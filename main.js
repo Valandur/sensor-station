@@ -3,6 +3,7 @@ const ray = require('raylib');
 const { format } = require('date-fns');
 const axios = require('axios');
 const fs = require('fs');
+const Gpio = require('onoff').Gpio;
 
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
@@ -20,6 +21,7 @@ const GESTURE_SWIPE_LEFT = 32;
 
 const SCREEN_SENSOR = 0;
 const SCREEN_WEATHER = 1;
+const SCREEN_AUTO_TIME = 20000;
 const NUM_SCREENS = 2;
 
 const TIME_X = 15;
@@ -42,7 +44,9 @@ const WEATHER_X = 10;
 const WEATHER_Y = 100;
 const WEATHER_SIZE = 25;
 
+// --------------
 // DHT Sensor
+// --------------
 let tempC = null;
 let rh = null;
 const updateDHT = async () => {
@@ -59,7 +63,9 @@ const updateDHT = async () => {
 setTimeout(updateDHT, 1);
 const dhtInterval = setInterval(updateDHT, 1000);
 
+// --------------
 // Weather
+// --------------
 const weatherForecast = [];
 if (!fs.existsSync(`data`)) {
 	fs.mkdirSync(`data`);
@@ -100,15 +106,48 @@ const updateWeather = async () => {
 setTimeout(updateWeather, 1);
 const weatherInterval = setInterval(updateWeather, 60000);
 
+// --------------
+// Buttons
+// --------------
+const buttonPrev = new Gpio(22, 'in', 'both', { activeLow: true });
+buttonPrev.watch((err, value) => (value === 1 ? nextScreen() : null));
+
+const buttonNext = new Gpio(23, 'in', 'both', { activeLow: true });
+buttonNext.watch((err, value) => (value === 1 ? prevScreen() : null));
+
+// --------------
 // Screens
+// --------------
 process.env['DISPLAY'] = ':0';
 
 ray.InitWindow(WIDTH, HEIGHT, 'main');
 ray.SetTargetFPS(10);
 ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
 
-let screen = 0;
 let tapTimeout = null;
+
+let screen = 0;
+const nextScreen = () => {
+	screen++;
+	if (screen >= NUM_SCREENS) {
+		screen = 0;
+	}
+	if (screenTimeout) {
+		clearTimeout(screenTimeout);
+	}
+	screenTimeout = setTimeout(nextScreen, SCREEN_AUTO_TIME);
+};
+const prevScreen = () => {
+	screen--;
+	if (screen < 0) {
+		screen = NUM_SCREENS - 1;
+	}
+	if (screenTimeout) {
+		clearTimeout(screenTimeout);
+	}
+	screenTimeout = setTimeout(nextScreen, SCREEN_AUTO_TIME);
+};
+let screenTimeout = setTimeout(nextScreen, SCREEN_AUTO_TIME);
 
 // Screens all
 const formatTime = () => format(new Date(), 'HH:mm:ss');
@@ -133,16 +172,10 @@ const render = async () => {
 			}
 		} else if (gesture === GESTURE_SWIPE_RIGHT) {
 			clearTimeout(tapTimeout);
-			screen--;
-			if (screen < 0) {
-				screen = NUM_SCREENS - 1;
-			}
+			prevScreen();
 		} else if (gesture === GESTURE_SWIPE_LEFT) {
 			clearTimeout(tapTimeout);
-			screen++;
-			if (screen >= NUM_SCREENS) {
-				screen = 0;
-			}
+			nextScreen();
 		}
 
 		ray.BeginDrawing();
@@ -171,7 +204,7 @@ const render = async () => {
 					}
 
 					ray.DrawTexture(tex, WEATHER_X + i * 100, WEATHER_Y, ray.WHITE);
-					ray.DrawText(format(f.time, 'hh:ss'), WEATHER_X + 20 + i * 100, WEATHER_Y - 10, WEATHER_SIZE, ray.LIGHTGRAY);
+					ray.DrawText(format(f.time, 'HH:ss'), WEATHER_X + 20 + i * 100, WEATHER_Y - 10, WEATHER_SIZE, ray.LIGHTGRAY);
 					ray.DrawText(formatTemp(f.temp), WEATHER_X + 30 + i * 100, WEATHER_Y + 90, WEATHER_SIZE, ray.GREEN);
 				}
 			}
@@ -179,13 +212,31 @@ const render = async () => {
 
 		ray.EndDrawing();
 
-		await new Promise((resolve) => setTimeout(resolve, 10));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
+
+	cleanup();
+};
+
+const cleanup = () => {
+	buttonPrev.unexport();
+	buttonNext.unexport();
 
 	ray.CloseWindow();
 
-	clearInterval(dhtInterval);
-	clearInterval(weatherInterval);
+	if (dhtInterval) {
+		clearInterval(dhtInterval);
+	}
+
+	if (weatherInterval) {
+		clearInterval(weatherInterval);
+	}
+
+	if (screenTimeout) {
+		clearInterval(screenTimeout);
+	}
 };
+
+process.on('SIGINT', () => cleanup());
 
 render().catch((err) => console.error(new Date(), err));
