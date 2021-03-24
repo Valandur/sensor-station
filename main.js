@@ -1,64 +1,191 @@
 const dht = require('node-dht-sensor').promises;
 const ray = require('raylib');
 const { format } = require('date-fns');
+const axios = require('axios');
+const fs = require('fs');
 
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
 
-const FONT_SIZE = 60;
-const Y_DATE = 10;
-const Y_TIME = 90;
-const Y_TEMP = 170;
-const Y_HUM = 170;
+const WEATHER_API_KEY = '05a064328a46dbcf8d1c402a33567d86';
+const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/forecast?mode=json&lang=en&units=metric';
+const WEATHER_CITY_ID = 2657896; // Zürich
 
-const X_COL1 = 15;
-const X_COL3 = 190;
+const WIDTH = 320;
+const HEIGHT = 240;
 
-let temperature = null;
-let humidity = null;
+const GESTURE_TAP = 1;
+const GESTURE_SWIPE_RIGHT = 16;
+const GESTURE_SWIPE_LEFT = 32;
 
-process.env['DISPLAY'] = ':0';
+const SCREEN_SENSOR = 0;
+const SCREEN_WEATHER = 1;
+const NUM_SCREENS = 2;
 
+const TIME_X = 15;
+const TIME_Y = 10;
+const TIME_SIZE = 40;
+
+const DATE_X = 190;
+const DATE_Y = 10;
+const DATE_SIZE = 40;
+
+const TEMP_X = 90;
+const TEMP_Y = 70;
+const TEMP_SIZE = 70;
+
+const RH_X = 90;
+const RH_Y = 150;
+const RH_SIZE = 70;
+
+const WEATHER_X = 10;
+const WEATHER_Y = 100;
+const WEATHER_SIZE = 25;
+
+// DHT Sensor
+let tempC = null;
+let rh = null;
 const updateDHT = async () => {
 	try {
 		const res = await dht.read(DHT_TYPE, DHT_PIN);
-		temperature = res.temperature;
-		humidity = res.humidity;
+		tempC = res.temperature;
+		rh = res.humidity;
 		lastErr = null;
 	} catch (err) {
-		console.error(err);
+		console.error(new Date(), err);
 	}
 };
 
+setTimeout(updateDHT, 1);
 const dhtInterval = setInterval(updateDHT, 1000);
 
-ray.InitWindow(320, 240, 'main');
-ray.SetTargetFPS(1);
+// Weather
+const weatherForecast = [];
+if (!fs.existsSync(`data`)) {
+	fs.mkdirSync(`data`);
+}
+const updateWeather = async () => {
+	const { data } = await axios(`${WEATHER_URL}&id=${WEATHER_CITY_ID}&APPID=${WEATHER_API_KEY}`);
 
-const render = () => {
-	ray.BeginDrawing();
-	ray.ClearBackground(ray.BLACK);
+	for (let i = 0; i < 3; i++) {
+		const forecast = data.list[i];
+		const weather = forecast.weather[0];
+		const imgPath = `data/${weather.icon}.png`;
 
-	const now = new Date();
-	ray.DrawText(format(now, 'dd.MM.yyyy'), X_COL1, Y_DATE, FONT_SIZE, ray.WHITE);
-	ray.DrawText(format(now, 'HH:mm:ss'), X_COL1, Y_TIME, FONT_SIZE, ray.WHITE);
+		if (fs.existsSync(imgPath)) {
+			weatherImg = imgPath;
+		} else {
+			const writer = fs.createWriteStream(imgPath);
+			const img = await axios({
+				method: 'GET',
+				url: `http://openweathermap.org/img/wn/${weather.icon}@2x.png`,
+				responseType: 'stream'
+			});
+			img.data.pipe(writer);
+			await new Promise((resolve, reject) => {
+				writer.on('finish', resolve);
+				writer.on('error', reject);
+			});
+			weatherImg = imgPath;
+		}
 
-	if (temperature !== null) {
-		ray.DrawText(`${temperature}°C`, X_COL1, Y_TEMP, FONT_SIZE, ray.GREEN);
+		weatherForecast.push({
+			time: new Date(forecast.dt * 1000),
+			img: imgPath,
+			temp: forecast.main.temp
+		});
 	}
-
-	if (humidity !== null) {
-		ray.DrawText(`${humidity}%`, X_COL3, Y_HUM, FONT_SIZE, ray.BLUE);
-	}
-
-	ray.EndDrawing();
 };
 
-const renderInterval = setInterval(render, 500);
+setTimeout(updateWeather, 1);
+const weatherInterval = setInterval(updateWeather, 60000);
 
-process.on('SIGINT', () => {
-	clearInterval(dhtInterval);
-	clearInterval(renderInterval);
+// Screens
+process.env['DISPLAY'] = ':0';
+
+ray.InitWindow(WIDTH, HEIGHT, 'main');
+ray.SetTargetFPS(10);
+ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
+
+let screen = 0;
+let tapTimeout = null;
+
+// Screens all
+const formatTime = () => format(new Date(), 'HH:mm:ss');
+const formatDate = () => format(new Date(), 'dd.MM');
+
+// Screens sensor
+let showC = true;
+const celsiusToFahrentheit = (tempC) => (tempC * 9) / 5 + 32;
+const formatTemp = (tempC) => (showC ? `${tempC.toFixed(0)}°C` : `${celsiusToFahrentheit(tempC).toFixed(0)}°F`);
+const formatRh = (rh) => `${rh}%`;
+
+// Screens weather
+const texMap = new Map();
+
+const render = async () => {
+	while (!ray.WindowShouldClose()) {
+		const gesture = ray.GetGestureDetected();
+		if (gesture === GESTURE_TAP) {
+			const { x, y } = ray.GetTouchPosition(0);
+			if (x >= TEMP_X && x <= RH_X / 2 && y >= TEMP_Y && y <= TEMP_Y + FONT_SIZE) {
+				tapTimeout = setTimeout(() => (showC = !showC), 200);
+			}
+		} else if (gesture === GESTURE_SWIPE_RIGHT) {
+			clearTimeout(tapTimeout);
+			screen--;
+			if (screen < 0) {
+				screen = NUM_SCREENS - 1;
+			}
+		} else if (gesture === GESTURE_SWIPE_LEFT) {
+			clearTimeout(tapTimeout);
+			screen++;
+			if (screen >= NUM_SCREENS) {
+				screen = 0;
+			}
+		}
+
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
+
+		ray.DrawText(formatTime(), TIME_X, TIME_Y, TIME_SIZE, ray.WHITE);
+		ray.DrawText(formatDate(), DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
+
+		if (screen === SCREEN_SENSOR) {
+			if (tempC !== null) {
+				ray.DrawText(formatTemp(tempC), TEMP_X, TEMP_Y, TEMP_SIZE, ray.GREEN);
+			}
+
+			if (rh !== null) {
+				ray.DrawText(formatRh(rh), RH_X, RH_Y, RH_SIZE, ray.BLUE);
+			}
+		} else if (screen === SCREEN_WEATHER) {
+			if (weatherForecast.length > 0) {
+				for (let i = 0; i < weatherForecast.length; i++) {
+					const f = weatherForecast[i];
+
+					let tex = texMap.get(f.img);
+					if (!tex) {
+						tex = ray.LoadTexture(f.img);
+						texMap.set(f.img, tex);
+					}
+
+					ray.DrawTexture(tex, WEATHER_X + i * 100, WEATHER_Y, ray.WHITE);
+					ray.DrawText(format(f.time, 'hh:ss'), WEATHER_X + 20 + i * 100, WEATHER_Y - 10, WEATHER_SIZE, ray.LIGHTGRAY);
+					ray.DrawText(formatTemp(f.temp), WEATHER_X + 30 + i * 100, WEATHER_Y + 90, WEATHER_SIZE, ray.GREEN);
+				}
+			}
+		}
+
+		ray.EndDrawing();
+
+		await new Promise((resolve) => setTimeout(resolve, 10));
+	}
 
 	ray.CloseWindow();
-});
+
+	clearInterval(dhtInterval);
+	clearInterval(weatherInterval);
+};
+
+render().catch((err) => console.error(new Date(), err));
