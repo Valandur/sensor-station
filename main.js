@@ -51,8 +51,8 @@ const WEATHER_SIZE = 45;
 // --------------
 // DHT Sensor
 // --------------
-let tempC = 0; //null;
-let rh = 0; //null;
+let tempC = null;
+let rh = null;
 const updateDHT = async () => {
 	try {
 		const res = await dht.read(DHT_TYPE, DHT_PIN);
@@ -189,7 +189,7 @@ const render = async () => {
 			ray.DrawText(formatTime(), TIME_X, TIME_Y, TIME_SIZE, ray.WHITE);
 			ray.DrawText(formatDate(), DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
 		} else if (screen === SCREEN_SENSOR) {
-			if (!tempC || !rh) {
+			if (tempC === null || rh === null) {
 				nextScreen();
 			}
 
