@@ -70,13 +70,14 @@ const dhtInterval = setInterval(updateDHT, 1000);
 // --------------
 // Weather
 // --------------
-const weatherForecast = [];
+let weatherForecast = [];
 if (!fs.existsSync(`data`)) {
 	fs.mkdirSync(`data`);
 }
 const updateWeather = async () => {
 	const { data } = await axios(`${WEATHER_URL}&id=${WEATHER_CITY_ID}&APPID=${WEATHER_API_KEY}`);
 
+	weatherForecast = [];
 	for (let i = 0; i < WEATHER_FORECASTS; i++) {
 		const forecast = data.list[i];
 		const weather = forecast.weather[0];
@@ -131,21 +132,43 @@ ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
 let tapTimeout = null;
 
 let screen = 0;
-const nextScreen = () => {
-	screen++;
-	if (screen >= NUM_SCREENS) {
-		screen = 0;
+const incScreen = () => (screen = (screen + 1) % NUM_SCREENS);
+const decScreen = () => (screen = screen === 0 ? NUM_SCREENS - 1 : screen - 1);
+const isValidScreen = () => {
+	switch (screen) {
+		case SCREEN_SENSOR:
+			if (tempC === null || rh === null) {
+				return false;
+			}
+			break;
+
+		case SCREEN_WEATHER:
+			if (weatherForecast.length === 0) {
+				return false;
+			}
+			break;
+
+		default:
+			break;
 	}
+
+	return true;
+};
+const nextScreen = () => {
+	do {
+		incScreen();
+	} while (!isValidScreen());
+
 	if (screenTimeout) {
 		clearTimeout(screenTimeout);
 	}
 	screenTimeout = setTimeout(nextScreen, SCREEN_AUTO_TIME);
 };
 const prevScreen = () => {
-	screen--;
-	if (screen < 0) {
-		screen = NUM_SCREENS - 1;
-	}
+	do {
+		decScreen();
+	} while (!isValidScreen());
+
 	if (screenTimeout) {
 		clearTimeout(screenTimeout);
 	}
@@ -189,17 +212,9 @@ const render = async () => {
 			ray.DrawText(formatTime(), TIME_X, TIME_Y, TIME_SIZE, ray.WHITE);
 			ray.DrawText(formatDate(), DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
 		} else if (screen === SCREEN_SENSOR) {
-			if (tempC === null || rh === null) {
-				nextScreen();
-			}
-
 			ray.DrawText(formatTemp(tempC), TEMP_X, TEMP_Y, TEMP_SIZE, ray.GREEN);
 			ray.DrawText(formatRh(rh), RH_X, RH_Y, RH_SIZE, ray.BLUE);
 		} else if (screen === SCREEN_WEATHER) {
-			if (weatherForecast.length === 0) {
-				nextScreen();
-			}
-
 			for (let i = 0; i < weatherForecast.length; i++) {
 				const f = weatherForecast[i];
 
@@ -226,11 +241,6 @@ const render = async () => {
 const cleanup = () => {
 	console.log('Cleaning up');
 
-	buttonPrev.unexport();
-	buttonNext.unexport();
-
-	ray.CloseWindow();
-
 	if (dhtInterval) {
 		clearInterval(dhtInterval);
 	}
@@ -242,6 +252,11 @@ const cleanup = () => {
 	if (screenTimeout) {
 		clearInterval(screenTimeout);
 	}
+
+	buttonPrev.unexport();
+	buttonNext.unexport();
+
+	ray.CloseWindow();
 };
 
 process.on('SIGINT', (...args) => {
