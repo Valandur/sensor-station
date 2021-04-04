@@ -9,6 +9,9 @@ process.env['DISPLAY'] = ':0';
 const WIDTH = 320;
 const HEIGHT = 240;
 
+const formatTemp = (temp: number) => `${temp.toFixed(0)}°C`;
+const formatRh = (rh: number) => `${rh}%`;
+
 // --------------
 // Sensors
 // --------------
@@ -61,14 +64,12 @@ display.addScreen({
 // --------------
 // Screen: Sensors
 // --------------
+/*
 const TEMP_Y = 20;
 const TEMP_SIZE = 100;
 
 const RH_Y = 135;
 const RH_SIZE = 100;
-
-const formatTemp = (temp: number) => `${temp.toFixed(0)}°C`;
-const formatRh = (rh: number) => `${rh}%`;
 
 display.addScreen({
 	render: (ray) => {
@@ -82,7 +83,7 @@ display.addScreen({
 	},
 	canShow: () => sensors.temperature !== null && sensors.humidity !== null
 });
-
+*/
 // --------------
 // Screen: Weather
 // --------------
