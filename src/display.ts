@@ -27,6 +27,7 @@ export class Display {
 	private screenTimeoutTime: number;
 	private buttonPrev: Gpio;
 	private buttonNext: Gpio;
+	private buttonDie: Gpio;
 
 	public shouldExit: boolean = false;
 
@@ -39,6 +40,9 @@ export class Display {
 
 		this.buttonNext = new Gpio(23, 'in', 'both', { activeLow: true });
 		this.buttonNext.watch((err, value) => (value === 1 ? this.nextScreen() : null));
+
+		this.buttonDie = new Gpio(27, 'in', 'both', { activeLow: true });
+		this.buttonDie.watch((err, value) => (value === 1 ? process.exit(1) : null));
 
 		ray.InitWindow(width, height, 'main');
 		ray.SetTargetFPS(10);
