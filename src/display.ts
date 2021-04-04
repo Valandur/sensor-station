@@ -42,7 +42,7 @@ export class Display {
 		this.buttonNext.watch((err, value) => (value === 1 ? this.nextScreen() : null));
 
 		this.buttonDie = new Gpio(27, 'in', 'both', { activeLow: true });
-		this.buttonDie.watch((err, value) => (value === 1 ? process.exit(1) : null));
+		this.buttonDie.watch((err, value) => (value === 1 ? process.kill(process.pid, 'SIGKILL') : null));
 
 		ray.InitWindow(width, height, 'main');
 		ray.SetTargetFPS(10);
