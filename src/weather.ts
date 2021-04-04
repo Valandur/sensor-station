@@ -1,19 +1,27 @@
 import axios from 'axios';
-import fs from 'fs';
+import { createWriteStream, mkdirSync, existsSync } from 'fs';
 
-const WEATHER_API_KEY = '05a064328a46dbcf8d1c402a33567d86';
-const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/forecast?mode=json&lang=en&units=metric';
-const WEATHER_CITY_ID = 2657896; // Zürich
-const WEATHER_FORECASTS = 2;
+const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
+const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely';
+const URL_LOC = '&lat=47.2949&lon=8.5645';
+const URL_APIKEY = '&APPID=05a064328a46dbcf8d1c402a33567d86';
+const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 
-export interface Forecast {
+interface WeatherEntry {
 	time: Date;
 	img: string;
 	temp: number;
+	feelsLike: number;
+	humidity: number;
 }
 
 export class Weather {
-	private _forecasts: Forecast[] = [];
+	private _current: WeatherEntry = null;
+	public get current() {
+		return this._current;
+	}
+
+	private _forecasts: WeatherEntry[] = [];
 	public get forecasts() {
 		return this._forecasts;
 	}
@@ -21,8 +29,8 @@ export class Weather {
 	private interval: NodeJS.Timer;
 
 	public init() {
-		if (!fs.existsSync(`data`)) {
-			fs.mkdirSync(`data`);
+		if (!existsSync(`data`)) {
+			mkdirSync(`data`);
 		}
 
 		setTimeout(this.updateWeather, 1000);
@@ -34,36 +42,51 @@ export class Weather {
 	}
 
 	private updateWeather = async () => {
-		const { data } = await axios(`${WEATHER_URL}&id=${WEATHER_CITY_ID}&APPID=${WEATHER_API_KEY}`);
+		const { data } = await axios(URL);
 
-		const forecasts = [];
+		const current = data.current;
+		const imgPath = await this.saveIcon(current.weather[0]);
+		this._current = {
+			time: new Date(current.dt * 1000),
+			img: imgPath,
+			temp: current.temp,
+			feelsLike: current.feels_like,
+			humidity: current.humidity
+		};
 
-		for (let i = 0; i < WEATHER_FORECASTS; i++) {
-			const forecast = data.list[i];
-			const weather = forecast.weather[0];
-			const imgPath = `data/${weather.icon}.png`;
-
-			if (!fs.existsSync(imgPath)) {
-				const writer = fs.createWriteStream(imgPath);
-				const img = await axios({
-					method: 'GET',
-					url: `http://openweathermap.org/img/wn/${weather.icon}@4x.png`,
-					responseType: 'stream'
-				});
-				img.data.pipe(writer);
-				await new Promise((resolve, reject) => {
-					writer.on('finish', resolve);
-					writer.on('error', reject);
-				});
-			}
+		const forecasts: WeatherEntry[] = [];
+		for (const forecast of data.hourly) {
+			const imgPath = await this.saveIcon(forecast.weather[0]);
 
 			forecasts.push({
 				time: new Date(forecast.dt * 1000),
 				img: imgPath,
-				temp: forecast.main.temp
+				temp: forecast.temp,
+				feelsLike: forecast.feels_like,
+				humidity: forecast.humidity
 			});
 		}
 
 		this._forecasts = forecasts;
 	};
+
+	private async saveIcon(weather: any) {
+		const imgPath = `data/${weather.icon}.png`;
+
+		if (!existsSync(imgPath)) {
+			const writer = createWriteStream(imgPath);
+			const img = await axios({
+				method: 'GET',
+				url: `http://openweathermap.org/img/wn/${weather.icon}@4x.png`,
+				responseType: 'stream'
+			});
+			img.data.pipe(writer);
+			await new Promise((resolve, reject) => {
+				writer.on('finish', resolve);
+				writer.on('error', reject);
+			});
+		}
+
+		return imgPath;
+	}
 }

@@ -1,3 +1,4 @@
+import { differenceInMilliseconds } from 'date-fns';
 import { Gpio } from 'onoff';
 
 import { Screen } from './screen';
@@ -11,6 +12,9 @@ const GESTURE_SWIPE_LEFT = 32;
 const SHOW_TIME = 20000;
 
 export class Display {
+	private width: number = 0;
+	private height: number = 0;
+
 	private screens: Screen[] = [];
 	private current: number = 0;
 	private get screen() {
@@ -19,12 +23,17 @@ export class Display {
 
 	private tapTimeout: NodeJS.Timeout;
 	private screenTimeout: NodeJS.Timeout;
+	private screenTimeoutStart: Date;
+	private screenTimeoutTime: number;
 	private buttonPrev: Gpio;
 	private buttonNext: Gpio;
 
 	public shouldExit: boolean = false;
 
 	public init(width: number, height: number) {
+		this.width = width;
+		this.height = height;
+
 		this.buttonPrev = new Gpio(22, 'in', 'both', { activeLow: true });
 		this.buttonPrev.watch((err, value) => (value === 1 ? this.prevScreen() : null));
 
@@ -34,6 +43,8 @@ export class Display {
 		ray.InitWindow(width, height, 'main');
 		ray.SetTargetFPS(10);
 		ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
+
+		this.startScreenTimeout();
 	}
 
 	public dispose() {
@@ -47,6 +58,12 @@ export class Display {
 		this.buttonNext.unexport();
 
 		ray.CloseWindow();
+	}
+
+	private startScreenTimeout() {
+		this.screenTimeoutStart = new Date();
+		this.screenTimeoutTime = this.screen?.showTime || SHOW_TIME;
+		this.screenTimeout = setTimeout(() => this.nextScreen(), this.screenTimeoutTime);
 	}
 
 	public addScreen(screen: Screen) {
@@ -67,7 +84,7 @@ export class Display {
 		if (this.screenTimeout) {
 			clearTimeout(this.screenTimeout);
 		}
-		this.screenTimeout = setTimeout(() => this.nextScreen(), this.screen.showTime || SHOW_TIME);
+		this.startScreenTimeout();
 	}
 
 	private incScreen() {
@@ -81,7 +98,7 @@ export class Display {
 		if (this.screenTimeout) {
 			clearTimeout(this.screenTimeout);
 		}
-		this.screenTimeout = setTimeout(() => this.nextScreen(), this.screen.showTime || SHOW_TIME);
+		this.startScreenTimeout();
 	}
 
 	private canShowScreen() {
@@ -107,7 +124,19 @@ export class Display {
 			ray.BeginDrawing();
 			ray.ClearBackground(ray.BLACK);
 
-			this.screen.render(ray);
+			if (this.canShowScreen()) {
+				this.screen.render(ray);
+			} else {
+				this.nextScreen();
+			}
+
+			ray.DrawRectangle(
+				0,
+				this.height - 2,
+				(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
+				2,
+				ray.GRAY
+			);
 
 			ray.EndDrawing();
 
