@@ -2,7 +2,7 @@ import axios from 'axios';
 import { createWriteStream, mkdirSync, existsSync } from 'fs';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
-const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely';
+const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_LOC = '&lat=47.2949&lon=8.5645';
 const URL_APIKEY = '&APPID=05a064328a46dbcf8d1c402a33567d86';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
@@ -10,17 +10,10 @@ const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 interface WeatherEntry {
 	time: Date;
 	img: string;
-	temp: number;
 	feelsLike: number;
-	humidity: number;
 }
 
 export class Weather {
-	private _current: WeatherEntry = null;
-	public get current() {
-		return this._current;
-	}
-
 	private _forecasts: WeatherEntry[] = [];
 	public get forecasts() {
 		return this._forecasts;
@@ -44,26 +37,23 @@ export class Weather {
 	private updateWeather = async () => {
 		const { data } = await axios(URL);
 
+		const forecasts: WeatherEntry[] = [];
+
 		const current = data.current;
 		const imgPath = await this.saveIcon(current.weather[0]);
-		this._current = {
+		forecasts.push({
 			time: new Date(current.dt * 1000),
 			img: imgPath,
-			temp: current.temp,
-			feelsLike: current.feels_like,
-			humidity: current.humidity
-		};
+			feelsLike: current.feels_like
+		});
 
-		const forecasts: WeatherEntry[] = [];
-		for (const forecast of data.hourly) {
+		for (const forecast of data.daily) {
 			const imgPath = await this.saveIcon(forecast.weather[0]);
 
 			forecasts.push({
 				time: new Date(forecast.dt * 1000),
 				img: imgPath,
-				temp: forecast.temp,
-				feelsLike: forecast.feels_like,
-				humidity: forecast.humidity
+				feelsLike: forecast.feels_like.day //{ min: forecast.feels_like.morn, max: forecast.feels_like.day }
 			});
 		}
 

@@ -1,4 +1,4 @@
-import { add, format, isAfter } from 'date-fns';
+import { add, differenceInHours, format, isAfter, startOfDay } from 'date-fns';
 
 import { Display } from './display';
 import { Sensors } from './sensors';
@@ -87,9 +87,14 @@ display.addScreen({
 // --------------
 // Screen: Weather
 // --------------
-const WEATHER_HOURS = [{ hours: 2 }, { hours: 5 }];
-const WEATHER_DAYS = [{ hours: 22 }, { hours: 46 }];
-const WEATHER_X = WIDTH / WEATHER_HOURS.length;
+type DateCompare = (now: Date, date: Date) => boolean;
+const WEATHER_FORECASTS: DateCompare[] = [
+	(now, date) => isAfter(date, now),
+	(now, date) => isAfter(date, startOfDay(add(now, { days: 1 }))),
+	(now, date) => isAfter(date, startOfDay(add(now, { days: 2 }))),
+	(now, date) => isAfter(date, startOfDay(add(now, { days: 3 })))
+];
+const WEATHER_PER_SCREEN = 2;
 const WEATHER_TIME_Y = 15;
 const WEATHER_ICON_Y = 40;
 const WEATHER_TEMP_Y = 175;
@@ -97,10 +102,70 @@ const WEATHER_FONT_SIZE = 55;
 
 const texMap = new Map();
 
+for (let i = 0; i < WEATHER_FORECASTS.length; i += WEATHER_PER_SCREEN) {
+	display.addScreen({
+		render: (ray) => {
+			const colWidth = WIDTH / WEATHER_PER_SCREEN;
+
+			const now = new Date();
+			const forecasts = WEATHER_FORECASTS.slice(i, i + WEATHER_PER_SCREEN)
+				.map((dateCompare) => weather.forecasts.find((forecast) => dateCompare(now, forecast.time)))
+				.filter((forecast) => !!forecast);
+
+			for (let i = 0; i < forecasts.length; i++) {
+				const forecast = forecasts[i];
+
+				let tex = texMap.get(forecast.img);
+				if (!tex) {
+					tex = ray.LoadTexture(forecast.img);
+					texMap.set(forecast.img, tex);
+				}
+
+				const dateFormat = differenceInHours(forecast.time, now) > 6 ? 'iii' : 'HH:mm';
+				const dateText = format(forecast.time, dateFormat);
+				const dateWidth = ray.MeasureText(dateText, WEATHER_FONT_SIZE);
+				ray.DrawText(
+					dateText,
+					i * colWidth + (colWidth - dateWidth) / 2,
+					WEATHER_TIME_Y,
+					WEATHER_FONT_SIZE,
+					ray.LIGHTGRAY
+				);
+
+				ray.DrawTexturePro(
+					tex,
+					{ x: 0, y: 0, width: tex.width, height: tex.height },
+					{ x: i * colWidth, y: WEATHER_ICON_Y, width: colWidth, height: colWidth },
+					{ x: 0, y: 0 },
+					0,
+					ray.WHITE
+				);
+
+				const tempText = formatTemp(forecast.feelsLike);
+				const tempSize = ray.MeasureText(tempText, WEATHER_FONT_SIZE);
+				ray.DrawText(tempText, i * colWidth + (colWidth - tempSize) / 2, WEATHER_TEMP_Y, WEATHER_FONT_SIZE, ray.GREEN);
+			}
+		},
+		canShow: () => {
+			const now = new Date();
+			return (
+				WEATHER_FORECASTS.slice(i, i + WEATHER_PER_SCREEN)
+					.map((dateCompare) => weather.forecasts.find((forecast) => dateCompare(now, forecast.time)))
+					.filter((forecast) => !!forecast).length > 0
+			);
+		}
+	});
+}
+
+/*
 display.addScreen({
 	render: (ray) => {
+		const colWidth = WIDTH / WEATHER_FORECASTS.length;
+
 		const now = new Date();
-		const forecasts = WEATHER_HOURS.map((time) => weather.forecasts.find((f) => isAfter(f.time, add(now, time))));
+		const forecasts = WEATHER_FORECASTS.map((dateCompare) =>
+			weather.forecasts.find((forecast) => dateCompare(now, forecast.time))
+		).filter((forecast) => !!forecast);
 
 		for (let i = 0; i < forecasts.length; i++) {
 			const forecast = forecasts[i];
@@ -115,7 +180,7 @@ display.addScreen({
 			const timeWidth = ray.MeasureText(timeText, WEATHER_FONT_SIZE);
 			ray.DrawText(
 				timeText,
-				i * WEATHER_X + (WEATHER_X - timeWidth) / 2,
+				i * colWidth + (colWidth - timeWidth) / 2,
 				WEATHER_TIME_Y,
 				WEATHER_FONT_SIZE,
 				ray.LIGHTGRAY
@@ -124,7 +189,7 @@ display.addScreen({
 			ray.DrawTexturePro(
 				tex,
 				{ x: 0, y: 0, width: tex.width, height: tex.height },
-				{ x: i * WEATHER_X, y: WEATHER_ICON_Y, width: WEATHER_X, height: WEATHER_X },
+				{ x: i * colWidth, y: WEATHER_ICON_Y, width: colWidth, height: colWidth },
 				{ x: 0, y: 0 },
 				0,
 				ray.WHITE
@@ -132,52 +197,12 @@ display.addScreen({
 
 			const tempText = formatTemp(forecast.feelsLike);
 			const tempSize = ray.MeasureText(tempText, WEATHER_FONT_SIZE);
-			ray.DrawText(tempText, i * WEATHER_X + (WEATHER_X - tempSize) / 2, WEATHER_TEMP_Y, WEATHER_FONT_SIZE, ray.GREEN);
+			ray.DrawText(tempText, i * colWidth + (colWidth - tempSize) / 2, WEATHER_TEMP_Y, WEATHER_FONT_SIZE, ray.GREEN);
 		}
 	},
 	canShow: () => weather.forecasts.length > 0
 });
-
-display.addScreen({
-	render: (ray) => {
-		const now = new Date();
-		const forecasts = WEATHER_DAYS.map((time) => weather.forecasts.find((f) => isAfter(f.time, add(now, time))));
-
-		for (let i = 0; i < forecasts.length; i++) {
-			const forecast = forecasts[i];
-
-			let tex = texMap.get(forecast.img);
-			if (!tex) {
-				tex = ray.LoadTexture(forecast.img);
-				texMap.set(forecast.img, tex);
-			}
-
-			const dayText = format(forecast.time, 'iii');
-			const dayWidth = ray.MeasureText(dayText, WEATHER_FONT_SIZE);
-			ray.DrawText(
-				dayText,
-				i * WEATHER_X + (WEATHER_X - dayWidth) / 2,
-				WEATHER_TIME_Y,
-				WEATHER_FONT_SIZE,
-				ray.LIGHTGRAY
-			);
-
-			ray.DrawTexturePro(
-				tex,
-				{ x: 0, y: 0, width: tex.width, height: tex.height },
-				{ x: i * WEATHER_X, y: WEATHER_ICON_Y, width: WEATHER_X, height: WEATHER_X },
-				{ x: 0, y: 0 },
-				0,
-				ray.WHITE
-			);
-
-			const tempText = formatTemp(forecast.feelsLike);
-			const tempSize = ray.MeasureText(tempText, WEATHER_FONT_SIZE);
-			ray.DrawText(tempText, i * WEATHER_X + (WEATHER_X - tempSize) / 2, WEATHER_TEMP_Y, WEATHER_FONT_SIZE, ray.GREEN);
-		}
-	},
-	canShow: () => weather.forecasts.length > 0
-});
+*/
 
 // --------------
 // Main run loop
