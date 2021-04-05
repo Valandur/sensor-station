@@ -1,4 +1,4 @@
-import { add, differenceInHours, format, isAfter, startOfDay } from 'date-fns';
+import { add, format, isAfter, isSameDay, startOfDay } from 'date-fns';
 
 import { Display } from './display';
 import { Sensors } from './sensors';
@@ -89,7 +89,7 @@ display.addScreen({
 // --------------
 type DateCompare = (now: Date, date: Date) => boolean;
 const WEATHER_FORECASTS: DateCompare[] = [
-	(now, date) => isAfter(date, now),
+	(now, date) => isAfter(date, startOfDay(now)),
 	(now, date) => isAfter(date, startOfDay(add(now, { days: 1 }))),
 	(now, date) => isAfter(date, startOfDay(add(now, { days: 2 }))),
 	(now, date) => isAfter(date, startOfDay(add(now, { days: 3 })))
@@ -121,8 +121,7 @@ for (let i = 0; i < WEATHER_FORECASTS.length; i += WEATHER_PER_SCREEN) {
 					texMap.set(forecast.img, tex);
 				}
 
-				const dateFormat = differenceInHours(forecast.time, now) > 6 ? 'iii' : 'HH:mm';
-				const dateText = format(forecast.time, dateFormat);
+				const dateText = isSameDay(forecast.time, now) ? 'Now' : format(forecast.time, 'iii');
 				const dateWidth = ray.MeasureText(dateText, WEATHER_FONT_SIZE);
 				ray.DrawText(
 					dateText,
