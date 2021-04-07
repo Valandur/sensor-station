@@ -64,12 +64,26 @@ export class Display {
 		ray.CloseWindow();
 	}
 
-	private startScreenTimeout() {
+	public startScreenTimeout() {
+		if (this.screenTimeout) {
+			clearTimeout(this.screenTimeout);
+		}
+
 		if (this.screens.length > 1) {
 			this.screenTimeoutStart = new Date();
 			this.screenTimeoutTime = this.screen?.showTime || SHOW_TIME;
 			this.screenTimeout = setTimeout(() => this.nextScreen(), this.screenTimeoutTime);
 		}
+	}
+
+	public stopScreenTimeout() {
+		if (this.screenTimeout) {
+			clearTimeout(this.screenTimeout);
+			this.screenTimeout = null;
+		}
+
+		this.screenTimeoutStart = null;
+		this.screenTimeoutTime = null;
 	}
 
 	public addScreen(screen: Screen) {
@@ -87,9 +101,6 @@ export class Display {
 			this.decScreen();
 		} while (!this.canShowScreen());
 
-		if (this.screenTimeout) {
-			clearTimeout(this.screenTimeout);
-		}
 		this.startScreenTimeout();
 	}
 
@@ -101,9 +112,6 @@ export class Display {
 			this.incScreen();
 		} while (!this.canShowScreen());
 
-		if (this.screenTimeout) {
-			clearTimeout(this.screenTimeout);
-		}
 		this.startScreenTimeout();
 	}
 
@@ -136,7 +144,7 @@ export class Display {
 				this.nextScreen();
 			}
 
-			if (this.screens.length > 1) {
+			if (this.screens.length > 1 && this.screenTimeoutStart) {
 				ray.DrawRectangle(
 					0,
 					this.height - 2,
@@ -151,4 +159,33 @@ export class Display {
 			await new Promise((resolve) => setTimeout(resolve, 1));
 		}
 	}
+
+	public drawText = (text: string, x: number, y: number, width: number, height: number, size?: number, color?: any) => {
+		let words = text.split(/ /g);
+		if (!color) {
+			color = height;
+			height = null;
+		}
+		if (!size) {
+			size = width;
+			width = null;
+		}
+
+		let line = 0;
+		while (words.length > 0) {
+			let index = words.length;
+			if (width) {
+				while (index > 1 && ray.MeasureText(words.slice(0, index).join(' '), size) > width) {
+					index--;
+				}
+			}
+			ray.DrawText(words.slice(0, index).join(' '), x, y + line * size, size, color);
+			words = words.slice(index);
+			line++;
+
+			if (height && line * size > height) {
+				return;
+			}
+		}
+	};
 }

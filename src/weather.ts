@@ -22,8 +22,8 @@ export class Weather {
 	private interval: NodeJS.Timer;
 
 	public init() {
-		if (!existsSync(`data`)) {
-			mkdirSync(`data`);
+		if (!existsSync(`data/weather`)) {
+			mkdirSync(`data/weather`, { recursive: true });
 		}
 
 		setTimeout(this.updateWeather, 1000);
@@ -61,7 +61,7 @@ export class Weather {
 	};
 
 	private async saveIcon(weather: any) {
-		const imgPath = `data/${weather.icon}.png`;
+		const imgPath = `data/weather/${weather.icon}.png`;
 
 		if (!existsSync(imgPath)) {
 			const writer = createWriteStream(imgPath);
