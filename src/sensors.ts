@@ -32,7 +32,6 @@ export class Sensors {
 	private updateDHT = async () => {
 		try {
 			const res = await dht.read(DHT_TYPE, DHT_PIN);
-			console.log(res);
 			this.temp = res.temperature;
 			this.rh = res.humidity;
 			this.err = null;

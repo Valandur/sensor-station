@@ -65,9 +65,11 @@ export class Display {
 	}
 
 	private startScreenTimeout() {
-		this.screenTimeoutStart = new Date();
-		this.screenTimeoutTime = this.screen?.showTime || SHOW_TIME;
-		this.screenTimeout = setTimeout(() => this.nextScreen(), this.screenTimeoutTime);
+		if (this.screens.length > 1) {
+			this.screenTimeoutStart = new Date();
+			this.screenTimeoutTime = this.screen?.showTime || SHOW_TIME;
+			this.screenTimeout = setTimeout(() => this.nextScreen(), this.screenTimeoutTime);
+		}
 	}
 
 	public addScreen(screen: Screen) {
@@ -134,13 +136,15 @@ export class Display {
 				this.nextScreen();
 			}
 
-			ray.DrawRectangle(
-				0,
-				this.height - 2,
-				(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
-				2,
-				ray.GRAY
-			);
+			if (this.screens.length > 1) {
+				ray.DrawRectangle(
+					0,
+					this.height - 2,
+					(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
+					2,
+					ray.GRAY
+				);
+			}
 
 			ray.EndDrawing();
 
