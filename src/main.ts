@@ -43,6 +43,9 @@ console.log('render...');
 
 const display = new Display();
 
+const formatTemp = (temp: number) => `${temp.toFixed(0)}°`;
+const formatRh = (rh: number) => `${rh}%`;
+
 // --------------
 // Screen: General
 // --------------
@@ -59,14 +62,14 @@ const YEAR_X = DATE_Y * RATIO;
 const YEAR_SIZE = 40;
 
 const renderHeader = (ray: any, now: Date) => {
-	const timeText = formatTime(now);
+	const timeText = format(now, 'HH:mm');
 	display.drawText(timeText, TIME_X, TIME_Y, TIME_SIZE, ray.ORANGE);
 
-	const dateText = formatDate(now);
+	const dateText = format(now, 'dd.MM');
 	const dateWidth = ray.MeasureText(dateText, DATE_SIZE);
 	display.drawText(dateText, WIDTH - DATE_X - dateWidth, DATE_Y, DATE_SIZE, ray.WHITE);
 
-	const yearText = format(now, 'E e. MMMM yyyy', { locale: de });
+	const yearText = format(now, 'eee d. MMMM yyyy', { locale: de });
 	const yearWidth = ray.MeasureText(yearText, YEAR_SIZE);
 	display.drawText(yearText, WIDTH - YEAR_X - yearWidth, YEAR_Y, YEAR_SIZE, ray.WHITE);
 };
@@ -85,11 +88,6 @@ const WEATHER_TIME_Y = 210;
 const WEATHER_ICON_Y = 265;
 const WEATHER_TEMP_Y = 400;
 const WEATHER_FONT_SIZE = 60;
-
-const formatTime = (date: Date) => format(date, 'HH:mm');
-const formatDate = (date: Date) => format(date, 'dd.MM');
-const formatTemp = (temp: number) => `${temp.toFixed(0)}°`;
-const formatRh = (rh: number) => `${rh}%`;
 
 type DateCompare = (now: Date, date: Date) => boolean;
 const WEATHER_FORECASTS: DateCompare[] = [
