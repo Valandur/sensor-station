@@ -2,7 +2,7 @@ import { add, format, isAfter, isSameDay, startOfDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 import { Display } from './display';
-import { News } from './news';
+import { FeedItem, News } from './news';
 import { Sensors } from './sensors';
 import { Weather } from './weather';
 
@@ -57,7 +57,7 @@ const DATE_Y = 20;
 const DATE_X = DATE_Y * RATIO;
 const DATE_SIZE = 100;
 
-const YEAR_Y = 120;
+const YEAR_Y = 124;
 const YEAR_X = DATE_Y * RATIO;
 const YEAR_SIZE = 40;
 
@@ -69,7 +69,7 @@ const renderHeader = (ray: any, now: Date) => {
 	const dateWidth = ray.MeasureText(dateText, DATE_SIZE);
 	display.drawText(dateText, WIDTH - DATE_X - dateWidth, DATE_Y, DATE_SIZE, ray.WHITE);
 
-	const yearText = format(now, 'eee d. MMMM yyyy', { locale: de });
+	const yearText = format(now, 'eee d. MMMM yy', { locale: de });
 	const yearWidth = ray.MeasureText(yearText, YEAR_SIZE);
 	display.drawText(yearText, WIDTH - YEAR_X - yearWidth, YEAR_Y, YEAR_SIZE, ray.WHITE);
 };
@@ -173,27 +173,26 @@ const NEWS_DESC_X = 200;
 const NEWS_ITEMS = 3;
 const NEWS_HEIGHT = 90;
 
-let itemIndex = -1;
 const newsImgMap = new Map();
 
+let newsGeneralItem: FeedItem = null;
 display.addScreen({
 	render: (ray) => {
 		const now = new Date();
 
 		renderHeader(ray, now);
 
-		if (itemIndex >= 0) {
-			const item = news.general[itemIndex];
-			display.drawText(item.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+		if (newsGeneralItem != null) {
+			display.drawText(newsGeneralItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
 			display.drawText(
-				format(item.date, 'eee HH:mm', { locale: de }),
+				format(newsGeneralItem.date, 'eee HH:mm', { locale: de }),
 				NEWS_X,
 				NEWS_Y + NEWS_HEIGHT,
 				NEWS_SIZE,
 				ray.GRAY
 			);
 			display.drawText(
-				item.description,
+				newsGeneralItem.description,
 				NEWS_DESC_X,
 				NEWS_Y + NEWS_HEIGHT,
 				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
@@ -202,10 +201,10 @@ display.addScreen({
 				ray.WHITE
 			);
 
-			let tex = newsImgMap.get(item.img);
+			let tex = newsImgMap.get(newsGeneralItem.img);
 			if (!tex) {
-				tex = ray.LoadTexture(item.img);
-				newsImgMap.set(item.img, tex);
+				tex = ray.LoadTexture(newsGeneralItem.img);
+				newsImgMap.set(newsGeneralItem.img, tex);
 			}
 
 			const width = NEWS_DESC_X - 2 * NEWS_X;
@@ -244,8 +243,8 @@ display.addScreen({
 		}
 	},
 	onTap: ({ x, y }) => {
-		if (itemIndex >= 0) {
-			itemIndex = -1;
+		if (newsGeneralItem != null) {
+			newsGeneralItem = null;
 			display.startScreenTimeout();
 			return;
 		}
@@ -257,7 +256,7 @@ display.addScreen({
 				y >= NEWS_Y + i * NEWS_HEIGHT &&
 				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
 			) {
-				itemIndex = i;
+				newsGeneralItem = news.general[i];
 				display.stopScreenTimeout();
 				return;
 			}
@@ -265,24 +264,24 @@ display.addScreen({
 	}
 });
 
+let newsSportItem: FeedItem = null;
 display.addScreen({
 	render: (ray) => {
 		const now = new Date();
 
 		renderHeader(ray, now);
 
-		if (itemIndex >= 0) {
-			const item = news.sport[itemIndex];
-			display.drawText(item.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+		if (newsSportItem != null) {
+			display.drawText(newsSportItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
 			display.drawText(
-				format(item.date, 'eee HH:mm', { locale: de }),
+				format(newsSportItem.date, 'eee HH:mm', { locale: de }),
 				NEWS_X,
 				NEWS_Y + NEWS_HEIGHT,
 				NEWS_SIZE,
 				ray.GRAY
 			);
 			display.drawText(
-				item.description,
+				newsSportItem.description,
 				NEWS_DESC_X,
 				NEWS_Y + NEWS_HEIGHT,
 				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
@@ -291,10 +290,10 @@ display.addScreen({
 				ray.WHITE
 			);
 
-			let tex = newsImgMap.get(item.img);
+			let tex = newsImgMap.get(newsSportItem.img);
 			if (!tex) {
-				tex = ray.LoadTexture(item.img);
-				newsImgMap.set(item.img, tex);
+				tex = ray.LoadTexture(newsSportItem.img);
+				newsImgMap.set(newsSportItem.img, tex);
 			}
 
 			const width = NEWS_DESC_X - 2 * NEWS_X;
@@ -333,8 +332,8 @@ display.addScreen({
 		}
 	},
 	onTap: ({ x, y }) => {
-		if (itemIndex >= 0) {
-			itemIndex = -1;
+		if (newsSportItem != null) {
+			newsSportItem = null;
 			display.startScreenTimeout();
 			return;
 		}
@@ -346,7 +345,7 @@ display.addScreen({
 				y >= NEWS_Y + i * NEWS_HEIGHT &&
 				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
 			) {
-				itemIndex = i;
+				newsSportItem = news.sport[i];
 				display.stopScreenTimeout();
 				return;
 			}

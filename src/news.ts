@@ -7,7 +7,7 @@ const URL_GENERAL = 'https://www.srf.ch/news/bnf/rss/1646';
 const URL_SPORT = 'https://www.srf.ch/sport/bnf/rss/718';
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 
-interface FeedItem {
+export interface FeedItem {
 	date: Date;
 	title: string;
 	description: string;
