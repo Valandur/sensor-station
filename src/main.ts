@@ -168,7 +168,7 @@ display.addScreen({
 // --------------
 const NEWS_Y = 200;
 const NEWS_X = 15 * RATIO;
-const NEWS_TITLE_X = 130;
+const NEWS_TITLE_X = 150;
 const NEWS_SIZE = 36;
 const NEWS_DESC_SIZE = 34;
 const NEWS_DESC_X = 200;
@@ -176,7 +176,6 @@ const NEWS_ITEMS = 3;
 const NEWS_HEIGHT = 90;
 
 let itemIndex = -1;
-
 const newsImgMap = new Map();
 
 display.addScreen({
@@ -188,6 +187,13 @@ display.addScreen({
 		if (itemIndex >= 0) {
 			const item = news.general[itemIndex];
 			display.drawText(item.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+			display.drawText(
+				format(item.date, 'eee HH:mm', { locale: de }),
+				NEWS_X,
+				NEWS_Y + NEWS_HEIGHT,
+				NEWS_SIZE,
+				ray.GRAY
+			);
 			display.drawText(
 				item.description,
 				NEWS_DESC_X,
@@ -204,12 +210,11 @@ display.addScreen({
 				newsImgMap.set(item.img, tex);
 			}
 
-			const ratio = tex.height / tex.width;
 			const width = NEWS_DESC_X - 2 * NEWS_X;
 			ray.DrawTexturePro(
 				tex,
 				{ x: 0, y: 0, width: tex.width, height: tex.height },
-				{ x: NEWS_X, y: NEWS_Y + NEWS_HEIGHT, width: width, height: width * ratio },
+				{ x: NEWS_X, y: NEWS_Y + 1.5 * NEWS_HEIGHT, width: width, height: width * (tex.height / tex.width) },
 				{ x: 0, y: 0 },
 				0,
 				ray.WHITE
@@ -219,9 +224,23 @@ display.addScreen({
 
 			for (let i = 0; i < items.length; i++) {
 				const item = items[i];
-				const y = NEWS_Y + i * (NEWS_HEIGHT + 4);
+				const y = NEWS_Y + i * NEWS_HEIGHT;
 
-				display.drawText(format(item.date, 'HH:mm'), NEWS_X, y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+				let tex = newsImgMap.get(item.img);
+				if (!tex) {
+					tex = ray.LoadTexture(item.img);
+					newsImgMap.set(item.img, tex);
+				}
+
+				const width = NEWS_TITLE_X - 2 * NEWS_X;
+				ray.DrawTexturePro(
+					tex,
+					{ x: 0, y: 0, width: tex.width, height: tex.height },
+					{ x: NEWS_X, y: y + 6, width: width, height: width * (tex.height / tex.width) },
+					{ x: 0, y: 0 },
+					0,
+					ray.WHITE
+				);
 				display.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
 			}
 		}
@@ -258,6 +277,13 @@ display.addScreen({
 			const item = news.sport[itemIndex];
 			display.drawText(item.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
 			display.drawText(
+				format(item.date, 'eee HH:mm', { locale: de }),
+				NEWS_X,
+				NEWS_Y + NEWS_HEIGHT,
+				NEWS_SIZE,
+				ray.GRAY
+			);
+			display.drawText(
 				item.description,
 				NEWS_DESC_X,
 				NEWS_Y + NEWS_HEIGHT,
@@ -273,12 +299,11 @@ display.addScreen({
 				newsImgMap.set(item.img, tex);
 			}
 
-			const ratio = tex.height / tex.width;
 			const width = NEWS_DESC_X - 2 * NEWS_X;
 			ray.DrawTexturePro(
 				tex,
 				{ x: 0, y: 0, width: tex.width, height: tex.height },
-				{ x: NEWS_X, y: NEWS_Y + NEWS_HEIGHT, width: width, height: width * ratio },
+				{ x: NEWS_X, y: NEWS_Y + 1.5 * NEWS_HEIGHT, width: width, height: width * (tex.height / tex.width) },
 				{ x: 0, y: 0 },
 				0,
 				ray.WHITE
@@ -288,9 +313,23 @@ display.addScreen({
 
 			for (let i = 0; i < items.length; i++) {
 				const item = items[i];
-				const y = NEWS_Y + i * (NEWS_HEIGHT + 4);
+				const y = NEWS_Y + i * NEWS_HEIGHT;
 
-				display.drawText(format(item.date, 'HH:mm'), NEWS_X, y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+				let tex = newsImgMap.get(item.img);
+				if (!tex) {
+					tex = ray.LoadTexture(item.img);
+					newsImgMap.set(item.img, tex);
+				}
+
+				const width = NEWS_TITLE_X - 2 * NEWS_X;
+				ray.DrawTexturePro(
+					tex,
+					{ x: 0, y: 0, width: tex.width, height: tex.height },
+					{ x: NEWS_X, y: y + 6, width: width, height: width * (tex.height / tex.width) },
+					{ x: 0, y: 0 },
+					0,
+					ray.WHITE
+				);
 				display.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
 			}
 		}
