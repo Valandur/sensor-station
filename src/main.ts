@@ -98,6 +98,8 @@ const WEATHER_FORECASTS: DateCompare[] = [
 ];
 const weatherIconMap = new Map<string, any>();
 
+let isPaused = false;
+
 display.addScreen({
 	render: (ray) => {
 		const now = new Date();
@@ -157,6 +159,15 @@ display.addScreen({
 				WEATHER_FONT_SIZE,
 				ray.GREEN
 			);
+		}
+	},
+	onTap: ({ x, y }) => {
+		if (isPaused) {
+			isPaused = false;
+			display.startScreenTimeout();
+		} else {
+			isPaused = true;
+			display.stopScreenTimeout();
 		}
 	}
 });
