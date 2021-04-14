@@ -27,7 +27,7 @@ export class Weather {
 		}
 
 		setTimeout(this.updateWeather, 1000);
-		this.interval = setInterval(this.updateWeather, 60000);
+		this.interval = setInterval(this.updateWeather, 10 * 60 * 1000);
 	}
 
 	public dispose() {
