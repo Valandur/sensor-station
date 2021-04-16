@@ -4,7 +4,7 @@ import { createWriteStream, mkdirSync, existsSync } from 'fs';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_LOC = '&lat=47.2949&lon=8.5645';
-const URL_APIKEY = '&APPID=05a064328a46dbcf8d1c402a33567d86';
+const URL_APIKEY = '&APPID=997cc39de6d86f852e088fc958b062df';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 
 interface WeatherEntry {
