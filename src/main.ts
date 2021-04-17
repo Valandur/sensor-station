@@ -65,11 +65,11 @@ const renderHeader = (ray: any, now: Date) => {
 	const timeText = format(now, 'HH:mm');
 	display.drawText(timeText, TIME_X, TIME_Y, TIME_SIZE, ray.ORANGE);
 
-	const dateText = format(now, 'dd.MM');
+	const dateText = format(now, 'dd. MMM', { locale: de });
 	const dateWidth = ray.MeasureText(dateText, DATE_SIZE);
 	display.drawText(dateText, WIDTH - DATE_X - dateWidth, DATE_Y, DATE_SIZE, ray.WHITE);
 
-	const yearText = format(now, 'eee d. MMMM yy', { locale: de });
+	const yearText = format(now, 'eeee, yyyy', { locale: de });
 	const yearWidth = ray.MeasureText(yearText, YEAR_SIZE);
 	display.drawText(yearText, WIDTH - YEAR_X - yearWidth, YEAR_Y, YEAR_SIZE, ray.WHITE);
 };
