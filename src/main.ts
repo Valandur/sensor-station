@@ -3,6 +3,7 @@ import { de } from 'date-fns/locale';
 
 import { Display } from './display';
 import { FeedItem, News } from './news';
+import { Printer } from './printer';
 import { Sensors } from './sensors';
 import { Weather } from './weather';
 
@@ -35,6 +36,14 @@ console.log('news...');
 
 const news = new News();
 news.init();
+
+// --------------
+// Printer
+// --------------
+console.log('printer...');
+
+const printer = new Printer();
+printer.init();
 
 // --------------
 // Screens
@@ -362,6 +371,46 @@ display.addScreen({
 			}
 		}
 	}
+});
+
+// --------------
+// Screen: Printer
+// --------------
+const PROGRESS_Y = 190;
+const PROGRESS_X = 15 * RATIO;
+const PROGRESS_WIDTH = WIDTH - 2 * PROGRESS_X;
+const PROGRESS_HEIGHT = 16;
+
+const IMAGE_Y = 210;
+const IMAGE_HEIGHT = HEIGHT - IMAGE_Y - 15;
+
+let printerTex: any;
+
+display.addScreen({
+	render: (ray) => {
+		const now = new Date();
+
+		renderHeader(ray, now);
+
+		if (!printerTex || printer.imageChanged) {
+			printerTex = ray.LoadTexture(printer.imagePath);
+			printer.imageChanged = false;
+		}
+
+		ray.DrawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH, PROGRESS_HEIGHT, ray.WHITE);
+		ray.DrawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH * (printer.progress / 100), PROGRESS_HEIGHT, ray.BLUE);
+
+		const imgWidth = IMAGE_HEIGHT * (printerTex.width / printerTex.height);
+		ray.DrawTexturePro(
+			printerTex,
+			{ x: 0, y: 0, width: printerTex.width, height: printerTex.height },
+			{ x: (WIDTH - imgWidth) / 2, y: IMAGE_Y, width: imgWidth, height: IMAGE_HEIGHT },
+			{ x: 0, y: 0 },
+			0,
+			ray.WHITE
+		);
+	},
+	canShow: () => printer.building
 });
 
 // --------------
