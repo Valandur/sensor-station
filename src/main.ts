@@ -64,7 +64,7 @@ const TIME_SIZE = 180;
 
 const DATE_Y = 20;
 const DATE_X = DATE_Y * RATIO;
-const DATE_SIZE = 100;
+const DATE_SIZE = 80;
 
 const YEAR_Y = 124;
 const YEAR_X = DATE_Y * RATIO;
@@ -380,6 +380,7 @@ const PROGRESS_Y = 190;
 const PROGRESS_X = 15 * RATIO;
 const PROGRESS_WIDTH = WIDTH - 2 * PROGRESS_X;
 const PROGRESS_HEIGHT = 16;
+const PROGRESS_SIZE = 50;
 
 const IMAGE_Y = 210;
 const IMAGE_HEIGHT = HEIGHT - IMAGE_Y - 15;
@@ -396,6 +397,8 @@ display.addScreen({
 			printerTex = ray.LoadTexture(printer.imagePath);
 			printer.imageChanged = false;
 		}
+
+		display.drawText(`${printer.progress}%`, PROGRESS_X, IMAGE_Y, PROGRESS_SIZE, ray.BLUE);
 
 		ray.DrawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH, PROGRESS_HEIGHT, ray.WHITE);
 		ray.DrawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH * (printer.progress / 100), PROGRESS_HEIGHT, ray.BLUE);
