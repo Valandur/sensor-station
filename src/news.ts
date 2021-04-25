@@ -30,7 +30,7 @@ export class News {
 		});
 
 		this.update();
-		this.interval = setInterval(this.update, 60 * 1000);
+		this.interval = setInterval(this.update, 10 * 60 * 1000);
 	}
 
 	public dispose() {
