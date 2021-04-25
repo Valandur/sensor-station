@@ -49,6 +49,9 @@ export class Display {
 		ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
 
 		this.startScreenTimeout();
+		if (this.screen.onShow) {
+			this.screen.onShow();
+		}
 	}
 
 	public dispose() {
@@ -102,6 +105,9 @@ export class Display {
 		} while (!this.canShowScreen());
 
 		this.startScreenTimeout();
+		if (this.screen.onShow) {
+			this.screen.onShow();
+		}
 	}
 
 	private incScreen() {
@@ -113,6 +119,9 @@ export class Display {
 		} while (!this.canShowScreen());
 
 		this.startScreenTimeout();
+		if (this.screen.onShow) {
+			this.screen.onShow();
+		}
 	}
 
 	private canShowScreen() {

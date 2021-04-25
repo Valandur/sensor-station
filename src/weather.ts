@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { createWriteStream, mkdirSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
+import Jimp from 'jimp';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
@@ -22,10 +23,6 @@ export class Weather {
 	private interval: NodeJS.Timer;
 
 	public init() {
-		if (!existsSync(`data/weather`)) {
-			mkdirSync(`data/weather`, { recursive: true });
-		}
-
 		setTimeout(this.updateWeather, 1000);
 		this.interval = setInterval(this.updateWeather, 10 * 60 * 1000);
 	}
@@ -64,17 +61,8 @@ export class Weather {
 		const imgPath = `data/weather/${weather.icon}.png`;
 
 		if (!existsSync(imgPath)) {
-			const writer = createWriteStream(imgPath);
-			const img = await axios({
-				method: 'GET',
-				url: `http://openweathermap.org/img/wn/${weather.icon}@4x.png`,
-				responseType: 'stream'
-			});
-			img.data.pipe(writer);
-			await new Promise((resolve, reject) => {
-				writer.on('finish', resolve);
-				writer.on('error', reject);
-			});
+			const img = await Jimp.read(`http://openweathermap.org/img/wn/${weather.icon}@4x.png`);
+			await img.writeAsync(imgPath);
 		}
 
 		return imgPath;

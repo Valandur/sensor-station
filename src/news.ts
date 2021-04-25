@@ -1,10 +1,9 @@
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, rmSync } from 'fs';
 import Parser from 'rss-parser';
 import Jimp from 'jimp';
 import { parse } from 'date-fns';
 
 const URL_GENERAL = 'https://www.srf.ch/news/bnf/rss/1646';
-const URL_SPORT = 'https://www.srf.ch/sport/bnf/rss/718';
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 
 export interface FeedItem {
@@ -23,21 +22,12 @@ export class News {
 		return this._general;
 	}
 
-	private _sport: FeedItem[] = [];
-	public get sport() {
-		return this._sport;
-	}
-
 	public init() {
 		this.parser = new Parser({
 			customFields: {
 				item: ['description']
 			}
 		});
-
-		if (!existsSync(`data/news`)) {
-			mkdirSync(`data/news`, { recursive: true });
-		}
 
 		this.update();
 		this.interval = setInterval(this.update, 60 * 1000);
@@ -49,14 +39,15 @@ export class News {
 
 	private update = async () => {
 		this._general = await this.getFeed(URL_GENERAL);
-		this._sport = await this.getFeed(URL_SPORT);
 	};
 
 	private async getFeed(feedUrl: string) {
 		const feed = await this.parser.parseURL(feedUrl);
 
+		rmSync('data/news', { force: true, recursive: true });
+
 		const items: FeedItem[] = [];
-		const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 5);
+		const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
 		for (const item of feedItems) {
 			const [, img, description] = MATCHER.exec(item.description);
 

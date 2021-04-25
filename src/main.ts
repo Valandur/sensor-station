@@ -56,18 +56,18 @@ const formatTemp = (temp: number) => `${temp.toFixed(0)}°`;
 const formatRh = (rh: number) => `${rh}%`;
 
 // --------------
-// Screen: General
+// Screen: Header
 // --------------
 const TIME_Y = 15;
-const TIME_X = TIME_Y * RATIO;
+const TIME_X = 15 * RATIO;
 const TIME_SIZE = 180;
 
-const DATE_Y = 20;
-const DATE_X = DATE_Y * RATIO;
+const DATE_Y = 30;
+const DATE_X = 500;
 const DATE_SIZE = 80;
 
-const YEAR_Y = 124;
-const YEAR_X = DATE_Y * RATIO;
+const YEAR_Y = 120;
+const YEAR_X = 500;
 const YEAR_SIZE = 40;
 
 const renderHeader = (ray: any, now: Date) => {
@@ -75,12 +75,10 @@ const renderHeader = (ray: any, now: Date) => {
 	display.drawText(timeText, TIME_X, TIME_Y, TIME_SIZE, ray.ORANGE);
 
 	const dateText = format(now, 'dd. MMM', { locale: de });
-	const dateWidth = ray.MeasureText(dateText, DATE_SIZE);
-	display.drawText(dateText, WIDTH - DATE_X - dateWidth, DATE_Y, DATE_SIZE, ray.WHITE);
+	display.drawText(dateText, DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
 
-	const yearText = format(now, 'eeee, yyyy', { locale: de });
-	const yearWidth = ray.MeasureText(yearText, YEAR_SIZE);
-	display.drawText(yearText, WIDTH - YEAR_X - yearWidth, YEAR_Y, YEAR_SIZE, ray.WHITE);
+	const yearText = format(now, 'eeee', { locale: de });
+	display.drawText(yearText, YEAR_X, YEAR_Y, YEAR_SIZE, ray.WHITE);
 };
 
 // --------------
@@ -108,7 +106,6 @@ const WEATHER_FORECASTS: DateCompare[] = [
 const weatherIconMap = new Map<string, any>();
 
 let isPaused = false;
-
 display.addScreen({
 	render: (ray) => {
 		const now = new Date();
@@ -186,15 +183,16 @@ display.addScreen({
 // --------------
 const NEWS_Y = 200;
 const NEWS_X = 15 * RATIO;
-const NEWS_TITLE_X = 150;
-const NEWS_SIZE = 36;
+const NEWS_TITLE_X = 250;
+const NEWS_SIZE = 42;
 const NEWS_DESC_SIZE = 34;
 const NEWS_DESC_X = 200;
-const NEWS_ITEMS = 3;
-const NEWS_HEIGHT = 90;
+const NEWS_ITEMS = 2;
+const NEWS_HEIGHT = 130;
 
 const newsImgMap = new Map();
 
+let newsModifier = 0;
 let newsGeneralItem: FeedItem = null;
 display.addScreen({
 	render: (ray) => {
@@ -237,7 +235,7 @@ display.addScreen({
 				ray.WHITE
 			);
 		} else {
-			const items = news.general.slice(0, NEWS_ITEMS);
+			const items = news.general.slice(newsModifier * NEWS_ITEMS, (newsModifier + 1) * NEWS_ITEMS);
 
 			for (let i = 0; i < items.length; i++) {
 				const item = items[i];
@@ -281,94 +279,16 @@ display.addScreen({
 				return;
 			}
 		}
-	}
-});
 
-let newsSportItem: FeedItem = null;
-display.addScreen({
-	render: (ray) => {
-		const now = new Date();
-
-		renderHeader(ray, now);
-
-		if (newsSportItem != null) {
-			display.drawText(newsSportItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
-			display.drawText(
-				format(newsSportItem.date, 'eee HH:mm', { locale: de }),
-				NEWS_X,
-				NEWS_Y + NEWS_HEIGHT,
-				NEWS_SIZE,
-				ray.GRAY
-			);
-			display.drawText(
-				newsSportItem.description,
-				NEWS_DESC_X,
-				NEWS_Y + NEWS_HEIGHT,
-				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
-				HEIGHT - 15 - NEWS_Y,
-				NEWS_DESC_SIZE,
-				ray.WHITE
-			);
-
-			let tex = newsImgMap.get(newsSportItem.img);
-			if (!tex) {
-				tex = ray.LoadTexture(newsSportItem.img);
-				newsImgMap.set(newsSportItem.img, tex);
-			}
-
-			const width = NEWS_DESC_X - 2 * NEWS_X;
-			ray.DrawTexturePro(
-				tex,
-				{ x: 0, y: 0, width: tex.width, height: tex.height },
-				{ x: NEWS_X, y: NEWS_Y + 1.5 * NEWS_HEIGHT, width: width, height: width * (tex.height / tex.width) },
-				{ x: 0, y: 0 },
-				0,
-				ray.WHITE
-			);
-		} else {
-			const items = news.sport.slice(0, NEWS_ITEMS);
-
-			for (let i = 0; i < items.length; i++) {
-				const item = items[i];
-				const y = NEWS_Y + i * NEWS_HEIGHT;
-
-				let tex = newsImgMap.get(item.img);
-				if (!tex) {
-					tex = ray.LoadTexture(item.img);
-					newsImgMap.set(item.img, tex);
-				}
-
-				const width = NEWS_TITLE_X - 2 * NEWS_X;
-				ray.DrawTexturePro(
-					tex,
-					{ x: 0, y: 0, width: tex.width, height: tex.height },
-					{ x: NEWS_X, y: y + 6, width: width, height: width * (tex.height / tex.width) },
-					{ x: 0, y: 0 },
-					0,
-					ray.WHITE
-				);
-				display.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
-			}
+		newsModifier++;
+		if (newsModifier * NEWS_ITEMS >= news.general.length) {
+			newsModifier = 0;
 		}
 	},
-	onTap: ({ x, y }) => {
-		if (newsSportItem != null) {
-			newsSportItem = null;
-			display.startScreenTimeout();
-			return;
-		}
-
-		for (let i = 0; i < NEWS_ITEMS; i++) {
-			if (
-				x >= NEWS_X &&
-				x <= NEWS_X + WIDTH - 2 * NEWS_X &&
-				y >= NEWS_Y + i * NEWS_HEIGHT &&
-				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
-			) {
-				newsSportItem = news.sport[i];
-				display.stopScreenTimeout();
-				return;
-			}
+	onShow: () => {
+		newsModifier++;
+		if (newsModifier * NEWS_ITEMS >= news.general.length) {
+			newsModifier = 0;
 		}
 	}
 });
