@@ -183,12 +183,12 @@ display.addScreen({
 // --------------
 const NEWS_Y = 200;
 const NEWS_X = 15 * RATIO;
-const NEWS_TITLE_X = 250;
+const NEWS_TITLE_X = 230;
 const NEWS_SIZE = 42;
 const NEWS_DESC_SIZE = 34;
 const NEWS_DESC_X = 200;
 const NEWS_ITEMS = 2;
-const NEWS_HEIGHT = 130;
+const NEWS_HEIGHT = 140;
 
 const newsImgMap = new Map();
 
