@@ -7,19 +7,28 @@ const font = ray.LoadFont('./fonts/arial.fnt');
 
 const rec = { x: 100, y: 100, width: 600, height: 280 };
 
-while (!ray.WindowShouldClose()) {
-	const text = 'Hello world ' + new Date().getTime();
+let count = 0;
+setInterval(() => count++, 100);
 
-	ray.BeginDrawing();
-	ray.ClearBackground(ray.BLACK);
+const main = async () => {
+	while (!ray.WindowShouldClose()) {
+		const text = 'Hello world: ' + count;
 
-	ray.DrawFPS(0, 0);
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
 
-	ray.DrawRectangleLinesEx(rec, 1, ray.RED);
+		ray.DrawFPS(0, 0);
 
-	ray.DrawTextRec(font, text, rec, 40, 1, true, ray.WHITE);
+		ray.DrawRectangleLinesEx({ x: 100, y: 100, width: 600, height: 280 }, 1, ray.RED);
 
-	ray.EndDrawing();
-}
+		ray.DrawTextRec(font, text, { x: 100, y: 100, width: 600, height: 280 }, 40, 1, true, ray.WHITE);
 
-ray.CloseWindow();
+		ray.EndDrawing();
+
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
+
+	ray.CloseWindow();
+};
+
+main();

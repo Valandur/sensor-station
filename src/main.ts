@@ -255,7 +255,7 @@ display.addScreen({
 
 		renderHeader(ray, header);
 
-		/*if (newsGeneralItem != null) {
+		if (newsGeneralItem != null) {
 			display.drawText(newsGeneralItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
 			display.drawText(
 				format(newsGeneralItem.date, 'eee HH:mm', { locale: de }),
@@ -289,22 +289,22 @@ display.addScreen({
 				0,
 				ray.WHITE
 			);
-		} else {*/
-		for (let i = 0; i < newsDraws.length; i++) {
-			const draw = newsDraws[i];
-			const y = NEWS_Y + i * NEWS_HEIGHT;
+		} else {
+			for (let i = 0; i < newsDraws.length; i++) {
+				const draw = newsDraws[i];
+				const y = NEWS_Y + i * NEWS_HEIGHT;
 
-			const width = NEWS_TITLE_X - 2 * NEWS_X;
-			ray.DrawTexturePro(
-				draw[0],
-				{ x: 0, y: 0, width: draw[0].width, height: draw[0].height },
-				{ x: NEWS_X, y: y + 6, width: width, height: width * (draw[0].height / draw[0].width) },
-				{ x: 0, y: 0 },
-				0,
-				ray.WHITE
-			);
-			//display.drawText(draw[1], NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
-			//}
+				const width = NEWS_TITLE_X - 2 * NEWS_X;
+				ray.DrawTexturePro(
+					draw[0],
+					{ x: 0, y: 0, width: draw[0].width, height: draw[0].height },
+					{ x: NEWS_X, y: y + 6, width: width, height: width * (draw[0].height / draw[0].width) },
+					{ x: 0, y: 0 },
+					0,
+					ray.WHITE
+				);
+				display.drawText(draw[1], NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
+			}
 		}
 
 		display.drawScreenSwitcher();
