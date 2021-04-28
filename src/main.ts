@@ -197,13 +197,13 @@ display.addScreen({
 		renderHeader(ctx);
 
 		if (newsGeneralItem != null) {
-			ctx.drawText(newsGeneralItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+			ctx.drawText(newsGeneralItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ctx.BLUE);
 			ctx.drawText(
 				format(newsGeneralItem.date, 'eee HH:mm', { locale: de }),
 				NEWS_X,
 				NEWS_Y + NEWS_HEIGHT,
 				NEWS_SIZE,
-				ray.GRAY
+				ctx.GRAY
 			);
 			ctx.drawText(
 				newsGeneralItem.description,
@@ -212,7 +212,7 @@ display.addScreen({
 				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
 				HEIGHT - 15 - NEWS_Y,
 				NEWS_DESC_SIZE,
-				ray.WHITE
+				ctx.WHITE
 			);
 
 			const width = NEWS_DESC_X - 2 * NEWS_X;
@@ -226,7 +226,7 @@ display.addScreen({
 
 				const width = NEWS_TITLE_X - 2 * NEWS_X;
 				ctx.drawImage(item.img, NEWS_X, y + 6, width);
-				ctx.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
+				ctx.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ctx.WHITE);
 			}
 		}
 	},
@@ -273,13 +273,13 @@ display.addScreen({
 		renderHeader(ctx);
 
 		if (newsSportItem != null) {
-			ctx.drawText(newsSportItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+			ctx.drawText(newsSportItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ctx.BLUE);
 			ctx.drawText(
 				format(newsSportItem.date, 'eee HH:mm', { locale: de }),
 				NEWS_X,
 				NEWS_Y + NEWS_HEIGHT,
 				NEWS_SIZE,
-				ray.GRAY
+				ctx.GRAY
 			);
 			ctx.drawText(
 				newsSportItem.description,
@@ -288,7 +288,7 @@ display.addScreen({
 				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
 				HEIGHT - 15 - NEWS_Y,
 				NEWS_DESC_SIZE,
-				ray.WHITE
+				ctx.WHITE
 			);
 
 			const width = NEWS_DESC_X - 2 * NEWS_X;
@@ -302,7 +302,7 @@ display.addScreen({
 
 				const width = NEWS_TITLE_X - 2 * NEWS_X;
 				ctx.drawImage(item.img, NEWS_X, y + 6, width);
-				ctx.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
+				ctx.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ctx.WHITE);
 			}
 		}
 	},
@@ -382,10 +382,10 @@ display.addScreen({
 	render: (ctx) => {
 		renderHeader(ctx);
 
-		ctx.drawText(`${printer.progress}%`, PROGRESS_X, PRINTER_IMG_Y, PROGRESS_SIZE, ray.BLUE);
+		ctx.drawText(`${printer.progress}%`, PROGRESS_X, PRINTER_IMG_Y, PROGRESS_SIZE, ctx.BLUE);
 
-		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH, PROGRESS_HEIGHT, ray.WHITE);
-		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH * (printer.progress / 100), PROGRESS_HEIGHT, ray.BLUE);
+		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH, PROGRESS_HEIGHT, ctx.WHITE);
+		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH * (printer.progress / 100), PROGRESS_HEIGHT, ctx.BLUE);
 
 		ctx.drawImage(printer.imagePath, WIDTH / 2, PRINTER_IMG_Y, null, PRINTER_IMG_HEIGHT, 'x');
 	},

@@ -54,6 +54,9 @@ export class Display {
 		ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
 
 		this.font = ray.LoadFont('./fonts/arial.fnt');
+		for (const screen of this.screens) {
+			screen[1].font = this.font;
+		}
 
 		this.startScreenTimeout();
 		if (this.screen.onShow) {

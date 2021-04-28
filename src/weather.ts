@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { existsSync } from 'fs';
+import { stat } from 'fs/promises';
 import Jimp from 'jimp';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
@@ -60,7 +60,10 @@ export class Weather {
 	private async saveIcon(weather: any) {
 		const imgPath = `data/weather/${weather.icon}.png`;
 
-		if (!existsSync(imgPath)) {
+		const exists = await stat(imgPath)
+			.then((s) => s.isFile())
+			.catch(() => false);
+		if (!exists) {
 			const img = await Jimp.read(`http://openweathermap.org/img/wn/${weather.icon}@4x.png`);
 			await img.writeAsync(imgPath);
 		}

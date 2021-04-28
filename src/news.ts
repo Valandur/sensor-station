@@ -69,7 +69,10 @@ export class News {
 	private async saveImg(imgName: string) {
 		const imgPath = `data/news/${imgName.replace(/\//g, '-').replace('.jpg', '.png')}`;
 
-		if (!(await stat(imgPath)).isFile()) {
+		const exists = await stat(imgPath)
+			.then((s) => s.isFile())
+			.catch(() => false);
+		if (!exists) {
 			const img = await Jimp.read(`https://www.srf.ch/static/cms/images/${imgName}`);
 			await img.writeAsync(imgPath);
 		}

@@ -5,7 +5,7 @@ import Jimp from 'jimp';
 const URL_AWW = 'https://www.reddit.com/r/aww/hot/.rss';
 
 export class Reddit {
-	private parser: Parser<{}, { 'media:thumbnail': string }>;
+	private parser: Parser<{}, { 'media:thumbnail': { $: { url: string } } }>;
 	private interval: NodeJS.Timer;
 
 	public aww: string[] = [];
@@ -35,9 +35,9 @@ export class Reddit {
 		const feed = await this.parser.parseURL(feedUrl);
 
 		const items: string[] = [];
-		const feedItems = feed.items.slice(0, 10);
+		const feedItems = feed.items.filter((i) => !!i['media:thumbnail']).slice(0, 10);
 		for (const item of feedItems) {
-			const url = item['media:thumbnail'].replace('&amp;', '&');
+			const url = item['media:thumbnail'].$.url;
 			const imgPath = await this.saveImg(url);
 			items.push(imgPath);
 		}
@@ -46,9 +46,16 @@ export class Reddit {
 	}
 
 	private async saveImg(imgUrl: string) {
-		const imgPath = `data/reddit/${imgUrl.substr(imgUrl.lastIndexOf('/')).replace('.jpg', '.png')}`;
+		let end = imgUrl.indexOf('?');
+		if (end === -1) {
+			end = imgUrl.length;
+		}
+		const imgPath = `data/reddit/${imgUrl.substring(imgUrl.lastIndexOf('/') + 1, end).replace('.jpg', '.png')}`;
 
-		if (!(await stat(imgPath)).isFile()) {
+		const exists = await stat(imgPath)
+			.then((s) => s.isFile())
+			.catch(() => false);
+		if (!exists) {
 			const img = await Jimp.read(imgUrl);
 			await img.writeAsync(imgPath);
 		}
