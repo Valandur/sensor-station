@@ -4,6 +4,7 @@ import Jimp from 'jimp';
 import { parse } from 'date-fns';
 
 const URL_GENERAL = 'https://www.srf.ch/news/bnf/rss/1646';
+const URL_SPORT = 'https://www.srf.ch/sport/bnf/rss/718';
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 
 export interface FeedItem {
@@ -17,10 +18,8 @@ export class News {
 	private parser: Parser<{}, { description: string }>;
 	private interval: NodeJS.Timer;
 
-	private _general: FeedItem[] = [];
-	public get general() {
-		return this._general;
-	}
+	public general: FeedItem[] = [];
+	public sport: FeedItem[] = [];
 
 	public init() {
 		this.parser = new Parser({
@@ -40,7 +39,8 @@ export class News {
 	private update = async () => {
 		await rm('data/news', { force: true, recursive: true });
 
-		this._general = await this.getFeed(URL_GENERAL);
+		this.general = await this.getFeed(URL_GENERAL);
+		this.sport = await this.getFeed(URL_SPORT);
 	};
 
 	private async getFeed(feedUrl: string) {
