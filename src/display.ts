@@ -1,6 +1,7 @@
 import { differenceInMilliseconds } from 'date-fns';
 import { Gpio } from 'onoff';
 
+import { RenderContext } from './render';
 import { Screen } from './screen';
 
 const ray = require('raylib');
@@ -16,10 +17,13 @@ export class Display {
 	private height: number = 0;
 	private font: any;
 
-	private screens: Screen[] = [];
+	private screens: [Screen, RenderContext][] = [];
 	private current: number = 0;
 	private get screen() {
-		return this.screens[this.current];
+		return this.screens[this.current][0];
+	}
+	private get context() {
+		return this.screens[this.current][1];
 	}
 
 	private tapTimeout: NodeJS.Timeout;
@@ -93,7 +97,7 @@ export class Display {
 	}
 
 	public addScreen(screen: Screen) {
-		this.screens.push(screen);
+		this.screens.push([screen, new RenderContext(ray)]);
 	}
 
 	private decScreen() {
@@ -155,51 +159,30 @@ export class Display {
 				this.nextScreen();
 			}
 
-			this.screen.render(ray);
+			this.screen.render(this.context); // Prepares drawing stuff
+
+			ray.BeginDrawing();
+			ray.ClearBackground(ray.BLACK);
+
+			this.context.render(); // Actually draws everything
+
+			if (this.screens.length > 1 && this.screenTimeoutStart) {
+				this.drawScreenSwitcher();
+			}
+
+			ray.EndDrawing();
 
 			await new Promise((resolve) => setTimeout(resolve, 0));
 		}
 	}
 
-	public drawText = (text: string, x: number, y: number, width: number, height: number, size?: number, color?: any) => {
-		let words = text.split(/ /g);
-		if (!color) {
-			color = height;
-			height = null;
-		}
-		if (!size) {
-			size = width;
-			width = null;
-		}
-
-		let line = 0;
-		while (words.length > 0) {
-			let index = words.length;
-			if (width) {
-				while (index > 1 && ray.MeasureText(words.slice(0, index).join(' '), size) > width) {
-					index--;
-				}
-			}
-			ray.DrawText(words.slice(0, index).join(' '), x, y + line * size, size, color);
-			//ray.DrawTextEx(this.font, words.slice(0, index).join(' '), { x, y: y + line * size }, size, 2, color);
-			words = words.slice(index);
-			line++;
-
-			if (height && (line + 1) * size > height) {
-				return;
-			}
-		}
-	};
-
-	public drawScreenSwitcher = () => {
-		if (this.screens.length > 1 && this.screenTimeoutStart) {
-			ray.DrawRectangle(
-				0,
-				this.height - 2,
-				(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
-				2,
-				ray.GRAY
-			);
-		}
-	};
+	private drawScreenSwitcher() {
+		ray.DrawRectangle(
+			0,
+			this.height - 2,
+			(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
+			2,
+			ray.GRAY
+		);
+	}
 }

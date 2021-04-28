@@ -1,4 +1,4 @@
-import { existsSync, rmSync } from 'fs';
+import { stat, rm } from 'fs/promises';
 import Parser from 'rss-parser';
 import Jimp from 'jimp';
 import { parse } from 'date-fns';
@@ -38,13 +38,13 @@ export class News {
 	}
 
 	private update = async () => {
+		await rm('data/news', { force: true, recursive: true });
+
 		this._general = await this.getFeed(URL_GENERAL);
 	};
 
 	private async getFeed(feedUrl: string) {
 		const feed = await this.parser.parseURL(feedUrl);
-
-		rmSync('data/news', { force: true, recursive: true });
 
 		const items: FeedItem[] = [];
 		const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
@@ -69,7 +69,7 @@ export class News {
 	private async saveImg(imgName: string) {
 		const imgPath = `data/news/${imgName.replace(/\//g, '-').replace('.jpg', '.png')}`;
 
-		if (!existsSync(imgPath)) {
+		if (!(await stat(imgPath)).isFile()) {
 			const img = await Jimp.read(`https://www.srf.ch/static/cms/images/${imgName}`);
 			await img.writeAsync(imgPath);
 		}

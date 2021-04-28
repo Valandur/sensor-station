@@ -1,4 +1,6 @@
-export type RenderFunction = (ray: any) => void;
+import { RenderContext } from './render';
+
+export type RenderFunction = (context: RenderContext) => void;
 export type CanShowFunction = () => boolean;
 export type OnShowFunction = () => void;
 export type OnHideFunction = () => void;
