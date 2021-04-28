@@ -4,6 +4,7 @@ import { de } from 'date-fns/locale';
 import { Display } from './display';
 import { FeedItem, News } from './news';
 import { Printer } from './printer';
+import { Reddit } from './reddit';
 import { RenderContext } from './render';
 import { Sensors } from './sensors';
 import { Weather } from './weather';
@@ -37,6 +38,14 @@ console.log('news...');
 
 const news = new News();
 news.init();
+
+// --------------
+// Reddit
+// --------------
+console.log('reddit...');
+
+const reddit = new Reddit();
+reddit.init();
 
 // --------------
 // Printer
@@ -170,7 +179,7 @@ display.addScreen({
 });
 
 // --------------
-// Screen: News
+// Screen: News General
 // --------------
 const NEWS_Y = 200;
 const NEWS_X = 15 * RATIO;
@@ -181,9 +190,7 @@ const NEWS_DESC_X = 200;
 const NEWS_ITEMS = 2;
 const NEWS_HEIGHT = 140;
 
-const newsImgMap = new Map();
-
-let newsModifier = 0;
+let newsGeneralModifier = 0;
 let newsGeneralItem: FeedItem = null;
 display.addScreen({
 	render: (ctx) => {
@@ -211,7 +218,7 @@ display.addScreen({
 			const width = NEWS_DESC_X - 2 * NEWS_X;
 			ctx.drawImage(newsGeneralItem.img, NEWS_X, NEWS_Y + 1.5 * NEWS_HEIGHT, width);
 		} else {
-			const items = news.general.slice(newsModifier * NEWS_ITEMS, (newsModifier + 1) * NEWS_ITEMS);
+			const items = news.general.slice(newsGeneralModifier * NEWS_ITEMS, (newsGeneralModifier + 1) * NEWS_ITEMS);
 
 			for (let i = 0; i < items.length; i++) {
 				const item = items[i];
@@ -243,15 +250,118 @@ display.addScreen({
 			}
 		}
 
-		newsModifier++;
-		if (newsModifier * NEWS_ITEMS >= news.general.length) {
-			newsModifier = 0;
+		newsGeneralModifier++;
+		if (newsGeneralModifier * NEWS_ITEMS >= news.general.length) {
+			newsGeneralModifier = 0;
 		}
 	},
 	onShow: () => {
-		newsModifier++;
-		if (newsModifier * NEWS_ITEMS >= news.general.length) {
-			newsModifier = 0;
+		newsGeneralModifier++;
+		if (newsGeneralModifier * NEWS_ITEMS >= news.general.length) {
+			newsGeneralModifier = 0;
+		}
+	}
+});
+
+// --------------
+// Screen: News Sport
+// --------------
+let newsSportModifier = 0;
+let newsSportItem: FeedItem = null;
+display.addScreen({
+	render: (ctx) => {
+		renderHeader(ctx);
+
+		if (newsSportItem != null) {
+			ctx.drawText(newsSportItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
+			ctx.drawText(
+				format(newsSportItem.date, 'eee HH:mm', { locale: de }),
+				NEWS_X,
+				NEWS_Y + NEWS_HEIGHT,
+				NEWS_SIZE,
+				ray.GRAY
+			);
+			ctx.drawText(
+				newsSportItem.description,
+				NEWS_DESC_X,
+				NEWS_Y + NEWS_HEIGHT,
+				WIDTH - 2 * NEWS_X - NEWS_DESC_X,
+				HEIGHT - 15 - NEWS_Y,
+				NEWS_DESC_SIZE,
+				ray.WHITE
+			);
+
+			const width = NEWS_DESC_X - 2 * NEWS_X;
+			ctx.drawImage(newsSportItem.img, NEWS_X, NEWS_Y + 1.5 * NEWS_HEIGHT, width);
+		} else {
+			const items = news.sport.slice(newsSportModifier * NEWS_ITEMS, (newsSportModifier + 1) * NEWS_ITEMS);
+
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				const y = NEWS_Y + i * NEWS_HEIGHT;
+
+				const width = NEWS_TITLE_X - 2 * NEWS_X;
+				ctx.drawImage(item.img, NEWS_X, y + 6, width);
+				ctx.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
+			}
+		}
+	},
+	onTap: ({ x, y }) => {
+		if (newsSportItem != null) {
+			newsSportItem = null;
+			display.startScreenTimeout();
+			return;
+		}
+
+		for (let i = 0; i < NEWS_ITEMS; i++) {
+			if (
+				x >= NEWS_X &&
+				x <= NEWS_X + WIDTH - 2 * NEWS_X &&
+				y >= NEWS_Y + i * NEWS_HEIGHT &&
+				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
+			) {
+				newsSportItem = news.sport[i];
+				display.stopScreenTimeout();
+				return;
+			}
+		}
+
+		newsSportModifier++;
+		if (newsSportModifier * NEWS_ITEMS >= news.sport.length) {
+			newsSportModifier = 0;
+		}
+	},
+	onShow: () => {
+		newsSportModifier++;
+		if (newsSportModifier * NEWS_ITEMS >= news.sport.length) {
+			newsSportModifier = 0;
+		}
+	}
+});
+
+// --------------
+// Screen: Reddit
+// --------------
+const REDDIT_Y = 190;
+const REDDIT_HEIGHT = HEIGHT - REDDIT_Y - 15;
+
+let redditModifier = 0;
+display.addScreen({
+	render: (ctx) => {
+		renderHeader(ctx);
+
+		ctx.drawImage(reddit.aww[redditModifier], WIDTH / 2, REDDIT_Y, null, REDDIT_HEIGHT, 'x');
+	},
+	onTap: () => {
+		redditModifier++;
+		if (redditModifier >= reddit.aww.length) {
+			redditModifier = 0;
+		}
+	},
+	onShow: () => {
+		redditModifier++;
+		if (redditModifier >= reddit.aww.length) {
+			redditModifier = 0;
 		}
 	}
 });
@@ -265,19 +375,19 @@ const PROGRESS_WIDTH = WIDTH - 2 * PROGRESS_X;
 const PROGRESS_HEIGHT = 16;
 const PROGRESS_SIZE = 50;
 
-const IMAGE_Y = 210;
-const IMAGE_HEIGHT = HEIGHT - IMAGE_Y - 15;
+const PRINTER_IMG_Y = 210;
+const PRINTER_IMG_HEIGHT = HEIGHT - PRINTER_IMG_Y - 15;
 
 display.addScreen({
 	render: (ctx) => {
 		renderHeader(ctx);
 
-		ctx.drawText(`${printer.progress}%`, PROGRESS_X, IMAGE_Y, PROGRESS_SIZE, ray.BLUE);
+		ctx.drawText(`${printer.progress}%`, PROGRESS_X, PRINTER_IMG_Y, PROGRESS_SIZE, ray.BLUE);
 
 		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH, PROGRESS_HEIGHT, ray.WHITE);
 		ctx.drawRectangle(PROGRESS_X, PROGRESS_Y, PROGRESS_WIDTH * (printer.progress / 100), PROGRESS_HEIGHT, ray.BLUE);
 
-		ctx.drawImage(printer.imagePath, WIDTH / 2, IMAGE_Y, null, IMAGE_HEIGHT, 'x');
+		ctx.drawImage(printer.imagePath, WIDTH / 2, PRINTER_IMG_Y, null, PRINTER_IMG_HEIGHT, 'x');
 	},
 	canShow: () => printer.building
 });
