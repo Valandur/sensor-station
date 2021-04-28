@@ -14,6 +14,7 @@ const SHOW_TIME = 20000;
 export class Display {
 	private width: number = 0;
 	private height: number = 0;
+	private font: any;
 
 	private screens: Screen[] = [];
 	private current: number = 0;
@@ -47,6 +48,8 @@ export class Display {
 		ray.InitWindow(width, height, 'main');
 		ray.SetTargetFPS(10);
 		ray.SetGesturesEnabled(GESTURE_TAP | GESTURE_SWIPE_RIGHT | GESTURE_SWIPE_LEFT);
+
+		this.font = ray.LoadFont('./fonts/arial.fnt');
 
 		this.startScreenTimeout();
 		if (this.screen.onShow) {
@@ -100,6 +103,10 @@ export class Display {
 		}
 	}
 	public prevScreen() {
+		if (this.screen.onHide) {
+			this.screen.onHide();
+		}
+
 		do {
 			this.decScreen();
 		} while (!this.canShowScreen());
@@ -114,6 +121,10 @@ export class Display {
 		this.current = (this.current + 1) % this.screens.length;
 	}
 	public nextScreen() {
+		if (this.screen.onHide) {
+			this.screen.onHide();
+		}
+
 		do {
 			this.incScreen();
 		} while (!this.canShowScreen());
@@ -144,28 +155,9 @@ export class Display {
 				this.nextScreen();
 			}
 
-			ray.BeginDrawing();
-			ray.ClearBackground(ray.BLACK);
+			this.screen.render(ray);
 
-			if (this.canShowScreen()) {
-				this.screen.render(ray);
-			} else {
-				this.nextScreen();
-			}
-
-			if (this.screens.length > 1 && this.screenTimeoutStart) {
-				ray.DrawRectangle(
-					0,
-					this.height - 2,
-					(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
-					2,
-					ray.GRAY
-				);
-			}
-
-			ray.EndDrawing();
-
-			await new Promise((resolve) => setTimeout(resolve, 1));
+			await new Promise((resolve) => setTimeout(resolve, 0));
 		}
 	}
 
@@ -189,12 +181,25 @@ export class Display {
 				}
 			}
 			ray.DrawText(words.slice(0, index).join(' '), x, y + line * size, size, color);
+			//ray.DrawTextEx(this.font, words.slice(0, index).join(' '), { x, y: y + line * size }, size, 2, color);
 			words = words.slice(index);
 			line++;
 
-			if (height && line * size > height) {
+			if (height && (line + 1) * size > height) {
 				return;
 			}
+		}
+	};
+
+	public drawScreenSwitcher = () => {
+		if (this.screens.length > 1 && this.screenTimeoutStart) {
+			ray.DrawRectangle(
+				0,
+				this.height - 2,
+				(differenceInMilliseconds(new Date(), this.screenTimeoutStart) / this.screenTimeoutTime) * this.width,
+				2,
+				ray.GRAY
+			);
 		}
 	};
 }

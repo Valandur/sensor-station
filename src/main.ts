@@ -70,15 +70,21 @@ const YEAR_Y = 120;
 const YEAR_X = 500;
 const YEAR_SIZE = 40;
 
-const renderHeader = (ray: any, now: Date) => {
-	const timeText = format(now, 'HH:mm');
-	display.drawText(timeText, TIME_X, TIME_Y, TIME_SIZE, ray.ORANGE);
+const prepareHeader = (now?: Date) => {
+	if (!now) {
+		now = new Date();
+	}
 
-	const dateText = format(now, 'dd. MMM', { locale: de });
-	display.drawText(dateText, DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
+	const time = format(now, 'HH:mm');
+	const date = format(now, 'dd. MMM', { locale: de });
+	const dateSub = format(now, 'eeee', { locale: de });
+	return { time, date, dateSub };
+};
 
-	const yearText = format(now, 'eeee', { locale: de });
-	display.drawText(yearText, YEAR_X, YEAR_Y, YEAR_SIZE, ray.WHITE);
+const renderHeader = (ray: any, { time, date, dateSub }: { time: string; date: string; dateSub: string }) => {
+	display.drawText(time, TIME_X, TIME_Y, TIME_SIZE, ray.ORANGE);
+	display.drawText(date, DATE_X, DATE_Y, DATE_SIZE, ray.WHITE);
+	display.drawText(dateSub, YEAR_X, YEAR_Y, YEAR_SIZE, ray.WHITE);
 };
 
 // --------------
@@ -105,22 +111,31 @@ const WEATHER_FORECASTS: DateCompare[] = [
 ];
 const weatherIconMap = new Map<string, any>();
 
+/*display.addScreen({
+	render: (ray) => {
+		const header = prepareHeader();
+
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
+
+		renderHeader(ray, header);
+
+		display.drawScreenSwitcher();
+		ray.EndDrawing();
+	}
+});*/
+
 let isPaused = false;
 display.addScreen({
 	render: (ray) => {
 		const now = new Date();
+		const header = prepareHeader(now);
 
-		renderHeader(ray, now);
+		const sensorTempText = formatTemp(sensors.temperature || 0);
+		const sensorTempWidth = ray.MeasureText(sensorTempText, TEMP_SIZE);
 
-		if (sensors.temperature !== null && sensors.humidity !== null) {
-			const tempText = formatTemp(sensors.temperature);
-			const tempWidth = ray.MeasureText(tempText, TEMP_SIZE);
-			display.drawText(tempText, (WIDTH / 3 - tempWidth) / 2, TEMP_Y, TEMP_SIZE, ray.GREEN);
-
-			const rhText = formatRh(sensors.humidity);
-			const rhWidth = ray.MeasureText(rhText, RH_SIZE);
-			display.drawText(rhText, (WIDTH / 3 - rhWidth) / 2, RH_Y, RH_SIZE, ray.BLUE);
-		}
+		const sensorRhText = formatRh(sensors.humidity || 0);
+		const sensorRhWidth = ray.MeasureText(sensorRhText, RH_SIZE);
 
 		const forecasts = WEATHER_FORECASTS.map((dateCompare) =>
 			weather.forecasts.find((forecast) => dateCompare(now, forecast.time))
@@ -128,6 +143,7 @@ display.addScreen({
 
 		const colWidth = (WIDTH - WEATHER_X) / forecasts.length;
 
+		const forecastDraws: [any, string, number, string, number][] = [];
 		for (let i = 0; i < forecasts.length; i++) {
 			const forecast = forecasts[i];
 
@@ -139,33 +155,54 @@ display.addScreen({
 
 			const dateText = isSameDay(forecast.time, now) ? 'Now' : format(forecast.time, 'iiiiii', { locale: de });
 			const dateWidth = ray.MeasureText(dateText, WEATHER_FONT_SIZE);
+
+			const tempText = formatTemp(forecast.feelsLike);
+			const tempWidth = ray.MeasureText(tempText, WEATHER_FONT_SIZE);
+
+			forecastDraws.push([tex, dateText, dateWidth, tempText, tempWidth]);
+		}
+
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
+
+		renderHeader(ray, header);
+
+		if (sensors.temperature !== null && sensors.humidity !== null) {
+			display.drawText(sensorTempText, (WIDTH / 3 - sensorTempWidth) / 2, TEMP_Y, TEMP_SIZE, ray.GREEN);
+			display.drawText(sensorRhText, (WIDTH / 3 - sensorRhWidth) / 2, RH_Y, RH_SIZE, ray.BLUE);
+		}
+
+		for (let i = 0; i < forecastDraws.length; i++) {
+			const draw = forecastDraws[i];
+
 			display.drawText(
-				dateText,
-				WEATHER_X + i * colWidth + (colWidth - dateWidth) / 2,
+				draw[1],
+				WEATHER_X + i * colWidth + (colWidth - draw[2]) / 2,
 				WEATHER_TIME_Y,
 				WEATHER_FONT_SIZE,
 				ray.LIGHTGRAY
 			);
 
 			ray.DrawTexturePro(
-				tex,
-				{ x: 0, y: 0, width: tex.width, height: tex.height },
+				draw[0],
+				{ x: 0, y: 0, width: draw[0].width, height: draw[0].height },
 				{ x: WEATHER_X + i * colWidth, y: WEATHER_ICON_Y, width: colWidth, height: colWidth },
 				{ x: 0, y: 0 },
 				0,
 				ray.WHITE
 			);
 
-			const tempText = formatTemp(forecast.feelsLike);
-			const tempSize = ray.MeasureText(tempText, WEATHER_FONT_SIZE);
 			display.drawText(
-				tempText,
-				WEATHER_X + i * colWidth + (colWidth - tempSize) / 2,
+				draw[3],
+				WEATHER_X + i * colWidth + (colWidth - draw[4]) / 2,
 				WEATHER_TEMP_Y,
 				WEATHER_FONT_SIZE,
 				ray.GREEN
 			);
 		}
+
+		display.drawScreenSwitcher();
+		ray.EndDrawing();
 	},
 	onTap: ({ x, y }) => {
 		if (isPaused) {
@@ -196,11 +233,29 @@ let newsModifier = 0;
 let newsGeneralItem: FeedItem = null;
 display.addScreen({
 	render: (ray) => {
-		const now = new Date();
+		const header = prepareHeader();
 
-		renderHeader(ray, now);
+		const items = news.general.slice(newsModifier * NEWS_ITEMS, (newsModifier + 1) * NEWS_ITEMS);
 
-		if (newsGeneralItem != null) {
+		const newsDraws: [any, string][] = [];
+		for (let i = 0; i < items.length; i++) {
+			const item = items[i];
+
+			let tex = newsImgMap.get(item.img);
+			if (!tex) {
+				tex = ray.LoadTexture(item.img);
+				newsImgMap.set(item.img, tex);
+			}
+
+			newsDraws.push([tex, item.title]);
+		}
+
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
+
+		renderHeader(ray, header);
+
+		/*if (newsGeneralItem != null) {
 			display.drawText(newsGeneralItem.title, NEWS_X, NEWS_Y, WIDTH - 2 * NEWS_X, NEWS_HEIGHT, NEWS_SIZE, ray.BLUE);
 			display.drawText(
 				format(newsGeneralItem.date, 'eee HH:mm', { locale: de }),
@@ -234,31 +289,26 @@ display.addScreen({
 				0,
 				ray.WHITE
 			);
-		} else {
-			const items = news.general.slice(newsModifier * NEWS_ITEMS, (newsModifier + 1) * NEWS_ITEMS);
+		} else {*/
+		for (let i = 0; i < newsDraws.length; i++) {
+			const draw = newsDraws[i];
+			const y = NEWS_Y + i * NEWS_HEIGHT;
 
-			for (let i = 0; i < items.length; i++) {
-				const item = items[i];
-				const y = NEWS_Y + i * NEWS_HEIGHT;
-
-				let tex = newsImgMap.get(item.img);
-				if (!tex) {
-					tex = ray.LoadTexture(item.img);
-					newsImgMap.set(item.img, tex);
-				}
-
-				const width = NEWS_TITLE_X - 2 * NEWS_X;
-				ray.DrawTexturePro(
-					tex,
-					{ x: 0, y: 0, width: tex.width, height: tex.height },
-					{ x: NEWS_X, y: y + 6, width: width, height: width * (tex.height / tex.width) },
-					{ x: 0, y: 0 },
-					0,
-					ray.WHITE
-				);
-				display.drawText(item.title, NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
-			}
+			const width = NEWS_TITLE_X - 2 * NEWS_X;
+			ray.DrawTexturePro(
+				draw[0],
+				{ x: 0, y: 0, width: draw[0].width, height: draw[0].height },
+				{ x: NEWS_X, y: y + 6, width: width, height: width * (draw[0].height / draw[0].width) },
+				{ x: 0, y: 0 },
+				0,
+				ray.WHITE
+			);
+			//display.drawText(draw[1], NEWS_TITLE_X, y, WIDTH - NEWS_X - NEWS_TITLE_X, NEWS_HEIGHT, NEWS_SIZE, ray.WHITE);
+			//}
 		}
+
+		display.drawScreenSwitcher();
+		ray.EndDrawing();
 	},
 	onTap: ({ x, y }) => {
 		if (newsGeneralItem != null) {
@@ -309,9 +359,12 @@ let printerTex: any;
 
 display.addScreen({
 	render: (ray) => {
-		const now = new Date();
+		const header = prepareHeader();
 
-		renderHeader(ray, now);
+		ray.BeginDrawing();
+		ray.ClearBackground(ray.BLACK);
+
+		renderHeader(ray, header);
 
 		if (!printerTex || printer.imageChanged) {
 			printerTex = ray.LoadTexture(printer.imagePath);
@@ -332,6 +385,9 @@ display.addScreen({
 			0,
 			ray.WHITE
 		);
+
+		display.drawScreenSwitcher();
+		ray.EndDrawing();
 	},
 	canShow: () => printer.building
 });
