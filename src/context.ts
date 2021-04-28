@@ -1,5 +1,7 @@
 import { resolve } from 'path';
 
+import { Color, Display } from './display';
+
 interface Rect {
 	x: number;
 	y: number;
@@ -30,44 +32,20 @@ interface PreparedImage {
 
 type PreparedDraw = PreparedRectangle | PreparedText | PreparedImage;
 
-interface Color {}
-
 interface Image {
 	width: number;
 	height: number;
 }
 
 export class RenderContext {
-	public ray: any = null;
-	public font: any = null;
-	public imgCache: Map<string, Image> = new Map();
+	private display: Display;
+	private ray: any;
+	private imgCache: Map<string, Image> = new Map();
+	private draws: PreparedDraw[] = [];
 
-	public get WHITE(): Color {
-		return this.ray.WHITE;
-	}
-	public get BLACK(): Color {
-		return this.ray.BLACK;
-	}
-	public get ORANGE(): Color {
-		return this.ray.ORANGE;
-	}
-	public get GREEN(): Color {
-		return this.ray.GREEN;
-	}
-	public get BLUE(): Color {
-		return this.ray.BLUE;
-	}
-	public get GRAY(): Color {
-		return this.ray.GRAY;
-	}
-	public get LIGHTGRAY(): Color {
-		return this.ray.LIGHTGRAY;
-	}
-
-	public draws: PreparedDraw[] = [];
-
-	public constructor(ray: any) {
-		this.ray = ray;
+	public constructor(display: Display) {
+		this.display = display;
+		this.ray = display.ray;
 	}
 
 	public drawRectangle(x: number, y: number, width: number, height: number, color: Color) {
@@ -139,10 +117,10 @@ export class RenderContext {
 		}
 
 		if (center === 'x' || center === 'both') {
-			x = x - img.width / 2;
+			x = x - width / 2;
 		}
 		if (center === 'y' || center === 'both') {
-			y = y - img.height / 2;
+			y = y - height / 2;
 		}
 
 		this.draws.push({
@@ -153,21 +131,14 @@ export class RenderContext {
 		});
 	}
 
-	public render() {
+	public draw() {
 		for (const draw of this.draws) {
 			if (draw.type === 'text') {
-				this.ray.DrawTextEx(this.font, draw.text, draw.pos, draw.size, 2, draw.color);
+				this.ray.DrawText(draw.text, draw.pos.x, draw.pos.y, draw.size, draw.color);
 			} else if (draw.type === 'img') {
-				this.ray.DrawTexturePro(
-					draw.img,
-					{ x: 0, y: 0, width: draw.img.width, height: draw.img.height },
-					{ x: draw.dest.x, y: 0, width: draw.dest.width, height: draw.dest.height },
-					{ x: 0, y: 0 },
-					0,
-					this.WHITE
-				);
+				this.ray.DrawTexturePro(draw.img, draw.src, draw.dest, { x: 0, y: 0 }, 0, this.display.WHITE);
 			} else if (draw.type === 'rect') {
-				this.ray.DrawRectanglePro(draw.dest, { x: 0, y: 0 }, draw.color);
+				this.ray.DrawRectanglePro(draw.dest, { x: 0, y: 0 }, 0, draw.color);
 			}
 		}
 

@@ -1,11 +1,21 @@
-import { stat, rm } from 'fs/promises';
+import { format, parse } from 'date-fns';
+import { de } from 'date-fns/locale';
+import { rm } from 'fs/promises';
 import Parser from 'rss-parser';
-import Jimp from 'jimp';
-import { parse } from 'date-fns';
 
-const URL_GENERAL = 'https://www.srf.ch/news/bnf/rss/1646';
-const URL_SPORT = 'https://www.srf.ch/sport/bnf/rss/718';
+import { Screen } from './screen';
+import { Display } from './display';
+
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
+
+const NEWS_Y = 200;
+const NEWS_X = 15;
+const NEWS_TITLE_X = 230;
+const NEWS_SIZE = 42;
+const NEWS_DESC_SIZE = 34;
+const NEWS_DESC_X = 200;
+const NEWS_ITEMS = 2;
+const NEWS_HEIGHT = 140;
 
 export interface FeedItem {
 	date: Date;
@@ -14,33 +24,129 @@ export interface FeedItem {
 	img: string;
 }
 
-export class News {
+export class News extends Screen {
+	private feedUrl: string;
+	private id: string;
 	private parser: Parser<{}, { description: string }>;
 	private interval: NodeJS.Timer;
+	private items: FeedItem[] = [];
+	private item: FeedItem = null;
+	private offset: number = 0;
 
-	public general: FeedItem[] = [];
-	public sport: FeedItem[] = [];
+	public constructor(name: string, feedUrl: string, display: Display) {
+		super(name, display);
 
-	public init() {
+		this.feedUrl = feedUrl;
+		this.id = this.feedUrl.substr(this.feedUrl.lastIndexOf('/'));
+	}
+
+	public async init(): Promise<void> {
 		this.parser = new Parser({
 			customFields: {
 				item: ['description']
 			}
 		});
 
-		this.update();
+		await this.update();
 		this.interval = setInterval(this.update, 10 * 60 * 1000);
 	}
 
-	public dispose() {
+	public dispose(): void {
 		clearInterval(this.interval);
 	}
 
-	private update = async () => {
-		await rm('data/news', { force: true, recursive: true });
+	public render(): void {
+		super.render();
 
-		this.general = await this.getFeed(URL_GENERAL);
-		this.sport = await this.getFeed(URL_SPORT);
+		if (this.item !== null) {
+			this.context.drawText(
+				this.item.title,
+				NEWS_X,
+				NEWS_Y,
+				this.display.WIDTH - 2 * NEWS_X,
+				NEWS_HEIGHT,
+				NEWS_SIZE,
+				this.display.BLUE
+			);
+
+			this.context.drawText(
+				format(this.item.date, 'eee HH:mm', { locale: de }),
+				NEWS_X,
+				NEWS_Y + NEWS_HEIGHT,
+				NEWS_SIZE,
+				this.display.GRAY
+			);
+
+			this.context.drawText(
+				this.item.description,
+				NEWS_DESC_X,
+				NEWS_Y + NEWS_HEIGHT,
+				this.display.WIDTH - 2 * NEWS_X - NEWS_DESC_X,
+				this.display.HEIGHT - 15 - NEWS_Y,
+				NEWS_DESC_SIZE,
+				this.display.WHITE
+			);
+
+			const width = NEWS_DESC_X - 2 * NEWS_X;
+			this.context.drawImage(this.item.img, NEWS_X, NEWS_Y + 1.5 * NEWS_HEIGHT, width);
+		} else {
+			const items = this.items.slice(this.offset * NEWS_ITEMS, (this.offset + 1) * NEWS_ITEMS);
+
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				const y = NEWS_Y + i * NEWS_HEIGHT;
+
+				const width = NEWS_TITLE_X - 2 * NEWS_X;
+				this.context.drawImage(item.img, NEWS_X, y + 6, width);
+				this.context.drawText(
+					item.title,
+					NEWS_TITLE_X,
+					y,
+					this.display.WIDTH - NEWS_X - NEWS_TITLE_X,
+					NEWS_HEIGHT,
+					NEWS_SIZE,
+					this.display.WHITE
+				);
+			}
+		}
+	}
+
+	public onTap({ x, y }: { x: number; y: number }): void {
+		if (this.item !== null) {
+			this.item = null;
+			this.display.startScreenTimeout();
+			return;
+		}
+
+		for (let i = 0; i < NEWS_ITEMS; i++) {
+			if (
+				x >= NEWS_X &&
+				x <= NEWS_X + this.display.WIDTH - 2 * NEWS_X &&
+				y >= NEWS_Y + i * NEWS_HEIGHT &&
+				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
+			) {
+				this.item = this.items[this.offset + i];
+				this.display.stopScreenTimeout();
+				return;
+			}
+		}
+
+		this.offset++;
+		if (this.offset * NEWS_ITEMS >= this.items.length) {
+			this.offset = 0;
+		}
+	}
+
+	public onShow(): void {
+		this.offset++;
+		if (this.offset * NEWS_ITEMS >= this.items.length) {
+			this.offset = 0;
+		}
+	}
+
+	private update = async () => {
+		await rm(this.dataDir, { force: true, recursive: true });
+		this.items = await this.getFeed(this.feedUrl);
 	};
 
 	private async getFeed(feedUrl: string) {
@@ -51,7 +157,7 @@ export class News {
 		for (const item of feedItems) {
 			const [, img, description] = MATCHER.exec(item.description);
 
-			const imgPath = await this.saveImg(img);
+			const imgPath = await this.cacheImage(`https://www.srf.ch/static/cms/images/${img}`);
 
 			const date = parse(item.pubDate.substr(5), 'dd MMM yyyy HH:mm:ss x', new Date());
 
@@ -64,19 +170,5 @@ export class News {
 		}
 
 		return items;
-	}
-
-	private async saveImg(imgName: string) {
-		const imgPath = `data/news/${imgName.replace(/\//g, '-').replace('.jpg', '.png')}`;
-
-		const exists = await stat(imgPath)
-			.then((s) => s.isFile())
-			.catch(() => false);
-		if (!exists) {
-			const img = await Jimp.read(`https://www.srf.ch/static/cms/images/${imgName}`);
-			await img.writeAsync(imgPath);
-		}
-
-		return imgPath;
 	}
 }
