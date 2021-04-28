@@ -50,7 +50,7 @@ export class Weather {
 			forecasts.push({
 				time: new Date(forecast.dt * 1000),
 				img: imgPath,
-				feelsLike: forecast.feels_like.day //{ min: forecast.feels_like.morn, max: forecast.feels_like.day }
+				feelsLike: forecast.feels_like.day
 			});
 		}
 
