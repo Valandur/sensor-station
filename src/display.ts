@@ -178,7 +178,7 @@ export class Display {
 
 				ray.EndDrawing();
 
-				await new Promise((resolve) => setTimeout(resolve, 10));
+				await new Promise((resolve) => setTimeout(resolve, 50));
 			}
 		} finally {
 			console.log('disposing...');

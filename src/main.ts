@@ -32,7 +32,7 @@ new News('news-sports', 'https://www.srf.ch/sport/bnf/rss/718', display);
 // Reddit
 // --------------
 console.log('reddit...');
-new Reddit('reddit-aww', 'https://www.reddit.com/r/aww/hot/.rss', display);
+new Reddit('reddit-earthporn', 'https://www.reddit.com/r/EarthPorn/hot/.rss', display);
 
 // --------------
 // Printer

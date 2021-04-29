@@ -21,6 +21,7 @@ interface PreparedText {
 	pos: { x: number; y: number };
 	size: number;
 	color: any;
+	font: boolean;
 }
 
 interface PreparedImage {
@@ -53,8 +54,26 @@ export class RenderContext {
 	}
 
 	public drawText(text: string, x: number, y: number, size: number, color: Color): void;
-	public drawText(text: string, x: number, y: number, width: number, height: number, size: number, color: Color): void;
-	public drawText(text: string, x: number, y: number, width: number, height: number, size?: number, color?: Color) {
+	public drawText(
+		text: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		size: number,
+		color: Color,
+		font?: boolean
+	): void;
+	public drawText(
+		text: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		size?: number,
+		color?: Color,
+		font?: boolean
+	) {
 		if (!color && !size) {
 			size = width;
 			color = height;
@@ -62,27 +81,40 @@ export class RenderContext {
 			height = null;
 		}
 
-		let words = text.split(/ /g);
-
 		let line = 0;
-		while (words.length > 0) {
-			// Grab as many words as we can, then remove until we're under the specified width
-			// if no width was specified this just grabs all the words
-			let index = words.length;
-			if (width) {
-				while (index > 1 && this.ray.MeasureText(words.slice(0, index).join(' '), size) > width) {
-					index--;
+
+		while (text.length > 0) {
+			// Gradually add more words until we either hit a new line or the max length
+			let index = 0;
+			let nextIndex = 0;
+			let shouldBreak = false;
+			do {
+				index = nextIndex;
+				if (shouldBreak || index >= text.length) {
+					break;
 				}
-			}
+				let nextWord = text.indexOf(' ', index);
+				let nextLine = text.indexOf('\n', index);
+				if (nextLine !== -1 && (nextWord === -1 || nextLine < nextWord)) {
+					nextIndex = nextLine + 1;
+					shouldBreak = true;
+				} else if (nextWord === -1) {
+					nextIndex = text.length;
+					shouldBreak = true;
+				} else {
+					nextIndex = nextWord + 1;
+				}
+			} while (!width || this.ray.MeasureText(text.substr(0, nextIndex), size) < width);
 
 			this.draws.push({
 				type: 'text',
-				text: words.slice(0, index).join(' '),
+				text: text.substr(0, index).trimEnd(),
 				pos: { x, y: y + line * size },
 				size,
-				color
+				color,
+				font
 			});
-			words = words.slice(index);
+			text = text.substr(index);
 			line++;
 
 			// If we reached the max height then abort
@@ -96,7 +128,14 @@ export class RenderContext {
 		return this.ray.MeasureText(text, size);
 	}
 
-	public drawImage(path: string, x: number, y: number, width: number, height?: number, center?: 'x' | 'y' | 'both') {
+	public drawImage(
+		path: string,
+		x: number,
+		y: number,
+		width: number,
+		height?: number,
+		center?: 'x' | 'y' | 'both'
+	): [number, number] {
 		path = resolve(path); // Normalize path
 
 		let img = this.imgCache.get(path);
@@ -129,12 +168,18 @@ export class RenderContext {
 			src: { x: 0, y: 0, width: img.width, height: img.height },
 			dest: { x, y, width, height }
 		});
+
+		return [width, height];
 	}
 
 	public draw() {
 		for (const draw of this.draws) {
 			if (draw.type === 'text') {
-				this.ray.DrawText(draw.text, draw.pos.x, draw.pos.y, draw.size, draw.color);
+				if (draw.font) {
+					this.ray.DrawTextEx(this.display.font, draw.text, draw.pos, draw.size, 2, draw.color);
+				} else {
+					this.ray.DrawText(draw.text, draw.pos.x, draw.pos.y, draw.size, draw.color);
+				}
 			} else if (draw.type === 'img') {
 				this.ray.DrawTexturePro(draw.img, draw.src, draw.dest, { x: 0, y: 0 }, 0, this.display.WHITE);
 			} else if (draw.type === 'rect') {

@@ -72,7 +72,7 @@ export class News extends Screen {
 			this.context.drawText(
 				format(this.item.date, 'eee HH:mm', { locale: de }),
 				NEWS_X,
-				NEWS_Y + NEWS_HEIGHT,
+				NEWS_Y + 2.5 * NEWS_SIZE,
 				NEWS_SIZE,
 				this.display.GRAY
 			);
@@ -80,7 +80,7 @@ export class News extends Screen {
 			this.context.drawText(
 				this.item.description,
 				NEWS_DESC_X,
-				NEWS_Y + NEWS_HEIGHT,
+				NEWS_Y + 2.5 * NEWS_SIZE,
 				this.display.WIDTH - 2 * NEWS_X - NEWS_DESC_X,
 				this.display.HEIGHT - 15 - NEWS_Y,
 				NEWS_DESC_SIZE,
@@ -88,7 +88,7 @@ export class News extends Screen {
 			);
 
 			const width = NEWS_DESC_X - 2 * NEWS_X;
-			this.context.drawImage(this.item.img, NEWS_X, NEWS_Y + 1.5 * NEWS_HEIGHT, width);
+			this.context.drawImage(this.item.img, NEWS_X, NEWS_Y + 3.5 * NEWS_SIZE, width);
 		} else {
 			const items = this.items.slice(this.offset * NEWS_ITEMS, (this.offset + 1) * NEWS_ITEMS);
 
@@ -125,7 +125,7 @@ export class News extends Screen {
 				y >= NEWS_Y + i * NEWS_HEIGHT &&
 				y < NEWS_Y + (i + 1) * NEWS_HEIGHT
 			) {
-				this.item = this.items[this.offset + i];
+				this.item = this.items[this.offset * NEWS_ITEMS + i];
 				this.display.stopScreenTimeout();
 				return;
 			}
@@ -145,7 +145,7 @@ export class News extends Screen {
 	}
 
 	private update = async () => {
-		await rm(this.dataDir, { force: true, recursive: true });
+		// await rm(this.dataDir, { force: true, recursive: true });
 		this.items = await this.getFeed(this.feedUrl);
 	};
 

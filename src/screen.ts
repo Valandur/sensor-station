@@ -75,7 +75,7 @@ export abstract class Screen {
 		this.context.draw();
 	}
 
-	protected async cacheImage(imgUrl: string, imgPath?: string): Promise<string> {
+	protected async cacheImage(imgUrl: string, imgPath?: string, size?: number): Promise<string> {
 		if (imgPath) {
 			imgPath = `${this.dataDir}/${imgPath}`;
 		} else {
@@ -88,7 +88,10 @@ export abstract class Screen {
 			.then((s) => s.isFile())
 			.catch(() => false);
 		if (!exists) {
-			const img = await Jimp.read(imgUrl);
+			let img = await Jimp.read(imgUrl);
+			if (size) {
+				img = img.scaleToFit(512, 512);
+			}
 			await img.writeAsync(imgPath);
 		}
 
