@@ -89,12 +89,22 @@ export class Reddit extends Screen {
 		const feed = await this.parser.parseURL(feedUrl);
 
 		const items: FeedItem[] = [];
-		const feedItems = feed.items.filter((i) => !!i['media:thumbnail']).slice(0, 10);
+		const feedItems = feed.items
+			.filter((i) => {
+				if (!i['media:thumbnail']) {
+					return false;
+				}
+				const [, w, h] = i.title.match(/[[({]?(\d+)\s*[x×]\s*(\d+)[\])}]?/);
+				return Number(w) >= Number(h);
+			})
+			.slice(0, 10);
+
 		for (const item of feedItems) {
 			const [, imgUrl] = MATCHER.exec(item.content);
 			const imgPath = await this.cacheImage(imgUrl, null, 512);
 			const title = item.title
-				.replace(/[[({]?(oc|\d*\s*x\s*\d*)[\])}]?/gi, '')
+				.replace(/[[({]?oc[\])}]?/gi, '')
+				.replace(/[[({]?(\d+\s*[x×]\s*\d+)[\])}]?/gi, '')
 				.replace(/[(){}[\]]/gi, '')
 				.split(/[,-]/)
 				.map((s) => s.trim())
