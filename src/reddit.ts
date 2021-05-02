@@ -94,7 +94,7 @@ export class Reddit extends Screen {
 				if (!i['media:thumbnail']) {
 					return false;
 				}
-				const [, w, h] = i.title.match(/[[({]?(\d+)\s*[x×]\s*(\d+)[\])}]?/);
+				const [, w, h] = i.title.match(/[[({]?(\d+)\s*[x×]\s*(\d+)[\])}]?/i);
 				return Number(w) >= Number(h);
 			})
 			.slice(0, 10);
