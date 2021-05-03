@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { global, styled } from '@stitches/react';
 
 import { Header } from './header';
@@ -28,15 +28,40 @@ const Container = styled('div', {
 	paddingTop: 0
 });
 
+const NUM_SCREENS = 4;
+
 export const App: FC = () => {
 	globalStyles();
 
+	const interval = useRef<NodeJS.Timeout>();
+	const [screen, setScreen] = useState(0);
+	const [paused, setPaused] = useState(false);
+
+	const incScreen = useCallback(() => {
+		setScreen((s) => (s + 1) % NUM_SCREENS);
+	}, [setScreen]);
+
+	const decScreen = useCallback(() => {
+		setScreen((s) => (NUM_SCREENS + s - 1) % NUM_SCREENS);
+	}, [setScreen]);
+
+	useEffect(() => {
+		if (paused) {
+			if (interval.current) {
+				clearInterval(interval.current);
+			}
+		} else {
+			interval.current = setInterval(incScreen, 20 * 1000);
+		}
+	}, [paused]);
+
 	return (
 		<Container>
-			<Header />
-			{false && <News />}
-			{false && <Reddit />}
-			{true && <Weather />}
+			<Header onTimeClick={decScreen} onDateClick={incScreen} />
+			{screen === 0 && <News id="1646" onRequestPause={(pause) => setPaused(pause)} />}
+			{screen === 1 && <News id="718" onRequestPause={(pause) => setPaused(pause)} />}
+			{screen === 2 && <Reddit />}
+			{screen === 3 && <Weather />}
 		</Container>
 	);
 };

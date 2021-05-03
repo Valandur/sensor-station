@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { Service } from './service';
 
-// const dht = require('node-dht-sensor').promises;
+const dht = require('node-dht-sensor').promises;
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
@@ -68,9 +68,9 @@ export class Weather extends Service {
 
 	private updateDHT = async () => {
 		try {
-			//const res = await dht.read(DHT_TYPE, DHT_PIN);
-			//this.sensorTemp = res.temperature;
-			//this.sensorRh = res.humidity;
+			const res = await dht.read(DHT_TYPE, DHT_PIN);
+			this.sensorTemp = res.temperature;
+			this.sensorRh = res.humidity;
 		} catch (err) {
 			// NO-OP
 		}

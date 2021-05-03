@@ -57,7 +57,7 @@ const SensorText = styled('div', {
 	textAlign: 'center'
 });
 const ContainerForecasts = styled('div', {
-	flex: 4,
+	flex: 3,
 	display: 'flex',
 	flexDirection: 'row',
 	justifyContent: 'space-between',

@@ -6,14 +6,14 @@ import React, { FC, useEffect, useState } from 'react';
 const HeaderContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'row',
-	paddingBottom: 40,
+	paddingBottom: 20,
 	boxSizing: 'border-box',
 	justifyContent: 'space-between'
 });
 
 const Time = styled('div', {
 	fontSize: 150,
-	lineHeight: '0.8em',
+	lineHeight: '1em',
 	color: 'orange'
 });
 
@@ -34,7 +34,12 @@ const DateSub = styled('div', {
 	color: 'gray'
 });
 
-export const Header: FC = () => {
+interface Props {
+	onTimeClick: () => void;
+	onDateClick: () => void;
+}
+
+export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 	const now = new Date();
 	const time = format(now, 'HH:mm');
 	const date = format(now, 'dd. MMM', { locale: de });
@@ -51,8 +56,8 @@ export const Header: FC = () => {
 
 	return (
 		<HeaderContainer>
-			<Time>{time}</Time>
-			<DateContainer>
+			<Time onClick={onTimeClick}>{time}</Time>
+			<DateContainer onClick={onDateClick}>
 				<DateMain>{date}</DateMain>
 				<DateSub>{dateSub}</DateSub>
 			</DateContainer>
