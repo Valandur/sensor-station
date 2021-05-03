@@ -58,10 +58,10 @@ export const App: FC = () => {
 	return (
 		<Container>
 			<Header onTimeClick={decScreen} onDateClick={incScreen} />
-			{screen === 0 && <News id="1646" onRequestPause={(pause) => setPaused(pause)} />}
-			{screen === 1 && <News id="718" onRequestPause={(pause) => setPaused(pause)} />}
-			{screen === 2 && <Reddit />}
-			{screen === 3 && <Weather />}
+			{screen === 0 && <Weather />}
+			{screen === 1 && <News id="1646" onRequestPause={(pause) => setPaused(pause)} />}
+			{screen === 2 && <News id="718" onRequestPause={(pause) => setPaused(pause)} />}
+			{screen === 3 && <Reddit />}
 		</Container>
 	);
 };

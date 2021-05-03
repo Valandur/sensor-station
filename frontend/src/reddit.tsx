@@ -1,7 +1,7 @@
 import { styled } from '@stitches/react';
 import axios from 'axios';
 import { parseISO } from 'date-fns';
-import React, { FC, Fragment, useEffect, useState } from 'react';
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 
 interface FeedItem {
 	date: Date;
@@ -38,33 +38,43 @@ const Container = styled('div', {
 });
 
 const Image = styled('div', {
-	flex: 2,
-	marginRight: 10
+	marginRight: 10,
+	position: 'relative'
 });
 
 const Title = styled('div', {
-	flex: 1,
 	fontSize: 30,
 	lineHeight: '1em'
 });
 
+let idx = 0;
+
 export const Reddit: FC = () => {
 	const reddit = useReddit('earthporn');
-	const [index, setIndex] = useState(0);
+	const item = reddit[idx % reddit.length];
+	const [, refresh] = useState(false);
 
-	const item = reddit[index];
+	const inc = useCallback(() => {
+		idx++;
+		refresh((v) => !v);
+	}, [refresh]);
 
-	useEffect(() => {
-		setIndex((idx) => (idx + 1) % (reddit.length || 1));
-	}, [reddit]);
+	useEffect(
+		() => () => {
+			idx++;
+		},
+		[]
+	);
 
 	if (!item) {
 		return null;
 	}
 
 	return (
-		<Container>
-			<Image style={{ backgroundImage: `url(http://localhost:2000/${item.img})`, backgroundRepeat: 'no-repeat' }} />
+		<Container onClick={inc}>
+			<Image>
+				<img src={`http://localhost:2000/${item.img}`} style={{ height: 300 }} />
+			</Image>
 			<Title>
 				{item.title.split('\n').map((line) => (
 					<Fragment key={line}>

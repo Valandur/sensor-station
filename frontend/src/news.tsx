@@ -50,7 +50,10 @@ const Item = styled('div', {
 
 const Image = styled('div', {
 	flex: 1,
-	marginRight: 10
+	marginRight: 10,
+	backgroundPosition: 'center',
+	backgroundSize: 'contain',
+	backgroundRepeat: 'no-repeat'
 });
 
 const Abstract = styled('div', {
@@ -97,9 +100,7 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 			) : (
 				newsGeneral.slice(0, 3).map((item) => (
 					<Item key={item.title} onClick={() => setItem(item)}>
-						<Image>
-							<img src={`http://localhost:2000/${item.img}`} style={{ height: '100%' }} />
-						</Image>
+						<Image style={{ backgroundImage: `url(http://localhost:2000/${item.img})` }} />
 						<Abstract>{item.title}</Abstract>
 					</Item>
 				))

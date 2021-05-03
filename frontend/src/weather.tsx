@@ -95,6 +95,7 @@ export const Weather: FC = () => {
 							style={{
 								flex: 1,
 								backgroundImage: `url(http://localhost:2000/${forecast.img})`,
+								backgroundPosition: 'center',
 								backgroundSize: 'contain',
 								backgroundRepeat: 'no-repeat'
 							}}
