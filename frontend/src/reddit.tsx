@@ -16,7 +16,7 @@ const useReddit = (name: string): FeedItem[] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`http://localhost:2000/reddit/${name}`);
-			console.log(name, data);
+			// console.log(name, data);
 			setItems(
 				data.map((item: { date: string; title: string; description: string; img: string }) => ({
 					...item,
@@ -47,31 +47,45 @@ const Title = styled('div', {
 	lineHeight: '1em'
 });
 
-let idx = 0;
+interface Props {
+	id: string;
+	onRequestReset: () => void;
+}
 
-export const Reddit: FC = () => {
-	const reddit = useReddit('earthporn');
-	const item = reddit[idx % reddit.length];
+const idxMap: Map<string, number> = new Map();
+
+export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
+	const reddit = useReddit(id);
 	const [, refresh] = useState(false);
 
 	const inc = useCallback(() => {
-		idx++;
+		const currIdx = idxMap.get(id);
+		const newIdx = typeof currIdx == 'number' ? currIdx + 1 : 1;
+		idxMap.set(id, newIdx);
 		refresh((v) => !v);
 	}, [refresh]);
 
 	useEffect(
 		() => () => {
-			idx++;
+			inc();
 		},
-		[]
+		[inc]
 	);
+
+	const onClick = useCallback(() => {
+		inc();
+		onRequestReset();
+	}, [inc, onRequestReset]);
+
+	const idx = (idxMap.get(id) || 0) % (reddit.length || 1);
+	const item = reddit[idx];
 
 	if (!item) {
 		return null;
 	}
 
 	return (
-		<Container onClick={inc}>
+		<Container onClick={onClick}>
 			<Image>
 				<img src={`http://localhost:2000/${item.img}`} style={{ height: 300 }} />
 			</Image>

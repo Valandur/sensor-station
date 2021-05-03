@@ -17,7 +17,7 @@ const useNews = (id: string): FeedItem[] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`http://localhost:2000/news/${id}`);
-			console.log(id, data);
+			// console.log(id, data);
 			setItems(
 				data.map((item: { date: string; title: string; description: string; img: string }) => ({
 					...item,
@@ -81,13 +81,27 @@ interface Props {
 	onRequestPause: (pause: boolean) => void;
 }
 
+const ITEMS = 3;
+const idxMap: Map<string, number> = new Map();
+
 export const News: FC<Props> = ({ id, onRequestPause }) => {
 	const newsGeneral = useNews(id);
 	const [item, setItem] = useState<FeedItem | null>(null);
 
+	useEffect(
+		() => () => {
+			const currIdx = idxMap.get(id);
+			const newIdx = typeof currIdx == 'number' ? currIdx + ITEMS : ITEMS;
+			idxMap.set(id, newIdx);
+		},
+		[id]
+	);
+
 	useEffect(() => {
 		onRequestPause(!!item);
 	}, [item]);
+
+	const idx = (idxMap.get(id) || 0) % (newsGeneral.length - ITEMS + 1 || 1);
 
 	return (
 		<Container onClick={() => (item ? setItem(null) : null)}>
@@ -98,7 +112,7 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 					<Text>{item.description}</Text>
 				</>
 			) : (
-				newsGeneral.slice(0, 3).map((item) => (
+				newsGeneral.slice(idx, idx + ITEMS).map((item) => (
 					<Item key={item.title} onClick={() => setItem(item)}>
 						<Image style={{ backgroundImage: `url(http://localhost:2000/${item.img})` }} />
 						<Abstract>{item.title}</Abstract>

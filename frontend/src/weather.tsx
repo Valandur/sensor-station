@@ -18,7 +18,7 @@ const useWeather = (): [WeatherEntry[], number | null, number | null] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`http://localhost:2000/weather`);
-			console.log('weather', data);
+			//console.log('weather', data);
 			setItems(
 				data.forecasts.map((f: { time: string; img: string; feelsLike: number }) => ({ ...f, time: parseISO(f.time) }))
 			);

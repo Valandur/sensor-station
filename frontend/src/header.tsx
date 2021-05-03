@@ -2,6 +2,7 @@ import { styled } from '@stitches/react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import React, { FC, useEffect, useState } from 'react';
+import Holidays from 'date-holidays';
 
 const HeaderContainer = styled('div', {
 	display: 'flex',
@@ -39,11 +40,14 @@ interface Props {
 	onDateClick: () => void;
 }
 
+const holidays = new Holidays('CH', 'ZH');
+
 export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 	const now = new Date();
+	const holiday = holidays.isHoliday(now);
 	const time = format(now, 'HH:mm');
 	const date = format(now, 'dd. MMM', { locale: de });
-	const dateSub = format(now, 'eeee', { locale: de });
+	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de });
 
 	const [, refresh] = useState(false);
 
@@ -59,7 +63,10 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 			<Time onClick={onTimeClick}>{time}</Time>
 			<DateContainer onClick={onDateClick}>
 				<DateMain>{date}</DateMain>
-				<DateSub>{dateSub}</DateSub>
+				<DateSub>
+					{dateSub}
+					{holiday && ` - ${holiday[0].name}`}
+				</DateSub>
 			</DateContainer>
 		</HeaderContainer>
 	);

@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { global, styled } from '@stitches/react';
+import { differenceInMilliseconds } from 'date-fns';
 
 import { Header } from './header';
 import { News } from './news';
@@ -28,7 +29,16 @@ const Container = styled('div', {
 	paddingTop: 0
 });
 
+const Progress = styled('div', {
+	position: 'absolute',
+	backgroundColor: 'gray',
+	left: 0,
+	bottom: 0,
+	height: 2
+});
+
 const NUM_SCREENS = 4;
+const AUTO_SWITCH = 20 * 1000;
 
 export const App: FC = () => {
 	globalStyles();
@@ -36,32 +46,60 @@ export const App: FC = () => {
 	const interval = useRef<NodeJS.Timeout>();
 	const [screen, setScreen] = useState(0);
 	const [paused, setPaused] = useState(false);
+	const [reset, setReset] = useState(new Date());
+	const [, refresh] = useState(false);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (!paused) {
+				refresh((v) => !v);
+				if (differenceInMilliseconds(new Date(), reset) >= AUTO_SWITCH) {
+					incScreen();
+				}
+			}
+		}, 100);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, [paused, reset]);
+
+	const resetTimer = useCallback(() => {
+		if (interval.current) {
+			clearInterval(interval.current);
+			interval.current = setInterval(incScreen, AUTO_SWITCH);
+		}
+	}, [interval]);
+
+	const pause = useCallback((pause: boolean) => {
+		if (pause) {
+			setPaused(true);
+		} else {
+			setReset(new Date());
+			setPaused(false);
+		}
+	}, []);
 
 	const incScreen = useCallback(() => {
 		setScreen((s) => (s + 1) % NUM_SCREENS);
-	}, [setScreen]);
+		setReset(new Date());
+	}, [setScreen, resetTimer]);
 
 	const decScreen = useCallback(() => {
 		setScreen((s) => (NUM_SCREENS + s - 1) % NUM_SCREENS);
-	}, [setScreen]);
-
-	useEffect(() => {
-		if (paused) {
-			if (interval.current) {
-				clearInterval(interval.current);
-			}
-		} else {
-			interval.current = setInterval(incScreen, 20 * 1000);
-		}
-	}, [paused]);
+		setReset(new Date());
+	}, [setScreen, resetTimer]);
 
 	return (
 		<Container>
 			<Header onTimeClick={decScreen} onDateClick={incScreen} />
 			{screen === 0 && <Weather />}
-			{screen === 1 && <News id="1646" onRequestPause={(pause) => setPaused(pause)} />}
-			{screen === 2 && <News id="718" onRequestPause={(pause) => setPaused(pause)} />}
-			{screen === 3 && <Reddit />}
+			{screen === 1 && <News id="1646" onRequestPause={pause} />}
+			{screen === 2 && <News id="718" onRequestPause={pause} />}
+			{screen === 3 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
+			{!paused && (
+				<Progress style={{ width: `${(differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }} />
+			)}
 		</Container>
 	);
 };
