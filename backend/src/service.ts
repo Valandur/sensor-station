@@ -1,5 +1,7 @@
-import { stat } from 'fs/promises';
-import Jimp from 'jimp';
+import axios from 'axios';
+import { createWriteStream } from 'fs';
+import { mkdir, stat } from 'fs/promises';
+import { dirname } from 'path';
 
 export class Service {
 	public readonly name: string;
@@ -12,12 +14,11 @@ export class Service {
 		return `data/${this.name}`;
 	}
 
-	protected async cacheImage(imgUrl: string, imgPath?: string, size?: number): Promise<string> {
+	protected async cacheImage(imgUrl: string, imgPath?: string): Promise<string> {
 		if (imgPath) {
 			imgPath = `${this.dataDir}/${imgPath}`;
 		} else {
-			const start = imgUrl.lastIndexOf('/') + 1;
-			const imgName = imgUrl.substring(start, imgUrl.indexOf('.', start)) + '.png';
+			const imgName = imgUrl.substring(imgUrl.lastIndexOf('/') + 1);
 			imgPath = `${this.dataDir}/${imgName}`;
 		}
 
@@ -25,11 +26,19 @@ export class Service {
 			.then((s) => s.isFile())
 			.catch(() => false);
 		if (!exists) {
-			let img = await Jimp.read(imgUrl);
-			if (size) {
-				img = img.scaleToFit(512, 512);
-			}
-			await img.writeAsync(imgPath);
+			await mkdir(dirname(imgPath), { recursive: true });
+
+			const writer = createWriteStream(imgPath);
+			const response = await axios({
+				url: imgUrl,
+				method: 'GET',
+				responseType: 'stream'
+			});
+			response.data.pipe(writer);
+			await new Promise((resolve, reject) => {
+				writer.on('finish', resolve);
+				writer.on('error', reject);
+			});
 		}
 
 		return imgPath;

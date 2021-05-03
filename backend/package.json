@@ -13,7 +13,6 @@
 		"cors": "2.8.5",
 		"date-fns": "2.21.1",
 		"express": "4.17.1",
-		"jimp": "0.16.1",
 		"node-dht-sensor": "0.4.3",
 		"onoff": "6.0.3",
 		"rss-parser": "3.12.0"

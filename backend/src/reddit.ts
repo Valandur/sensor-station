@@ -59,7 +59,7 @@ export class Reddit extends Service {
 
 		for (const item of feedItems) {
 			const [, imgUrl] = MATCHER.exec(item.content);
-			const imgPath = await this.cacheImage(imgUrl, null, 512);
+			const imgPath = await this.cacheImage(imgUrl);
 			const title = item.title
 				.replace(/[[({]?oc[\])}]?/gi, '')
 				.replace(/[[({]?(\d+\s*[x×]\s*\d+)[\])}]?/gi, '')
