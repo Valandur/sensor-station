@@ -53,7 +53,7 @@ const ContainerSensor = styled('div', {
 	alignItems: 'center'
 });
 const SensorText = styled('div', {
-	fontSize: 60,
+	fontSize: 80,
 	textAlign: 'center'
 });
 const ContainerForecasts = styled('div', {
@@ -67,6 +67,10 @@ const Forecast = styled('div', {
 	flex: 1,
 	display: 'flex',
 	flexDirection: 'column'
+});
+const ForecastImg = styled('i', {
+	fontSize: '7.5em !important',
+	textAlign: 'center'
 });
 const ForecastText = styled('div', {
 	fontSize: 60,
@@ -84,22 +88,14 @@ export const Weather: FC = () => {
 	return (
 		<Container>
 			<ContainerSensor>
-				<SensorText style={{ color: '#23ad00' }}>{temp}°</SensorText>
-				<SensorText style={{ color: '#0052d6' }}>{rh}%</SensorText>
+				<SensorText style={{ color: '#23ad00' }}>{temp?.toFixed(1)}°</SensorText>
+				<SensorText style={{ color: '#0052d6' }}>{rh?.toFixed(0)}%</SensorText>
 			</ContainerSensor>
 			<ContainerForecasts>
 				{shownForecasts.map((forecast) => (
 					<Forecast key={forecast.time.toISOString()}>
-						<ForecastText>{format(forecast.time, 'iiiiii', { locale: de })}</ForecastText>
-						<div
-							style={{
-								flex: 1,
-								backgroundImage: `url(http://localhost:2000/${forecast.img})`,
-								backgroundPosition: 'center',
-								backgroundSize: 'contain',
-								backgroundRepeat: 'no-repeat'
-							}}
-						></div>
+						<ForecastText style={{ flex: 1 }}>{format(forecast.time, 'iiiiii', { locale: de })}</ForecastText>
+						<ForecastImg className={`owf owf-${forecast.img}`} />
 						<ForecastText style={{ color: '#23ad00' }}>{forecast.feelsLike.toFixed(0)}°</ForecastText>
 					</Forecast>
 				))}

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { global, styled } from '@stitches/react';
 import { differenceInMilliseconds } from 'date-fns';
 
@@ -43,7 +43,6 @@ const AUTO_SWITCH = 20 * 1000;
 export const App: FC = () => {
 	globalStyles();
 
-	const interval = useRef<NodeJS.Timeout>();
 	const [screen, setScreen] = useState(0);
 	const [paused, setPaused] = useState(false);
 	const [reset, setReset] = useState(new Date());
@@ -54,7 +53,7 @@ export const App: FC = () => {
 			if (!paused) {
 				refresh((v) => !v);
 				if (differenceInMilliseconds(new Date(), reset) >= AUTO_SWITCH) {
-					incScreen();
+					// incScreen();
 				}
 			}
 		}, 100);
@@ -65,11 +64,8 @@ export const App: FC = () => {
 	}, [paused, reset]);
 
 	const resetTimer = useCallback(() => {
-		if (interval.current) {
-			clearInterval(interval.current);
-			interval.current = setInterval(incScreen, AUTO_SWITCH);
-		}
-	}, [interval]);
+		setReset(new Date());
+	}, [setReset]);
 
 	const pause = useCallback((pause: boolean) => {
 		if (pause) {
@@ -98,7 +94,9 @@ export const App: FC = () => {
 			{screen === 2 && <News id="718" onRequestPause={pause} />}
 			{screen === 3 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
 			{!paused && (
-				<Progress style={{ width: `${(differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }} />
+				<Progress
+					style={{ width: `${Math.min(1, differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }}
+				/>
 			)}
 		</Container>
 	);

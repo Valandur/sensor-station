@@ -21,7 +21,11 @@ const Time = styled('div', {
 const DateContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'column',
-	alignItems: 'flex-end'
+	justifyContent: 'space-between',
+	alignItems: 'flex-end',
+	paddingTop: 10,
+	paddingBottom: 10,
+	overflowX: 'hidden'
 });
 
 const DateMain = styled('div', {
@@ -32,7 +36,8 @@ const DateMain = styled('div', {
 const DateSub = styled('div', {
 	fontSize: 50,
 	lineHeight: '1em',
-	color: 'gray'
+	color: 'gray',
+	whiteSpace: 'nowrap'
 });
 
 interface Props {
@@ -47,7 +52,7 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 	const holiday = holidays.isHoliday(now);
 	const time = format(now, 'HH:mm');
 	const date = format(now, 'dd. MMM', { locale: de });
-	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de });
+	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
 
 	const [, refresh] = useState(false);
 
@@ -65,7 +70,7 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 				<DateMain>{date}</DateMain>
 				<DateSub>
 					{dateSub}
-					{holiday && ` - ${holiday[0].name}`}
+					{holiday && ` • ${holiday[0].name}`}
 				</DateSub>
 			</DateContainer>
 		</HeaderContainer>

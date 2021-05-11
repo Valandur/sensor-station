@@ -1,7 +1,6 @@
 import { styled } from '@stitches/react';
 import axios from 'axios';
-import { format, parseISO } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { parseISO } from 'date-fns';
 import React, { FC, useEffect, useState } from 'react';
 
 interface FeedItem {
@@ -9,6 +8,7 @@ interface FeedItem {
 	title: string;
 	description: string;
 	img: string;
+	link: string;
 }
 
 const useNews = (id: string): FeedItem[] => {
@@ -44,36 +44,43 @@ const Item = styled('div', {
 	flex: 1,
 	display: 'flex',
 	flexDirection: 'row',
+	alignItems: 'center',
 	overflow: 'hidden',
 	marginTop: 10
 });
 
-const Image = styled('div', {
-	flex: 1,
-	marginRight: 10,
-	backgroundPosition: 'center',
-	backgroundSize: 'contain',
-	backgroundRepeat: 'no-repeat'
+const Image = styled('img', {
+	height: '100%',
+	marginRight: 10
 });
 
 const Abstract = styled('div', {
 	flex: 4,
-	fontSize: 32
+	fontSize: 40,
+	lineHeight: '1.1em'
 });
 
-const Title = styled('div', {
-	fontSize: 38,
-	color: 'gray'
+const IFrame = styled('iframe', {
+	width: '100%',
+	height: '100%',
+	borderWidth: 1,
+	borderStyle: 'solid',
+	borderColor: 'gray'
 });
 
-const Date = styled('div', {
-	flex: 1,
-	fontSize: 26,
-	color: 'orange'
+const DetailContainer = styled('div', {
+	position: 'absolute',
+	top: 10,
+	left: 10,
+	right: 10,
+	bottom: 10
 });
 
-const Text = styled('div', {
-	fontSize: 32
+const CloseButton = styled('button', {
+	position: 'absolute',
+	top: 10,
+	right: 10,
+	fontSize: 20
 });
 
 interface Props {
@@ -81,11 +88,11 @@ interface Props {
 	onRequestPause: (pause: boolean) => void;
 }
 
-const ITEMS = 3;
+const ITEMS = 2;
 const idxMap: Map<string, number> = new Map();
 
 export const News: FC<Props> = ({ id, onRequestPause }) => {
-	const newsGeneral = useNews(id);
+	const news = useNews(id);
 	const [item, setItem] = useState<FeedItem | null>(null);
 
 	useEffect(
@@ -101,20 +108,19 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 		onRequestPause(!!item);
 	}, [item]);
 
-	const idx = (idxMap.get(id) || 0) % (newsGeneral.length - ITEMS + 1 || 1);
+	const idx = (idxMap.get(id) || 0) % (news.length - ITEMS + 1 || 1);
 
 	return (
 		<Container onClick={() => (item ? setItem(null) : null)}>
 			{item ? (
-				<>
-					<Title>{item.title}</Title>
-					<Date>{format(item.date, 'eeee, d. LLL yyyy - HH:mm', { locale: de })}</Date>
-					<Text>{item.description}</Text>
-				</>
+				<DetailContainer>
+					<IFrame src={item.link} />
+					<CloseButton>X</CloseButton>
+				</DetailContainer>
 			) : (
-				newsGeneral.slice(idx, idx + ITEMS).map((item) => (
+				news.slice(idx, idx + ITEMS).map((item) => (
 					<Item key={item.title} onClick={() => setItem(item)}>
-						<Image style={{ backgroundImage: `url(http://localhost:2000/${item.img})` }} />
+						<Image src={item.img} />
 						<Abstract>{item.title}</Abstract>
 					</Item>
 				))

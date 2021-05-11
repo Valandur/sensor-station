@@ -18,8 +18,8 @@ export class Reddit extends Service {
 	public items: FeedItem[] = [];
 	private interval: NodeJS.Timer;
 
-	public constructor(name: string, feedUrl: string) {
-		super(`reddit/${name}`);
+	public constructor(feedUrl: string) {
+		super();
 
 		this.feedUrl = feedUrl;
 	}
@@ -59,7 +59,6 @@ export class Reddit extends Service {
 
 		for (const item of feedItems) {
 			const [, imgUrl] = MATCHER.exec(item.content);
-			const imgPath = await this.cacheImage(imgUrl);
 			const title = item.title
 				.replace(/[[({]?oc[\])}]?/gi, '')
 				.replace(/[[({]?(\d+\s*[x×]\s*\d+)[\])}]?/gi, '')
@@ -68,7 +67,7 @@ export class Reddit extends Service {
 				.map((s) => s.trim())
 				.filter((s) => !!s)
 				.join('\n');
-			items.push({ date: parseISO(item.pubDate), title, img: imgPath });
+			items.push({ date: parseISO(item.pubDate), title, img: imgUrl });
 		}
 
 		return items;

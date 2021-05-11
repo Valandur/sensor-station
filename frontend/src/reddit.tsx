@@ -87,7 +87,7 @@ export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
 	return (
 		<Container onClick={onClick}>
 			<Image>
-				<img src={`http://localhost:2000/${item.img}`} style={{ height: 300 }} />
+				<img src={item.img} style={{ height: 300 }} />
 			</Image>
 			<Title>
 				{item.title.split('\n').map((line) => (
