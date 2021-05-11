@@ -88,7 +88,7 @@ export const Weather: FC = () => {
 	return (
 		<Container>
 			<ContainerSensor>
-				<SensorText style={{ color: '#23ad00' }}>{temp?.toFixed(1)}°</SensorText>
+				<SensorText style={{ color: '#23ad00' }}>{temp?.toFixed(0)}°</SensorText>
 				<SensorText style={{ color: '#0052d6' }}>{rh?.toFixed(0)}%</SensorText>
 			</ContainerSensor>
 			<ContainerForecasts>
@@ -96,7 +96,7 @@ export const Weather: FC = () => {
 					<Forecast key={forecast.time.toISOString()}>
 						<ForecastText style={{ flex: 1 }}>{format(forecast.time, 'iiiiii', { locale: de })}</ForecastText>
 						<ForecastImg className={`owf owf-${forecast.img}`} />
-						<ForecastText style={{ color: '#23ad00' }}>{forecast.feelsLike.toFixed(0)}°</ForecastText>
+						<ForecastText style={{ flex: 0.5, color: '#23ad00' }}>{forecast.feelsLike.toFixed(0)}°</ForecastText>
 					</Forecast>
 				))}
 			</ContainerForecasts>

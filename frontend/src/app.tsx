@@ -53,7 +53,7 @@ export const App: FC = () => {
 			if (!paused) {
 				refresh((v) => !v);
 				if (differenceInMilliseconds(new Date(), reset) >= AUTO_SWITCH) {
-					// incScreen();
+					incScreen();
 				}
 			}
 		}, 100);
