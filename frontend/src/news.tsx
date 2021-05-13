@@ -56,7 +56,7 @@ const Image = styled('img', {
 
 const Abstract = styled('div', {
 	flex: 4,
-	fontSize: 40,
+	fontSize: 38,
 	lineHeight: '1.1em'
 });
 

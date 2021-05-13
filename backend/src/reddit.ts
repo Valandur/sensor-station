@@ -52,8 +52,7 @@ export class Reddit extends Service {
 				if (!i['media:thumbnail']) {
 					return false;
 				}
-				const [, w, h] = i.title.match(/[[({]?(\d+)\s*[x×]\s*(\d+)[\])}]?/i);
-				return Number(w) >= Number(h);
+				return true;
 			})
 			.slice(0, 10);
 

@@ -37,7 +37,7 @@ const Progress = styled('div', {
 	height: 2
 });
 
-const NUM_SCREENS = 4;
+const NUM_SCREENS = 6;
 const AUTO_SWITCH = 20 * 1000;
 
 export const App: FC = () => {
@@ -92,7 +92,9 @@ export const App: FC = () => {
 			{screen === 0 && <Weather />}
 			{screen === 1 && <News id="1646" onRequestPause={pause} />}
 			{screen === 2 && <News id="718" onRequestPause={pause} />}
-			{screen === 3 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
+			{screen === 3 && <Reddit id="pics" onRequestReset={resetTimer} />}
+			{screen === 4 && <Reddit id="funny" onRequestReset={resetTimer} />}
+			{screen === 5 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
 			{!paused && (
 				<Progress
 					style={{ width: `${Math.min(1, differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }}

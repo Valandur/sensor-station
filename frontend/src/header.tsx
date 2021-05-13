@@ -70,7 +70,8 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 				<DateMain>{date}</DateMain>
 				<DateSub>
 					{dateSub}
-					{holiday && ` • ${holiday[0].name}`}
+					{/* eslint-disable-next-line no-irregular-whitespace */}
+					{holiday && ` • ${holiday[0].name}`}
 				</DateSub>
 			</DateContainer>
 		</HeaderContainer>
