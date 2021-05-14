@@ -1,14 +1,17 @@
 import { parseISO } from 'date-fns';
 import Parser from 'rss-parser';
+import probe from 'probe-image-size';
 
 import { Service } from './service';
 
-const MATCHER = /<a href="([\w:\/\.]*?)">\[link\]/;
+// Check if we have an actual image link in the content
+const MATCHER = /<a href="([\w:\/\.]*?\.(jpg|jpeg|png|bmp|webp))">\[link\]/i;
 
 export interface FeedItem {
 	date: Date;
 	title: string;
 	img: string;
+	ratio: number;
 }
 
 export class Reddit extends Service {
@@ -47,26 +50,19 @@ export class Reddit extends Service {
 		const feed = await this.parser.parseURL(feedUrl);
 
 		const items: FeedItem[] = [];
-		const feedItems = feed.items
-			.filter((i) => {
-				if (!i['media:thumbnail']) {
-					return false;
-				}
-				return true;
-			})
-			.slice(0, 10);
+		const feedItems = feed.items.filter((i) => !!i['media:thumbnail'] && MATCHER.test(i.content)).slice(0, 10);
 
 		for (const item of feedItems) {
-			const [, imgUrl] = MATCHER.exec(item.content);
+			const imgUrl = item['media:thumbnail']['$'].url;
+			const imgInfo = await probe(imgUrl);
 			const title = item.title
 				.replace(/[[({]?oc[\])}]?/gi, '')
 				.replace(/[[({]?(\d+\s*[x×]\s*\d+)[\])}]?/gi, '')
-				.replace(/[(){}[\]]/gi, '')
 				.split(/[,-.]/)
 				.map((s) => s.trim())
 				.filter((s) => !!s)
 				.join('\n');
-			items.push({ date: parseISO(item.pubDate), title, img: imgUrl });
+			items.push({ date: parseISO(item.pubDate), title, img: imgUrl, ratio: imgInfo.width / imgInfo.height });
 		}
 
 		return items;
