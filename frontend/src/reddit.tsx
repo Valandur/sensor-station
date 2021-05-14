@@ -6,8 +6,8 @@ import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 interface FeedItem {
 	date: Date;
 	title: string;
-	description: string;
 	img: string;
+	ratio: number;
 }
 
 const useReddit = (name: string): FeedItem[] => {
@@ -34,12 +34,22 @@ const useReddit = (name: string): FeedItem[] => {
 const Container = styled('div', {
 	flex: 1,
 	display: 'flex',
-	flexDirection: 'row'
+	flexDirection: 'row',
+	overflow: 'hidden'
 });
 
 const Image = styled('div', {
 	marginRight: 10,
 	position: 'relative'
+});
+const ImageFull = styled('div', {
+	position: 'absolute',
+	top: 10,
+	right: 10,
+	bottom: 10,
+	width: '50%',
+	backgroundColor: 'black',
+	textAlign: 'right'
 });
 
 const Title = styled('div', {
@@ -86,10 +96,16 @@ export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
 
 	return (
 		<Container onClick={onClick}>
-			<Image>
-				<img src={item.img} style={{ height: 300 }} />
-			</Image>
-			<Title>
+			{item.ratio <= 1 ? (
+				<ImageFull>
+					<img src={item.img} style={{ maxHeight: '100%', maxWidth: '100%' }} />
+				</ImageFull>
+			) : (
+				<Image>
+					<img src={item.img} style={{ height: '100%' }} />
+				</Image>
+			)}
+			<Title style={{ maxWidth: item.ratio <= 1 ? '48%' : '' }}>
 				{item.title.split('\n').map((line) => (
 					<Fragment key={line}>
 						{line}
