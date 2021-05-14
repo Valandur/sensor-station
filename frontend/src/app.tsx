@@ -90,10 +90,10 @@ export const App: FC = () => {
 		<Container>
 			<Header onTimeClick={decScreen} onDateClick={incScreen} />
 			{screen === 0 && <Weather />}
-			{screen === 1 && <News id="1646" onRequestPause={pause} />}
-			{screen === 2 && <News id="718" onRequestPause={pause} />}
-			{screen === 3 && <Reddit id="pics" onRequestReset={resetTimer} />}
-			{screen === 4 && <Reddit id="funny" onRequestReset={resetTimer} />}
+			{screen === 1 && <Reddit id="pics" onRequestReset={resetTimer} />}
+			{screen === 2 && <News id="1646" onRequestPause={pause} />}
+			{screen === 3 && <Reddit id="funny" onRequestReset={resetTimer} />}
+			{screen === 4 && <News id="718" onRequestPause={pause} />}
 			{screen === 5 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
 			{!paused && (
 				<Progress
