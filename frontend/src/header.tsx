@@ -16,8 +16,7 @@ const Time = styled('div', {
 	fontSize: 150,
 	lineHeight: '1em',
 	color: 'orange',
-	marginTop: -12,
-	marginLeft: -5
+	marginTop: -2
 });
 
 const DateContainer = styled('div', {
@@ -26,7 +25,8 @@ const DateContainer = styled('div', {
 	justifyContent: 'space-between',
 	alignItems: 'flex-end',
 	paddingBottom: 10,
-	overflowX: 'hidden'
+	overflowX: 'hidden',
+	paddingTop: 4
 });
 
 const DateMain = styled('div', {

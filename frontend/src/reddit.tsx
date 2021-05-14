@@ -44,10 +44,13 @@ const Image = styled('div', {
 });
 const ImageFull = styled('div', {
 	position: 'absolute',
-	top: 10,
-	right: 10,
-	bottom: 10,
-	width: '50%',
+	top: 0,
+	paddingTop: 10,
+	right: 0,
+	paddingRight: 10,
+	bottom: 0,
+	paddingBottom: 10,
+	width: '45%',
 	backgroundColor: 'black',
 	textAlign: 'right'
 });
@@ -105,7 +108,7 @@ export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
 					<img src={item.img} style={{ height: '100%' }} />
 				</Image>
 			)}
-			<Title style={{ maxWidth: item.ratio <= 1 ? '48%' : '' }}>
+			<Title style={{ maxWidth: item.ratio <= 1 ? '45%' : '' }}>
 				{item.title.split('\n').map((line) => (
 					<Fragment key={line}>
 						{line}
