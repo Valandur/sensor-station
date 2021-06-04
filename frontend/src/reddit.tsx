@@ -38,26 +38,30 @@ const Container = styled('div', {
 	overflow: 'hidden'
 });
 
-const Image = styled('div', {
-	marginRight: 10,
-	position: 'relative'
+const Image = styled('img', {
+	height: '100%',
+	width: 'auto'
 });
-const ImageFull = styled('div', {
+const ImageFull = styled('img', {
 	position: 'absolute',
+	boxSizing: 'border-box',
 	top: 0,
-	paddingTop: 10,
 	right: 0,
-	paddingRight: 10,
 	bottom: 0,
-	paddingBottom: 10,
-	width: '45%',
+	paddingTop: 20,
+	paddingBottom: 20,
+	paddingLeft: 10,
 	backgroundColor: 'black',
-	textAlign: 'right'
+	textAlign: 'right',
+	maxHeight: '100%',
+	maxWidth: '100%'
 });
 
 const Title = styled('div', {
+	flex: 1,
 	fontSize: 30,
-	lineHeight: '1em'
+	lineHeight: '1em',
+	marginLeft: 10
 });
 
 interface Props {
@@ -99,16 +103,8 @@ export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
 
 	return (
 		<Container onClick={onClick}>
-			{item.ratio <= 1 ? (
-				<ImageFull>
-					<img src={item.img} style={{ maxHeight: '100%', maxWidth: '100%' }} />
-				</ImageFull>
-			) : (
-				<Image>
-					<img src={item.img} style={{ height: '100%' }} />
-				</Image>
-			)}
-			<Title style={{ maxWidth: item.ratio <= 1 ? '45%' : '' }}>
+			{item.ratio < 1 ? <ImageFull src={item.img} /> : <Image src={item.img} />}
+			<Title style={{ maxWidth: item.ratio < 1 ? '40%' : undefined }}>
 				{item.title.split('\n').map((line) => (
 					<Fragment key={line}>
 						{line}

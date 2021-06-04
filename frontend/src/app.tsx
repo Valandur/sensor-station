@@ -6,6 +6,15 @@ import { Header } from './header';
 import { News } from './news';
 import { Reddit } from './reddit';
 import { Weather } from './weather';
+import { Events } from './events';
+
+const BIRTHDAYS: { name: string; month: number; day: number }[] = [
+	{
+		name: 'Michi',
+		month: 6,
+		day: 4
+	}
+];
 
 const globalStyles = global({
 	body: {
@@ -24,9 +33,7 @@ const Container = styled('div', {
 	height: '100vh',
 	display: 'flex',
 	flexDirection: 'column',
-	boxSizing: 'border-box',
-	padding: 10,
-	paddingTop: 0
+	boxSizing: 'border-box'
 });
 
 const Progress = styled('div', {
@@ -37,7 +44,6 @@ const Progress = styled('div', {
 	height: 2
 });
 
-const NUM_SCREENS = 4;
 const AUTO_SWITCH = 20 * 1000;
 
 export const App: FC = () => {
@@ -76,15 +82,20 @@ export const App: FC = () => {
 		}
 	}, []);
 
+	const now = new Date();
+	const birthday = BIRTHDAYS.find((b) => now.getMonth() + 1 === b.month && now.getDate() === b.day);
+
+	const NUM_SCREENS = birthday ? 5 : 4;
+
 	const incScreen = useCallback(() => {
 		setScreen((s) => (s + 1) % NUM_SCREENS);
 		setReset(new Date());
-	}, [setScreen, resetTimer]);
+	}, [setScreen, resetTimer, NUM_SCREENS]);
 
 	const decScreen = useCallback(() => {
 		setScreen((s) => (NUM_SCREENS + s - 1) % NUM_SCREENS);
 		setReset(new Date());
-	}, [setScreen, resetTimer]);
+	}, [setScreen, resetTimer, NUM_SCREENS]);
 
 	return (
 		<Container>
@@ -93,6 +104,14 @@ export const App: FC = () => {
 			{screen === 1 && <News id="1646" onRequestPause={pause} />}
 			{screen === 2 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
 			{screen === 3 && <News id="718" onRequestPause={pause} />}
+			{birthday && screen === 4 && (
+				<Events>
+					🎉 Happy Birthday <b>{birthday.name}</b> 🎉
+					<br />
+					<br />
+					Alles gueti zum Geburi! 🥳
+				</Events>
+			)}
 			{!paused && (
 				<Progress
 					style={{ width: `${Math.min(1, differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }}
