@@ -13,6 +13,21 @@ const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 		name: 'Michi',
 		month: 6,
 		day: 4
+	},
+	{
+		name: 'Robin',
+		month: 3,
+		day: 26
+	},
+	{
+		name: 'Lea',
+		month: 8,
+		day: 1
+	},
+	{
+		name: 'Marco',
+		month: 12,
+		day: 14
 	}
 ];
 
