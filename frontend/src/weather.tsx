@@ -74,7 +74,8 @@ const ForecastImg = styled('i', {
 });
 const ForecastText = styled('div', {
 	fontSize: 60,
-	textAlign: 'center'
+	textAlign: 'center',
+	marginTop: 20
 });
 
 export const Weather: FC = () => {
