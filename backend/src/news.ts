@@ -63,7 +63,7 @@ export class News extends Service {
 			items.push({
 				date: date,
 				title: item.title,
-				link: `http://localhost:2000/news/${this.name}/${i}`,
+				link: `/news/${this.name}/${i}`,
 				origLink: item.link,
 				description: description,
 				img: `https://www.srf.ch/static/cms/images/${img}`

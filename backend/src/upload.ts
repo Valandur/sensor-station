@@ -26,7 +26,7 @@ export class Upload extends Service {
 		const path = `upload/${image.md5}${extname(image.name)}`;
 		image.mv(`data/${path}`);
 
-		const imgInfo = await probe(`http://localhost:2000/${path}`);
+		const imgInfo = await probe(`http://localhost/${path}`);
 
 		this.items.push({ img: path, title: description, ratio: imgInfo.width / imgInfo.height });
 		writeFileSync(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');

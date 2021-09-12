@@ -16,6 +16,7 @@ const main = async () => {
 	app.use(json());
 	app.use(urlencoded({ extended: true }));
 	app.use(express.static(`../frontend/build`));
+	app.use('/web', express.static(`../frontend/build`));
 
 	console.log('weather...');
 	const weather = new Weather();

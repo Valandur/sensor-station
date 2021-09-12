@@ -13,9 +13,6 @@ const globalStyles = global({
 	}
 });
 
-const ENDPOINT = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/upload`;
-//const ENDPOINT = `http://localhost:2000/upload`;
-
 interface Item {
 	title: string;
 	img: string;
@@ -30,7 +27,7 @@ export const Web: FC = () => {
 	const [file, setFile] = useState<File>();
 
 	const refresh = useCallback(async () => {
-		const { data } = await axios(ENDPOINT);
+		const { data } = await axios('/upload');
 		setItems(data);
 	}, [setItems]);
 
@@ -43,7 +40,7 @@ export const Web: FC = () => {
 		formData.append('description', descr);
 		formData.append('image', file);
 
-		const { data } = await axios({ method: 'POST', url: ENDPOINT, data: formData });
+		const { data } = await axios({ method: 'POST', url: '/upload', data: formData });
 		setItems(data);
 
 		setDescr('');
@@ -51,7 +48,7 @@ export const Web: FC = () => {
 	};
 
 	const remove = async (img: string) => {
-		const { data } = await axios({ method: 'DELETE', url: ENDPOINT, data: { img } });
+		const { data } = await axios({ method: 'DELETE', url: '/upload', data: { img } });
 		setItems(data);
 	};
 
@@ -77,7 +74,7 @@ export const Web: FC = () => {
 					<div key={item.img} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
 						<div style={{ flex: 1 }}>{item.title}</div>
 						<div style={{ flex: 5 }}>
-							<img src={item.img} style={{ maxWidth: 800, maxHeight: 200 }} />
+							<img src={'/' + item.img} style={{ maxWidth: 800, maxHeight: 200 }} />
 						</div>
 						<div style={{ flex: 1 }}>
 							<button onClick={() => remove(item.img)}>X</button>
