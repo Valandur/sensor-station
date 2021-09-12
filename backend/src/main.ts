@@ -95,7 +95,7 @@ const main = async () => {
 	});
 
 	console.log('running...');
-	app.listen(2000);
+	app.listen(80);
 };
 
 main().catch((err) => console.error(err));

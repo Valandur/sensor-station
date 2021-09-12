@@ -15,8 +15,7 @@ const useReddit = (name: string): FeedItem[] => {
 
 	useEffect(() => {
 		const main = async () => {
-			const { data } = await axios(`http://localhost:2000/reddit/${name}`);
-			// console.log(name, data);
+			const { data } = await axios(`/reddit/${name}`);
 			setItems(
 				data.map((item: { date: string }) => ({
 					...item,

@@ -16,7 +16,7 @@ const useNews = (id: string): FeedItem[] => {
 
 	useEffect(() => {
 		const main = async () => {
-			const { data } = await axios(`http://localhost:2000/news/${id}`);
+			const { data } = await axios(`/news/${id}`);
 			// console.log(id, data);
 			setItems(
 				data.map((item: { date: string }) => ({

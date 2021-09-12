@@ -13,8 +13,7 @@ const useUpload = (): FeedItem[] => {
 
 	useEffect(() => {
 		const main = async () => {
-			const { data } = await axios(`http://localhost:2000/upload`);
-			console.log(data);
+			const { data } = await axios(`/upload`);
 			setItems(data);
 		};
 
