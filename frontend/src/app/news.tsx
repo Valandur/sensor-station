@@ -19,7 +19,7 @@ const useNews = (id: string): FeedItem[] => {
 			const { data } = await axios(`http://localhost:2000/news/${id}`);
 			// console.log(id, data);
 			setItems(
-				data.map((item: { date: string; title: string; description: string; img: string }) => ({
+				data.map((item: { date: string }) => ({
 					...item,
 					date: parseISO(item.date)
 				}))

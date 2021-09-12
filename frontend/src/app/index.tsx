@@ -7,6 +7,7 @@ import { News } from './news';
 import { Reddit } from './reddit';
 import { Weather } from './weather';
 import { Events } from './events';
+import { Upload } from './upload';
 
 const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 	{
@@ -100,33 +101,40 @@ export const App: FC = () => {
 	const now = new Date();
 	const birthday = BIRTHDAYS.find((b) => now.getMonth() + 1 === b.month && now.getDate() === b.day);
 
-	const NUM_SCREENS = birthday ? 5 : 4;
+	const screens: JSX.Element[] = [
+		<Weather />,
+		<News id="1646" onRequestPause={pause} />,
+		<Reddit id="earthporn" onRequestReset={resetTimer} />,
+		<Weather />,
+		<News id="718" onRequestPause={pause} />,
+		<Upload onRequestReset={resetTimer} />
+	];
+	if (birthday) {
+		screens.push(
+			<Events>
+				🎉 Happy Birthday <b>{birthday.name}</b> 🎉
+				<br />
+				<br />
+				Alles gueti zum Geburi! 🥳
+			</Events>
+		);
+	}
+	const numScreens = screens.length;
 
 	const incScreen = useCallback(() => {
-		setScreen((s) => (s + 1) % NUM_SCREENS);
+		setScreen((s) => (s + 1) % numScreens);
 		setReset(new Date());
-	}, [setScreen, resetTimer, NUM_SCREENS]);
+	}, [setScreen, resetTimer, numScreens]);
 
 	const decScreen = useCallback(() => {
-		setScreen((s) => (NUM_SCREENS + s - 1) % NUM_SCREENS);
+		setScreen((s) => (numScreens + s - 1) % numScreens);
 		setReset(new Date());
-	}, [setScreen, resetTimer, NUM_SCREENS]);
+	}, [setScreen, resetTimer, numScreens]);
 
 	return (
 		<Container>
 			<Header onTimeClick={decScreen} onDateClick={incScreen} />
-			{screen === 0 && <Weather />}
-			{screen === 1 && <News id="1646" onRequestPause={pause} />}
-			{screen === 2 && <Reddit id="earthporn" onRequestReset={resetTimer} />}
-			{screen === 3 && <News id="718" onRequestPause={pause} />}
-			{birthday && screen === 4 && (
-				<Events>
-					🎉 Happy Birthday <b>{birthday.name}</b> 🎉
-					<br />
-					<br />
-					Alles gueti zum Geburi! 🥳
-				</Events>
-			)}
+			{screens[screen]}
 			{!paused && (
 				<Progress
 					style={{ width: `${Math.min(1, differenceInMilliseconds(new Date(), reset) / AUTO_SWITCH) * 100}%` }}

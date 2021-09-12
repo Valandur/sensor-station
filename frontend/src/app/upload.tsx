@@ -1,28 +1,21 @@
 import { styled } from '@stitches/react';
 import axios from 'axios';
-import { parseISO } from 'date-fns';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 
 interface FeedItem {
-	date: Date;
 	title: string;
 	img: string;
 	ratio: number;
 }
 
-const useReddit = (name: string): FeedItem[] => {
+const useUpload = (): FeedItem[] => {
 	const [items, setItems] = useState<FeedItem[]>([]);
 
 	useEffect(() => {
 		const main = async () => {
-			const { data } = await axios(`http://localhost:2000/reddit/${name}`);
-			// console.log(name, data);
-			setItems(
-				data.map((item: { date: string; title: string; description: string; img: string }) => ({
-					...item,
-					date: parseISO(item.date)
-				}))
-			);
+			const { data } = await axios(`http://localhost:2000/upload`);
+			console.log(data);
+			setItems(data);
 		};
 
 		main().catch((err) => console.error(err));
@@ -39,8 +32,10 @@ const Container = styled('div', {
 });
 
 const Image = styled('img', {
-	height: '100%',
-	width: 'auto'
+	height: 'auto',
+	maxHeight: '100%',
+	width: 'auto',
+	maxWidth: '70%'
 });
 const ImageFull = styled('img', {
 	position: 'absolute',
@@ -65,20 +60,17 @@ const Title = styled('div', {
 });
 
 interface Props {
-	id: string;
 	onRequestReset: () => void;
 }
 
-const idxMap: Map<string, number> = new Map();
+let savedIdx = 0;
 
-export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
-	const reddit = useReddit(id);
+export const Upload: FC<Props> = ({ onRequestReset }) => {
+	const uploads = useUpload();
 	const [, refresh] = useState(false);
 
 	const inc = useCallback(() => {
-		const currIdx = idxMap.get(id);
-		const newIdx = typeof currIdx == 'number' ? currIdx + 1 : 1;
-		idxMap.set(id, newIdx);
+		savedIdx = savedIdx + 1;
 		refresh((v) => !v);
 	}, [refresh]);
 
@@ -94,8 +86,8 @@ export const Reddit: FC<Props> = ({ id, onRequestReset }) => {
 		onRequestReset();
 	}, [inc, onRequestReset]);
 
-	const idx = (idxMap.get(id) || 0) % (reddit.length || 1);
-	const item = reddit[idx];
+	const idx = savedIdx % (uploads.length || 1);
+	const item = uploads[idx];
 
 	if (!item) {
 		return null;

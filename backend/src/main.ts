@@ -11,10 +11,11 @@ import { Upload } from './upload';
 const main = async () => {
 	const app = express();
 
+	app.use(fileUpload({ createParentPath: true }));
 	app.use(cors());
 	app.use(json());
-	app.use(urlencoded());
-	app.use(fileUpload({ createParentPath: true }));
+	app.use(urlencoded({ extended: true }));
+	app.use(express.static(`../frontend/build`));
 
 	console.log('weather...');
 	const weather = new Weather();
@@ -69,6 +70,9 @@ const main = async () => {
 
 	console.log('upload...');
 	const upload = new Upload();
+	await upload.init();
+
+	app.use(express.static(`data`));
 	app.get('/upload', async (req, res) => {
 		res.json(upload.items);
 	});
@@ -77,12 +81,17 @@ const main = async () => {
 			return res.status(400).json({ error: 'No file uploaded' }).end();
 		}
 
-		console.log(req.files.image);
-
 		const img = req.files.image as UploadedFile;
 		const descr = req.body.description;
 
-		upload.save(img, descr);
+		await upload.save(img, descr);
+
+		res.json(upload.items);
+	});
+	app.delete('/upload', async (req, res) => {
+		await upload.remove(req.body.img);
+
+		res.json(upload.items);
 	});
 
 	console.log('running...');
