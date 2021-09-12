@@ -95,8 +95,8 @@ const main = async () => {
 		res.json(upload.items);
 	});
 
+	await new Promise<void>((resolve) => app.listen(80, '0.0.0.0', resolve));
 	console.log('running...');
-	app.listen(80);
 };
 
 main().catch((err) => console.error(err));
