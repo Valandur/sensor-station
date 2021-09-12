@@ -1,14 +1,20 @@
 import express from 'express';
 import cors from 'cors';
+import fileUpload, { UploadedFile } from 'express-fileupload';
+import { json, urlencoded } from 'body-parser';
 
 import { News } from './news';
 import { Reddit } from './reddit';
 import { Weather } from './weather';
+import { Upload } from './upload';
 
 const main = async () => {
 	const app = express();
 
 	app.use(cors());
+	app.use(json());
+	app.use(urlencoded());
+	app.use(fileUpload({ createParentPath: true }));
 
 	console.log('weather...');
 	const weather = new Weather();
@@ -59,6 +65,24 @@ const main = async () => {
 		}
 
 		res.json(reddit.items);
+	});
+
+	console.log('upload...');
+	const upload = new Upload();
+	app.get('/upload', async (req, res) => {
+		res.json(upload.items);
+	});
+	app.post('/upload', async (req, res) => {
+		if (!req.files) {
+			return res.status(400).json({ error: 'No file uploaded' }).end();
+		}
+
+		console.log(req.files.image);
+
+		const img = req.files.image as UploadedFile;
+		const descr = req.body.description;
+
+		upload.save(img, descr);
 	});
 
 	console.log('running...');
