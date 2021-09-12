@@ -1,34 +1,41 @@
-# Sensor station
+# Robot
 
-## Setup
+## Dependencies
 
-Install dependencies
+`sudo apt install --no-install-recommends vim htop chromium-browser xserver-xorg x11-xserver-utils xinit unclutter fonts-noto-color-emoji`
 
-```shell
-sudo apt install xorg xorg-dev
+### Autostart Web UI
+
+> .bash_profile
+
+```
+[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
 ```
 
-Edit `rc.local` to start the x server
+> .xinitrc
 
-```shell
-[...]
-
-X &
-
-[...]
 ```
+#!/usr/bin/env sh
+xset -dpms
+xset s off
+xset s noblank
 
-Install this repo
-
-```shell
-npm install
-```
-
-Install pm2 and add this process to the start list
-
-```shell
-$ npm i -g pm2
-$ pm2 startup
-$ pm2 start --name sensor main.js
-$ pm2 save
+unclutter &
+chromium-browser http://localhost:3000 \
+  --window-size=800,480 \
+  --window-position=0,0 \
+  --start-fullscreen \
+  --kiosk \
+  --incognito \
+  --noerrdialogs \
+  --disable-translate \
+  --no-first-run \
+  --fast \
+  --fast-start \
+  --disable-infobars \
+  --disable-features=TranslateUI \
+  --disk-cache-dir=/dev/null \
+  --overscroll-history-navigation=0 \
+  --disable-pinch \
+  --check-for-update-interval=31536000
 ```
