@@ -4,7 +4,6 @@ import { differenceInMilliseconds } from 'date-fns';
 
 import { Header } from './header';
 import { News } from './news';
-import { Reddit } from './reddit';
 import { Weather } from './weather';
 import { Events } from './events';
 import { Upload } from './upload';
@@ -104,10 +103,8 @@ export const App: FC = () => {
 	const screens: JSX.Element[] = [
 		<Weather />,
 		<News id="1646" onRequestPause={pause} />,
-		<Reddit id="earthporn" onRequestReset={resetTimer} />,
-		<Weather />,
-		<News id="718" onRequestPause={pause} />,
-		<Upload onRequestReset={resetTimer} />
+		<Upload onRequestReset={resetTimer} />,
+		<News id="718" onRequestPause={pause} />
 	];
 	if (birthday) {
 		screens.push(
