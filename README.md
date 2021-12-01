@@ -22,7 +22,7 @@ xset s noblank
 
 unclutter &
 chromium-browser http://localhost:3000 \
-  --window-size=800,480 \
+  --window-size=1024,600 \
   --window-position=0,0 \
   --start-fullscreen \
   --kiosk \

@@ -52,7 +52,7 @@ const ContainerSensor = styled('div', {
 	alignItems: 'center'
 });
 const SensorText = styled('div', {
-	fontSize: 80,
+	fontSize: 100,
 	textAlign: 'center'
 });
 const ContainerForecasts = styled('div', {
@@ -68,13 +68,13 @@ const Forecast = styled('div', {
 	flexDirection: 'column'
 });
 const ForecastImg = styled('i', {
-	fontSize: '7.5em !important',
+	fontSize: '10em !important',
 	textAlign: 'center'
 });
 const ForecastText = styled('div', {
-	fontSize: 60,
+	fontSize: 80,
 	textAlign: 'center',
-	marginTop: 20
+	marginTop: 35
 });
 
 export const Weather: FC = () => {
