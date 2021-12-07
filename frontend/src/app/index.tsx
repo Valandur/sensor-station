@@ -6,7 +6,6 @@ import { Header } from './header';
 import { News } from './news';
 import { Weather } from './weather';
 import { Events } from './events';
-import { Upload } from './upload';
 
 const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 	{
@@ -103,7 +102,6 @@ export const App: FC = () => {
 	const screens: JSX.Element[] = [
 		<Weather />,
 		<News id="1646" onRequestPause={pause} />,
-		<Upload onRequestReset={resetTimer} />,
 		<News id="718" onRequestPause={pause} />
 	];
 	if (birthday) {
