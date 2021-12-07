@@ -48,13 +48,14 @@ const DateSub = styled('div', {
 });
 
 const ProgressContainer = styled('div', {
-	padding: 30,
+	padding: 10,
+	paddingLeft: 20,
 	boxSizing: 'border-box',
 	height: '100%'
 });
 
 const ProgressBackground = styled('div', {
-	width: 20,
+	width: 40,
 	height: '100%',
 	position: 'relative',
 	backgroundColor: 'white'
@@ -70,7 +71,8 @@ const Progress = styled('div', {
 	width: '100%',
 	bottom: 0,
 	boxSizing: 'border-box',
-	paddingBottom: 4
+	paddingBottom: 4,
+	fontSize: '2em'
 });
 
 interface Props {
