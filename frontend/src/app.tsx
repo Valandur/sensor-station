@@ -9,24 +9,14 @@ import { Events } from './events';
 
 const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 	{
-		name: 'Michi',
-		month: 6,
-		day: 4
+		name: 'Mama',
+		month: 10,
+		day: 5
 	},
 	{
-		name: 'Robin',
-		month: 3,
-		day: 26
-	},
-	{
-		name: 'Lea',
-		month: 8,
-		day: 1
-	},
-	{
-		name: 'Marco',
-		month: 12,
-		day: 14
+		name: 'Papa',
+		month: 1,
+		day: 19
 	}
 ];
 

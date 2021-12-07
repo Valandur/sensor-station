@@ -95,7 +95,7 @@ interface PiJuice {
 
 export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 	const now = new Date();
-	const holiday = holidays.isHoliday(new Date('2021-08-01 12:00:00 GMT+0100'));
+	const holiday = holidays.isHoliday(now);
 	const time = format(now, 'HH:mm');
 	const date = format(now, 'dd. MMM', { locale: de });
 	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
