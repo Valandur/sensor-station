@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { global, styled } from '@stitches/react';
+import { globalCss, styled } from '@stitches/react';
 import { differenceInMilliseconds } from 'date-fns';
 
 import { Header } from './header';
@@ -30,7 +30,7 @@ const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 	}
 ];
 
-const globalStyles = global({
+const globalStyles = globalCss({
 	body: {
 		margin: 0,
 		padding: 0,
