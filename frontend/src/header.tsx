@@ -61,10 +61,16 @@ const ProgressBackground = styled('div', {
 });
 
 const Progress = styled('div', {
+	display: 'flex',
+	flexDirection: 'column',
+	justifyContent: 'flex-end',
+	alignItems: 'center',
 	position: 'absolute',
 	backgroundColor: 'green',
 	width: '100%',
-	bottom: 0
+	bottom: 0,
+	boxSizing: 'border-box',
+	paddingBottom: 4
 });
 
 interface Props {
@@ -108,7 +114,7 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 		};
 
 		main().catch((err) => console.error(err));
-		const interval = setInterval(() => main().catch((err) => console.error(err)), 10000);
+		const interval = setInterval(() => main().catch((err) => console.error(err)), 5000);
 
 		return () => {
 			clearInterval(interval);
@@ -121,7 +127,9 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 			{piJuice && (
 				<ProgressContainer>
 					<ProgressBackground>
-						<Progress style={{ height: `${piJuice.battery.charge}%` }} />
+						<Progress style={{ height: `${piJuice.battery.charge}%` }}>
+							{piJuice.status.batteryStatus.includes('CHARGING') && '⚡'}
+						</Progress>
 					</ProgressBackground>
 				</ProgressContainer>
 			)}
