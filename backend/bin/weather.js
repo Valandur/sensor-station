@@ -6,19 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weather = void 0;
 const axios_1 = __importDefault(require("axios"));
 const service_1 = require("./service");
+const UPDATE_INTERVAL = 60 * 60 * 1000;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_LOC = '&lat=47.2949&lon=8.5645';
 const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
-const DHT_TYPE = 11;
-const DHT_PIN = 17;
 class Weather extends service_1.Service {
     constructor() {
-        super();
+        super(...arguments);
         this.forecasts = [];
-        this.sensorTemp = null;
-        this.sensorRh = null;
         this.updateForecasts = async () => {
             const { data } = await axios_1.default(URL);
             const forecasts = [];
@@ -37,36 +34,13 @@ class Weather extends service_1.Service {
             }
             this.forecasts = forecasts;
         };
-        this.updateDHT = async () => {
-            if (!this.dht) {
-                this.sensorTemp = Math.random() * 10;
-                this.sensorRh = Math.random() * 100;
-            }
-            try {
-                const res = await this.dht.read(DHT_TYPE, DHT_PIN);
-                this.sensorTemp = res.temperature;
-                this.sensorRh = res.humidity;
-            }
-            catch (err) {
-                // NO-OP
-            }
-        };
-        try {
-            this.dht = require('node-dht-sensor').promises;
-        }
-        catch {
-            // NO-OP
-        }
     }
     async init() {
-        await this.updateDHT();
         await this.updateForecasts();
-        this.forecastInterval = setInterval(this.updateForecasts, 10 * 60 * 1000);
-        this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+        this.forecastInterval = setInterval(this.updateForecasts, UPDATE_INTERVAL);
     }
     dispose() {
         clearInterval(this.forecastInterval);
-        clearInterval(this.sensorInterval);
     }
 }
 exports.Weather = Weather;

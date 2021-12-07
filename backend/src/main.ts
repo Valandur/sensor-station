@@ -24,7 +24,7 @@ const main = async () => {
 	const weather = new Weather();
 	await weather.init();
 	app.get('/weather', (req, res) => {
-		res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
+		res.json({ forecasts: weather.forecasts });
 	});
 
 	console.log('news...');
