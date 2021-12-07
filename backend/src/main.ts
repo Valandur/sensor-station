@@ -16,7 +16,7 @@ const main = async () => {
 	console.log('pijuice...');
 	const pijuice = new PiJuice();
 	await pijuice.init();
-	app.get('/battery', (req, res) => {
+	app.get('/pijuice', (req, res) => {
 		res.json({ status: pijuice.status, battery: pijuice.battery });
 	});
 
