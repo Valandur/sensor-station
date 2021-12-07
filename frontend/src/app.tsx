@@ -58,7 +58,7 @@ const Progress = styled('div', {
 	height: 2
 });
 
-const AUTO_SWITCH = 20 * 1000;
+const AUTO_SWITCH = 30 * 1000;
 
 export const App: FC = () => {
 	globalStyles();
@@ -76,7 +76,7 @@ export const App: FC = () => {
 					incScreen();
 				}
 			}
-		}, 100);
+		}, 1000);
 
 		return () => {
 			clearInterval(interval);

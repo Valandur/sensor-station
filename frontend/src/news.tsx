@@ -3,6 +3,8 @@ import axios from 'axios';
 import { parseISO } from 'date-fns';
 import React, { FC, useEffect, useState } from 'react';
 
+import { BASE_URL } from './const';
+
 interface FeedItem {
 	date: Date;
 	title: string;
@@ -16,7 +18,7 @@ const useNews = (id: string): FeedItem[] => {
 
 	useEffect(() => {
 		const main = async () => {
-			const { data } = await axios(`/news/${id}`);
+			const { data } = await axios(`${BASE_URL}/news/${id}`);
 			// console.log(id, data);
 			setItems(
 				data.map((item: { date: string }) => ({
@@ -114,7 +116,7 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 		<Container onClick={() => (item ? setItem(null) : null)}>
 			{item ? (
 				<DetailContainer>
-					<IFrame src={item.link} />
+					<IFrame src={`${BASE_URL}${item.link}`} />
 					<CloseButton>X</CloseButton>
 				</DetailContainer>
 			) : (
