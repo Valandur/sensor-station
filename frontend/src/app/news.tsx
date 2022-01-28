@@ -1,36 +1,7 @@
 import { styled } from '@stitches/react';
-import axios from 'axios';
-import { parseISO } from 'date-fns';
 import React, { FC, useEffect, useState } from 'react';
 
-interface FeedItem {
-	date: Date;
-	title: string;
-	description: string;
-	img: string;
-	link: string;
-}
-
-const useNews = (id: string): FeedItem[] => {
-	const [items, setItems] = useState<FeedItem[]>([]);
-
-	useEffect(() => {
-		const main = async () => {
-			const { data } = await axios(`/news/${id}`);
-			// console.log(id, data);
-			setItems(
-				data.map((item: { date: string }) => ({
-					...item,
-					date: parseISO(item.date)
-				}))
-			);
-		};
-
-		main().catch((err) => console.error(err));
-	}, [id]);
-
-	return items;
-};
+import { BASE_URL, NewsItem, useNews } from './api';
 
 const Container = styled('div', {
 	flex: 1,
@@ -79,7 +50,7 @@ const DetailContainer = styled('div', {
 const CloseButton = styled('button', {
 	position: 'absolute',
 	top: 10,
-	right: 10,
+	left: 10,
 	fontSize: 20
 });
 
@@ -93,7 +64,7 @@ const idxMap: Map<string, number> = new Map();
 
 export const News: FC<Props> = ({ id, onRequestPause }) => {
 	const news = useNews(id);
-	const [item, setItem] = useState<FeedItem | null>(null);
+	const [item, setItem] = useState<NewsItem | null>(null);
 
 	useEffect(
 		() => () => {
@@ -111,11 +82,11 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 	const idx = (idxMap.get(id) || 0) % (news.length - ITEMS + 1 || 1);
 
 	return (
-		<Container onClick={() => (item ? setItem(null) : null)}>
+		<Container>
 			{item ? (
 				<DetailContainer>
-					<IFrame src={item.link} />
-					<CloseButton>X</CloseButton>
+					<IFrame src={BASE_URL + item.link} />
+					<CloseButton onClick={() => setItem(null)}>X</CloseButton>
 				</DetailContainer>
 			) : (
 				news.slice(idx, idx + ITEMS).map((item) => (

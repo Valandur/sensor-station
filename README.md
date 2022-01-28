@@ -21,7 +21,7 @@ xset s off
 xset s noblank
 
 unclutter &
-chromium-browser http://localhost:3000 \
+chromium-browser http://localhost \
   --window-size=1024,600 \
   --window-position=0,0 \
   --start-fullscreen \
@@ -37,5 +37,6 @@ chromium-browser http://localhost:3000 \
   --disk-cache-dir=/dev/null \
   --overscroll-history-navigation=0 \
   --disable-pinch \
-  --check-for-update-interval=31536000
+  --check-for-update-interval=31536000 \
+  --force-dark-mode
 ```

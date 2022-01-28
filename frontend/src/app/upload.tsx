@@ -1,27 +1,7 @@
 import { styled } from '@stitches/react';
-import axios from 'axios';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 
-interface FeedItem {
-	title: string;
-	img: string;
-	ratio: number;
-}
-
-const useUpload = (): FeedItem[] => {
-	const [items, setItems] = useState<FeedItem[]>([]);
-
-	useEffect(() => {
-		const main = async () => {
-			const { data } = await axios(`/upload`);
-			setItems(data);
-		};
-
-		main().catch((err) => console.error(err));
-	}, []);
-
-	return items;
-};
+import { BASE_URL, useUpload } from './api';
 
 const Container = styled('div', {
 	flex: 1,
@@ -94,7 +74,7 @@ export const Upload: FC<Props> = ({ onRequestReset }) => {
 
 	return (
 		<Container onClick={onClick}>
-			{item.ratio < 1 ? <ImageFull src={item.img} /> : <Image src={item.img} />}
+			{item.ratio < 1 ? <ImageFull src={BASE_URL + item.img} /> : <Image src={BASE_URL + item.img} />}
 			<Title style={{ maxWidth: item.ratio < 1 ? '40%' : undefined }}>
 				{item.title.split('\n').map((line) => (
 					<Fragment key={line}>

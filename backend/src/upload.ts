@@ -18,12 +18,13 @@ export class Upload extends Service {
 
 	public async init(): Promise<void> {
 		this.items = JSON.parse(readFileSync(ITEMS_PATH, 'utf-8'));
+		this.items = this.items.map((i) => ({ ...i, img: i.img.startsWith('/') ? i.img : '/' + i.img }));
 	}
 
 	public dispose(): void {}
 
 	public async save(image: UploadedFile, description: string) {
-		const path = `upload/${image.md5}${extname(image.name)}`;
+		const path = `/upload/${image.md5}${extname(image.name)}`;
 		image.mv(`data/${path}`);
 
 		const imgInfo = await probe(`http://localhost/${path}`);

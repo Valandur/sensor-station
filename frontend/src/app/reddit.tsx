@@ -1,34 +1,7 @@
 import { styled } from '@stitches/react';
-import axios from 'axios';
-import { parseISO } from 'date-fns';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 
-interface FeedItem {
-	date: Date;
-	title: string;
-	img: string;
-	ratio: number;
-}
-
-const useReddit = (name: string): FeedItem[] => {
-	const [items, setItems] = useState<FeedItem[]>([]);
-
-	useEffect(() => {
-		const main = async () => {
-			const { data } = await axios(`/reddit/${name}`);
-			setItems(
-				data.map((item: { date: string }) => ({
-					...item,
-					date: parseISO(item.date)
-				}))
-			);
-		};
-
-		main().catch((err) => console.error(err));
-	}, []);
-
-	return items;
-};
+import { useReddit } from './api';
 
 const Container = styled('div', {
 	flex: 1,

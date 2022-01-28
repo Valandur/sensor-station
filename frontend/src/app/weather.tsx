@@ -1,35 +1,9 @@
 import { styled } from '@stitches/react';
-import axios from 'axios';
-import { add, format, isAfter, parseISO, startOfDay } from 'date-fns';
+import { add, format, isAfter, startOfDay } from 'date-fns';
 import { de } from 'date-fns/locale';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 
-interface WeatherEntry {
-	time: Date;
-	img: string;
-	feelsLike: number;
-}
-
-const useWeather = (): [WeatherEntry[], number | null, number | null] => {
-	const [items, setItems] = useState<WeatherEntry[]>([]);
-	const [temp, setTemp] = useState<number | null>(null);
-	const [rh, setRh] = useState<number | null>(null);
-
-	useEffect(() => {
-		const main = async () => {
-			const { data } = await axios(`/weather`);
-			setItems(
-				data.forecasts.map((f: { time: string; img: string; feelsLike: number }) => ({ ...f, time: parseISO(f.time) }))
-			);
-			setTemp(data.sensor.temp || 0);
-			setRh(data.sensor.rh || 0);
-		};
-
-		main().catch((err) => console.error(err));
-	}, []);
-
-	return [items, temp, rh];
-};
+import { useWeather, WeatherItem } from './api';
 
 type DateCompare = (now: Date, date: Date) => boolean;
 const WEATHER_FORECASTS: DateCompare[] = [
@@ -83,7 +57,7 @@ export const Weather: FC = () => {
 	const now = new Date();
 	const shownForecasts = WEATHER_FORECASTS.map((dateCompare) =>
 		forecasts.find((forecast) => dateCompare(now, forecast.time))
-	).filter((forecast) => !!forecast) as WeatherEntry[];
+	).filter((forecast) => !!forecast) as WeatherItem[];
 
 	return (
 		<Container>
