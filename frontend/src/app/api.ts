@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { parseISO } from 'date-fns';
 
-export const BASE_URL = '';
+export const BASE_URL = window.location.origin;
 
 export interface WeatherItem {
 	time: Date;
