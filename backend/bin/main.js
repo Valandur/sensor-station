@@ -14,13 +14,15 @@ const upload_1 = require("./upload");
 const pijuice_1 = require("./pijuice");
 const main = async () => {
     const app = (0, express_1.default)();
-    app.use((0, express_fileupload_1.default)({ createParentPath: true }));
     app.use((0, cors_1.default)());
     app.use((0, body_parser_1.json)());
-    app.use((0, body_parser_1.urlencoded)({ extended: true }));
     app.use(express_1.default.static(`../frontend/build`));
-    app.use('/web', express_1.default.static(`../frontend/build`));
-    if (process.env.DISABLE_PIJUICE) {
+    if (!process.env.DISABLE_UPLOAD) {
+        app.use('/web', express_1.default.static(`../frontend/build`));
+        app.use((0, body_parser_1.urlencoded)({ extended: true }));
+        app.use((0, express_fileupload_1.default)({ createParentPath: true }));
+    }
+    if (!process.env.DISABLE_PIJUICE) {
         console.log('pijuice...');
         const pijuice = new pijuice_1.PiJuice();
         await pijuice.init();
@@ -60,7 +62,7 @@ const main = async () => {
         const page = await news.getArticle(item);
         res.send(page);
     });
-    if (process.env.DISABLE_REDDIT) {
+    if (!process.env.DISABLE_REDDIT) {
         console.log('reddit...');
         const redditMap = new Map();
         app.get('/reddit/:name', async (req, res) => {
@@ -75,7 +77,7 @@ const main = async () => {
             res.json(reddit.items);
         });
     }
-    if (process.env.DISABLE_UPLOAD) {
+    if (!process.env.DISABLE_UPLOAD) {
         console.log('upload...');
         const upload = new upload_1.Upload();
         await upload.init();

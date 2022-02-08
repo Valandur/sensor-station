@@ -12,14 +12,17 @@ import { PiJuice } from './pijuice';
 const main = async () => {
 	const app = express();
 
-	app.use(fileUpload({ createParentPath: true }));
 	app.use(cors());
 	app.use(json() as RequestHandler);
-	app.use(urlencoded({ extended: true }) as RequestHandler);
 	app.use(express.static(`../frontend/build`));
-	app.use('/web', express.static(`../frontend/build`));
 
-	if (process.env.DISABLE_PIJUICE) {
+	if (!process.env.DISABLE_UPLOAD) {
+		app.use('/web', express.static(`../frontend/build`));
+		app.use(urlencoded({ extended: true }) as RequestHandler);
+		app.use(fileUpload({ createParentPath: true }));
+	}
+
+	if (!process.env.DISABLE_PIJUICE) {
 		console.log('pijuice...');
 		const pijuice = new PiJuice();
 		await pijuice.init();
@@ -64,7 +67,7 @@ const main = async () => {
 		res.send(page);
 	});
 
-	if (process.env.DISABLE_REDDIT) {
+	if (!process.env.DISABLE_REDDIT) {
 		console.log('reddit...');
 		const redditMap: Map<string, Reddit> = new Map();
 		app.get('/reddit/:name', async (req, res) => {
@@ -81,7 +84,7 @@ const main = async () => {
 		});
 	}
 
-	if (process.env.DISABLE_UPLOAD) {
+	if (!process.env.DISABLE_UPLOAD) {
 		console.log('upload...');
 		const upload = new Upload();
 		await upload.init();
