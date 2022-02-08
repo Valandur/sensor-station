@@ -44,6 +44,8 @@ export class Weather extends Service {
 		if (!process.env.DISABLE_SENSOR) {
 			await this.updateDHT();
 			this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+		} else {
+			console.log('SENSOR DISABLED');
 		}
 	}
 

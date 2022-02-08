@@ -29,6 +29,8 @@ const main = async () => {
 		app.get('/pijuice', (req, res) => {
 			res.json({ status: pijuice.status, battery: pijuice.battery });
 		});
+	} else {
+		console.log('PIJUICE DISABLED');
 	}
 
 	console.log('weather...');
@@ -82,6 +84,8 @@ const main = async () => {
 
 			res.json(reddit.items);
 		});
+	} else {
+		console.log('REDDIT DISABLED');
 	}
 
 	if (!process.env.DISABLE_UPLOAD) {
@@ -110,6 +114,8 @@ const main = async () => {
 
 			res.json(upload.items);
 		});
+	} else {
+		console.log('UPLOAD DISABLED');
 	}
 
 	await new Promise<void>((resolve) => app.listen(80, '0.0.0.0', resolve));
