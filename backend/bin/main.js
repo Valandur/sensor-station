@@ -30,6 +30,9 @@ const main = async () => {
             res.json({ status: pijuice.status, battery: pijuice.battery });
         });
     }
+    else {
+        console.log('PIJUICE DISABLED');
+    }
     console.log('weather...');
     const weather = new weather_1.Weather();
     await weather.init();
@@ -77,6 +80,9 @@ const main = async () => {
             res.json(reddit.items);
         });
     }
+    else {
+        console.log('REDDIT DISABLED');
+    }
     if (!process.env.DISABLE_UPLOAD) {
         console.log('upload...');
         const upload = new upload_1.Upload();
@@ -99,7 +105,11 @@ const main = async () => {
             res.json(upload.items);
         });
     }
-    await new Promise((resolve) => app.listen(80, '0.0.0.0', resolve));
-    console.log('running...');
+    else {
+        console.log('UPLOAD DISABLED');
+    }
+    const port = process.env.PORT ? Number(process.env.PORT) : 80;
+    await new Promise((resolve) => app.listen(port || 80, '0.0.0.0', resolve));
+    console.log(`running on 0.0.0.0:${port}...`);
 };
 main().catch((err) => console.error(err));

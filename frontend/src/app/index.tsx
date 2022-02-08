@@ -103,19 +103,18 @@ export const App: FC = () => {
 	const screens: JSX.Element[] = [
 		<Weather />,
 		<News id="1646" onRequestPause={pause} />,
-		<Upload onRequestReset={resetTimer} />,
-		<News id="718" onRequestPause={pause} />
-	];
-	if (birthday) {
-		screens.push(
+		!process.env.REACT_APP_DISABLE_UPLOAD && <Upload onRequestReset={resetTimer} />,
+		<News id="718" onRequestPause={pause} />,
+		birthday && (
 			<Events>
 				🎉 Happy Birthday <b>{birthday.name}</b> 🎉
 				<br />
 				<br />
 				Alles gueti zum Geburi! 🥳
 			</Events>
-		);
-	}
+		)
+	].filter((e) => !!e) as JSX.Element[];
+
 	const numScreens = screens.length;
 
 	const incScreen = useCallback(() => {

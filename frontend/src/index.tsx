@@ -9,12 +9,8 @@ ReactDOM.render(
 	<React.StrictMode>
 		<Router>
 			<Routes>
-				<Route path="/web">
-					<Web />
-				</Route>
-				<Route path="/*">
-					<App />
-				</Route>
+				{!process.env.REACT_APP_DISABLE_UPLOAD && <Route path="/web" element={<Web />} />}
+				<Route path="/*" element={<App />} />
 			</Routes>
 		</Router>
 	</React.StrictMode>,

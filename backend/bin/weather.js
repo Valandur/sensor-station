@@ -65,6 +65,9 @@ class Weather extends service_1.Service {
             await this.updateDHT();
             this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
         }
+        else {
+            console.log('SENSOR DISABLED');
+        }
     }
     dispose() {
         clearInterval(this.forecastInterval);

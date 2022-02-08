@@ -1,5 +1,5 @@
 import { UploadedFile } from 'express-fileupload';
-import { readFileSync, rmSync, writeFileSync } from 'fs';
+import { readFile, rm, writeFile } from 'fs/promises';
 import { extname } from 'path';
 import probe from 'probe-image-size';
 
@@ -17,7 +17,7 @@ export class Upload extends Service {
 	public items: UploadItem[] = [];
 
 	public async init(): Promise<void> {
-		this.items = JSON.parse(readFileSync(ITEMS_PATH, 'utf-8'));
+		this.items = JSON.parse(await readFile(ITEMS_PATH, 'utf-8').catch(() => '[]'));
 		this.items = this.items.map((i) => ({ ...i, img: i.img.startsWith('/') ? i.img : '/' + i.img }));
 	}
 
@@ -30,7 +30,7 @@ export class Upload extends Service {
 		const imgInfo = await probe(`http://localhost/${path}`);
 
 		this.items.push({ img: path, title: description, ratio: imgInfo.width / imgInfo.height });
-		writeFileSync(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
+		await writeFile(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
 	}
 
 	public async remove(img: string) {
@@ -39,9 +39,9 @@ export class Upload extends Service {
 			throw new Error(`Removing invalid image`);
 		}
 
-		rmSync(`data/${img}`);
+		await rm(`data/${img}`);
 		this.items.splice(idx, 1);
 
-		writeFileSync(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
+		await writeFile(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
 	}
 }

@@ -118,8 +118,10 @@ const main = async () => {
 		console.log('UPLOAD DISABLED');
 	}
 
-	await new Promise<void>((resolve) => app.listen(80, '0.0.0.0', resolve));
-	console.log('running...');
+	const port = process.env.PORT ? Number(process.env.PORT) : 80;
+
+	await new Promise<void>((resolve) => app.listen(port || 80, '0.0.0.0', resolve));
+	console.log(`running on 0.0.0.0:${port}...`);
 };
 
 main().catch((err) => console.error(err));

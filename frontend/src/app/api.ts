@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { parseISO } from 'date-fns';
 
-export const BASE_URL = window.location.origin;
+export const BASE_URL = process.env.REACT_APP_API_URL || window.location.origin;
 
 export interface WeatherItem {
 	time: Date;
@@ -131,6 +131,10 @@ export const useBattery = (): PiJuice | undefined => {
 	const [piJuice, setPiJuice] = useState<PiJuice>();
 
 	useEffect(() => {
+		if (process.env.REACT_APP_DISABLE_PIJUICE) {
+			return;
+		}
+
 		const main = async () => {
 			const { data } = await axios(`${BASE_URL}/pijuice`);
 			setPiJuice(data);

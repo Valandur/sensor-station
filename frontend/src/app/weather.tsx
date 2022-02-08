@@ -61,10 +61,12 @@ export const Weather: FC = () => {
 
 	return (
 		<Container>
-			<ContainerSensor>
-				<SensorText style={{ color: '#23ad00' }}>{temp?.toFixed(0)}°</SensorText>
-				<SensorText style={{ color: '#0052d6' }}>{rh?.toFixed(0)}%</SensorText>
-			</ContainerSensor>
+			{!process.env.REACT_APP_DISABLE_SENSOR && (
+				<ContainerSensor>
+					<SensorText style={{ color: '#23ad00' }}>{temp?.toFixed(0)}°</SensorText>
+					<SensorText style={{ color: '#0052d6' }}>{rh?.toFixed(0)}%</SensorText>
+				</ContainerSensor>
+			)}
 			<ContainerForecasts>
 				{shownForecasts.map((forecast) => (
 					<Forecast key={forecast.time.toISOString()}>

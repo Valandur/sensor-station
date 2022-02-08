@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "ts-node-dev src/main.ts",
+		"dev": "PORT=2000 ts-node-dev src/main.ts",
 		"build": "tsc",
 		"start": "npm run build && node bin/main.js",
 		"test": "ts-node src/test.ts"
