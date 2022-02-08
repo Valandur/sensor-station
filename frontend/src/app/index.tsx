@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { global, styled } from '@stitches/react';
+import { globalCss, styled } from '@stitches/react';
 import { differenceInMilliseconds } from 'date-fns';
 
 import { Header } from './header';
@@ -31,7 +31,7 @@ const BIRTHDAYS: { name: string; month: number; day: number }[] = [
 	}
 ];
 
-const globalStyles = global({
+const globalStyles = globalCss({
 	body: {
 		margin: 0,
 		padding: 0,
@@ -59,7 +59,7 @@ const Progress = styled('div', {
 	height: 2
 });
 
-const AUTO_SWITCH = 20 * 1000;
+const AUTO_SWITCH = 30 * 1000;
 
 export const App: FC = () => {
 	globalStyles();
@@ -77,7 +77,7 @@ export const App: FC = () => {
 					incScreen();
 				}
 			}
-		}, 100);
+		}, 1000);
 
 		return () => {
 			clearInterval(interval);

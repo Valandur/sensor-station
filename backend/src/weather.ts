@@ -38,16 +38,21 @@ export class Weather extends Service {
 	}
 
 	public async init(): Promise<void> {
-		await this.updateDHT();
 		await this.updateForecasts();
-
 		this.forecastInterval = setInterval(this.updateForecasts, 10 * 60 * 1000);
-		this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+
+		if (!process.env.DISABLE_SENSOR) {
+			await this.updateDHT();
+			this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+		}
 	}
 
 	public dispose(): void {
 		clearInterval(this.forecastInterval);
-		clearInterval(this.sensorInterval);
+
+		if (this.sensorInterval) {
+			clearInterval(this.sensorInterval);
+		}
 	}
 
 	private updateForecasts = async () => {

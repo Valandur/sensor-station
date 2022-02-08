@@ -1,8 +1,8 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { global } from '@stitches/react';
+import { globalCss } from '@stitches/react';
 import axios from 'axios';
 
-const globalStyles = global({
+const globalStyles = globalCss({
 	body: {
 		backgroundColor: 'black',
 		fontFamily:
