@@ -5,6 +5,7 @@
 	"scripts": {
 		"start": "REACT_APP_API_URL=http://localhost:2000 react-scripts start",
 		"build": "react-scripts build",
+		"build:zero": "REACT_APP_DISABLE_SENSOR=1 REACT_APP_DISABLE_UPLOAD=1 react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject",
 		"serve": "serve -s build -p 3000"
