@@ -45,29 +45,29 @@ export class Modem {
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
 		if (copsMatch) {
-			console.log('COPS:', copsMatch[3]);
+			console.log('COPS:', ...copsMatch.slice(1));
 			operator = copsMatch[3];
 		}
 
 		let signal: number;
 		const { response: csqResp } = await this.commander.send('AT+CSQ');
-		const csqMatch = CSQ.exec(csqResp);
+		const csqMatch = CSQ.exec(csqResp.slice(1));
 		if (csqMatch) {
-			console.log('CSQ:', csqMatch[1]);
+			console.log('CSQ:', ...csqMatch);
 			signal = Number(csqMatch[1]);
 		}
 
 		await this.commander.send('AT+CREG=2');
 		const { response: cregResp } = await this.commander.send('AT+CREG?');
-		const cregMatch = CREG.exec(cregResp);
+		const cregMatch = CREG.exec(cregResp.slice(1));
 		if (cregMatch) {
-			console.log('CREG:', cregMatch[1]);
+			console.log('CREG:', ...cregMatch);
 		}
 
 		const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
-		const gpsMatch = GPS.exec(gpsResp);
+		const gpsMatch = GPS.exec(gpsResp.slice(1));
 		if (gpsMatch) {
-			console.log('GPS:', gpsMatch[1], gpsMatch[2], gpsMatch[3], gpsMatch[4]);
+			console.log('GPS:', ...gpsMatch);
 		}
 
 		return { isConnected: true, operator, signal };
