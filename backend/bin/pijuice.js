@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PiJuice = exports.BatteryChargingTemperature = exports.PowerIn = exports.BatteryStatus = void 0;
 const i2c_bus_1 = __importDefault(require("i2c-bus"));
-const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const BUS_NUMBER = 0x01;
 const I2C_ADDRESS = 0x14;
 const CMD_STATUS = 0x40;
@@ -41,21 +40,12 @@ var BatteryChargingTemperature;
     BatteryChargingTemperature[BatteryChargingTemperature["COOL"] = 2] = "COOL";
     BatteryChargingTemperature[BatteryChargingTemperature["WARM"] = 3] = "WARM";
 })(BatteryChargingTemperature = exports.BatteryChargingTemperature || (exports.BatteryChargingTemperature = {}));
-class PiJuice extends tiny_typed_emitter_1.TypedEmitter {
+class PiJuice {
     constructor() {
-        super(...arguments);
         this.update = async () => {
             try {
-                const status = await this.getStatus();
-                if (!this.status || status.batteryStatus !== this.status.batteryStatus) {
-                    this.status = status;
-                    this.emit("status", status);
-                }
-                this.battery = {
-                    charge: await this.getChargeLevel(),
-                    voltage: await this.getBatteryVoltage(),
-                    current: await this.getBatteryCurrent()
-                };
+                this.status = await this.getStatus();
+                this.battery = await this.getBattery();
             }
             catch (err) {
                 console.error(err);
@@ -109,6 +99,13 @@ class PiJuice extends tiny_typed_emitter_1.TypedEmitter {
         const powerIn = PowerIn[(status >>> 4) & 0x03];
         const powerIn5vIo = PowerIn[(status >>> 6) & 0x03];
         return { isFault, isButton, batteryStatus, powerIn, powerIn5vIo };
+    }
+    async getBattery() {
+        return {
+            charge: await this.getChargeLevel(),
+            voltage: await this.getBatteryVoltage(),
+            current: await this.getBatteryCurrent()
+        };
     }
     async getChargeLevel() {
         const data = await this.read(CMD_CHARGE_LEVEL, 1);

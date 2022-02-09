@@ -7,11 +7,12 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const body_parser_1 = require("body-parser");
+const modem_1 = require("./modem");
 const news_1 = require("./news");
-const reddit_1 = require("./reddit");
-const weather_1 = require("./weather");
-const upload_1 = require("./upload");
 const pijuice_1 = require("./pijuice");
+const reddit_1 = require("./reddit");
+const upload_1 = require("./upload");
+const weather_1 = require("./weather");
 const main = async () => {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)());
@@ -22,6 +23,12 @@ const main = async () => {
         app.use((0, body_parser_1.urlencoded)({ extended: true }));
         app.use((0, express_fileupload_1.default)({ createParentPath: true }));
     }
+    console.log('weather...');
+    const weather = new weather_1.Weather();
+    await weather.init();
+    app.get('/weather', (req, res) => {
+        res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
+    });
     if (!process.env.DISABLE_PIJUICE) {
         console.log('pijuice...');
         const pijuice = new pijuice_1.PiJuice();
@@ -33,12 +40,6 @@ const main = async () => {
     else {
         console.log('PIJUICE DISABLED');
     }
-    console.log('weather...');
-    const weather = new weather_1.Weather();
-    await weather.init();
-    app.get('/weather', (req, res) => {
-        res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
-    });
     console.log('news...');
     const newsMap = new Map();
     app.get('/news/:id', async (req, res) => {
@@ -107,6 +108,17 @@ const main = async () => {
     }
     else {
         console.log('UPLOAD DISABLED');
+    }
+    if (!process.env.DISABLE_MODEM) {
+        console.log('modem...');
+        const modem = new modem_1.Modem();
+        await modem.init();
+        app.get('/modem', (req, res) => {
+            res.json({ status: modem.status });
+        });
+    }
+    else {
+        console.log('MODEM DISABLED');
     }
     const port = process.env.PORT ? Number(process.env.PORT) : 80;
     await new Promise((resolve) => app.listen(port || 80, '0.0.0.0', resolve));
