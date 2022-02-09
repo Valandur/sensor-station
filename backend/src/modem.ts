@@ -1,0 +1,48 @@
+import SerialCommander from '@westh/serial-commander';
+
+const PORT = '/dev/ttyUSB2';
+
+export interface StatusInfo {
+	isConnected: boolean;
+	network: string;
+	signalQuality: number;
+}
+
+export class Modem {
+	private commander: any;
+	private timer: NodeJS.Timer;
+
+	public status: StatusInfo;
+
+	public async init() {
+		this.commander = new SerialCommander({ port: PORT });
+		await this.commander.send('AT');
+		this.timer = setInterval(this.update, 1000);
+	}
+
+	public async dispose() {
+		await this.commander.close();
+		clearInterval(this.timer);
+	}
+
+	private update = async () => {
+		try {
+			this.status = await this.getStatus();
+		} catch (err) {
+			console.error(err);
+		}
+	};
+
+	public async getStatus(): Promise<StatusInfo> {
+		const copsResp = await this.commander.send('AT+COPS?');
+		console.log(copsResp);
+
+		const csqResp = await this.commander.send('AT+CSQ');
+		console.log(csqResp);
+
+		const cgRegResp = await this.commander.send('AT+CGREG');
+		console.log(cgRegResp);
+
+		return { isConnected: false, network: '', signalQuality: 0 };
+	}
+}

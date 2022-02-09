@@ -1,5 +1,4 @@
-import i2c, { PromisifiedBus } from "i2c-bus";
-import { TypedEmitter } from "tiny-typed-emitter";
+import i2c, { PromisifiedBus } from 'i2c-bus';
 
 const BUS_NUMBER = 0x01;
 const I2C_ADDRESS = 0x14;
@@ -18,24 +17,24 @@ const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
 
 export enum BatteryStatus {
-	"NORMAL" = 0,
-	"CHARGING_FROM_IN" = 1,
-	"CHARGING_FROM_5V_IO" = 2,
-	"NONE" = 3
+	'NORMAL' = 0,
+	'CHARGING_FROM_IN' = 1,
+	'CHARGING_FROM_5V_IO' = 2,
+	'NONE' = 3
 }
 
 export enum PowerIn {
-	"NONE" = 0,
-	"BAD" = 1,
-	"WEAK" = 2,
-	"PRESENT" = 3
+	'NONE' = 0,
+	'BAD' = 1,
+	'WEAK' = 2,
+	'PRESENT' = 3
 }
 
 export enum BatteryChargingTemperature {
-	"NORMAL" = 0,
-	"SUSPEND" = 1,
-	"COOL" = 2,
-	"WARM" = 3
+	'NORMAL' = 0,
+	'SUSPEND' = 1,
+	'COOL' = 2,
+	'WARM' = 3
 }
 
 export interface StatusInfo {
@@ -46,20 +45,18 @@ export interface StatusInfo {
 	powerIn5vIo: string;
 }
 
-export interface PiJuiceEvents {
-	status: (newStatus: StatusInfo) => void;
+export interface BatteryInfo {
+	charge: number;
+	voltage: number;
+	current: number;
 }
 
-export class PiJuice extends TypedEmitter<PiJuiceEvents> {
+export class PiJuice {
 	private bus: PromisifiedBus;
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
-	public battery: {
-		charge: number;
-		voltage: number;
-		current: number;
-	};
+	public battery: BatteryInfo;
 
 	public async init() {
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
@@ -73,17 +70,8 @@ export class PiJuice extends TypedEmitter<PiJuiceEvents> {
 
 	private update = async () => {
 		try {
-			const status = await this.getStatus();
-			if (!this.status || status.batteryStatus !== this.status.batteryStatus) {
-				this.status = status;
-				this.emit("status", status);
-			}
-
-			this.battery = {
-				charge: await this.getChargeLevel(),
-				voltage: await this.getBatteryVoltage(),
-				current: await this.getBatteryCurrent()
-			};
+			this.status = await this.getStatus();
+			this.battery = await this.getBattery();
 		} catch (err) {
 			console.error(err);
 		}
@@ -100,6 +88,14 @@ export class PiJuice extends TypedEmitter<PiJuiceEvents> {
 		const powerIn5vIo = PowerIn[(status >>> 6) & 0x03];
 
 		return { isFault, isButton, batteryStatus, powerIn, powerIn5vIo };
+	}
+
+	public async getBattery(): Promise<BatteryInfo> {
+		return {
+			charge: await this.getChargeLevel(),
+			voltage: await this.getBatteryVoltage(),
+			current: await this.getBatteryCurrent()
+		};
 	}
 
 	public async getChargeLevel() {

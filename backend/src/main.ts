@@ -3,11 +3,12 @@ import cors from 'cors';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import { json, urlencoded } from 'body-parser';
 
+import { Modem } from './modem';
 import { News } from './news';
-import { Reddit } from './reddit';
-import { Weather } from './weather';
-import { Upload } from './upload';
 import { PiJuice } from './pijuice';
+import { Reddit } from './reddit';
+import { Upload } from './upload';
+import { Weather } from './weather';
 
 const main = async () => {
 	const app = express();
@@ -22,6 +23,13 @@ const main = async () => {
 		app.use(fileUpload({ createParentPath: true }));
 	}
 
+	console.log('weather...');
+	const weather = new Weather();
+	await weather.init();
+	app.get('/weather', (req, res) => {
+		res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
+	});
+
 	if (!process.env.DISABLE_PIJUICE) {
 		console.log('pijuice...');
 		const pijuice = new PiJuice();
@@ -32,13 +40,6 @@ const main = async () => {
 	} else {
 		console.log('PIJUICE DISABLED');
 	}
-
-	console.log('weather...');
-	const weather = new Weather();
-	await weather.init();
-	app.get('/weather', (req, res) => {
-		res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
-	});
 
 	console.log('news...');
 	const newsMap: Map<string, News> = new Map();
@@ -116,6 +117,17 @@ const main = async () => {
 		});
 	} else {
 		console.log('UPLOAD DISABLED');
+	}
+
+	if (!process.env.DISABLE_MODEM) {
+		console.log('modem...');
+		const modem = new Modem();
+		await modem.init();
+		app.get('/modem', (req, res) => {
+			res.json({ status: modem.status });
+		});
+	} else {
+		console.log('MODEM DISABLED');
 	}
 
 	const port = process.env.PORT ? Number(process.env.PORT) : 80;
