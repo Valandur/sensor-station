@@ -42,21 +42,21 @@ class Modem {
         }
         let signal;
         const { response: csqResp } = await this.commander.send('AT+CSQ');
-        const csqMatch = CSQ.exec(csqResp.slice(1));
+        const csqMatch = CSQ.exec(csqResp);
         if (csqMatch) {
-            console.log('CSQ:', ...csqMatch);
+            console.log('CSQ:', ...csqMatch.slice(1));
             signal = Number(csqMatch[1]);
         }
         await this.commander.send('AT+CREG=2');
         const { response: cregResp } = await this.commander.send('AT+CREG?');
-        const cregMatch = CREG.exec(cregResp.slice(1));
+        const cregMatch = CREG.exec(cregResp);
         if (cregMatch) {
-            console.log('CREG:', ...cregMatch);
+            console.log('CREG:', ...cregMatch.slice(1));
         }
         const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
-        const gpsMatch = GPS.exec(gpsResp.slice(1));
+        const gpsMatch = GPS.exec(gpsResp);
         if (gpsMatch) {
-            console.log('GPS:', ...gpsMatch);
+            console.log('GPS:', ...gpsMatch.slice(1));
         }
         return { isConnected: true, operator, signal };
     }
