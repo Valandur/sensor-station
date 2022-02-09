@@ -9,6 +9,8 @@ const PORT = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 10 * 1000;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
+const CREG = /\+CREG: (\d+),(\d+),([0-9A-F]+),([0-9A-F]+)/i;
+const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
 class Modem {
     constructor() {
         this.update = async () => {
@@ -46,8 +48,16 @@ class Modem {
             signal = Number(csqMatch[1]);
         }
         await this.commander.send('AT+CREG=2');
-        const { response: cgRegResp } = await this.commander.send('AT+CREG?');
-        console.log(cgRegResp.split('\r'));
+        const { response: cregResp } = await this.commander.send('AT+CREG?');
+        const cregMatch = CREG.exec(cregResp);
+        if (cregMatch) {
+            console.log('CREG:', cregMatch[1]);
+        }
+        const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
+        const gpsMatch = GPS.exec(gpsResp);
+        if (gpsMatch) {
+            console.log('GPS:', gpsMatch[1], gpsMatch[2], gpsMatch[3], gpsMatch[4]);
+        }
         return { isConnected: true, operator, signal };
     }
 }
