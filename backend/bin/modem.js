@@ -30,21 +30,25 @@ class Modem {
         clearInterval(this.timer);
     }
     async getStatus() {
+        let operator;
         await this.commander.send('AT+COPS=3,0');
         const { response: copsResp } = await this.commander.send('AT+COPS?');
         const copsMatch = COPS.exec(copsResp);
         if (copsMatch) {
-            console.log('COPS', copsMatch[3]);
+            console.log('COPS:', copsMatch[3]);
+            operator = copsMatch[3];
         }
+        let signal;
         const { response: csqResp } = await this.commander.send('AT+CSQ');
         const csqMatch = CSQ.exec(csqResp);
         if (csqMatch) {
-            console.log('CSQ', csqMatch[1]);
+            console.log('CSQ:', csqMatch[1]);
+            signal = Number(csqMatch[1]);
         }
         await this.commander.send('AT+CREG=2');
-        const { response: cgRegResp } = await this.commander.send('AT+CREG');
+        const { response: cgRegResp } = await this.commander.send('AT+CREG?');
         console.log(cgRegResp.split('\r'));
-        return { isConnected: false, network: '', signalQuality: 0 };
+        return { isConnected: true, operator, signal };
     }
 }
 exports.Modem = Modem;

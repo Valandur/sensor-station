@@ -8,8 +8,8 @@ const CSQ = /\+CSQ: (\d+),(\d+)/i;
 
 export interface StatusInfo {
 	isConnected: boolean;
-	network: string;
-	signalQuality: number;
+	operator: string;
+	signal: number;
 }
 
 export class Modem {
@@ -38,23 +38,27 @@ export class Modem {
 	};
 
 	public async getStatus(): Promise<StatusInfo> {
+		let operator: string;
 		await this.commander.send('AT+COPS=3,0');
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
 		if (copsMatch) {
-			console.log('COPS', copsMatch[3]);
+			console.log('COPS:', copsMatch[3]);
+			operator = copsMatch[3];
 		}
 
+		let signal: number;
 		const { response: csqResp } = await this.commander.send('AT+CSQ');
 		const csqMatch = CSQ.exec(csqResp);
 		if (csqMatch) {
-			console.log('CSQ', csqMatch[1]);
+			console.log('CSQ:', csqMatch[1]);
+			signal = Number(csqMatch[1]);
 		}
 
 		await this.commander.send('AT+CREG=2');
-		const { response: cgRegResp } = await this.commander.send('AT+CREG');
+		const { response: cgRegResp } = await this.commander.send('AT+CREG?');
 		console.log(cgRegResp.split('\r'));
 
-		return { isConnected: false, network: '', signalQuality: 0 };
+		return { isConnected: true, operator, signal };
 	}
 }
