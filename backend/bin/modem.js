@@ -30,7 +30,7 @@ class Modem {
     async getStatus() {
         await this.commander.send('AT+COPS=3,0');
         const { response: copsResp } = await this.commander.send('AT+COPS?');
-        console.log(copsResp);
+        console.log(copsResp.split('\r').filter((l) => l.startsWith('COPS:')));
         const { response: csqResp } = await this.commander.send('AT+CSQ');
         console.log(csqResp);
         await this.commander.send('AT+CGREG=2');

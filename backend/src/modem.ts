@@ -10,7 +10,7 @@ export interface StatusInfo {
 }
 
 export class Modem {
-	private commander: any;
+	private commander: SerialCommander;
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
@@ -37,7 +37,7 @@ export class Modem {
 	public async getStatus(): Promise<StatusInfo> {
 		await this.commander.send('AT+COPS=3,0');
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
-		console.log(copsResp);
+		console.log(copsResp.split('\r').filter((l) => l.startsWith('COPS:')));
 
 		const { response: csqResp } = await this.commander.send('AT+CSQ');
 		console.log(csqResp);
