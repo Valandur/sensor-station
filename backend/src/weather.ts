@@ -14,6 +14,70 @@ const DHT_PIN = 17;
 const UPDATE_INTERVAL_FORECASTS = 10 * 60 * 1000;
 const UPDATE_INTERVAL_SENSOR = 10 * 1000;
 
+const ICON_MAP: { [key: number]: string } = {
+	200: 'thunderstorm',
+	201: 'thunderstorm',
+	202: 'thunderstorm',
+	210: 'thunderstorm',
+	211: 'thunderstorm',
+	212: 'thunderstorm',
+	221: 'thunderstorm',
+	230: 'thunderstorm',
+	231: 'thunderstorm',
+	232: 'thunderstorm',
+
+	300: 'drizzle',
+	301: 'drizzle',
+	302: 'drizzle',
+	310: 'drizzle',
+	311: 'drizzle',
+	312: 'drizzle',
+	313: 'drizzle',
+	314: 'drizzle',
+	321: 'drizzle',
+
+	500: 'rain',
+	501: 'rain',
+	502: 'heavyrain',
+	503: 'heavyrain',
+	504: 'heavyrain',
+	511: 'snow',
+	520: 'drizzle',
+	521: 'drizzle',
+	522: 'drizzle',
+	531: 'drizzle',
+
+	600: 'snow',
+	601: 'snow',
+	602: 'heavysnow',
+	611: 'snow',
+	612: 'snow',
+	613: 'snow',
+	615: 'snow',
+	616: 'snow',
+	620: 'snow',
+	621: 'snow',
+	622: 'heavysnow',
+
+	701: 'foggy',
+	711: 'foggy',
+	721: 'foggy',
+	731: 'sandstorm',
+	741: 'foggy',
+	751: 'sand',
+	761: 'sand',
+	762: 'sand',
+	771: 'wind',
+	781: 'tornado',
+
+	800: 'clear',
+
+	801: 'clouds',
+	802: 'clouds',
+	803: 'overcast',
+	804: 'overcast'
+};
+
 interface WeatherEntry {
 	time: Date;
 	img: string;
@@ -65,17 +129,21 @@ export class Weather extends Service {
 
 		const forecasts: WeatherEntry[] = [];
 
+		const hours = new Date().getHours();
+		const prefix = '/icons/';
+		const suffix = hours > 20 || hours < 6 ? '_n.png' : '_d.png';
+
 		const current = data.current;
 		forecasts.push({
 			time: new Date(current.dt * 1000),
-			img: `${current.weather[0].id}`,
+			img: prefix + ICON_MAP[current.weather[0].id] + suffix,
 			feelsLike: current.feels_like
 		});
 
 		for (const forecast of data.daily) {
 			forecasts.push({
 				time: new Date(forecast.dt * 1000),
-				img: `${forecast.weather[0].id}`,
+				img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
 				feelsLike: forecast.feels_like.day
 			});
 		}

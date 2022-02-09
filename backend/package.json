@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "PORT=2000 ts-node-dev src/main.ts",
 		"build": "tsc",
-		"start": "npm run build && node bin/main.js",
+		"start": "REACT_APP_DISABLE_UPLOAD=1 REACT_APP_DISABLE_SENSOR=1 npm run build && node bin/main.js",
 		"test": "ts-node src/test.ts"
 	},
 	"dependencies": {

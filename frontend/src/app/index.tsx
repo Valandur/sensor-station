@@ -38,7 +38,7 @@ const globalStyles = globalCss({
 		backgroundColor: 'black',
 		fontFamily:
 			"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-		color: 'white',
+		color: 'orange',
 		'-webkit-font-smoothing': 'antialiased',
 		'-moz-osx-font-smoothing': 'grayscale'
 	}
@@ -65,7 +65,7 @@ export const App: FC = () => {
 	globalStyles();
 
 	const [screen, setScreen] = useState(0);
-	const [paused, setPaused] = useState(false);
+	const [paused, setPaused] = useState(true);
 	const [reset, setReset] = useState(new Date());
 	const [, refresh] = useState(false);
 

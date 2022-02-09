@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const body_parser_1 = require("body-parser");
+require("./types");
 const modem_1 = require("./modem");
 const news_1 = require("./news");
 const pijuice_1 = require("./pijuice");

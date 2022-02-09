@@ -3,6 +3,8 @@ import cors from 'cors';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import { json, urlencoded } from 'body-parser';
 
+import './types';
+
 import { Modem } from './modem';
 import { News } from './news';
 import { PiJuice } from './pijuice';

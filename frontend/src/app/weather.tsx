@@ -39,16 +39,15 @@ const ContainerForecasts = styled('div', {
 const Forecast = styled('div', {
 	flex: 1,
 	display: 'flex',
-	flexDirection: 'column'
+	flexDirection: 'column',
+	alignItems: 'center'
 });
-const ForecastImg = styled('i', {
-	fontSize: '10em !important',
-	textAlign: 'center'
+const ForecastImg = styled('img', {
+	width: '80%'
 });
 const ForecastText = styled('div', {
 	fontSize: 80,
-	textAlign: 'center',
-	marginTop: 35
+	textAlign: 'center'
 });
 
 export const Weather: FC = () => {
@@ -70,9 +69,9 @@ export const Weather: FC = () => {
 			<ContainerForecasts>
 				{shownForecasts.map((forecast) => (
 					<Forecast key={forecast.time.toISOString()}>
-						<ForecastText style={{ flex: 1 }}>{format(forecast.time, 'iiiiii', { locale: de })}</ForecastText>
-						<ForecastImg className={`owf owf-${forecast.img}`} />
-						<ForecastText style={{ flex: 0.5, color: '#23ad00' }}>{forecast.feelsLike.toFixed(0)}°</ForecastText>
+						<ForecastText>{format(forecast.time, 'iiiiii', { locale: de })}</ForecastText>
+						<ForecastImg src={forecast.img} />
+						<ForecastText style={{ color: '#23ad00' }}>{forecast.feelsLike.toFixed(0)}°</ForecastText>
 					</Forecast>
 				))}
 			</ContainerForecasts>

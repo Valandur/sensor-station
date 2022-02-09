@@ -150,3 +150,35 @@ export const useBattery = (): PiJuice | undefined => {
 
 	return piJuice;
 };
+
+export interface Modem {
+	isConnected: boolean;
+	operator: string;
+	signal: number;
+	lat: number;
+	lng: number;
+}
+
+export const useModem = (): Modem | undefined => {
+	const [modem, setModem] = useState<Modem>();
+
+	useEffect(() => {
+		if (process.env.REACT_APP_DISABLE_MODEM) {
+			return;
+		}
+
+		const main = async () => {
+			const { data } = await axios(`${BASE_URL}/modem`);
+			setModem(data);
+		};
+
+		main().catch((err) => console.error(err));
+		const interval = setInterval(() => main().catch((err) => console.error(err)), 5000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
+
+	return modem;
+};

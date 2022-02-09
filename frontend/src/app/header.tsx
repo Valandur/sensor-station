@@ -4,7 +4,7 @@ import { de } from 'date-fns/locale';
 import React, { FC } from 'react';
 import Holidays from 'date-holidays';
 
-import { useBattery } from './api';
+import { useBattery, useModem } from './api';
 
 const HeaderContainer = styled('div', {
 	display: 'flex',
@@ -17,7 +17,6 @@ const HeaderContainer = styled('div', {
 const Time = styled('div', {
 	fontSize: 150,
 	lineHeight: '1em',
-	color: 'orange',
 	marginTop: -2
 });
 
@@ -46,27 +45,46 @@ const DateSub = styled('div', {
 	whiteSpace: 'nowrap'
 });
 
-const ProgressContainer = styled('div', {
-	padding: 10,
-	paddingLeft: 20,
+const SymbolContainer = styled('div', {
+	margin: 10,
+	marginLeft: 20,
 	boxSizing: 'border-box',
-	height: '100%'
-});
-
-const ProgressBackground = styled('div', {
-	width: 40,
 	height: '100%',
-	position: 'relative',
-	backgroundColor: 'white'
+	display: 'flex',
+	flexDirection: 'column',
+	alignItems: 'center'
 });
 
-const Progress = styled('div', {
+const MobileContainer = styled('div', {
+	display: 'flex',
+	flexDirection: 'row',
+	alignItems: 'flex-end'
+});
+
+const MobileBar = styled('div', {
+	width: 10,
+	marginRight: 2
+});
+
+const GPSContainer = styled('div', {
+	fontSize: '2em',
+	textAlign: 'center'
+});
+
+const BatteryContainer = styled('div', {
+	flex: 1,
+	position: 'relative',
+	backgroundColor: 'gray',
+	alignSelf: 'stretch'
+});
+
+const BatteryCharge = styled('div', {
 	display: 'flex',
 	flexDirection: 'column',
 	justifyContent: 'flex-end',
 	alignItems: 'center',
 	position: 'absolute',
-	backgroundColor: 'green',
+	backgroundColor: 'orange',
 	width: '100%',
 	bottom: 0,
 	boxSizing: 'border-box',
@@ -87,20 +105,32 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 	const time = format(now, 'HH:mm');
 	const date = format(now, 'd. MMMM', { locale: de });
 	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
+
 	const piJuice = useBattery();
+	const modem = useModem();
 
 	return (
 		<HeaderContainer>
 			<Time onClick={onTimeClick}>{time}</Time>
-			{piJuice && (
-				<ProgressContainer>
-					<ProgressBackground>
-						<Progress style={{ height: `${piJuice.battery.charge}%` }}>
+			<SymbolContainer>
+				{modem?.operator && (
+					<MobileContainer>
+						<MobileBar style={{ height: 5, backgroundColor: modem.signal > 0 ? 'orange' : 'gray' }}></MobileBar>
+						<MobileBar style={{ height: 15, backgroundColor: modem.signal > 1 ? 'orange' : 'gray' }}></MobileBar>
+						<MobileBar style={{ height: 25, backgroundColor: modem.signal > 2 ? 'orange' : 'gray' }}></MobileBar>
+						<MobileBar style={{ height: 35, backgroundColor: modem.signal > 3 ? 'orange' : 'gray' }}></MobileBar>
+					</MobileContainer>
+				)}
+				{!!modem?.lat && !!modem?.lng && <GPSContainer>🛰️</GPSContainer>}
+				{piJuice && (
+					<BatteryContainer>
+						<BatteryCharge style={{ height: `${piJuice.battery.charge}%` }}>
 							{piJuice.status.batteryStatus.includes('CHARGING') && '⚡'}
-						</Progress>
-					</ProgressBackground>
-				</ProgressContainer>
-			)}
+						</BatteryCharge>
+					</BatteryContainer>
+				)}
+			</SymbolContainer>
+
 			<DateContainer onClick={onDateClick}>
 				<DateMain>{date}</DateMain>
 				<DateSub>
