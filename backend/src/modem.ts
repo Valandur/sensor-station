@@ -12,6 +12,8 @@ export interface StatusInfo {
 	isConnected: boolean;
 	operator: string;
 	signal: number;
+	lat: number;
+	lng: number;
 }
 
 export class Modem {
@@ -54,7 +56,8 @@ export class Modem {
 		const csqMatch = CSQ.exec(csqResp);
 		if (csqMatch) {
 			console.log('CSQ:', ...csqMatch.slice(1));
-			signal = Number(csqMatch[1]);
+			const rawSig = Number(csqMatch[1]);
+			signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
 		}
 
 		await this.commander.send('AT+CREG=2');
@@ -64,12 +67,16 @@ export class Modem {
 			console.log('CREG:', ...cregMatch.slice(1));
 		}
 
+		let lat: number;
+		let lng: number;
 		const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
 		const gpsMatch = GPS.exec(gpsResp);
 		if (gpsMatch) {
 			console.log('GPS:', ...gpsMatch.slice(1));
+			lat = Number(gpsMatch[1]) * (gpsMatch[2] === 'S' ? -1 : 1);
+			lng = Number(gpsMatch[3]) * (gpsMatch[4] === 'W' ? -1 : 1);
 		}
 
-		return { isConnected: true, operator, signal };
+		return { isConnected: true, operator, signal, lat, lng };
 	}
 }
