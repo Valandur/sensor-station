@@ -16,7 +16,7 @@ export class Modem {
 	public status: StatusInfo;
 
 	public async init() {
-		this.commander = new SerialCommander({ port: PORT });
+		this.commander = new SerialCommander({ port: PORT, disableLog: true });
 		await this.commander.send('AT');
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
@@ -35,13 +35,15 @@ export class Modem {
 	};
 
 	public async getStatus(): Promise<StatusInfo> {
-		const copsResp = await this.commander.send('AT+COPS?');
+		await this.commander.send('AT+COPS=3,0');
+		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		console.log(copsResp);
 
-		const csqResp = await this.commander.send('AT+CSQ');
+		const { response: csqResp } = await this.commander.send('AT+CSQ');
 		console.log(csqResp);
 
-		const cgRegResp = await this.commander.send('AT+CGREG');
+		await this.commander.send('AT+CGREG=2');
+		const { response: cgRegResp } = await this.commander.send('AT+CGREG');
 		console.log(cgRegResp);
 
 		return { isConnected: false, network: '', signalQuality: 0 };

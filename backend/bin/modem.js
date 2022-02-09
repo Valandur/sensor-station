@@ -19,7 +19,7 @@ class Modem {
         };
     }
     async init() {
-        this.commander = new serial_commander_1.default({ port: PORT });
+        this.commander = new serial_commander_1.default({ port: PORT, disableLog: true });
         await this.commander.send('AT');
         this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }
@@ -28,11 +28,13 @@ class Modem {
         clearInterval(this.timer);
     }
     async getStatus() {
-        const copsResp = await this.commander.send('AT+COPS?');
+        await this.commander.send('AT+COPS=3,0');
+        const { response: copsResp } = await this.commander.send('AT+COPS?');
         console.log(copsResp);
-        const csqResp = await this.commander.send('AT+CSQ');
+        const { response: csqResp } = await this.commander.send('AT+CSQ');
         console.log(csqResp);
-        const cgRegResp = await this.commander.send('AT+CGREG');
+        await this.commander.send('AT+CGREG=2');
+        const { response: cgRegResp } = await this.commander.send('AT+CGREG');
         console.log(cgRegResp);
         return { isConnected: false, network: '', signalQuality: 0 };
     }
