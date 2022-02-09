@@ -8,6 +8,6 @@ declare module '@westh/serial-commander' {
 		public constructor(opts: Options);
 
 		public send(command: string): Promise<{ response: string }>;
-		public close(): void;
+		public close(): Promise<void>;
 	}
 }

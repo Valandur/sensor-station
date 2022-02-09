@@ -7,6 +7,8 @@ exports.Modem = void 0;
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const PORT = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 10 * 1000;
+const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
+const CSQ = /\+CSQ: (\d+),(\d+)/i;
 class Modem {
     constructor() {
         this.update = async () => {
@@ -30,11 +32,17 @@ class Modem {
     async getStatus() {
         await this.commander.send('AT+COPS=3,0');
         const { response: copsResp } = await this.commander.send('AT+COPS?');
-        console.log(copsResp.split('\r'));
+        const copsMatch = COPS.exec(copsResp);
+        if (copsMatch) {
+            console.log('COPS', copsMatch[3]);
+        }
         const { response: csqResp } = await this.commander.send('AT+CSQ');
-        console.log(csqResp.split('\r'));
-        await this.commander.send('AT+CGREG=2');
-        const { response: cgRegResp } = await this.commander.send('AT+CGREG');
+        const csqMatch = CSQ.exec(csqResp);
+        if (csqMatch) {
+            console.log('CSQ', csqMatch[1]);
+        }
+        await this.commander.send('AT+CREG=2');
+        const { response: cgRegResp } = await this.commander.send('AT+CREG');
         console.log(cgRegResp.split('\r'));
         return { isConnected: false, network: '', signalQuality: 0 };
     }
