@@ -13,6 +13,8 @@ const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
+const UPDATE_INTERVAL_FORECASTS = 10 * 60 * 1000;
+const UPDATE_INTERVAL_SENSOR = 10 * 1000;
 class Weather extends service_1.Service {
     constructor() {
         super();
@@ -60,10 +62,10 @@ class Weather extends service_1.Service {
     }
     async init() {
         await this.updateForecasts();
-        this.forecastInterval = setInterval(this.updateForecasts, 10 * 60 * 1000);
+        this.forecastInterval = setInterval(this.updateForecasts, UPDATE_INTERVAL_FORECASTS);
         if (!process.env.DISABLE_SENSOR) {
             await this.updateDHT();
-            this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+            this.sensorInterval = setInterval(this.updateDHT, UPDATE_INTERVAL_SENSOR);
         }
         else {
             console.log('SENSOR DISABLED');

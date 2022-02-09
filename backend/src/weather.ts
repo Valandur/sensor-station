@@ -11,6 +11,9 @@ const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
 
+const UPDATE_INTERVAL_FORECASTS = 10 * 60 * 1000;
+const UPDATE_INTERVAL_SENSOR = 10 * 1000;
+
 interface WeatherEntry {
 	time: Date;
 	img: string;
@@ -39,11 +42,11 @@ export class Weather extends Service {
 
 	public async init(): Promise<void> {
 		await this.updateForecasts();
-		this.forecastInterval = setInterval(this.updateForecasts, 10 * 60 * 1000);
+		this.forecastInterval = setInterval(this.updateForecasts, UPDATE_INTERVAL_FORECASTS);
 
 		if (!process.env.DISABLE_SENSOR) {
 			await this.updateDHT();
-			this.sensorInterval = setInterval(this.updateDHT, 1 * 1000);
+			this.sensorInterval = setInterval(this.updateDHT, UPDATE_INTERVAL_SENSOR);
 		} else {
 			console.log('SENSOR DISABLED');
 		}

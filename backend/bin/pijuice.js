@@ -19,6 +19,7 @@ const CMD_IO_CURRENT = 0x4f;
 const CMD_LED_STATE = 0x66;
 const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
+const UPDATE_INTERVAL = 10 * 1000;
 var BatteryStatus;
 (function (BatteryStatus) {
     BatteryStatus[BatteryStatus["NORMAL"] = 0] = "NORMAL";
@@ -84,7 +85,7 @@ class PiJuice {
     }
     async init() {
         this.bus = await i2c_bus_1.default.openPromisified(BUS_NUMBER);
-        this.timer = setInterval(this.update, 1000);
+        this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }
     async dispose() {
         await this.bus.close();

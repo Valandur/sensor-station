@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Modem = void 0;
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const PORT = '/dev/ttyUSB2';
+const UPDATE_INTERVAL = 10 * 1000;
 class Modem {
     constructor() {
         this.update = async () => {
@@ -20,7 +21,7 @@ class Modem {
     async init() {
         this.commander = new serial_commander_1.default({ port: PORT });
         await this.commander.send('AT');
-        this.timer = setInterval(this.update, 1000);
+        this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }
     async dispose() {
         await this.commander.close();

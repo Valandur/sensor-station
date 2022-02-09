@@ -1,6 +1,7 @@
 import SerialCommander from '@westh/serial-commander';
 
 const PORT = '/dev/ttyUSB2';
+const UPDATE_INTERVAL = 10 * 1000;
 
 export interface StatusInfo {
 	isConnected: boolean;
@@ -17,7 +18,7 @@ export class Modem {
 	public async init() {
 		this.commander = new SerialCommander({ port: PORT });
 		await this.commander.send('AT');
-		this.timer = setInterval(this.update, 1000);
+		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
 
 	public async dispose() {
