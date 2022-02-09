@@ -108,23 +108,16 @@ export const useReddit = (name: string): RedditItem[] => {
 	return items;
 };
 
-export interface StatusInfo {
+export interface PiJuice {
 	isFault: boolean;
 	isButton: boolean;
 	batteryStatus: string;
 	powerIn: string;
 	powerIn5vIo: string;
-}
 
-export interface Battery {
 	charge: number;
 	voltage: number;
 	current: number;
-}
-
-export interface PiJuice {
-	status: StatusInfo;
-	battery: Battery;
 }
 
 export const useBattery = (): PiJuice | undefined => {

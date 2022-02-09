@@ -37,7 +37,7 @@ const main = async () => {
 		const pijuice = new PiJuice();
 		await pijuice.init();
 		app.get('/pijuice', (req, res) => {
-			res.json({ status: pijuice.status, battery: pijuice.battery });
+			res.json(pijuice.status);
 		});
 	} else {
 		console.log('PIJUICE DISABLED');
@@ -126,7 +126,7 @@ const main = async () => {
 		const modem = new Modem();
 		await modem.init();
 		app.get('/modem', (req, res) => {
-			res.json({ status: modem.status });
+			res.json(modem.status);
 		});
 	} else {
 		console.log('MODEM DISABLED');

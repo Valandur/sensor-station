@@ -124,8 +124,8 @@ export const Header: FC<Props> = ({ onTimeClick, onDateClick }) => {
 				{!!modem?.lat && !!modem?.lng && <GPSContainer>🛰️</GPSContainer>}
 				{piJuice && (
 					<BatteryContainer>
-						<BatteryCharge style={{ height: `${piJuice.battery.charge}%` }}>
-							{piJuice.status.batteryStatus.includes('CHARGING') && '⚡'}
+						<BatteryCharge style={{ height: `${piJuice.charge}%` }}>
+							{piJuice.batteryStatus.includes('CHARGING') && '⚡'}
 						</BatteryCharge>
 					</BatteryContainer>
 				)}

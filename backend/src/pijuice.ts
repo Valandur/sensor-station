@@ -45,9 +45,6 @@ export interface StatusInfo {
 	batteryStatus: string;
 	powerIn: string;
 	powerIn5vIo: string;
-}
-
-export interface BatteryInfo {
 	charge: number;
 	voltage: number;
 	current: number;
@@ -58,7 +55,6 @@ export class PiJuice {
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
-	public battery: BatteryInfo;
 
 	public async init() {
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
@@ -73,7 +69,6 @@ export class PiJuice {
 	private update = async () => {
 		try {
 			this.status = await this.getStatus();
-			this.battery = await this.getBattery();
 		} catch (err) {
 			console.error(err);
 		}
@@ -89,14 +84,19 @@ export class PiJuice {
 		const powerIn = PowerIn[(status >>> 4) & 0x03];
 		const powerIn5vIo = PowerIn[(status >>> 6) & 0x03];
 
-		return { isFault, isButton, batteryStatus, powerIn, powerIn5vIo };
-	}
+		const charge = await this.getChargeLevel();
+		const voltage = await this.getBatteryVoltage();
+		const current = await this.getBatteryCurrent();
 
-	public async getBattery(): Promise<BatteryInfo> {
 		return {
-			charge: await this.getChargeLevel(),
-			voltage: await this.getBatteryVoltage(),
-			current: await this.getBatteryCurrent()
+			isFault,
+			isButton,
+			batteryStatus,
+			powerIn,
+			powerIn5vIo,
+			charge,
+			voltage,
+			current
 		};
 	}
 

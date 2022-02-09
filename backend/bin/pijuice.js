@@ -46,7 +46,6 @@ class PiJuice {
         this.update = async () => {
             try {
                 this.status = await this.getStatus();
-                this.battery = await this.getBattery();
             }
             catch (err) {
                 console.error(err);
@@ -99,13 +98,18 @@ class PiJuice {
         const batteryStatus = BatteryStatus[(status >>> 2) & 0x03];
         const powerIn = PowerIn[(status >>> 4) & 0x03];
         const powerIn5vIo = PowerIn[(status >>> 6) & 0x03];
-        return { isFault, isButton, batteryStatus, powerIn, powerIn5vIo };
-    }
-    async getBattery() {
+        const charge = await this.getChargeLevel();
+        const voltage = await this.getBatteryVoltage();
+        const current = await this.getBatteryCurrent();
         return {
-            charge: await this.getChargeLevel(),
-            voltage: await this.getBatteryVoltage(),
-            current: await this.getBatteryCurrent()
+            isFault,
+            isButton,
+            batteryStatus,
+            powerIn,
+            powerIn5vIo,
+            charge,
+            voltage,
+            current
         };
     }
     async getChargeLevel() {
