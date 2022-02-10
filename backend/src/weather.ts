@@ -149,7 +149,7 @@ export class Weather extends Service {
 			} catch (err) {
 				console.error(err);
 			}
-		} else {
+		} else if (!process.env.DISABLE_SENSOR) {
 			temp = Math.random() * 10;
 			rh = Math.random() * 100;
 		}

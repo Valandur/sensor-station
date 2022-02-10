@@ -104,7 +104,7 @@ class Weather extends service_1.Service {
                     console.error(err);
                 }
             }
-            else {
+            else if (!process.env.DISABLE_SENSOR) {
                 temp = Math.random() * 10;
                 rh = Math.random() * 100;
             }
