@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weather = void 0;
 const axios_1 = __importDefault(require("axios"));
 const service_1 = require("./service");
-const util_1 = require("./util");
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_LOC = '&lat=47.2949&lon=8.5645';
@@ -79,7 +78,7 @@ class Weather extends service_1.Service {
             const { data } = await (0, axios_1.default)(URL);
             const forecasts = [];
             const prefix = '/icons/';
-            const suffix = (0, util_1.isNight)() ? '_n.png' : '_d.png';
+            const suffix = '.png';
             const current = data.current;
             forecasts.push({
                 time: new Date(current.dt * 1000),
@@ -93,8 +92,8 @@ class Weather extends service_1.Service {
                     feelsLike: forecast.feels_like.day
                 });
             }
-            let temp = Math.random() * 10;
-            let rh = Math.random() * 100;
+            let temp;
+            let rh;
             if (this.dht) {
                 try {
                     const res = await this.dht.read(DHT_TYPE, DHT_PIN);
@@ -104,6 +103,10 @@ class Weather extends service_1.Service {
                 catch (err) {
                     console.error(err);
                 }
+            }
+            else {
+                temp = Math.random() * 10;
+                rh = Math.random() * 100;
             }
             this.status = {
                 temp,

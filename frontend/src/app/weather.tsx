@@ -43,7 +43,7 @@ const Forecast = styled('div', {
 	alignItems: 'center'
 });
 const ForecastImg = styled('img', {
-	width: '80%'
+	width: '60%'
 });
 const ForecastText = styled('div', {
 	fontSize: 80,

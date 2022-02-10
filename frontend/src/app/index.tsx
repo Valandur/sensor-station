@@ -35,10 +35,8 @@ const globalStyles = globalCss({
 	body: {
 		margin: 0,
 		padding: 0,
-		backgroundColor: 'black',
 		fontFamily:
 			"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-		color: 'orange',
 		'-webkit-font-smoothing': 'antialiased',
 		'-moz-osx-font-smoothing': 'grayscale'
 	}
@@ -65,7 +63,7 @@ export const App: FC = () => {
 	globalStyles();
 
 	const [screen, setScreen] = useState(0);
-	const [paused, setPaused] = useState(true);
+	const [paused, setPaused] = useState(false);
 	const [reset, setReset] = useState(new Date());
 	const [, refresh] = useState(false);
 
@@ -74,7 +72,7 @@ export const App: FC = () => {
 			if (!paused) {
 				refresh((v) => !v);
 				if (differenceInMilliseconds(new Date(), reset) >= AUTO_SWITCH) {
-					incScreen();
+					changeScreen();
 				}
 			}
 		}, 1000);
@@ -88,14 +86,18 @@ export const App: FC = () => {
 		setReset(new Date());
 	}, [setReset]);
 
-	const pause = useCallback((pause: boolean) => {
-		if (pause) {
-			setPaused(true);
-		} else {
+	const pause = useCallback(
+		(pause?: boolean) => {
 			setReset(new Date());
-			setPaused(false);
-		}
-	}, []);
+
+			if (typeof pause !== 'boolean') {
+				setPaused((p) => !p);
+			} else {
+				setPaused(pause);
+			}
+		},
+		[paused]
+	);
 
 	const now = new Date();
 	const birthday = BIRTHDAYS.find((b) => now.getMonth() + 1 === b.month && now.getDate() === b.day);
@@ -116,20 +118,20 @@ export const App: FC = () => {
 	].filter((e) => !!e) as JSX.Element[];
 
 	const numScreens = screens.length;
+	const hours = new Date().getHours();
+	const isNight = hours > 20 || hours < 6;
 
-	const incScreen = useCallback(() => {
-		setScreen((s) => (s + 1) % numScreens);
-		setReset(new Date());
-	}, [setScreen, resetTimer, numScreens]);
-
-	const decScreen = useCallback(() => {
-		setScreen((s) => (numScreens + s - 1) % numScreens);
-		setReset(new Date());
-	}, [setScreen, resetTimer, numScreens]);
+	const changeScreen = useCallback(
+		(diff = 1) => {
+			setScreen((s) => (s + numScreens + diff) % numScreens);
+			setReset(new Date());
+		},
+		[setScreen, resetTimer, numScreens]
+	);
 
 	return (
-		<Container>
-			<Header onTimeClick={decScreen} onDateClick={incScreen} />
+		<Container style={{ color: isNight ? 'white' : 'black', backgroundColor: isNight ? 'black' : 'white' }}>
+			<Header onTimeClick={pause} />
 			{screens[screen]}
 			{!paused && (
 				<Progress

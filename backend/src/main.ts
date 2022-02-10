@@ -8,10 +8,8 @@ import './types';
 import { Modem } from './modem';
 import { News } from './news';
 import { Battery } from './battery';
-import { Reddit } from './reddit';
 import { Upload } from './upload';
 import { Weather } from './weather';
-import { isNight } from './util';
 
 const main = async () => {
 	const app = express();
@@ -24,15 +22,6 @@ const main = async () => {
 		app.use('/web', express.static(`../frontend/build`));
 		app.use(urlencoded({ extended: true }) as RequestHandler);
 		app.use(fileUpload({ createParentPath: true }));
-	}
-
-	// Weather
-	console.log('weather...');
-	const weather = new Weather();
-	if (!process.env.DISABLE_WEATHER) {
-		await weather.init();
-	} else {
-		console.log('WEATHER DISABLED');
 	}
 
 	// Battery
@@ -55,15 +44,18 @@ const main = async () => {
 
 	// General data route
 	app.get('/data', (req, res) => {
-		const now = new Date();
-
 		res.json({
-			date: now,
-			isNight: isNight(now),
-			weather: weather.status,
 			battery: battery.status,
 			modem: modem.status
 		});
+	});
+
+	// Weather
+	console.log('weather...');
+	const weather = new Weather();
+	await weather.init();
+	app.get('/weather', (req, res) => {
+		res.json(weather.status);
 	});
 
 	console.log('news...');
@@ -94,25 +86,6 @@ const main = async () => {
 		const page = await news.getArticle(item);
 		res.send(page);
 	});
-
-	if (!process.env.DISABLE_REDDIT) {
-		console.log('reddit...');
-		const redditMap: Map<string, Reddit> = new Map();
-		app.get('/reddit/:name', async (req, res) => {
-			const name = req.params.name;
-			let reddit = redditMap.get(name);
-			if (!reddit) {
-				console.log(`setting up reddit ${name}`);
-				reddit = new Reddit(`https://www.reddit.com/r/${name}/hot/.rss`);
-				redditMap.set(name, reddit);
-				await reddit.init();
-			}
-
-			res.json(reddit.items);
-		});
-	} else {
-		console.log('REDDIT DISABLED');
-	}
 
 	if (!process.env.DISABLE_UPLOAD) {
 		console.log('upload...');

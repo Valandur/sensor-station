@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 import { Service } from './service';
-import { isNight } from './util';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
@@ -123,7 +122,7 @@ export class Weather extends Service {
 		const forecasts: WeatherEntry[] = [];
 
 		const prefix = '/icons/';
-		const suffix = isNight() ? '_n.png' : '_d.png';
+		const suffix = '.png';
 
 		const current = data.current;
 		forecasts.push({
@@ -140,8 +139,8 @@ export class Weather extends Service {
 			});
 		}
 
-		let temp = Math.random() * 10;
-		let rh = Math.random() * 100;
+		let temp: number;
+		let rh: number;
 		if (this.dht) {
 			try {
 				const res = await this.dht.read(DHT_TYPE, DHT_PIN);
@@ -150,6 +149,9 @@ export class Weather extends Service {
 			} catch (err) {
 				console.error(err);
 			}
+		} else {
+			temp = Math.random() * 10;
+			rh = Math.random() * 100;
 		}
 
 		this.status = {

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Modem = void 0;
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const promises_1 = require("fs/promises");
+const geo_tz_1 = require("geo-tz");
 const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 10 * 1000;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -26,12 +27,15 @@ class Modem {
     async init() {
         if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
             console.log(`Modem not available @ ${MODEM_SERIAL}`);
+            const lat = 47.17554525;
+            const lng = 8.33849761;
             this.status = {
                 isConnected: true,
                 operator: 'DR',
                 signal: 3,
-                lat: 4.717554525,
-                lng: 8.33849761
+                lat,
+                lng,
+                tz: (0, geo_tz_1.find)(lat, lng)[0]
             };
             return;
         }
@@ -68,14 +72,16 @@ class Modem {
         }
         let lat;
         let lng;
+        let tz;
         const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
         const gpsMatch = GPS.exec(gpsResp);
         if (gpsMatch) {
             console.log('GPS:', ...gpsMatch.slice(1));
             lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
             lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
+            tz = (0, geo_tz_1.find)(lat, lng)[0];
         }
-        return { isConnected: true, operator, signal, lat, lng };
+        return { isConnected: true, operator, signal, lat, lng, tz };
     }
 }
 exports.Modem = Modem;

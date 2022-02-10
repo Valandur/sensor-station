@@ -3,6 +3,53 @@ import axios from 'axios';
 import { parseISO } from 'date-fns';
 
 export const BASE_URL = process.env.REACT_APP_API_URL || window.location.origin;
+const DATA_UPDATE_INTERVAL = 10 * 1000;
+
+export interface Battery {
+	isFault: boolean;
+	isButton: boolean;
+	batteryStatus: string;
+	powerIn: string;
+	powerIn5vIo: string;
+
+	charge: number;
+	voltage: number;
+	current: number;
+}
+
+export interface Modem {
+	isConnected: boolean;
+	operator: string;
+	signal: number;
+	lat: number;
+	lng: number;
+	tz: string;
+}
+
+export interface Data {
+	battery: Battery;
+	modem: Modem;
+}
+
+export const useData = (): Partial<Data> => {
+	const [data, setData] = useState<Partial<Data>>({});
+
+	useEffect(() => {
+		const main = async () => {
+			const { data } = await axios(`${BASE_URL}/data`);
+			setData(data);
+		};
+
+		main().catch((err) => console.error(err));
+		const interval = setInterval(() => main().catch((err) => console.error(err)), DATA_UPDATE_INTERVAL);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
+
+	return data;
+};
 
 export interface WeatherItem {
 	time: Date;
@@ -18,11 +65,10 @@ export const useWeather = (): [WeatherItem[], number | null, number | null] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`${BASE_URL}/weather`);
-			setItems(
-				data.forecasts.map((f: { time: string; img: string; feelsLike: number }) => ({ ...f, time: parseISO(f.time) }))
-			);
-			setTemp(data.sensor.temp || 0);
-			setRh(data.sensor.rh || 0);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			setItems(data.forecasts.map((f: any) => ({ ...f, time: parseISO(f.time) })));
+			setTemp(data.temp || 0);
+			setRh(data.rh || 0);
 		};
 
 		main().catch((err) => console.error(err));
@@ -45,7 +91,6 @@ export const useNews = (id: string): NewsItem[] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`${BASE_URL}/news/${id}`);
-			// console.log(id, data);
 			setItems(
 				data.map((item: { date: string }) => ({
 					...item,
@@ -79,99 +124,4 @@ export const useUpload = (): UploadItem[] => {
 	}, []);
 
 	return items;
-};
-
-export interface RedditItem {
-	date: Date;
-	title: string;
-	img: string;
-	ratio: number;
-}
-
-export const useReddit = (name: string): RedditItem[] => {
-	const [items, setItems] = useState<RedditItem[]>([]);
-
-	useEffect(() => {
-		const main = async () => {
-			const { data } = await axios(`${BASE_URL}/reddit/${name}`);
-			setItems(
-				data.map((item: { date: string }) => ({
-					...item,
-					date: parseISO(item.date)
-				}))
-			);
-		};
-
-		main().catch((err) => console.error(err));
-	}, []);
-
-	return items;
-};
-
-export interface PiJuice {
-	isFault: boolean;
-	isButton: boolean;
-	batteryStatus: string;
-	powerIn: string;
-	powerIn5vIo: string;
-
-	charge: number;
-	voltage: number;
-	current: number;
-}
-
-export const useBattery = (): PiJuice | undefined => {
-	const [piJuice, setPiJuice] = useState<PiJuice>();
-
-	useEffect(() => {
-		if (process.env.REACT_APP_DISABLE_PIJUICE) {
-			return;
-		}
-
-		const main = async () => {
-			const { data } = await axios(`${BASE_URL}/pijuice`);
-			setPiJuice(data);
-		};
-
-		main().catch((err) => console.error(err));
-		const interval = setInterval(() => main().catch((err) => console.error(err)), 5000);
-
-		return () => {
-			clearInterval(interval);
-		};
-	}, []);
-
-	return piJuice;
-};
-
-export interface Modem {
-	isConnected: boolean;
-	operator: string;
-	signal: number;
-	lat: number;
-	lng: number;
-}
-
-export const useModem = (): Modem | undefined => {
-	const [modem, setModem] = useState<Modem>();
-
-	useEffect(() => {
-		if (process.env.REACT_APP_DISABLE_MODEM) {
-			return;
-		}
-
-		const main = async () => {
-			const { data } = await axios(`${BASE_URL}/modem`);
-			setModem(data);
-		};
-
-		main().catch((err) => console.error(err));
-		const interval = setInterval(() => main().catch((err) => console.error(err)), 5000);
-
-		return () => {
-			clearInterval(interval);
-		};
-	}, []);
-
-	return modem;
 };
