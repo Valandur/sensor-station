@@ -65,7 +65,7 @@ export class Battery {
 				isFault: false,
 				isButton: false,
 				batteryStatus: 'CHARGING_FROM_IN',
-				powerIn: 'WEAK',
+				powerIn: 'PRESENT',
 				powerIn5vIo: 'NONE',
 				charge: 43,
 				current: -1.132,

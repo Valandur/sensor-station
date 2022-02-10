@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, TouchEvent, useCallback, useEffect, useState } from 'react';
 import { globalCss, styled } from '@stitches/react';
 import { differenceInMilliseconds } from 'date-fns';
 
@@ -38,7 +38,9 @@ const globalStyles = globalCss({
 		fontFamily:
 			"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
 		'-webkit-font-smoothing': 'antialiased',
-		'-moz-osx-font-smoothing': 'grayscale'
+		'-moz-osx-font-smoothing': 'grayscale',
+		backgroundColor: 'black',
+		color: 'orange'
 	}
 });
 
@@ -66,6 +68,7 @@ export const App: FC = () => {
 	const [paused, setPaused] = useState(false);
 	const [reset, setReset] = useState(new Date());
 	const [, refresh] = useState(false);
+	const [startX, setStartX] = useState(0);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -118,8 +121,6 @@ export const App: FC = () => {
 	].filter((e) => !!e) as JSX.Element[];
 
 	const numScreens = screens.length;
-	const hours = new Date().getHours();
-	const isNight = hours > 20 || hours < 6;
 
 	const changeScreen = useCallback(
 		(diff = 1) => {
@@ -129,9 +130,27 @@ export const App: FC = () => {
 		[setScreen, resetTimer, numScreens]
 	);
 
+	const touchStart = useCallback(
+		(e: TouchEvent<HTMLDivElement>) => {
+			setStartX(e.changedTouches[0].clientX);
+		},
+		[setStartX]
+	);
+	const touchEnd = useCallback(
+		(e: TouchEvent<HTMLDivElement>) => {
+			const diff = e.changedTouches[0].clientX - startX;
+			if (diff < -100) {
+				changeScreen(1);
+			} else if (diff > 100) {
+				changeScreen(-1);
+			}
+		},
+		[changeScreen, startX]
+	);
+
 	return (
-		<Container style={{ color: isNight ? 'white' : 'black', backgroundColor: isNight ? 'black' : 'white' }}>
-			<Header onTimeClick={pause} />
+		<Container onTouchStart={touchStart} onTouchEnd={touchEnd}>
+			<Header isPaused={paused} onTimeClick={pause} />
 			{screens[screen]}
 			{!paused && (
 				<Progress

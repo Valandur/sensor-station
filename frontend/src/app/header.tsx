@@ -30,14 +30,14 @@ const RightContainer = styled('div', {
 });
 
 const DateMain = styled('div', {
-	fontSize: 80,
+	fontSize: 60,
 	lineHeight: '1em'
 });
 
 const DateSub = styled('div', {
 	display: 'flex',
 	flexDirection: 'row',
-	fontSize: 50,
+	fontSize: 40,
 	whiteSpace: 'nowrap'
 });
 
@@ -48,7 +48,7 @@ const SymbolContainer = styled('div', {
 	height: 50
 });
 
-const GPSContainer = styled('div', {
+const BasicSymbol = styled('div', {
 	fontSize: '2em',
 	marginRight: 20
 });
@@ -66,26 +66,27 @@ const MobileBar = styled('div', {
 });
 
 const BatteryContainer = styled('div', {
-	width: 100,
-	display: 'flex',
-	flexDirection: 'row',
-	alignItems: 'center',
-	backgroundColor: 'gray'
+	width: 200,
+	backgroundColor: 'gray',
+	border: '1px solid black'
 });
 
 const BatteryCharge = styled('div', {
-	paddingLeft: 4,
+	color: 'black',
 	backgroundColor: 'orange',
-	alignSelf: 'stretch'
+	paddingLeft: 4,
+	fontSize: 28,
+	whiteSpace: 'nowrap'
 });
 
 interface Props {
+	isPaused: boolean;
 	onTimeClick: () => void;
 }
 
 const holidays = new Holidays('CH', 'ZH');
 
-export const Header: FC<Props> = ({ onTimeClick }) => {
+export const Header: FC<Props> = ({ isPaused, onTimeClick }) => {
 	const { battery, modem } = useData();
 
 	const now = new Date();
@@ -102,8 +103,9 @@ export const Header: FC<Props> = ({ onTimeClick }) => {
 				<SymbolContainer>
 					{battery && (
 						<BatteryContainer>
-							<BatteryCharge style={{ width: `${battery.charge}%` }}>{battery.charge}%</BatteryCharge>
-							{battery.batteryStatus.includes('CHARGING') && <div>⚡</div>}
+							<BatteryCharge style={{ width: `${battery.charge}%` }}>
+								{battery.charge}% {battery.batteryStatus.includes('CHARGING') && '⚡'}
+							</BatteryCharge>
 						</BatteryContainer>
 					)}
 
@@ -116,7 +118,9 @@ export const Header: FC<Props> = ({ onTimeClick }) => {
 						</MobileContainer>
 					)}
 
-					{!!modem?.lat && !!modem?.lng && <GPSContainer>🛰️</GPSContainer>}
+					{!!modem?.lat && !!modem?.lng && <BasicSymbol>🛰️</BasicSymbol>}
+
+					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
 				</SymbolContainer>
 
 				<DateMain>{date}</DateMain>
