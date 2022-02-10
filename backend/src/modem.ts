@@ -67,7 +67,6 @@ export class Modem {
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
 		if (copsMatch) {
-			console.log('COPS:', ...copsMatch.slice(1));
 			operator = copsMatch[3];
 		}
 
@@ -75,16 +74,8 @@ export class Modem {
 		const { response: csqResp } = await this.commander.send('AT+CSQ');
 		const csqMatch = CSQ.exec(csqResp);
 		if (csqMatch) {
-			console.log('CSQ:', ...csqMatch.slice(1));
 			const rawSig = Number(csqMatch[1]);
 			signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
-		}
-
-		await this.commander.send('AT+CREG=2');
-		const { response: cregResp } = await this.commander.send('AT+CREG?');
-		const cregMatch = CREG.exec(cregResp);
-		if (cregMatch) {
-			console.log('CREG:', ...cregMatch.slice(1));
 		}
 
 		let lat: number;
@@ -93,7 +84,6 @@ export class Modem {
 		const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
 		const gpsMatch = GPS.exec(gpsResp);
 		if (gpsMatch) {
-			console.log('GPS:', ...gpsMatch.slice(1));
 			lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
 			lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
 			tz = find(lat, lng)[0];
