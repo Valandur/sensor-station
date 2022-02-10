@@ -33,17 +33,18 @@ const ContainerForecasts = styled('div', {
 	flex: 3,
 	display: 'flex',
 	flexDirection: 'row',
-	justifyContent: 'space-between',
+	justifyContent: 'space-evenly',
 	alignItems: 'stretch'
 });
 const Forecast = styled('div', {
 	flex: 1,
 	display: 'flex',
 	flexDirection: 'column',
+	justifyContent: 'space-evenly',
 	alignItems: 'center'
 });
 const ForecastImg = styled('img', {
-	width: '60%'
+	width: '80%'
 });
 const ForecastText = styled('div', {
 	fontSize: 80,

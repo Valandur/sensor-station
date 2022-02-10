@@ -51,7 +51,7 @@ const CloseButton = styled('button', {
 	position: 'absolute',
 	top: 10,
 	left: 10,
-	fontSize: 20
+	fontSize: 40
 });
 
 interface Props {
@@ -86,7 +86,7 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 			{item ? (
 				<DetailContainer>
 					<IFrame src={BASE_URL + item.link} />
-					<CloseButton onClick={() => setItem(null)}>X</CloseButton>
+					<CloseButton onClick={() => setItem(null)}>❌</CloseButton>
 				</DetailContainer>
 			) : (
 				news.slice(idx, idx + ITEMS).map((item) => (
