@@ -17,7 +17,7 @@ const CMD_LED_STATE = 0x66;
 const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
 
-const UPDATE_INTERVAL = 10 * 1000;
+const UPDATE_INTERVAL = 1 * 60 * 1000;
 
 export enum BatteryStatus {
 	'NORMAL' = 0,
@@ -75,6 +75,8 @@ export class Battery {
 		}
 
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
+		await this.update();
+
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
 

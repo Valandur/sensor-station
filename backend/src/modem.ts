@@ -3,7 +3,7 @@ import { stat } from 'fs/promises';
 import { find } from 'geo-tz';
 
 const MODEM_SERIAL = '/dev/ttyUSB2';
-const UPDATE_INTERVAL = 10 * 1000;
+const UPDATE_INTERVAL = 5 * 60 * 1000;
 
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
@@ -43,7 +43,8 @@ export class Modem {
 		}
 
 		this.commander = new SerialCommander({ port: MODEM_SERIAL, disableLog: true });
-		await this.commander.send('AT');
+		await this.update();
+
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
 

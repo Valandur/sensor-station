@@ -20,7 +20,7 @@ const CMD_IO_CURRENT = 0x4f;
 const CMD_LED_STATE = 0x66;
 const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
-const UPDATE_INTERVAL = 10 * 1000;
+const UPDATE_INTERVAL = 1 * 60 * 1000;
 var BatteryStatus;
 (function (BatteryStatus) {
     BatteryStatus[BatteryStatus["NORMAL"] = 0] = "NORMAL";
@@ -100,6 +100,7 @@ class Battery {
             return;
         }
         this.bus = await i2c_bus_1.default.openPromisified(BUS_NUMBER);
+        await this.update();
         this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }
     async dispose() {

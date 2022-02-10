@@ -8,7 +8,7 @@ const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const promises_1 = require("fs/promises");
 const geo_tz_1 = require("geo-tz");
 const MODEM_SERIAL = '/dev/ttyUSB2';
-const UPDATE_INTERVAL = 10 * 1000;
+const UPDATE_INTERVAL = 5 * 60 * 1000;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CREG = /\+CREG: (\d+),(\d+),([0-9A-F]+),([0-9A-F]+)/i;
@@ -40,7 +40,7 @@ class Modem {
             return;
         }
         this.commander = new serial_commander_1.default({ port: MODEM_SERIAL, disableLog: true });
-        await this.commander.send('AT');
+        await this.update();
         this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }
     async dispose() {
