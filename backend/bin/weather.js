@@ -75,22 +75,27 @@ class Weather extends service_1.Service {
     constructor() {
         super();
         this.update = async () => {
-            const { data } = await (0, axios_1.default)(URL);
             const forecasts = [];
-            const prefix = '/icons/';
-            const suffix = '.png';
-            const current = data.current;
-            forecasts.push({
-                time: new Date(current.dt * 1000),
-                img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-                feelsLike: current.feels_like
-            });
-            for (const forecast of data.daily) {
+            try {
+                const { data } = await (0, axios_1.default)(URL);
+                const prefix = '/icons/';
+                const suffix = '.png';
+                const current = data.current;
                 forecasts.push({
-                    time: new Date(forecast.dt * 1000),
-                    img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-                    feelsLike: forecast.feels_like.day
+                    time: new Date(current.dt * 1000),
+                    img: prefix + ICON_MAP[current.weather[0].id] + suffix,
+                    feelsLike: current.feels_like
                 });
+                for (const forecast of data.daily) {
+                    forecasts.push({
+                        time: new Date(forecast.dt * 1000),
+                        img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+                        feelsLike: forecast.feels_like.day
+                    });
+                }
+            }
+            catch (err) {
+                console.error(err);
             }
             let temp;
             let rh;

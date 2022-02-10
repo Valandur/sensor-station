@@ -117,26 +117,30 @@ export class Weather extends Service {
 	}
 
 	private update = async () => {
-		const { data } = await axios(URL);
-
 		const forecasts: WeatherEntry[] = [];
 
-		const prefix = '/icons/';
-		const suffix = '.png';
+		try {
+			const { data } = await axios(URL);
 
-		const current = data.current;
-		forecasts.push({
-			time: new Date(current.dt * 1000),
-			img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-			feelsLike: current.feels_like
-		});
+			const prefix = '/icons/';
+			const suffix = '.png';
 
-		for (const forecast of data.daily) {
+			const current = data.current;
 			forecasts.push({
-				time: new Date(forecast.dt * 1000),
-				img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-				feelsLike: forecast.feels_like.day
+				time: new Date(current.dt * 1000),
+				img: prefix + ICON_MAP[current.weather[0].id] + suffix,
+				feelsLike: current.feels_like
 			});
+
+			for (const forecast of data.daily) {
+				forecasts.push({
+					time: new Date(forecast.dt * 1000),
+					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+					feelsLike: forecast.feels_like.day
+				});
+			}
+		} catch (err) {
+			console.error(err);
 		}
 
 		let temp: number;
