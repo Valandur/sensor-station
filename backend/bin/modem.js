@@ -62,6 +62,11 @@ class Modem {
             const rawSig = Number(csqMatch[1]);
             signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
         }
+        /*const { response: cregResp } = await this.commander.send('AT+CREG?');
+        const cregMatch = CREG.exec(cregResp);
+        if (cregMatch) {
+            console.log('CREG:', ...cregMatch.slice(1));
+        }*/
         let lat;
         let lng;
         let tz;
