@@ -7,10 +7,11 @@ import './types';
 
 import { Modem } from './modem';
 import { News } from './news';
-import { PiJuice } from './pijuice';
+import { Battery } from './battery';
 import { Reddit } from './reddit';
 import { Upload } from './upload';
 import { Weather } from './weather';
+import { isNight } from './util';
 
 const main = async () => {
 	const app = express();
@@ -25,23 +26,45 @@ const main = async () => {
 		app.use(fileUpload({ createParentPath: true }));
 	}
 
+	// Weather
 	console.log('weather...');
 	const weather = new Weather();
-	await weather.init();
-	app.get('/weather', (req, res) => {
-		res.json({ forecasts: weather.forecasts, sensor: { temp: weather.sensorTemp, rh: weather.sensorRh } });
-	});
-
-	if (!process.env.DISABLE_PIJUICE) {
-		console.log('pijuice...');
-		const pijuice = new PiJuice();
-		await pijuice.init();
-		app.get('/pijuice', (req, res) => {
-			res.json(pijuice.status);
-		});
+	if (!process.env.DISABLE_WEATHER) {
+		await weather.init();
 	} else {
-		console.log('PIJUICE DISABLED');
+		console.log('WEATHER DISABLED');
 	}
+
+	// Battery
+	console.log('battery...');
+	const battery = new Battery();
+	if (!process.env.DISABLE_BATTERY) {
+		await battery.init();
+	} else {
+		console.log('BATTERY DISABLED');
+	}
+
+	// Modem
+	console.log('modem...');
+	const modem = new Modem();
+	if (!process.env.DISABLE_MODEM) {
+		await modem.init();
+	} else {
+		console.log('MODEM DISABLED');
+	}
+
+	// General data route
+	app.get('/data', (req, res) => {
+		const now = new Date();
+
+		res.json({
+			date: now,
+			isNight: isNight(now),
+			weather: weather.status,
+			battery: battery.status,
+			modem: modem.status
+		});
+	});
 
 	console.log('news...');
 	const newsMap: Map<string, News> = new Map();
@@ -119,17 +142,6 @@ const main = async () => {
 		});
 	} else {
 		console.log('UPLOAD DISABLED');
-	}
-
-	if (!process.env.DISABLE_MODEM) {
-		console.log('modem...');
-		const modem = new Modem();
-		await modem.init();
-		app.get('/modem', (req, res) => {
-			res.json(modem.status);
-		});
-	} else {
-		console.log('MODEM DISABLED');
 	}
 
 	const port = process.env.PORT ? Number(process.env.PORT) : 80;

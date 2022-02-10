@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Modem = void 0;
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
-const PORT = '/dev/ttyUSB2';
+const promises_1 = require("fs/promises");
+const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 10 * 1000;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
@@ -23,7 +24,18 @@ class Modem {
         };
     }
     async init() {
-        this.commander = new serial_commander_1.default({ port: PORT, disableLog: true });
+        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
+            console.log(`Modem not available @ ${MODEM_SERIAL}`);
+            this.status = {
+                isConnected: true,
+                operator: 'DR',
+                signal: 3,
+                lat: 4.717554525,
+                lng: 8.33849761
+            };
+            return;
+        }
+        this.commander = new serial_commander_1.default({ port: MODEM_SERIAL, disableLog: true });
         await this.commander.send('AT');
         this.timer = setInterval(this.update, UPDATE_INTERVAL);
     }

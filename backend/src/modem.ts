@@ -1,6 +1,7 @@
 import SerialCommander from '@westh/serial-commander';
+import { stat } from 'fs/promises';
 
-const PORT = '/dev/ttyUSB2';
+const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 10 * 1000;
 
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -23,7 +24,19 @@ export class Modem {
 	public status: StatusInfo;
 
 	public async init() {
-		this.commander = new SerialCommander({ port: PORT, disableLog: true });
+		if (!(await stat(MODEM_SERIAL).catch(() => false))) {
+			console.log(`Modem not available @ ${MODEM_SERIAL}`);
+			this.status = {
+				isConnected: true,
+				operator: 'DR',
+				signal: 3,
+				lat: 4.717554525,
+				lng: 8.33849761
+			};
+			return;
+		}
+
+		this.commander = new SerialCommander({ port: MODEM_SERIAL, disableLog: true });
 		await this.commander.send('AT');
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}

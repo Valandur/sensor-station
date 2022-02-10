@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { Service } from './service';
+import { isNight } from './util';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
@@ -11,8 +12,7 @@ const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
 
-const UPDATE_INTERVAL_FORECASTS = 10 * 60 * 1000;
-const UPDATE_INTERVAL_SENSOR = 10 * 1000;
+const UPDATE_INTERVAL = 10 * 60 * 1000;
 
 const ICON_MAP: { [key: number]: string } = {
 	200: 'thunderstorm',
@@ -84,54 +84,46 @@ interface WeatherEntry {
 	feelsLike: number;
 }
 
+interface WeatherStatus {
+	temp: number;
+	rh: number;
+	forecasts: WeatherEntry[];
+}
+
 export class Weather extends Service {
 	private dht: any;
+	private timer: NodeJS.Timer;
 
-	public forecasts: WeatherEntry[] = [];
-	private forecastInterval: NodeJS.Timer;
-
-	public sensorTemp: number = null;
-	public sensorRh: number = null;
-	private sensorInterval: NodeJS.Timer;
+	public status: WeatherStatus;
 
 	public constructor() {
 		super();
 
-		try {
-			this.dht = require('node-dht-sensor').promises;
-		} catch {
-			// NO-OP
-		}
-	}
-
-	public async init(): Promise<void> {
-		await this.updateForecasts();
-		this.forecastInterval = setInterval(this.updateForecasts, UPDATE_INTERVAL_FORECASTS);
-
 		if (!process.env.DISABLE_SENSOR) {
-			await this.updateDHT();
-			this.sensorInterval = setInterval(this.updateDHT, UPDATE_INTERVAL_SENSOR);
+			try {
+				this.dht = require('node-dht-sensor').promises;
+			} catch {}
 		} else {
 			console.log('SENSOR DISABLED');
 		}
 	}
 
-	public dispose(): void {
-		clearInterval(this.forecastInterval);
-
-		if (this.sensorInterval) {
-			clearInterval(this.sensorInterval);
-		}
+	public async init(): Promise<void> {
+		await this.update();
+		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
 
-	private updateForecasts = async () => {
+	public dispose(): void {
+		clearInterval(this.timer);
+	}
+
+	private update = async () => {
 		const { data } = await axios(URL);
 
 		const forecasts: WeatherEntry[] = [];
 
-		const hours = new Date().getHours();
 		const prefix = '/icons/';
-		const suffix = hours > 20 || hours < 6 ? '_n.png' : '_d.png';
+		const suffix = isNight() ? '_n.png' : '_d.png';
 
 		const current = data.current;
 		forecasts.push({
@@ -148,21 +140,22 @@ export class Weather extends Service {
 			});
 		}
 
-		this.forecasts = forecasts;
-	};
-
-	private updateDHT = async () => {
-		if (!this.dht) {
-			this.sensorTemp = Math.random() * 10;
-			this.sensorRh = Math.random() * 100;
+		let temp = Math.random() * 10;
+		let rh = Math.random() * 100;
+		if (this.dht) {
+			try {
+				const res = await this.dht.read(DHT_TYPE, DHT_PIN);
+				temp = res.temperature;
+				rh = res.humidity;
+			} catch (err) {
+				console.error(err);
+			}
 		}
 
-		try {
-			const res = await this.dht.read(DHT_TYPE, DHT_PIN);
-			this.sensorTemp = res.temperature;
-			this.sensorRh = res.humidity;
-		} catch (err) {
-			// NO-OP
-		}
+		this.status = {
+			temp,
+			rh,
+			forecasts
+		};
 	};
 }

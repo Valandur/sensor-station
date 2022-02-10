@@ -1,3 +1,4 @@
+import { stat } from 'fs/promises';
 import i2c, { PromisifiedBus } from 'i2c-bus';
 
 const BUS_NUMBER = 0x01;
@@ -50,13 +51,29 @@ export interface StatusInfo {
 	current: number;
 }
 
-export class PiJuice {
+export class Battery {
 	private bus: PromisifiedBus;
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
 
 	public async init() {
+		const file = `/dev/i2c-${BUS_NUMBER}`;
+		if (!(await stat(file).catch(() => false))) {
+			console.log(`PiJuice not available @ ${file}`);
+			this.status = {
+				isFault: false,
+				isButton: false,
+				batteryStatus: 'CHARGING_FROM_IN',
+				powerIn: 'WEAK',
+				powerIn5vIo: 'NONE',
+				charge: 43,
+				current: -1.132,
+				voltage: 3.942
+			};
+			return;
+		}
+
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
 	}
