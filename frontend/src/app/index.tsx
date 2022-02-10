@@ -149,7 +149,7 @@ export const App: FC = () => {
 
 	return (
 		<Container onTouchStart={touchStart} onTouchEnd={touchEnd}>
-			<Header isPaused={paused} onTimeClick={pause} />
+			<Header isPaused={paused} onRequestPause={pause} />
 			{screens[screen]}
 			{!paused && (
 				<Progress

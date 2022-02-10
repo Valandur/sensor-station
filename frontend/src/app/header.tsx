@@ -1,7 +1,7 @@
 import { styled } from '@stitches/react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import React, { FC } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import Holidays from 'date-holidays';
 
 import { useData } from './api';
@@ -10,9 +10,9 @@ const HeaderContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'row',
 	alignItems: 'stretch',
-	paddingLeft: 4,
-	paddingRight: 4,
-	marginBottom: 30
+	paddingLeft: 10,
+	paddingRight: 10,
+	marginBottom: 20
 });
 
 const LeftContainer = styled('div', {
@@ -25,8 +25,8 @@ const RightContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'column',
 	alignItems: 'flex-end',
-	alignSelf: 'center',
-	overflowX: 'hidden'
+	overflowX: 'hidden',
+	paddingTop: 10
 });
 
 const DateMain = styled('div', {
@@ -79,27 +79,47 @@ const BatteryCharge = styled('div', {
 	whiteSpace: 'nowrap'
 });
 
+const Options = styled('div', {
+	position: 'fixed',
+	top: 160,
+	left: 10,
+	right: 10,
+	bottom: 10,
+	padding: 10,
+	backgroundColor: 'black',
+	border: '1px solid orange',
+	fontSize: 20
+});
+
 interface Props {
 	isPaused: boolean;
-	onTimeClick: () => void;
+	onRequestPause: (pause?: boolean) => void;
 }
 
 const holidays = new Holidays('CH', 'ZH');
 
-export const Header: FC<Props> = ({ isPaused, onTimeClick }) => {
+export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 	const { battery, modem } = useData();
 
 	const now = new Date();
 	const holiday = holidays.isHoliday(now);
-	const time = format(now, 'HH:mm');
+	const time = now.toLocaleTimeString('de-CH', { timeZone: modem?.tz, timeStyle: 'short' });
 	const date = format(now, 'd. MMMM', { locale: de });
 	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
+
+	const onTimeClick = useCallback(() => onRequestPause(), []);
+
+	const [showOptions, setShowOptions] = useState(false);
+	const toggleOptions = useCallback(() => {
+		setShowOptions(!showOptions);
+		onRequestPause(!showOptions);
+	}, [setShowOptions, onRequestPause, showOptions]);
 
 	return (
 		<HeaderContainer>
 			<LeftContainer onClick={onTimeClick}>{time}</LeftContainer>
 
-			<RightContainer>
+			<RightContainer onClick={toggleOptions}>
 				<SymbolContainer>
 					{battery && (
 						<BatteryContainer>
@@ -130,6 +150,15 @@ export const Header: FC<Props> = ({ isPaused, onTimeClick }) => {
 					{holiday && <div>&nbsp;•&nbsp;{holiday[0].name}</div>}
 				</DateSub>
 			</RightContainer>
+
+			{showOptions && (
+				<Options>
+					<div>Net: {modem?.operator}</div>
+					<div>Lat: {modem?.lat}</div>
+					<div>Lng: {modem?.lng}</div>
+					<div>TZ: {modem?.tz}</div>
+				</Options>
+			)}
 		</HeaderContainer>
 	);
 };
