@@ -31,13 +31,13 @@ const RightContainer = styled('div', {
 
 const DateMain = styled('div', {
 	fontSize: 60,
-	lineHeight: '1em'
+	paddingTop: 10
 });
 
 const DateSub = styled('div', {
 	display: 'flex',
 	flexDirection: 'row',
-	fontSize: 40,
+	fontSize: 30,
 	whiteSpace: 'nowrap'
 });
 
@@ -45,11 +45,11 @@ const SymbolContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'row-reverse',
 	alignItems: 'center',
-	height: 50
+	height: 20
 });
 
 const BasicSymbol = styled('div', {
-	fontSize: '2em',
+	fontSize: 20,
 	marginRight: 20
 });
 
@@ -61,12 +61,12 @@ const MobileContainer = styled('div', {
 });
 
 const MobileBar = styled('div', {
-	width: 10,
+	width: 4,
 	marginRight: 2
 });
 
 const BatteryContainer = styled('div', {
-	width: 200,
+	width: 100,
 	backgroundColor: 'gray',
 	border: '1px solid black'
 });
@@ -75,7 +75,7 @@ const BatteryCharge = styled('div', {
 	color: 'black',
 	backgroundColor: 'orange',
 	paddingLeft: 4,
-	fontSize: 28,
+	fontSize: 20,
 	whiteSpace: 'nowrap'
 });
 
@@ -104,7 +104,7 @@ export const Header: FC<Props> = ({ isPaused, onTimeClick }) => {
 					{battery && (
 						<BatteryContainer>
 							<BatteryCharge style={{ width: `${battery.charge}%` }}>
-								{battery.charge}% {battery.batteryStatus.includes('CHARGING') && '⚡'}
+								{battery.batteryStatus.includes('CHARGING') && '⚡'} {battery.charge}%
 							</BatteryCharge>
 						</BatteryContainer>
 					)}
@@ -112,9 +112,9 @@ export const Header: FC<Props> = ({ isPaused, onTimeClick }) => {
 					{modem?.operator && (
 						<MobileContainer>
 							<MobileBar style={{ height: 5, backgroundColor: modem.signal > 0 ? 'orange' : 'gray' }}></MobileBar>
-							<MobileBar style={{ height: 15, backgroundColor: modem.signal > 1 ? 'orange' : 'gray' }}></MobileBar>
-							<MobileBar style={{ height: 25, backgroundColor: modem.signal > 2 ? 'orange' : 'gray' }}></MobileBar>
-							<MobileBar style={{ height: 35, backgroundColor: modem.signal > 3 ? 'orange' : 'gray' }}></MobileBar>
+							<MobileBar style={{ height: 10, backgroundColor: modem.signal > 1 ? 'orange' : 'gray' }}></MobileBar>
+							<MobileBar style={{ height: 15, backgroundColor: modem.signal > 2 ? 'orange' : 'gray' }}></MobileBar>
+							<MobileBar style={{ height: 20, backgroundColor: modem.signal > 3 ? 'orange' : 'gray' }}></MobileBar>
 						</MobileContainer>
 					)}
 
