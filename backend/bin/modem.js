@@ -81,8 +81,8 @@ class Modem {
             const second = Number(cclkMatch[6]);
             const rawTz = Number(cclkMatch[7]) * 15;
             const tzSign = rawTz > 0 ? '+' : '-';
-            const tzHours = Math.floor(Math.abs(rawTz) / 60);
-            const tzMinutes = Math.abs(rawTz) % 60;
+            const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
+            const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
             tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
             time = (0, date_fns_tz_1.zonedTimeToUtc)(new Date(year, month - 1, day, hour, minute, second), `UTC${tzOffset}`).toISOString();
         }
