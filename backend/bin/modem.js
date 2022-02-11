@@ -91,7 +91,7 @@ class Modem {
             lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
             tzName = (0, geo_tz_1.find)(lat, lng)[0];
         }
-        return { isConnected: true, operator, signal, time: new Date().toISOString(), tzOffset: 0, lat, lng, tzName };
+        return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName };
     }
 }
 exports.Modem = Modem;

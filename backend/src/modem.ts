@@ -111,6 +111,6 @@ export class Modem {
 			tzName = find(lat, lng)[0];
 		}
 
-		return { isConnected: true, operator, signal, time: new Date().toISOString(), tzOffset: 0, lat, lng, tzName };
+		return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName };
 	}
 }
