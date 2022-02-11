@@ -74,13 +74,13 @@ class Weather extends service_1.Service {
     constructor(modem) {
         super();
         this.update = async () => {
+            const alerts = [];
             const forecasts = [];
             const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.6921314';
             const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.4584784';
             const url = `${URL}&lat=${lat}&lon=${lng}`;
             try {
                 const { data } = await (0, axios_1.default)(url);
-                console.log(data);
                 const prefix = '/icons/';
                 const suffix = '.png';
                 const current = data.current;
@@ -94,6 +94,16 @@ class Weather extends service_1.Service {
                         time: new Date(forecast.dt * 1000),
                         img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
                         feelsLike: forecast.feels_like.day
+                    });
+                }
+                for (const alert of data.alerts) {
+                    alerts.push({
+                        sender: alert.sender_name,
+                        event: alert.event,
+                        start: new Date(alert.start * 1000),
+                        end: new Date(alert.end * 1000),
+                        description: alert.description,
+                        tags: alert.tags
                     });
                 }
             }
@@ -119,7 +129,8 @@ class Weather extends service_1.Service {
             this.status = {
                 temp,
                 rh,
-                forecasts
+                forecasts,
+                alerts
             };
         };
         this.modem = modem;

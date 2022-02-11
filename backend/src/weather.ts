@@ -83,10 +83,20 @@ interface WeatherEntry {
 	feelsLike: number;
 }
 
+interface Alert {
+	sender: string;
+	event: string;
+	start: Date;
+	end: Date;
+	description: string;
+	tags: string[];
+}
+
 interface WeatherStatus {
 	temp: number;
 	rh: number;
 	forecasts: WeatherEntry[];
+	alerts: Alert[];
 }
 
 export class Weather extends Service {
@@ -121,6 +131,7 @@ export class Weather extends Service {
 	}
 
 	private update = async () => {
+		const alerts: Alert[] = [];
 		const forecasts: WeatherEntry[] = [];
 
 		const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.6921314';
@@ -129,7 +140,6 @@ export class Weather extends Service {
 
 		try {
 			const { data } = await axios(url);
-			console.log(data);
 
 			const prefix = '/icons/';
 			const suffix = '.png';
@@ -146,6 +156,17 @@ export class Weather extends Service {
 					time: new Date(forecast.dt * 1000),
 					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
 					feelsLike: forecast.feels_like.day
+				});
+			}
+
+			for (const alert of data.alerts) {
+				alerts.push({
+					sender: alert.sender_name,
+					event: alert.event,
+					start: new Date(alert.start * 1000),
+					end: new Date(alert.end * 1000),
+					description: alert.description,
+					tags: alert.tags
 				});
 			}
 		} catch (err) {
@@ -170,7 +191,8 @@ export class Weather extends Service {
 		this.status = {
 			temp,
 			rh,
-			forecasts
+			forecasts,
+			alerts
 		};
 	};
 }
