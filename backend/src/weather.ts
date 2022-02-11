@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 import { Service } from './service';
+import { Modem } from './modem';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
-const URL_LOC = '&lat=47.2949&lon=8.5645';
 const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
-const URL = `${BASE_URL}${URL_OPTIONS}${URL_LOC}${URL_APIKEY}`;
+const URL = `${BASE_URL}${URL_OPTIONS}${URL_APIKEY}`;
 
 const DHT_TYPE = 11;
 const DHT_PIN = 17;
@@ -95,8 +95,12 @@ export class Weather extends Service {
 
 	public status: WeatherStatus;
 
-	public constructor() {
+	private modem: Modem;
+
+	public constructor(modem?: Modem) {
 		super();
+
+		this.modem = modem;
 
 		if (!process.env.DISABLE_SENSOR) {
 			try {
@@ -119,8 +123,13 @@ export class Weather extends Service {
 	private update = async () => {
 		const forecasts: WeatherEntry[] = [];
 
+		const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.6921314';
+		const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.4584784';
+		const url = `${URL}&lat=${lat}&lon=${lng}`;
+
 		try {
-			const { data } = await axios(URL);
+			const { data } = await axios(url);
+			console.log(data);
 
 			const prefix = '/icons/';
 			const suffix = '.png';
