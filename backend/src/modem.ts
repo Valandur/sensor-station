@@ -2,6 +2,7 @@ import SerialCommander from '@westh/serial-commander';
 import { stat } from 'fs/promises';
 import { find } from 'geo-tz';
 import { zonedTimeToUtc } from 'date-fns-tz';
+import { min, parse, parseISO } from 'date-fns';
 
 const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 5 * 60 * 1000;
@@ -104,8 +105,8 @@ export class Modem {
 			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
 			tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
 
-			const date = new Date(year, month - 1, day, hour, minute, second);
-			time = zonedTimeToUtc(date, `UTC${tzOffset}`).toISOString();
+			const date = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}T${tzOffset}`);
+			time = zonedTimeToUtc(date, tzOffset).toISOString();
 		}
 
 		let lat: number;
