@@ -149,9 +149,9 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 					{!!modem?.lat && !!modem?.lng && <BasicSymbol>🛰️</BasicSymbol>}
 
-					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
-
 					{modem && <BasicSymbol>{tzOffset} 🌐</BasicSymbol>}
+
+					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
 				</SymbolContainer>
 
 				<DateMain>{date}</DateMain>
