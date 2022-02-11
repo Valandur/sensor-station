@@ -92,12 +92,12 @@ export class Modem {
 		const { response: cclkResp } = await this.commander.send('AT+CCLK?');
 		const cclkMatch = CCLK.exec(cclkResp);
 		if (cclkMatch) {
-			const year = 2000 + Number(cclkMatch[1]);
-			const month = Number(cclkMatch[2]);
-			const day = Number(cclkMatch[3]);
-			const hour = Number(cclkMatch[4]);
-			const minute = Number(cclkMatch[5]);
-			const second = Number(cclkMatch[6]);
+			const year = `${2000 + Number(cclkMatch[1])}`;
+			const month = `${Number(cclkMatch[2])}`.padStart(2, '0');
+			const day = `${Number(cclkMatch[3])}`.padStart(2, '0');
+			const hour = `${Number(cclkMatch[4])}`.padStart(2, '0');
+			const minute = `${Number(cclkMatch[5])}`.padStart(2, '0');
+			const second = `${Number(cclkMatch[6])}`.padStart(2, '0');
 			const rawTz = Number(cclkMatch[7]) * 15;
 
 			const tzSign = rawTz > 0 ? '+' : '-';
@@ -105,7 +105,7 @@ export class Modem {
 			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
 			tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
 
-			const date = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}T${tzOffset}`);
+			const date = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`);
 			time = zonedTimeToUtc(date, tzOffset).toISOString();
 		}
 
