@@ -1,10 +1,10 @@
-# Robot
+# Weather Station
 
 ## Dependencies
 
 `sudo apt install --no-install-recommends vim htop chromium-browser xserver-xorg x11-xserver-utils xinit unclutter fonts-noto-color-emoji`
 
-### Autostart Web UI
+## Autostart Web UI
 
 > .bash_profile
 
@@ -39,4 +39,23 @@ chromium-browser http://localhost \
   --disable-pinch \
   --check-for-update-interval=31536000 \
   --force-dark-mode
+```
+
+## Modem config
+
+```shell
+# deregister from network
+$ AT+COPS=2
+
+# automatic time update enabled
+$ AT+CTZU=1
+
+# re-register to network
+$ AT+COPS=0
+
+# auto start GPS on modem boot
+$ AT+CGPSAUTO=1
+
+# start gps in standalone mode
+$ AT+CGPS=1,1
 ```

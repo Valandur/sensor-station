@@ -46,13 +46,11 @@ export class Modem {
 			return;
 		}
 
-		this.commander = new SerialCommander({ port: MODEM_SERIAL, defaultDelay: 10, disableLog: true });
-		await this.commander.send('AT+COPS=2', { timeout: 5000 }); // deregister from network
-		await this.commander.send('AT+CTZU=1'); // automatic time update enabled
-		await this.commander.send('AT+COPS=0', { timeout: 5000 }); // register to network
-		await this.commander.send('AT+CGPSAUTO=1'); // Auto start GPS on modem boot
-		await this.commander.send('AT+CGPS=1,1', { timeout: 5000 }); // start gps in standalone mode
-
+		this.commander = new SerialCommander({
+			port: MODEM_SERIAL,
+			defaultDelay: 10,
+			disableLog: true
+		});
 		await this.update();
 
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
