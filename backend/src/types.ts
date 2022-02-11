@@ -1,13 +1,18 @@
 declare module '@westh/serial-commander' {
-	export interface Options {
-		port: string;
-		disableLog: boolean;
+	export interface ConstructorOptions {
+		port?: string;
+		defaultDelay?: number;
+		disableLog?: boolean;
+	}
+
+	export interface SendOptions {
+		timeout?: number;
 	}
 
 	export default class SerialCommander {
-		public constructor(opts: Options);
+		public constructor(opts: ConstructorOptions);
 
-		public send(command: string): Promise<{ response: string }>;
+		public send(command: string, options?: SendOptions): Promise<{ response: string }>;
 		public close(): Promise<void>;
 	}
 }

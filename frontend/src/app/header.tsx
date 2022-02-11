@@ -103,7 +103,7 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 	const now = new Date();
 	const holiday = holidays.isHoliday(now);
-	const time = now.toLocaleTimeString('de-CH', { timeZone: modem?.tz, timeStyle: 'short' });
+	const time = now.toLocaleTimeString('de-CH', { timeZone: modem?.tzName, timeStyle: 'short' });
 	const date = format(now, 'd. MMMM', { locale: de });
 	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
 
@@ -153,10 +153,16 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 			{showOptions && (
 				<Options>
+					<div>Time: {modem?.time}</div>
+					<div>
+						TZ: {modem?.tzOffset} ({modem?.tzName})
+					</div>
 					<div>Net: {modem?.operator}</div>
 					<div>Lat: {modem?.lat}</div>
 					<div>Lng: {modem?.lng}</div>
-					<div>TZ: {modem?.tz}</div>
+					<div>Power: {battery?.powerIn}</div>
+					<div>Voltage: {battery?.voltage}V</div>
+					<div>Current: {battery?.current}A</div>
 				</Options>
 			)}
 		</HeaderContainer>

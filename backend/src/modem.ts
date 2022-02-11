@@ -7,16 +7,18 @@ const UPDATE_INTERVAL = 5 * 60 * 1000;
 
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
-const CREG = /\+CREG: (\d+),(\d+),([0-9A-F]+),([0-9A-F]+)/i;
+const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
 
 export interface StatusInfo {
 	isConnected: boolean;
+	time: string;
+	tzOffset: number;
 	operator: string;
 	signal: number;
 	lat: number;
 	lng: number;
-	tz: string;
+	tzName: string;
 }
 
 export class Modem {
@@ -33,16 +35,24 @@ export class Modem {
 
 			this.status = {
 				isConnected: true,
+				time: new Date().toISOString(),
+				tzOffset: +1,
 				operator: 'DR',
 				signal: 3,
 				lat,
 				lng,
-				tz: find(lat, lng)[0]
+				tzName: find(lat, lng)[0]
 			};
 			return;
 		}
 
-		this.commander = new SerialCommander({ port: MODEM_SERIAL, disableLog: true });
+		this.commander = new SerialCommander({ port: MODEM_SERIAL, defaultDelay: 10, disableLog: true });
+		await this.commander.send('AT+COPS=2', { timeout: 5000 }); // deregister from network
+		await this.commander.send('AT+CTZU=1'); // automatic time update enabled
+		await this.commander.send('AT+COPS=0', { timeout: 5000 }); // register to network
+		await this.commander.send('AT+CGPSAUTO=1'); // Auto start GPS on modem boot
+		await this.commander.send('AT+CGPS=1,1', { timeout: 5000 }); // start gps in standalone mode
+
 		await this.update();
 
 		this.timer = setInterval(this.update, UPDATE_INTERVAL);
@@ -63,7 +73,6 @@ export class Modem {
 
 	public async getStatus(): Promise<StatusInfo> {
 		let operator: string;
-		await this.commander.send('AT+COPS=3,0');
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
 		if (copsMatch) {
@@ -78,11 +87,11 @@ export class Modem {
 			signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
 		}
 
-		/*const { response: cregResp } = await this.commander.send('AT+CREG?');
-		const cregMatch = CREG.exec(cregResp);
-		if (cregMatch) {
-			console.log('CREG:', ...cregMatch.slice(1));
-		}*/
+		const { response: cclkResp } = await this.commander.send('AT+CCLK?');
+		const cclkMatch = CCLK.exec(cclkResp);
+		if (cclkMatch) {
+			console.log('CCLK:', ...cclkMatch.slice(1));
+		}
 
 		let lat: number;
 		let lng: number;
@@ -95,6 +104,6 @@ export class Modem {
 			tz = find(lat, lng)[0];
 		}
 
-		return { isConnected: true, operator, signal, lat, lng, tz };
+		return { isConnected: true, operator, signal, time: new Date().toISOString(), tzOffset: 0, lat, lng, tzName: tz };
 	}
 }
