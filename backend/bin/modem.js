@@ -7,8 +7,6 @@ exports.Modem = void 0;
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const promises_1 = require("fs/promises");
 const geo_tz_1 = require("geo-tz");
-const date_fns_tz_1 = require("date-fns-tz");
-const date_fns_1 = require("date-fns");
 const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 5 * 60 * 1000;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -85,8 +83,7 @@ class Modem {
             const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
             const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
             tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
-            const date = (0, date_fns_1.parseISO)(`${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`);
-            time = (0, date_fns_tz_1.zonedTimeToUtc)(date, tzOffset).toISOString();
+            time = `${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`;
         }
         let lat;
         let lng;
