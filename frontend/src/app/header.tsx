@@ -50,14 +50,14 @@ const SymbolContainer = styled('div', {
 
 const BasicSymbol = styled('div', {
 	fontSize: 20,
-	marginRight: 20
+	marginLeft: 20
 });
 
 const MobileContainer = styled('div', {
 	display: 'flex',
 	flexDirection: 'row',
 	alignItems: 'flex-end',
-	marginRight: 20
+	marginLeft: 20
 });
 
 const MobileBar = styled('div', {
@@ -68,7 +68,8 @@ const MobileBar = styled('div', {
 const BatteryContainer = styled('div', {
 	width: 100,
 	backgroundColor: 'gray',
-	border: '1px solid black'
+	border: '1px solid black',
+	marginLeft: 20
 });
 
 const BatteryCharge = styled('div', {
@@ -143,6 +144,12 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 					{!!modem?.lat && !!modem?.lng && <BasicSymbol>🛰️</BasicSymbol>}
 
 					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
+
+					{modem && (
+						<BasicSymbol>
+							{modem?.tzName} ({modem?.tzOffset})
+						</BasicSymbol>
+					)}
 				</SymbolContainer>
 
 				<DateMain>{date}</DateMain>
