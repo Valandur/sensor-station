@@ -67,22 +67,31 @@ class Modem {
             const rawSig = Number(csqMatch[1]);
             signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
         }
+        let time;
+        let tzOffset;
         const { response: cclkResp } = await this.commander.send('AT+CCLK?');
         const cclkMatch = CCLK.exec(cclkResp);
         if (cclkMatch) {
-            console.log('CCLK:', ...cclkMatch.slice(1));
+            const year = 2000 + Number(cclkMatch[1]);
+            const month = Number(cclkMatch[2]);
+            const day = Number(cclkMatch[3]);
+            const hour = Number(cclkMatch[4]);
+            const minute = Number(cclkMatch[5]);
+            const second = Number(cclkMatch[6]);
+            time = new Date(year, month, day, hour, minute, second).toISOString();
+            tzOffset = Number(cclkMatch[7]) / 4;
         }
         let lat;
         let lng;
-        let tz;
+        let tzName;
         const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
         const gpsMatch = GPS.exec(gpsResp);
         if (gpsMatch) {
             lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
             lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
-            tz = (0, geo_tz_1.find)(lat, lng)[0];
+            tzName = (0, geo_tz_1.find)(lat, lng)[0];
         }
-        return { isConnected: true, operator, signal, time: new Date().toISOString(), tzOffset: 0, lat, lng, tzName: tz };
+        return { isConnected: true, operator, signal, time: new Date().toISOString(), tzOffset: 0, lat, lng, tzName };
     }
 }
 exports.Modem = Modem;
