@@ -2,7 +2,7 @@ import { styled } from '@stitches/react';
 import { de } from 'date-fns/locale';
 import React, { FC, useCallback, useState } from 'react';
 import Holidays from 'date-holidays';
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz';
 
 import { useData } from './api';
 
@@ -104,6 +104,7 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 	const now = new Date();
 	const tz = modem?.tzName || modem?.tzOffset || 'Europe/Zurich';
+	const tzOffset = getTimezoneOffset(tz);
 
 	const holiday = holidays.isHoliday(now);
 	const time = formatInTimeZone(now, tz, 'HH:mm');
@@ -145,11 +146,7 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
 
-					{modem && (
-						<BasicSymbol>
-							{modem?.tzName} ({modem?.tzOffset})
-						</BasicSymbol>
-					)}
+					{modem && <BasicSymbol>{tzOffset} 🕓</BasicSymbol>}
 				</SymbolContainer>
 
 				<DateMain>{date}</DateMain>
