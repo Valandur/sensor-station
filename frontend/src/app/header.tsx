@@ -104,7 +104,8 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 	const now = new Date();
 	const tz = modem?.tzName || modem?.tzOffset || 'Europe/Zurich';
-	const tzOffset = getTimezoneOffset(tz);
+	const tzMins = getTimezoneOffset(tz) / 60000;
+	const tzOffset = `${Math.floor(tzMins / 60)}`.padStart(2, '0') + ':' + `${tzMins % 60}`.padStart(2, '0');
 
 	const holiday = holidays.isHoliday(now);
 	const time = formatInTimeZone(now, tz, 'HH:mm');
@@ -146,7 +147,7 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 
 					{isPaused && <BasicSymbol>⏸️</BasicSymbol>}
 
-					{modem && <BasicSymbol>{tzOffset} 🕓</BasicSymbol>}
+					{modem && <BasicSymbol>{tzOffset} 🌐</BasicSymbol>}
 				</SymbolContainer>
 
 				<DateMain>{date}</DateMain>
