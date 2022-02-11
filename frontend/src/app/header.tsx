@@ -89,7 +89,9 @@ const Options = styled('div', {
 	padding: 10,
 	backgroundColor: 'black',
 	border: '1px solid orange',
-	fontSize: 20
+	fontSize: 20,
+	display: 'flex',
+	flexDirection: 'column'
 });
 
 interface Props {
@@ -174,6 +176,12 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 					<div>Power: {battery?.powerIn}</div>
 					<div>Voltage: {battery?.voltage}V</div>
 					<div>Current: {battery?.current}A</div>
+
+					<div style={{ flex: 1 }} />
+
+					<div>
+						<button onClick={() => window.location.reload()}>Reload</button>
+					</div>
 				</Options>
 			)}
 		</HeaderContainer>
