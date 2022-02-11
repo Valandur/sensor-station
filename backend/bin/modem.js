@@ -84,7 +84,8 @@ class Modem {
             const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
             const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
             tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
-            time = (0, date_fns_tz_1.zonedTimeToUtc)(new Date(year, month - 1, day, hour, minute, second), `UTC${tzOffset}`).toISOString();
+            const date = new Date(year, month - 1, day, hour, minute, second);
+            time = (0, date_fns_tz_1.zonedTimeToUtc)(date, `UTC${tzOffset}`).toISOString();
         }
         let lat;
         let lng;
