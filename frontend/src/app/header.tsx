@@ -1,8 +1,8 @@
 import { styled } from '@stitches/react';
-import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import React, { FC, useCallback, useState } from 'react';
 import Holidays from 'date-holidays';
+import { formatInTimeZone } from 'date-fns-tz';
 
 import { useData } from './api';
 
@@ -102,10 +102,12 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 	const { battery, modem } = useData();
 
 	const now = new Date();
+	const tz = modem?.tzName || modem?.tzOffset || 'Europe/Zurich';
+
 	const holiday = holidays.isHoliday(now);
-	const time = now.toLocaleTimeString('de-CH', { timeZone: modem?.tzName, timeStyle: 'short' });
-	const date = format(now, 'd. MMMM', { locale: de });
-	const dateSub = format(now, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
+	const time = formatInTimeZone(now, tz, 'HH:mm');
+	const date = formatInTimeZone(now, tz, 'd. MMMM', { locale: de });
+	const dateSub = formatInTimeZone(now, tz, holiday ? 'eee' : 'eeee', { locale: de }).replace('.', '');
 
 	const onTimeClick = useCallback(() => onRequestPause(), []);
 

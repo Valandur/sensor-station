@@ -24,7 +24,7 @@ export interface Modem {
 	lat: number;
 	lng: number;
 	time: string;
-	tzOffset: number;
+	tzOffset: string;
 	tzName: string;
 }
 
