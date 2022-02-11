@@ -105,7 +105,11 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 	const now = new Date();
 	const tz = modem?.tzName || modem?.tzOffset || 'Europe/Zurich';
 	const tzMins = getTimezoneOffset(tz) / 60000;
-	const tzOffset = `${Math.floor(tzMins / 60)}`.padStart(2, '0') + ':' + `${tzMins % 60}`.padStart(2, '0');
+	const tzOffset =
+		(tzMins > 0 ? '+' : '-') +
+		`${Math.floor(Math.abs(tzMins) / 60)}`.padStart(2, '0') +
+		':' +
+		`${Math.abs(tzMins) % 60}`.padStart(2, '0');
 
 	const holiday = holidays.isHoliday(now);
 	const time = formatInTimeZone(now, tz, 'HH:mm');
