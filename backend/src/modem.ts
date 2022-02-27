@@ -1,14 +1,19 @@
+import { networkInterfaces } from 'os';
+import { readFile, stat, writeFile } from 'fs/promises';
 import SerialCommander from '@westh/serial-commander';
-import { stat } from 'fs/promises';
 import { find } from 'geo-tz';
 
 const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 5 * 60 * 1000;
+const BASE_LAT = 47.17554525;
+const BASE_LNG = 8.33849761;
 
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
+
+const STATE_PATH = `data/modem/state.json`;
 
 export interface StatusInfo {
 	isConnected: boolean;
@@ -19,6 +24,11 @@ export interface StatusInfo {
 	lat: number;
 	lng: number;
 	tzName: string;
+	cached: boolean;
+}
+
+interface IpMap {
+	[name: string]: string[];
 }
 
 export class Modem {
@@ -26,26 +36,9 @@ export class Modem {
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
+	public ips: IpMap;
 
 	public async init() {
-		if (!(await stat(MODEM_SERIAL).catch(() => false))) {
-			console.log(`Modem not available @ ${MODEM_SERIAL}`);
-			const lat = 47.17554525;
-			const lng = 8.33849761;
-
-			this.status = {
-				isConnected: true,
-				time: new Date().toISOString(),
-				tzOffset: '+01:00',
-				operator: 'DR',
-				signal: 3,
-				lat,
-				lng,
-				tzName: find(lat, lng)[0]
-			};
-			return;
-		}
-
 		this.commander = new SerialCommander({
 			port: MODEM_SERIAL,
 			defaultDelay: 10,
@@ -63,13 +56,62 @@ export class Modem {
 
 	private update = async () => {
 		try {
-			this.status = await this.getStatus();
+			this.ips = await this.getIps();
 		} catch (err) {
 			console.error(err);
 		}
+
+		try {
+			this.status = await this.getStatus();
+			await writeFile(STATE_PATH, JSON.stringify(this.status), 'utf-8');
+		} catch (err) {
+			console.error(err);
+
+			const status = await readFile(STATE_PATH, 'utf-8').catch(() =>
+				JSON.stringify({
+					isConnected: false,
+					time: new Date().toISOString(),
+					tzOffset: '+01:00',
+					operator: 'DR',
+					signal: 3,
+					lat: BASE_LAT,
+					lng: BASE_LNG,
+					tzName: find(BASE_LAT, BASE_LNG)[0],
+					cached: true
+				})
+			);
+			this.status = { ...JSON.parse(status), cached: true };
+		}
 	};
 
+	public async getIps(): Promise<IpMap> {
+		const nets = networkInterfaces();
+		const ips: IpMap = {};
+
+		for (const name of Object.keys(nets)) {
+			for (const net of nets[name]) {
+				if (net.internal) {
+					continue;
+				}
+
+				let netIps = ips[name];
+				if (!netIps) {
+					netIps = [];
+					ips[name] = netIps;
+				}
+
+				netIps.push(net.address);
+			}
+		}
+
+		return ips;
+	}
+
 	public async getStatus(): Promise<StatusInfo> {
+		if (!(await stat(MODEM_SERIAL).catch(() => false))) {
+			throw new Error(`Modem not available @ ${MODEM_SERIAL}`);
+		}
+
 		let operator: string;
 		const { response: copsResp } = await this.commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
@@ -117,6 +159,6 @@ export class Modem {
 			tzName = find(lat, lng)[0];
 		}
 
-		return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName };
+		return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName, cached: false };
 	}
 }
