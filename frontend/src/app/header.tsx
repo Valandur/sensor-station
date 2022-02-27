@@ -102,7 +102,7 @@ interface Props {
 const holidays = new Holidays('CH', 'ZH');
 
 export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
-	const { battery, modem } = useData();
+	const { battery, modem, interfaces } = useData();
 
 	const now = new Date();
 	const tz = modem?.tzName || modem?.tzOffset || 'Europe/Zurich';
@@ -176,11 +176,18 @@ export const Header: FC<Props> = ({ isPaused, onRequestPause }) => {
 					<div>Power: {battery?.powerIn}</div>
 					<div>Voltage: {battery?.voltage}V</div>
 					<div>Current: {battery?.current}A</div>
+					{interfaces?.map((iface) => (
+						<div key={iface.name}>
+							{iface.name}: {iface.ips.join(' | ')}
+						</div>
+					))}
 
 					<div style={{ flex: 1 }} />
 
 					<div>
-						<button onClick={() => window.location.reload()}>Reload</button>
+						<button onClick={() => window.location.reload()} style={{ fontSize: 20 }}>
+							Reload
+						</button>
 					</div>
 				</Options>
 			)}

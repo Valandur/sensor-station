@@ -46,7 +46,8 @@ const main = async () => {
 	app.get('/data', (req, res) => {
 		res.json({
 			battery: battery.status,
-			modem: modem.status
+			modem: modem.status,
+			interfaces: modem.interfaces
 		});
 	});
 

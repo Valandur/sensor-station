@@ -27,8 +27,9 @@ export interface StatusInfo {
 	cached: boolean;
 }
 
-interface IpMap {
-	[name: string]: string[];
+export interface Interface {
+	name: string;
+	ips: string[];
 }
 
 export class Modem {
@@ -36,7 +37,7 @@ export class Modem {
 	private timer: NodeJS.Timer;
 
 	public status: StatusInfo;
-	public ips: IpMap;
+	public interfaces: Interface[];
 
 	public async init() {
 		this.commander = new SerialCommander({
@@ -56,7 +57,7 @@ export class Modem {
 
 	private update = async () => {
 		try {
-			this.ips = await this.getIps();
+			this.interfaces = await this.getInterfaces();
 		} catch (err) {
 			console.error(err);
 		}
@@ -84,9 +85,9 @@ export class Modem {
 		}
 	};
 
-	public async getIps(): Promise<IpMap> {
+	public async getInterfaces(): Promise<Interface[]> {
 		const nets = networkInterfaces();
-		const ips: IpMap = {};
+		const interfaces: Map<string, string[]> = new Map();
 
 		for (const name of Object.keys(nets)) {
 			for (const net of nets[name]) {
@@ -94,17 +95,17 @@ export class Modem {
 					continue;
 				}
 
-				let netIps = ips[name];
+				let netIps = interfaces.get(name);
 				if (!netIps) {
 					netIps = [];
-					ips[name] = netIps;
+					interfaces.set(name, netIps);
 				}
 
 				netIps.push(net.address);
 			}
 		}
 
-		return ips;
+		return [...interfaces.entries()].map(([name, ips]) => ({ name, ips }));
 	}
 
 	public async getStatus(): Promise<StatusInfo> {

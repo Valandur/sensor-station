@@ -26,11 +26,18 @@ export interface Modem {
 	time: string;
 	tzOffset: string;
 	tzName: string;
+	cached: boolean;
+}
+
+export interface Interface {
+	name: string;
+	ips: string[];
 }
 
 export interface Data {
 	battery: Battery;
 	modem: Modem;
+	interfaces: Interface[];
 }
 
 export const useData = (): Partial<Data> => {
