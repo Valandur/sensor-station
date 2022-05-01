@@ -34,7 +34,7 @@ interface Item {
 	ratio: number;
 }
 
-const BASE_URL = 'http://localhost:2000'; // window.location.origin;
+export const BASE_URL = process.env.REACT_APP_API_URL || window.location.origin;
 
 export const Web: FC = () => {
 	globalStyles();
