@@ -116,7 +116,15 @@ export const useNews = (id: string): NewsItem[] => {
 
 export interface UploadItem {
 	title: string;
+	date: Date;
 	img: string;
+	ratio: number;
+}
+
+interface RawUploadItem {
+	img: string;
+	title: string;
+	date: string;
 	ratio: number;
 }
 
@@ -126,7 +134,7 @@ export const useUpload = (): UploadItem[] => {
 	useEffect(() => {
 		const main = async () => {
 			const { data } = await axios(`${BASE_URL}/upload`);
-			setItems(data);
+			setItems(data.map((d: RawUploadItem) => ({ ...d, date: parseISO(d.date) })));
 		};
 
 		main().catch((err) => console.error(err));

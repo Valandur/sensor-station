@@ -4,43 +4,50 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Modem = void 0;
-const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
+const os_1 = require("os");
 const promises_1 = require("fs/promises");
+const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const geo_tz_1 = require("geo-tz");
 const MODEM_SERIAL = '/dev/ttyUSB2';
 const UPDATE_INTERVAL = 5 * 60 * 1000;
+const BASE_LAT = 47.17554525;
+const BASE_LNG = 8.33849761;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
+const STATE_PATH = `data/modem/state.json`;
 class Modem {
     constructor() {
         this.update = async () => {
             try {
-                this.status = await this.getStatus();
+                this.interfaces = await this.getInterfaces();
             }
             catch (err) {
                 console.error(err);
             }
+            try {
+                this.status = await this.getStatus();
+                await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
+            }
+            catch (err) {
+                console.error(err);
+                const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => JSON.stringify({
+                    isConnected: false,
+                    time: new Date().toISOString(),
+                    tzOffset: '+01:00',
+                    operator: 'DR',
+                    signal: 3,
+                    lat: BASE_LAT,
+                    lng: BASE_LNG,
+                    tzName: (0, geo_tz_1.find)(BASE_LAT, BASE_LNG)[0],
+                    cached: true
+                }));
+                this.status = { ...JSON.parse(status), cached: true };
+            }
         };
     }
     async init() {
-        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
-            console.log(`Modem not available @ ${MODEM_SERIAL}`);
-            const lat = 47.17554525;
-            const lng = 8.33849761;
-            this.status = {
-                isConnected: true,
-                time: new Date().toISOString(),
-                tzOffset: '+01:00',
-                operator: 'DR',
-                signal: 3,
-                lat,
-                lng,
-                tzName: (0, geo_tz_1.find)(lat, lng)[0]
-            };
-            return;
-        }
         this.commander = new serial_commander_1.default({
             port: MODEM_SERIAL,
             defaultDelay: 10,
@@ -53,7 +60,28 @@ class Modem {
         await this.commander.close();
         clearInterval(this.timer);
     }
+    async getInterfaces() {
+        const nets = (0, os_1.networkInterfaces)();
+        const interfaces = new Map();
+        for (const name of Object.keys(nets)) {
+            for (const net of nets[name]) {
+                if (net.internal) {
+                    continue;
+                }
+                let netIps = interfaces.get(name);
+                if (!netIps) {
+                    netIps = [];
+                    interfaces.set(name, netIps);
+                }
+                netIps.push(net.address);
+            }
+        }
+        return [...interfaces.entries()].map(([name, ips]) => ({ name, ips }));
+    }
     async getStatus() {
+        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
+            throw new Error(`Modem not available @ ${MODEM_SERIAL}`);
+        }
         let operator;
         const { response: copsResp } = await this.commander.send('AT+COPS?');
         const copsMatch = COPS.exec(copsResp);
@@ -95,7 +123,7 @@ class Modem {
             lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
             tzName = (0, geo_tz_1.find)(lat, lng)[0];
         }
-        return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName };
+        return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName, cached: false };
     }
 }
 exports.Modem = Modem;

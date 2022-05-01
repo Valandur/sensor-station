@@ -1,4 +1,4 @@
-import express, { RequestHandler } from 'express';
+import express from 'express';
 import cors from 'cors';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import { json, urlencoded } from 'body-parser';
@@ -10,17 +10,20 @@ import { News } from './news';
 import { Battery } from './battery';
 import { Upload } from './upload';
 import { Weather } from './weather';
+import { isValid, parseISO } from 'date-fns';
 
 const main = async () => {
 	const app = express();
 
 	app.use(cors());
-	app.use(json() as RequestHandler);
+	app.use(json());
 	app.use(express.static(`../frontend/build`));
+
+	app.options('*', cors());
 
 	if (!process.env.DISABLE_UPLOAD) {
 		app.use('/web', express.static(`../frontend/build`));
-		app.use(urlencoded({ extended: true }) as RequestHandler);
+		app.use(urlencoded({ extended: true }));
 		app.use(fileUpload({ createParentPath: true }));
 	}
 
@@ -62,30 +65,40 @@ const main = async () => {
 	console.log('news...');
 	const newsMap: Map<string, News> = new Map();
 	app.get('/news/:id', async (req, res) => {
-		const id = req.params.id;
-		let news = newsMap.get(id);
-		if (!news) {
-			console.log(`setting up news ${id}`);
-			news = new News(id, `https://www.srf.ch/news/bnf/rss/${id}`);
-			newsMap.set(id, news);
-			await news.init();
-		}
+		try {
+			const id = req.params.id;
+			let news = newsMap.get(id);
+			if (!news) {
+				console.log(`setting up news ${id}`);
+				news = new News(id, `https://www.srf.ch/news/bnf/rss/${id}`);
+				newsMap.set(id, news);
+				await news.init();
+			}
 
-		res.json(news.items);
+			res.json(news.items);
+		} catch (err) {
+			console.error(err);
+			res.status(500).send(err.message);
+		}
 	});
 	app.get('/news/:id/:item', async (req, res) => {
-		const id = req.params.id;
-		let news = newsMap.get(id);
-		if (!news) {
-			console.log(`setting up news ${id}`);
-			news = new News(id, `https://www.srf.ch/news/bnf/rss/${id}`);
-			newsMap.set(id, news);
-			await news.init();
-		}
+		try {
+			const id = req.params.id;
+			let news = newsMap.get(id);
+			if (!news) {
+				console.log(`setting up news ${id}`);
+				news = new News(id, `https://www.srf.ch/news/bnf/rss/${id}`);
+				newsMap.set(id, news);
+				await news.init();
+			}
 
-		const item = Number(req.params.item);
-		const page = await news.getArticle(item);
-		res.send(page);
+			const item = Number(req.params.item);
+			const page = await news.getArticle(item);
+			res.send(page);
+		} catch (err) {
+			console.error(err);
+			res.status(500).send(err.message);
+		}
 	});
 
 	if (!process.env.DISABLE_UPLOAD) {
@@ -98,21 +111,49 @@ const main = async () => {
 			res.json(upload.items);
 		});
 		app.post('/upload', async (req, res) => {
-			if (!req.files) {
-				return res.status(400).json({ error: 'No file uploaded' }).end();
+			try {
+				if (!req.files) {
+					return res.status(400).json({ error: 'No file uploaded' }).end();
+				}
+
+				const img = req.files.image as UploadedFile;
+				const title = req.body.title;
+				let date = parseISO(req.body.date);
+				if (!isValid(date)) {
+					date = new Date();
+				}
+
+				await upload.save(img, title, date);
+
+				res.json(upload.items);
+			} catch (err) {
+				console.error(err);
+				res.status(500).send(err.message);
 			}
+		});
+		app.put('/upload', async (req, res) => {
+			try {
+				const img = req.body.img;
+				const title = req.body.title;
+				const date = parseISO(req.body.date);
 
-			const img = req.files.image as UploadedFile;
-			const descr = req.body.description;
+				await upload.edit(img, title, date);
 
-			await upload.save(img, descr);
-
-			res.json(upload.items);
+				res.json(upload.items);
+			} catch (err) {
+				console.error(err);
+				res.status(500).send(err.message);
+			}
 		});
 		app.delete('/upload', async (req, res) => {
-			await upload.remove(req.body.img);
+			try {
+				await upload.remove(req.body.img);
 
-			res.json(upload.items);
+				res.json(upload.items);
+			} catch (err) {
+				console.error(err);
+				res.status(500).send(err.message);
+			}
 		});
 	} else {
 		console.log('UPLOAD DISABLED');

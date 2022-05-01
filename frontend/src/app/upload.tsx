@@ -1,4 +1,6 @@
 import { styled } from '@stitches/react';
+import { format } from 'date-fns';
+import de from 'date-fns/locale/de';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 
 import { BASE_URL, useUpload } from './api';
@@ -75,13 +77,16 @@ export const Upload: FC<Props> = ({ onRequestReset }) => {
 	return (
 		<Container onClick={onClick}>
 			{item.ratio < 1 ? <ImageFull src={BASE_URL + item.img} /> : <Image src={BASE_URL + item.img} />}
-			<Title style={{ maxWidth: item.ratio < 1 ? '40%' : undefined }}>
-				{item.title.split('\n').map((line) => (
-					<Fragment key={line}>
-						{line}
-						<br />
-					</Fragment>
-				))}
+			<Title style={{ maxWidth: item.ratio < 1 ? '40%' : undefined, display: 'flex', flexDirection: 'column' }}>
+				<div style={{ flex: 1 }}>
+					{item.title.split('\n').map((line, i) => (
+						<Fragment key={i}>
+							{line}
+							<br />
+						</Fragment>
+					))}
+				</div>
+				<div style={{ marginBottom: 10 }}>{format(item.date, 'dd. MMM yyyy', { locale: de })}</div>
 			</Title>
 		</Container>
 	);

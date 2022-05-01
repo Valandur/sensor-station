@@ -134,8 +134,8 @@ export class Weather extends Service {
 		const alerts: Alert[] = [];
 		const forecasts: WeatherEntry[] = [];
 
-		const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.6921314';
-		const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.4584784';
+		const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
+		const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
 		const url = `${URL}&lat=${lat}&lon=${lng}`;
 
 		try {
@@ -159,15 +159,17 @@ export class Weather extends Service {
 				});
 			}
 
-			for (const alert of data.alerts) {
-				alerts.push({
-					sender: alert.sender_name,
-					event: alert.event,
-					start: new Date(alert.start * 1000),
-					end: new Date(alert.end * 1000),
-					description: alert.description,
-					tags: alert.tags
-				});
+			if (data.alerts) {
+				for (const alert of data.alerts) {
+					alerts.push({
+						sender: alert.sender_name,
+						event: alert.event,
+						start: new Date(alert.start * 1000),
+						end: new Date(alert.end * 1000),
+						description: alert.description,
+						tags: alert.tags
+					});
+				}
 			}
 		} catch (err) {
 			console.error(err);
