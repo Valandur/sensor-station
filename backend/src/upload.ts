@@ -26,6 +26,7 @@ export class Upload extends Service {
 			img: item.img.startsWith('/') ? item.img : '/' + item.img,
 			ratio: item.ratio
 		}));
+		console.log(`Loaded ${this.items.length} uploaded images`)
 	}
 
 	public dispose(): void {}
@@ -35,8 +36,9 @@ export class Upload extends Service {
 		image.mv(`data/${path}`);
 
 		const size = imageSize(image.data);
+		const ratio = size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
 
-		this.items.push({ img: path, title, date, ratio: size.width / size.height });
+		this.items.push({ img: path, title, date, ratio });
 		await writeFile(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
 	}
 

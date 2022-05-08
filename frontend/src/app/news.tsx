@@ -1,5 +1,5 @@
 import { styled } from '@stitches/react';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, TouchEvent, useCallback, useEffect, useState } from 'react';
 
 import { BASE_URL, NewsItem, useNews } from './api';
 
@@ -65,14 +65,35 @@ const idxMap: Map<string, number> = new Map();
 export const News: FC<Props> = ({ id, onRequestPause }) => {
 	const news = useNews(id);
 	const [item, setItem] = useState<NewsItem | null>(null);
+	const [startY, setStartY] = useState(0);
 
-	useEffect(
-		() => () => {
+	const inc = useCallback(
+		(num: number) => {
 			const currIdx = idxMap.get(id);
-			const newIdx = typeof currIdx == 'number' ? currIdx + ITEMS : ITEMS;
+			const newIdx = typeof currIdx == 'number' ? currIdx + num * ITEMS : ITEMS;
 			idxMap.set(id, newIdx);
 		},
 		[id]
+	);
+
+	useEffect(() => inc(1), [id]);
+
+	const touchStart = useCallback(
+		(e: TouchEvent<HTMLDivElement>) => {
+			setStartY(e.changedTouches[0].clientY);
+		},
+		[setStartY]
+	);
+	const touchEnd = useCallback(
+		(e: TouchEvent<HTMLDivElement>) => {
+			const diff = e.changedTouches[0].clientY - startY;
+			if (diff < -100) {
+				inc(1);
+			} else if (diff > 100) {
+				inc(-1);
+			}
+		},
+		[inc, startY]
 	);
 
 	useEffect(() => {
@@ -82,7 +103,7 @@ export const News: FC<Props> = ({ id, onRequestPause }) => {
 	const idx = (idxMap.get(id) || 0) % (news.length - ITEMS + 1 || 1);
 
 	return (
-		<Container>
+		<Container onTouchStart={touchStart} onTouchEnd={touchEnd}>
 			{item ? (
 				<DetailContainer>
 					<IFrame src={BASE_URL + item.link} />
