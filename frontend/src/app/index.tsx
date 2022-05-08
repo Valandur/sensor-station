@@ -108,7 +108,6 @@ export const App: FC = () => {
 		<Weather />,
 		<News id="1646" onRequestPause={pause} />,
 		!process.env.REACT_APP_DISABLE_UPLOAD && <Upload onRequestReset={resetTimer} />,
-		<News id="718" onRequestPause={pause} />,
 		birthday && (
 			<Events>
 				🎉 Happy Birthday <b>{birthday.name}</b> 🎉
