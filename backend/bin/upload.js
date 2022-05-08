@@ -20,13 +20,15 @@ class Upload extends service_1.Service {
             img: item.img.startsWith('/') ? item.img : '/' + item.img,
             ratio: item.ratio
         }));
+        console.log(`Loaded ${this.items.length} uploaded images`);
     }
     dispose() { }
     async save(image, title, date) {
         const path = `/upload/${image.md5}${(0, path_1.extname)(image.name)}`;
         image.mv(`data/${path}`);
         const size = (0, image_size_1.imageSize)(image.data);
-        this.items.push({ img: path, title, date, ratio: size.width / size.height });
+        const ratio = size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
+        this.items.push({ img: path, title, date, ratio });
         await (0, promises_1.writeFile)(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
     }
     async edit(img, title, date) {
