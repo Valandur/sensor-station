@@ -115,6 +115,7 @@ export class Weather extends Service {
 		if (!process.env.DISABLE_SENSOR) {
 			try {
 				this.dht = require('node-dht-sensor').promises;
+				console.log(`SENSOR: TYPE: ${DHT_TYPE}, PIN: ${DHT_PIN}`);
 			} catch {}
 		} else {
 			console.log('SENSOR DISABLED');
