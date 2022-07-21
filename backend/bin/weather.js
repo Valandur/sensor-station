@@ -10,7 +10,7 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_APIKEY}`;
-const DHT_TYPE = 11;
+const DHT_TYPE = process.env.DHT_22 ? 22 : 11;
 const DHT_PIN = 17;
 const UPDATE_INTERVAL = 10 * 60 * 1000;
 const ICON_MAP = {
@@ -139,6 +139,7 @@ class Weather extends service_1.Service {
         if (!process.env.DISABLE_SENSOR) {
             try {
                 this.dht = require('node-dht-sensor').promises;
+                console.log(`SENSOR: TYPE: ${DHT_TYPE}, PIN: ${DHT_PIN}`);
             }
             catch { }
         }
