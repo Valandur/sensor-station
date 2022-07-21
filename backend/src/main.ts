@@ -3,6 +3,7 @@ import cors from 'cors';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import { json, urlencoded } from 'body-parser';
 
+import 'dotenv/config';
 import './types';
 
 import { Modem } from './modem';
