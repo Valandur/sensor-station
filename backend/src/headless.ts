@@ -21,7 +21,7 @@ const main = async () => {
 		try {
 			const { temp, rh } = weather.status;
 			const date = new Date().toISOString();
-			await appendFile('./data/recordings.txt', `${date},${temp},${rh}`, 'utf-8');
+			await appendFile('./data/recordings.txt', `${date},${temp},${rh}\n`, 'utf-8');
 			console.log(`Recorded temp & rh`, date, temp, rh);
 		} catch (err) {
 			console.error(err);
