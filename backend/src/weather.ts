@@ -139,41 +139,43 @@ export class Weather extends Service {
 		const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
 		const url = `${URL}&lat=${lat}&lon=${lng}`;
 
-		try {
-			const { data } = await axios(url);
+		if (!process.env.DISABLE_WEATHER) {
+			try {
+				const { data } = await axios(url);
 
-			const prefix = '/icons/';
-			const suffix = '.png';
+				const prefix = '/icons/';
+				const suffix = '.png';
 
-			const current = data.current;
-			forecasts.push({
-				time: new Date(current.dt * 1000),
-				img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-				feelsLike: current.feels_like
-			});
-
-			for (const forecast of data.daily) {
+				const current = data.current;
 				forecasts.push({
-					time: new Date(forecast.dt * 1000),
-					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-					feelsLike: forecast.feels_like.day
+					time: new Date(current.dt * 1000),
+					img: prefix + ICON_MAP[current.weather[0].id] + suffix,
+					feelsLike: current.feels_like
 				});
-			}
 
-			if (data.alerts) {
-				for (const alert of data.alerts) {
-					alerts.push({
-						sender: alert.sender_name,
-						event: alert.event,
-						start: new Date(alert.start * 1000),
-						end: new Date(alert.end * 1000),
-						description: alert.description,
-						tags: alert.tags
+				for (const forecast of data.daily) {
+					forecasts.push({
+						time: new Date(forecast.dt * 1000),
+						img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+						feelsLike: forecast.feels_like.day
 					});
 				}
+
+				if (data.alerts) {
+					for (const alert of data.alerts) {
+						alerts.push({
+							sender: alert.sender_name,
+							event: alert.event,
+							start: new Date(alert.start * 1000),
+							end: new Date(alert.end * 1000),
+							description: alert.description,
+							tags: alert.tags
+						});
+					}
+				}
+			} catch (err) {
+				console.error(err);
 			}
-		} catch (err) {
-			console.error(err);
 		}
 
 		let temp: number;
