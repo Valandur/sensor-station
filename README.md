@@ -6,13 +6,15 @@
 
 ## Autostart Web UI
 
-> .bash_profile
+### .bash_profile
 
 ```
 [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
+
+. .bashrc
 ```
 
-> .xinitrc
+### .xinitrc
 
 ```
 #!/usr/bin/env sh
