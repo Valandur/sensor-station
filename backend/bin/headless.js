@@ -18,10 +18,10 @@ const main = async () => {
             const date = new Date();
             const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'yyyy_MM')}.txt`;
             if (!(await (0, promises_1.stat)(fileName).catch(() => false))) {
-                await (0, promises_1.writeFile)(fileName, `${date},${temp},${rh}\n`, 'utf-8');
+                await (0, promises_1.writeFile)(fileName, `${date.toISOString()},${temp},${rh}\n`, 'utf-8');
             }
             else {
-                await (0, promises_1.appendFile)(fileName, `${date},${temp},${rh}\n`, 'utf-8');
+                await (0, promises_1.appendFile)(fileName, `${date.toISOString()},${temp},${rh}\n`, 'utf-8');
             }
             console.log(`Recorded temp & rh`, date, temp, rh);
         }
