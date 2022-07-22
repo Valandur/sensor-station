@@ -16,7 +16,7 @@ const main = async () => {
             await weather.update();
             const { temp, rh } = weather.status;
             const date = new Date();
-            const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'YYYY_MM')}.txt`;
+            const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'yyyy_MM')}.txt`;
             if (!(await (0, promises_1.stat)(fileName).catch(() => false))) {
                 await (0, promises_1.writeFile)(fileName, `${date},${temp},${rh}\n`, 'utf-8');
             }

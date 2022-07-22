@@ -20,7 +20,7 @@ const main = async () => {
 			await weather.update();
 			const { temp, rh } = weather.status;
 			const date = new Date();
-			const fileName = `./data/recordings/${format(date, 'YYYY_MM')}.txt`;
+			const fileName = `./data/recordings/${format(date, 'yyyy_MM')}.txt`;
 
 			if (!(await stat(fileName).catch(() => false))) {
 				await writeFile(fileName, `${date},${temp},${rh}\n`, 'utf-8');
