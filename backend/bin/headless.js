@@ -9,6 +9,10 @@ const main = async () => {
     console.log('weather...');
     const weather = new weather_1.Weather();
     await weather.init();
+    await (0, promises_1.mkdir)('./data/', { recursive: true });
+    if (!(await (0, promises_1.stat)('./data/recordings.txt').catch(() => false))) {
+        await (0, promises_1.writeFile)('./data/recordings.txt', '', 'utf-8');
+    }
     const record = async () => {
         try {
             const { temp, rh } = weather.status;

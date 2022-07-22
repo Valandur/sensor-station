@@ -1,4 +1,4 @@
-import { appendFile } from 'fs/promises';
+import { appendFile, mkdir, stat, writeFile } from 'fs/promises';
 
 import 'dotenv/config';
 
@@ -11,6 +11,11 @@ const main = async () => {
 	console.log('weather...');
 	const weather = new Weather();
 	await weather.init();
+
+	await mkdir('./data/', { recursive: true });
+	if (!(await stat('./data/recordings.txt').catch(() => false))) {
+		await writeFile('./data/recordings.txt', '', 'utf-8');
+	}
 
 	const record = async () => {
 		try {
