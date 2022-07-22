@@ -1,23 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const promises_1 = require("fs/promises");
+const date_fns_1 = require("date-fns");
 require("dotenv/config");
 const weather_1 = require("./weather");
-const RECORD_INTERVAL = 60000;
+const RECORD_INTERVAL = 60 * 1000;
 const main = async () => {
     // Weather
     console.log('weather...');
     const weather = new weather_1.Weather();
     await weather.init();
-    await (0, promises_1.mkdir)('./data/', { recursive: true });
-    if (!(await (0, promises_1.stat)('./data/recordings.txt').catch(() => false))) {
-        await (0, promises_1.writeFile)('./data/recordings.txt', '', 'utf-8');
-    }
+    await (0, promises_1.mkdir)('./data/recordings/', { recursive: true });
     const record = async () => {
         try {
+            await weather.update();
             const { temp, rh } = weather.status;
-            const date = new Date().toISOString();
-            await (0, promises_1.appendFile)('./data/recordings.txt', `${date},${temp},${rh}\n`, 'utf-8');
+            const date = new Date();
+            const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'YYYY_MM')}.txt`;
+            if (!(await (0, promises_1.stat)(fileName).catch(() => false))) {
+                await (0, promises_1.writeFile)(fileName, `${date},${temp},${rh}\n`, 'utf-8');
+            }
+            else {
+                await (0, promises_1.appendFile)(fileName, `${date},${temp},${rh}\n`, 'utf-8');
+            }
             console.log(`Recorded temp & rh`, date, temp, rh);
         }
         catch (err) {

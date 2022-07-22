@@ -151,7 +151,9 @@ class Weather extends service_1.Service {
     }
     async init() {
         await this.update();
-        this.timer = setInterval(this.update, UPDATE_INTERVAL);
+        if (!process.env.DISABLE_WEATHER_TIMER) {
+            this.timer = setInterval(this.update, UPDATE_INTERVAL);
+        }
     }
     dispose() {
         clearInterval(this.timer);

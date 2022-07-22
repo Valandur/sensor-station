@@ -124,14 +124,17 @@ export class Weather extends Service {
 
 	public async init(): Promise<void> {
 		await this.update();
-		this.timer = setInterval(this.update, UPDATE_INTERVAL);
+
+		if (!process.env.DISABLE_WEATHER_TIMER) {
+			this.timer = setInterval(this.update, UPDATE_INTERVAL);
+		}
 	}
 
 	public dispose(): void {
 		clearInterval(this.timer);
 	}
 
-	private update = async () => {
+	public update = async () => {
 		const alerts: Alert[] = [];
 		const forecasts: WeatherEntry[] = [];
 
