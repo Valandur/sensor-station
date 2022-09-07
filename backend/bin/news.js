@@ -8,32 +8,43 @@ const axios_1 = __importDefault(require("axios"));
 const date_fns_1 = require("date-fns");
 const rss_parser_1 = __importDefault(require("rss-parser"));
 const service_1 = require("./service");
-const UPDATE_INTERVAL = 60 * 60 * 1000;
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 class News extends service_1.Service {
-    constructor(name, feedUrl) {
-        super();
-        this.items = [];
+    constructor() {
+        super(...arguments);
+        this.enabled = !process.env.NEWS_DISABLED;
+        this.feedMap = new Map();
         this.update = async () => {
-            this.items = await this.getFeed(this.feedUrl);
+            for (const feed of this.feedMap.values()) {
+                await this.updateFeed(feed);
+            }
         };
-        this.name = name;
-        this.feedUrl = feedUrl;
     }
     async init() {
+        if (!this.enabled) {
+            console.log('NEWS DISABLED');
+            return;
+        }
         this.parser = new rss_parser_1.default({
             customFields: {
                 item: ['description']
             }
         });
         await this.update();
-        this.interval = setInterval(this.update, UPDATE_INTERVAL);
+        if (process.env.NEWS_UPDATE_INTERVAL) {
+            const interval = 1000 * Number(process.env.NEWS_UPDATE_INTERVAL);
+            this.timer = setInterval(this.update, interval);
+            console.log('NEWS UPDATE STARTED', interval);
+        }
+        else {
+            console.log('NEWS UPDATE DISABLED');
+        }
     }
     dispose() {
-        clearInterval(this.interval);
+        clearInterval(this.timer);
     }
-    async getFeed(feedUrl) {
-        const feed = await this.parser.parseURL(feedUrl);
+    async updateFeed(newsFeed) {
+        const feed = await this.parser.parseURL(newsFeed.feedUrl);
         const items = [];
         const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
         for (let i = 0; i < feedItems.length; i++) {
@@ -43,16 +54,26 @@ class News extends service_1.Service {
             items.push({
                 date: date,
                 title: item.title,
-                link: `/news/${this.name}/${i}`,
+                link: `/news/${newsFeed.name}/${i}`,
                 origLink: item.link,
                 description: description,
                 img: `https://www.srf.ch/static/cms/images/${img}`
             });
         }
-        return items;
+        newsFeed.items = items;
     }
-    async getArticle(id) {
-        const { data } = await (0, axios_1.default)(this.items[id].origLink);
+    async getItems(feedId) {
+        let newsFeed = this.feedMap.get(feedId);
+        if (!newsFeed) {
+            console.log(`NEWS SETTING UP ${feedId}`);
+            newsFeed = { name: feedId, feedUrl: `https://www.srf.ch/news/bnf/rss/${feedId}`, items: [] };
+            this.feedMap.set(feedId, newsFeed);
+            await this.updateFeed(newsFeed);
+        }
+        return newsFeed.items;
+    }
+    async getArticle(feedId, itemId) {
+        const { data } = await (0, axios_1.default)(this.feedMap.get(feedId).items[itemId].origLink);
         let page = data;
         const headerStart = page.indexOf('<header');
         const mainStart = page.indexOf('<!-- Begin of main wrapper');

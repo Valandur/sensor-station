@@ -10,9 +10,6 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_APIKEY}`;
-const DHT_TYPE = process.env.DHT_22 ? 22 : 11;
-const DHT_PIN = 17;
-const UPDATE_INTERVAL = 10 * 60 * 1000;
 const ICON_MAP = {
     200: 'thunderstorm',
     201: 'thunderstorm',
@@ -71,88 +68,68 @@ const ICON_MAP = {
     804: 'overcast'
 };
 class Weather extends service_1.Service {
-    constructor(modem) {
-        super();
+    constructor() {
+        super(...arguments);
+        this.enabled = !process.env.WEATHER_DISABLED;
+        this.forecasts = [];
+        this.alerts = [];
         this.update = async () => {
-            const alerts = [];
-            const forecasts = [];
-            const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
-            const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
+            const lat = this.app.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
+            const lng = this.app.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
             const url = `${URL}&lat=${lat}&lon=${lng}`;
-            if (!process.env.DISABLE_WEATHER) {
-                try {
-                    const { data } = await (0, axios_1.default)(url);
-                    const prefix = '/icons/';
-                    const suffix = '.png';
-                    const current = data.current;
+            try {
+                const alerts = [];
+                const forecasts = [];
+                const { data } = await (0, axios_1.default)(url);
+                const prefix = '/icons/';
+                const suffix = '.png';
+                const current = data.current;
+                forecasts.push({
+                    time: new Date(current.dt * 1000),
+                    img: prefix + ICON_MAP[current.weather[0].id] + suffix,
+                    feelsLike: current.feels_like
+                });
+                for (const forecast of data.daily) {
                     forecasts.push({
-                        time: new Date(current.dt * 1000),
-                        img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-                        feelsLike: current.feels_like
+                        time: new Date(forecast.dt * 1000),
+                        img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+                        feelsLike: forecast.feels_like.day
                     });
-                    for (const forecast of data.daily) {
-                        forecasts.push({
-                            time: new Date(forecast.dt * 1000),
-                            img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-                            feelsLike: forecast.feels_like.day
+                }
+                if (data.alerts) {
+                    for (const alert of data.alerts) {
+                        alerts.push({
+                            sender: alert.sender_name,
+                            event: alert.event,
+                            start: new Date(alert.start * 1000),
+                            end: new Date(alert.end * 1000),
+                            description: alert.description,
+                            tags: alert.tags
                         });
                     }
-                    if (data.alerts) {
-                        for (const alert of data.alerts) {
-                            alerts.push({
-                                sender: alert.sender_name,
-                                event: alert.event,
-                                start: new Date(alert.start * 1000),
-                                end: new Date(alert.end * 1000),
-                                description: alert.description,
-                                tags: alert.tags
-                            });
-                        }
-                    }
                 }
-                catch (err) {
-                    console.error(err);
-                }
+                this.forecasts = forecasts;
+                this.alerts = alerts;
+                this.updatedAt = new Date();
             }
-            let temp;
-            let rh;
-            if (this.dht) {
-                try {
-                    const res = await this.dht.read(DHT_TYPE, DHT_PIN);
-                    temp = res.temperature;
-                    rh = res.humidity;
-                }
-                catch (err) {
-                    console.error(err);
-                }
+            catch (err) {
+                console.error(err);
             }
-            else if (!process.env.DISABLE_SENSOR) {
-                temp = Math.random() * 10;
-                rh = Math.random() * 100;
-            }
-            this.status = {
-                temp,
-                rh,
-                forecasts,
-                alerts
-            };
         };
-        this.modem = modem;
-        if (!process.env.DISABLE_SENSOR) {
-            try {
-                this.dht = require('node-dht-sensor').promises;
-                console.log(`SENSOR: TYPE: ${DHT_TYPE}, PIN: ${DHT_PIN}`);
-            }
-            catch { }
-        }
-        else {
-            console.log('SENSOR DISABLED');
-        }
     }
     async init() {
+        if (!this.enabled) {
+            console.log('WEATHER DISABLED');
+            return;
+        }
         await this.update();
-        if (!process.env.DISABLE_WEATHER_TIMER) {
-            this.timer = setInterval(this.update, UPDATE_INTERVAL);
+        if (process.env.WEATHER_UPDATE_INTERVAL) {
+            const interval = 1000 * Number(process.env.WEATHER_UPDATE_INTERVAL);
+            this.timer = setInterval(this.update, interval);
+            console.log('WEATHER UPDATE STARTED', interval);
+        }
+        else {
+            console.log('WEATHER UPDATE DISABLED');
         }
     }
     dispose() {

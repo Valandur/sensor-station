@@ -1,5 +1,8 @@
+import { Application } from 'express';
 import { stat } from 'fs/promises';
 import i2c, { PromisifiedBus } from 'i2c-bus';
+
+import { Service } from './service';
 
 const BUS_NUMBER = 0x01;
 const I2C_ADDRESS = 0x14;
@@ -16,8 +19,6 @@ const CMD_IO_CURRENT = 0x4f;
 const CMD_LED_STATE = 0x66;
 const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
-
-const UPDATE_INTERVAL = 1 * 60 * 1000;
 
 export enum BatteryStatus {
 	'NORMAL' = 0,
@@ -51,13 +52,21 @@ export interface StatusInfo {
 	current: number;
 }
 
-export class Battery {
+export class Battery extends Service {
+	public readonly enabled = !process.env.BATTERY_DISABLED;
+
 	private bus: PromisifiedBus;
 	private timer: NodeJS.Timer;
 
+	public updatedAt: Date;
 	public status: StatusInfo;
 
 	public async init() {
+		if (!this.enabled) {
+			console.log('BATTERY DISABLED');
+			return;
+		}
+
 		const file = `/dev/i2c-${BUS_NUMBER}`;
 		if (!(await stat(file).catch(() => false))) {
 			console.log(`PiJuice not available @ ${file}`);
@@ -77,7 +86,13 @@ export class Battery {
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
 		await this.update();
 
-		this.timer = setInterval(this.update, UPDATE_INTERVAL);
+		if (process.env.BATTERY_UPDATE_INTERVAL) {
+			const interval = 1000 * Number(process.env.BATTERY_UPDATE_INTERVAL);
+			this.timer = setInterval(this.update, interval);
+			console.log('BATTERY UPDATE STARTED', interval);
+		} else {
+			console.log('BATTERY UPDATE DISABLED');
+		}
 	}
 
 	public async dispose() {
@@ -88,6 +103,7 @@ export class Battery {
 	private update = async () => {
 		try {
 			this.status = await this.getStatus();
+			this.updatedAt = new Date();
 		} catch (err) {
 			console.error(err);
 		}

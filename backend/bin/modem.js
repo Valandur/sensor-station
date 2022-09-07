@@ -8,8 +8,8 @@ const os_1 = require("os");
 const promises_1 = require("fs/promises");
 const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const geo_tz_1 = require("geo-tz");
+const service_1 = require("./service");
 const MODEM_SERIAL = '/dev/ttyUSB2';
-const UPDATE_INTERVAL = 5 * 60 * 1000;
 const BASE_LAT = 47.17554525;
 const BASE_LNG = 8.33849761;
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -17,8 +17,10 @@ const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
 const STATE_PATH = `data/modem/state.json`;
-class Modem {
+class Modem extends service_1.Service {
     constructor() {
+        super(...arguments);
+        this.enabled = !process.env.MODEM_DISABLED;
         this.update = async () => {
             try {
                 this.interfaces = await this.getInterfaces();
@@ -28,6 +30,7 @@ class Modem {
             }
             try {
                 this.status = await this.getStatus();
+                this.updatedAt = new Date();
                 await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
             }
             catch (err) {
@@ -48,13 +51,24 @@ class Modem {
         };
     }
     async init() {
+        if (!this.enabled) {
+            console.log('MODEM DISABLED');
+            return;
+        }
         this.commander = new serial_commander_1.default({
             port: MODEM_SERIAL,
             defaultDelay: 10,
             disableLog: true
         });
         await this.update();
-        this.timer = setInterval(this.update, UPDATE_INTERVAL);
+        if (process.env.MODEM_UPDATE_INTERVAL) {
+            const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
+            this.timer = setInterval(this.update, interval);
+            console.log('MODEM UPDATE STARTED', interval);
+        }
+        else {
+            console.log('MODEM UPDATE DISABLED');
+        }
     }
     async dispose() {
         await this.commander.close();

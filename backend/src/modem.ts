@@ -3,8 +3,9 @@ import { readFile, stat, writeFile } from 'fs/promises';
 import SerialCommander from '@westh/serial-commander';
 import { find } from 'geo-tz';
 
+import { Service } from './service';
+
 const MODEM_SERIAL = '/dev/ttyUSB2';
-const UPDATE_INTERVAL = 5 * 60 * 1000;
 const BASE_LAT = 47.17554525;
 const BASE_LNG = 8.33849761;
 
@@ -32,22 +33,37 @@ export interface Interface {
 	ips: string[];
 }
 
-export class Modem {
+export class Modem extends Service {
+	public readonly enabled = !process.env.MODEM_DISABLED;
+
 	private commander: SerialCommander;
 	private timer: NodeJS.Timer;
 
+	public updatedAt: Date;
 	public status: StatusInfo;
 	public interfaces: Interface[];
 
-	public async init() {
+	public override async init(): Promise<void> {
+		if (!this.enabled) {
+			console.log('MODEM DISABLED');
+			return;
+		}
+
 		this.commander = new SerialCommander({
 			port: MODEM_SERIAL,
 			defaultDelay: 10,
 			disableLog: true
 		});
+
 		await this.update();
 
-		this.timer = setInterval(this.update, UPDATE_INTERVAL);
+		if (process.env.MODEM_UPDATE_INTERVAL) {
+			const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
+			this.timer = setInterval(this.update, interval);
+			console.log('MODEM UPDATE STARTED', interval);
+		} else {
+			console.log('MODEM UPDATE DISABLED');
+		}
 	}
 
 	public async dispose() {
@@ -64,6 +80,7 @@ export class Modem {
 
 		try {
 			this.status = await this.getStatus();
+			this.updatedAt = new Date();
 			await writeFile(STATE_PATH, JSON.stringify(this.status), 'utf-8');
 		} catch (err) {
 			console.error(err);

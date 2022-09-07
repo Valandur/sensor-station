@@ -8,11 +8,6 @@ const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
 const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
 const URL = `${BASE_URL}${URL_OPTIONS}${URL_APIKEY}`;
 
-const DHT_TYPE = process.env.DHT_22 ? 22 : 11;
-const DHT_PIN = 17;
-
-const UPDATE_INTERVAL = 10 * 60 * 1000;
-
 const ICON_MAP: { [key: number]: string } = {
 	200: 'thunderstorm',
 	201: 'thunderstorm',
@@ -92,41 +87,29 @@ interface Alert {
 	tags: string[];
 }
 
-interface WeatherStatus {
-	temp: number;
-	rh: number;
-	forecasts: WeatherEntry[];
-	alerts: Alert[];
-}
-
 export class Weather extends Service {
-	private dht: any;
+	public readonly enabled = !process.env.WEATHER_DISABLED;
+
 	private timer: NodeJS.Timer;
 
-	public status: WeatherStatus;
+	public updatedAt: Date;
+	public forecasts: WeatherEntry[] = [];
+	public alerts: Alert[] = [];
 
-	private modem: Modem;
-
-	public constructor(modem?: Modem) {
-		super();
-
-		this.modem = modem;
-
-		if (!process.env.DISABLE_SENSOR) {
-			try {
-				this.dht = require('node-dht-sensor').promises;
-				console.log(`SENSOR: TYPE: ${DHT_TYPE}, PIN: ${DHT_PIN}`);
-			} catch {}
-		} else {
-			console.log('SENSOR DISABLED');
+	public override async init(): Promise<void> {
+		if (!this.enabled) {
+			console.log('WEATHER DISABLED');
+			return;
 		}
-	}
 
-	public async init(): Promise<void> {
 		await this.update();
 
-		if (!process.env.DISABLE_WEATHER_TIMER) {
-			this.timer = setInterval(this.update, UPDATE_INTERVAL);
+		if (process.env.WEATHER_UPDATE_INTERVAL) {
+			const interval = 1000 * Number(process.env.WEATHER_UPDATE_INTERVAL);
+			this.timer = setInterval(this.update, interval);
+			console.log('WEATHER UPDATE STARTED', interval);
+		} else {
+			console.log('WEATHER UPDATE DISABLED');
 		}
 	}
 
@@ -135,72 +118,52 @@ export class Weather extends Service {
 	}
 
 	public update = async () => {
-		const alerts: Alert[] = [];
-		const forecasts: WeatherEntry[] = [];
-
-		const lat = this.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
-		const lng = this.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
+		const lat = this.app.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
+		const lng = this.app.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
 		const url = `${URL}&lat=${lat}&lon=${lng}`;
 
-		if (!process.env.DISABLE_WEATHER) {
-			try {
-				const { data } = await axios(url);
+		try {
+			const alerts: Alert[] = [];
+			const forecasts: WeatherEntry[] = [];
 
-				const prefix = '/icons/';
-				const suffix = '.png';
+			const { data } = await axios(url);
 
-				const current = data.current;
+			const prefix = '/icons/';
+			const suffix = '.png';
+
+			const current = data.current;
+			forecasts.push({
+				time: new Date(current.dt * 1000),
+				img: prefix + ICON_MAP[current.weather[0].id] + suffix,
+				feelsLike: current.feels_like
+			});
+
+			for (const forecast of data.daily) {
 				forecasts.push({
-					time: new Date(current.dt * 1000),
-					img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-					feelsLike: current.feels_like
+					time: new Date(forecast.dt * 1000),
+					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+					feelsLike: forecast.feels_like.day
 				});
+			}
 
-				for (const forecast of data.daily) {
-					forecasts.push({
-						time: new Date(forecast.dt * 1000),
-						img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-						feelsLike: forecast.feels_like.day
+			if (data.alerts) {
+				for (const alert of data.alerts) {
+					alerts.push({
+						sender: alert.sender_name,
+						event: alert.event,
+						start: new Date(alert.start * 1000),
+						end: new Date(alert.end * 1000),
+						description: alert.description,
+						tags: alert.tags
 					});
 				}
-
-				if (data.alerts) {
-					for (const alert of data.alerts) {
-						alerts.push({
-							sender: alert.sender_name,
-							event: alert.event,
-							start: new Date(alert.start * 1000),
-							end: new Date(alert.end * 1000),
-							description: alert.description,
-							tags: alert.tags
-						});
-					}
-				}
-			} catch (err) {
-				console.error(err);
 			}
-		}
 
-		let temp: number;
-		let rh: number;
-		if (this.dht) {
-			try {
-				const res = await this.dht.read(DHT_TYPE, DHT_PIN);
-				temp = res.temperature;
-				rh = res.humidity;
-			} catch (err) {
-				console.error(err);
-			}
-		} else if (!process.env.DISABLE_SENSOR) {
-			temp = Math.random() * 10;
-			rh = Math.random() * 100;
+			this.forecasts = forecasts;
+			this.alerts = alerts;
+			this.updatedAt = new Date();
+		} catch (err) {
+			console.error(err);
 		}
-
-		this.status = {
-			temp,
-			rh,
-			forecasts,
-			alerts
-		};
 	};
 }

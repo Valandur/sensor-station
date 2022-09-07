@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Battery = exports.BatteryChargingTemperature = exports.PowerIn = exports.BatteryStatus = void 0;
 const promises_1 = require("fs/promises");
 const i2c_bus_1 = __importDefault(require("i2c-bus"));
+const service_1 = require("./service");
 const BUS_NUMBER = 0x01;
 const I2C_ADDRESS = 0x14;
 const CMD_STATUS = 0x40;
@@ -20,7 +21,6 @@ const CMD_IO_CURRENT = 0x4f;
 const CMD_LED_STATE = 0x66;
 const CMD_LED_BLINK = 0x68;
 const CMD_IO_PIN_ACCESS = 0x75;
-const UPDATE_INTERVAL = 1 * 60 * 1000;
 var BatteryStatus;
 (function (BatteryStatus) {
     BatteryStatus[BatteryStatus["NORMAL"] = 0] = "NORMAL";
@@ -42,11 +42,14 @@ var BatteryChargingTemperature;
     BatteryChargingTemperature[BatteryChargingTemperature["COOL"] = 2] = "COOL";
     BatteryChargingTemperature[BatteryChargingTemperature["WARM"] = 3] = "WARM";
 })(BatteryChargingTemperature = exports.BatteryChargingTemperature || (exports.BatteryChargingTemperature = {}));
-class Battery {
+class Battery extends service_1.Service {
     constructor() {
+        super(...arguments);
+        this.enabled = !process.env.BATTERY_DISABLED;
         this.update = async () => {
             try {
                 this.status = await this.getStatus();
+                this.updatedAt = new Date();
             }
             catch (err) {
                 console.error(err);
@@ -84,6 +87,10 @@ class Battery {
         };
     }
     async init() {
+        if (!this.enabled) {
+            console.log('BATTERY DISABLED');
+            return;
+        }
         const file = `/dev/i2c-${BUS_NUMBER}`;
         if (!(await (0, promises_1.stat)(file).catch(() => false))) {
             console.log(`PiJuice not available @ ${file}`);
@@ -101,7 +108,14 @@ class Battery {
         }
         this.bus = await i2c_bus_1.default.openPromisified(BUS_NUMBER);
         await this.update();
-        this.timer = setInterval(this.update, UPDATE_INTERVAL);
+        if (process.env.BATTERY_UPDATE_INTERVAL) {
+            const interval = 1000 * Number(process.env.BATTERY_UPDATE_INTERVAL);
+            this.timer = setInterval(this.update, interval);
+            console.log('BATTERY UPDATE STARTED', interval);
+        }
+        else {
+            console.log('BATTERY UPDATE DISABLED');
+        }
     }
     async dispose() {
         await this.bus.close();
