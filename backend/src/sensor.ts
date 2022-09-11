@@ -94,7 +94,7 @@ export class Sensor extends Service {
 		}
 	};
 
-	public createReadStream(year: number, month: number) {
+	public createReadStream(year: string, month: string) {
 		const fileName = `./data/recordings/${year}_${month}.txt`;
 		return createReadStream(fileName);
 	}

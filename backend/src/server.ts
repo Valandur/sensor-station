@@ -86,8 +86,8 @@ export class Server extends Service {
 		// Recordings
 		this.webApp.get('/recordings/:year/:month', (req, res) => {
 			try {
-				const year = Number(req.params.year);
-				const month = Number(req.params.month);
+				const year = req.params.year;
+				const month = req.params.month;
 				res.setHeader('content-type', 'application/json');
 				this.app.sensor.createReadStream(year, month).pipe(res);
 			} catch (err) {
