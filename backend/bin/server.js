@@ -19,6 +19,7 @@ class Server extends service_1.Service {
         super(...arguments);
         this.enabled = !process.env.SERVER_DISABLED;
         this.uploadEnabled = !process.env.SERVER_UPLOAD_DISABLED;
+        this.cbs = [];
         this.items = [];
     }
     async init() {
@@ -39,12 +40,7 @@ class Server extends service_1.Service {
                 interfaces: this.app.modem.interfaces
             });
         });
-        this.webApp.get('/weather', (req, res) => {
-            res.json({
-                forecasts: this.app.weather.forecasts,
-                alerts: this.app.weather.alerts
-            });
-        });
+        // News
         this.webApp.get('/news/:id', async (req, res) => {
             try {
                 const id = req.params.id;
@@ -62,6 +58,26 @@ class Server extends service_1.Service {
                 const item = Number(req.params.item);
                 const page = await this.app.news.getArticle(id, item);
                 res.send(page);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send(err.message);
+            }
+        });
+        // Weather
+        this.webApp.get('/weather', (req, res) => {
+            res.json({
+                forecasts: this.app.weather.forecasts,
+                alerts: this.app.weather.alerts
+            });
+        });
+        // Recordings
+        this.webApp.get('/recordings/:year/:month', (req, res) => {
+            try {
+                const year = Number(req.params.year);
+                const month = Number(req.params.month);
+                res.setHeader('content-type', 'application/json');
+                this.app.sensor.createReadStream(year, month).pipe(res);
             }
             catch (err) {
                 console.error(err);
@@ -131,10 +147,18 @@ class Server extends service_1.Service {
             }
         });
     }
+    async register(cb) {
+        this.cbs.push(cb);
+    }
     async run() {
         if (!this.enabled) {
+            this.cbs = [];
             return;
         }
+        for (const cb of this.cbs) {
+            await cb(this.webApp);
+        }
+        this.cbs = [];
         const port = (process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : 80) || 80;
         await new Promise((resolve) => this.webApp.listen(port, '0.0.0.0', resolve));
         console.log(`SERVER RUNNING ON 0.0.0.0:${port}...`);

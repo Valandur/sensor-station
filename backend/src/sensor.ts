@@ -1,5 +1,6 @@
 import { appendFile, mkdir, stat, writeFile } from 'fs/promises';
 import { format } from 'date-fns';
+import { createReadStream } from 'fs';
 
 import { Service } from './service';
 
@@ -92,4 +93,9 @@ export class Sensor extends Service {
 			console.error(err);
 		}
 	};
+
+	public createReadStream(year: number, month: number) {
+		const fileName = `./data/recordings/${year}_${month}.txt`;
+		return createReadStream(fileName);
+	}
 }

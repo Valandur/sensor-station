@@ -23,6 +23,10 @@ export class Application {
 	}
 
 	public async run() {
+		// Server
+		console.log('server...');
+		await this.server.init();
+
 		// Battery
 		console.log('battery...');
 		await this.battery.init();
@@ -38,10 +42,6 @@ export class Application {
 		// News
 		console.log('news...');
 		await this.news.init();
-
-		// Server
-		console.log('server...');
-		await this.server.init();
 
 		// RUN
 		return this.server.run();

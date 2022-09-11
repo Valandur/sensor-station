@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sensor = void 0;
 const promises_1 = require("fs/promises");
 const date_fns_1 = require("date-fns");
+const fs_1 = require("fs");
 const service_1 = require("./service");
 class Sensor extends service_1.Service {
     constructor() {
@@ -79,6 +80,10 @@ class Sensor extends service_1.Service {
     dispose() {
         clearInterval(this.updateTimer);
         clearInterval(this.recordTimer);
+    }
+    createReadStream(year, month) {
+        const fileName = `./data/recordings/${year}_${month}.txt`;
+        return (0, fs_1.createReadStream)(fileName);
     }
 }
 exports.Sensor = Sensor;

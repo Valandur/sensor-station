@@ -17,6 +17,9 @@ class Application {
         this.weather = new weather_1.Weather(this);
     }
     async run() {
+        // Server
+        console.log('server...');
+        await this.server.init();
         // Battery
         console.log('battery...');
         await this.battery.init();
@@ -29,9 +32,6 @@ class Application {
         // News
         console.log('news...');
         await this.news.init();
-        // Server
-        console.log('server...');
-        await this.server.init();
         // RUN
         return this.server.run();
     }
