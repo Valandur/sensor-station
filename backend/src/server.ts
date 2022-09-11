@@ -88,7 +88,8 @@ export class Server extends Service {
 			try {
 				const year = req.params.year;
 				const month = req.params.month;
-				res.setHeader('content-type', 'application/json');
+				res.setHeader('content-type', 'text/csv');
+				res.setHeader('content-disposition', `attachment;filename=recordings_${year}_${month}.csv`);
 				this.app.sensor.createReadStream(year, month).pipe(res);
 			} catch (err) {
 				console.error(err);
