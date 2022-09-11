@@ -27,7 +27,7 @@ class Sensor extends service_1.Service {
                 const date = this.updatedAt;
                 const temp = this.temperature;
                 const rh = this.relativeHumidity;
-                const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'yyyy_MM')}.txt`;
+                const fileName = `./data/recordings/${(0, date_fns_1.format)(date, 'yyyy_MM')}.csv`;
                 if (isNaN(temp) || isNaN(rh)) {
                     console.error('Could not record data because of invalid values', date, temp, rh);
                     return;
@@ -82,7 +82,7 @@ class Sensor extends service_1.Service {
         clearInterval(this.recordTimer);
     }
     createReadStream(year, month) {
-        const fileName = `./data/recordings/${year}_${month}.txt`;
+        const fileName = `./data/recordings/${year}_${month}.csv`;
         return (0, fs_1.createReadStream)(fileName);
     }
 }
