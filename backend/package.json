@@ -21,7 +21,6 @@
 		"i2c-bus": "5.2.2",
 		"image-size": "1.0.2",
 		"rss-parser": "3.12.0",
-		"sqlite3": "5.0.11",
 		"tiny-typed-emitter": "2.1.0"
 	},
 	"devDependencies": {
