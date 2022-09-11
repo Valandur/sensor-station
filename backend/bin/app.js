@@ -32,6 +32,8 @@ class Application {
         // News
         console.log('news...');
         await this.news.init();
+        console.log('sensor...');
+        await this.sensor.init();
         // RUN
         return this.server.run();
     }
