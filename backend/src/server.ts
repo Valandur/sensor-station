@@ -79,7 +79,9 @@ export class Server extends Service {
 		this.webApp.get('/weather', (req, res) => {
 			res.json({
 				forecasts: this.app.weather.forecasts,
-				alerts: this.app.weather.alerts
+				alerts: this.app.weather.alerts,
+				temp: this.app.sensor.temperature,
+				rh: this.app.sensor.relativeHumidity
 			});
 		});
 
