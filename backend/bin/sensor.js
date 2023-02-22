@@ -8,8 +8,8 @@ const service_1 = require("./service");
 class Sensor extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.SENSOR_DISABLED;
-        this.dhtType = process.env.SENSOR_DHT_22 ? 22 : 11;
+        this.enabled = process.env.SENSOR_ENABLED === '1';
+        this.dhtType = process.env.SENSOR_DHT_TYPE ? Number(process.env.SENSOR_DHT_TYPE) : 11;
         this.dhtPin = 17;
         this.update = async () => {
             try {

@@ -70,7 +70,7 @@ const ICON_MAP = {
 class Weather extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.WEATHER_DISABLED;
+        this.enabled = process.env.WEATHER_ENABLED === '1';
         this.forecasts = [];
         this.alerts = [];
         this.update = async () => {
@@ -83,12 +83,12 @@ class Weather extends service_1.Service {
                 const { data } = await (0, axios_1.default)(url);
                 const prefix = '/icons/';
                 const suffix = '.png';
-                const current = data.current;
+                /*const current = data.current;
                 forecasts.push({
                     time: new Date(current.dt * 1000),
                     img: prefix + ICON_MAP[current.weather[0].id] + suffix,
                     feelsLike: current.feels_like
-                });
+                });*/
                 for (const forecast of data.daily) {
                     forecasts.push({
                         time: new Date(forecast.dt * 1000),

@@ -20,7 +20,7 @@ const STATE_PATH = `data/modem/state.json`;
 class Modem extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.MODEM_DISABLED;
+        this.enabled = process.env.MODEM_ENABLED === '1';
         this.update = async () => {
             try {
                 this.interfaces = await this.getInterfaces();

@@ -45,7 +45,7 @@ var BatteryChargingTemperature;
 class Battery extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.BATTERY_DISABLED;
+        this.enabled = process.env.BATTERY_ENABLED === '1';
         this.update = async () => {
             try {
                 this.status = await this.getStatus();

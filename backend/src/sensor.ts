@@ -1,22 +1,28 @@
-import { appendFile, mkdir, stat, writeFile } from 'fs/promises';
-import { format } from 'date-fns';
-import { createReadStream } from 'fs';
+import { parseISO } from 'date-fns';
+import sqlite3, { Database } from 'sqlite3';
 
 import { Service } from './service';
 
+export interface Recording {
+	ts: Date;
+	temp: number;
+	rh: number;
+}
+
 export class Sensor extends Service {
-	public readonly enabled = !process.env.SENSOR_DISABLED;
-	private readonly dhtType = process.env.SENSOR_DHT_22 ? 22 : 11;
+	public readonly enabled = process.env.SENSOR_ENABLED === '1';
+	private readonly dhtType = process.env.SENSOR_DHT_TYPE ? Number(process.env.SENSOR_DHT_TYPE) : 11;
 	private readonly dhtPin = 17;
 
 	private dht: any;
+	private db: Database;
 
 	private updateTimer: NodeJS.Timer;
 	private recordTimer: NodeJS.Timer;
 
 	public updatedAt: Date;
-	public temperature: number;
-	public relativeHumidity: number;
+	public temperature: number = 0;
+	public relativeHumidity: number = 0;
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
@@ -29,8 +35,10 @@ export class Sensor extends Service {
 			console.log(`SENSOR: TYPE: ${this.dhtType}, PIN: ${this.dhtPin}`);
 		} catch (err) {
 			console.error(err);
-			return;
 		}
+
+		this.db = new sqlite3.Database('./data/recordings.sqlite3');
+		this.db.run('CREATE TABLE IF NOT EXISTS recordings (ts DATETIME, temp DOUBLE, rh DOUBLE)');
 
 		await this.update();
 
@@ -43,7 +51,6 @@ export class Sensor extends Service {
 		}
 
 		if (process.env.SENSOR_RECORDING_INTERVAL) {
-			await mkdir('./data/recordings/', { recursive: true });
 			const interval = 1000 * Number(process.env.SENSOR_RECORDING_INTERVAL);
 			this.recordTimer = setInterval(this.record, interval);
 			console.log('SENSOR RECORDING STARTED', interval);
@@ -53,6 +60,10 @@ export class Sensor extends Service {
 	}
 
 	public dispose(): void {
+		if (this.db) {
+			this.db.close();
+		}
+
 		clearInterval(this.updateTimer);
 		clearInterval(this.recordTimer);
 	}
@@ -69,24 +80,22 @@ export class Sensor extends Service {
 		}
 	};
 
-	public record = async () => {
+	private record = async () => {
 		try {
 			const date = this.updatedAt;
 			const temp = this.temperature;
 			const rh = this.relativeHumidity;
 
-			const fileName = `./data/recordings/${format(date, 'yyyy_MM')}.csv`;
-
-			if (isNaN(temp) || isNaN(rh)) {
-				console.error('Could not record data because of invalid values', date, temp, rh);
+			if (!date || isNaN(temp) || isNaN(rh)) {
+				console.error('Could not record sensors because of invalid values', date, temp, rh);
 				return;
 			}
 
-			if (!(await stat(fileName).catch(() => false))) {
-				await writeFile(fileName, `${date.toISOString()},${temp},${rh}\n`, 'utf-8');
-			} else {
-				await appendFile(fileName, `${date.toISOString()},${temp},${rh}\n`, 'utf-8');
-			}
+			await new Promise<void>((res, rej) =>
+				this.db.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [date.toISOString(), temp, rh], (err) =>
+					err ? rej(err) : res()
+				)
+			);
 
 			console.log(`Recorded temp & rh`, date, temp, rh);
 		} catch (err) {
@@ -94,8 +103,9 @@ export class Sensor extends Service {
 		}
 	};
 
-	public createReadStream(year: string, month: string) {
-		const fileName = `./data/recordings/${year}_${month}.csv`;
-		return createReadStream(fileName);
-	}
+	public getRecordings = async (): Promise<Recording[]> => {
+		return new Promise<any>((res, rej) =>
+			this.db.all('SELECT ts, temp, rh FROM recordings', (err, rows) => (err ? rej(err) : res(rows)))
+		);
+	};
 }

@@ -17,8 +17,8 @@ const ITEMS_PATH = `data/upload/items.json`;
 class Server extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.SERVER_DISABLED;
-        this.uploadEnabled = !process.env.SERVER_UPLOAD_DISABLED;
+        this.enabled = process.env.SERVER_ENABLED === '1';
+        this.uploadEnabled = process.env.SERVER_UPLOAD_ENABLED === '1';
         this.cbs = [];
         this.items = [];
     }

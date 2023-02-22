@@ -13,7 +13,7 @@ export interface NewsFeed {
 }
 
 export interface FeedItem {
-	date: Date;
+	ts: string;
 	title: string;
 	link: string;
 	origLink: string;
@@ -22,7 +22,7 @@ export interface FeedItem {
 }
 
 export class News extends Service {
-	public readonly enabled = !process.env.NEWS_DISABLED;
+	public readonly enabled = process.env.NEWS_ENABLED === '1';
 
 	private parser: Parser<{}, { description: string }>;
 	private feedMap: Map<string, NewsFeed> = new Map();
@@ -74,7 +74,7 @@ export class News extends Service {
 			const date = parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date());
 
 			items.push({
-				date: date,
+				ts: date.toISOString(),
 				title: item.title,
 				link: `/news/${newsFeed.name}/${i}`,
 				origLink: item.link,

@@ -1,18 +1,12 @@
-import express, { Application } from 'express';
-import cors from 'cors';
-import { isValid, parseISO } from 'date-fns';
-import fileUpload, { UploadedFile } from 'express-fileupload';
-import imageSize from 'image-size';
-import { extname } from 'path';
-import { json, urlencoded } from 'body-parser';
+import { parseISO } from 'date-fns';
 import { readFile, rm, writeFile } from 'fs/promises';
+import Fastify, { FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
+import mercurius, { IResolvers } from 'mercurius';
 
-import { Service } from './service';
-import { createReadStream } from 'fs';
+import { Service } from '../service';
 
 const ITEMS_PATH = `data/upload/items.json`;
-
-export type RegisterCallback = (app: Application) => Promise<void> | void;
 
 export interface UploadItem {
 	title: string;
@@ -22,13 +16,12 @@ export interface UploadItem {
 }
 
 export class Server extends Service {
-	public readonly enabled = !process.env.SERVER_DISABLED;
-	public readonly uploadEnabled = !process.env.SERVER_UPLOAD_DISABLED;
+	public readonly enabled = process.env.SERVER_ENABLED === '1';
+	public readonly uploadEnabled = process.env.SERVER_UPLOAD_ENABLED === '1';
 
-	private cbs: RegisterCallback[] = [];
 	private items: UploadItem[] = [];
 
-	public webApp: Application;
+	public webApp: FastifyInstance;
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
@@ -36,38 +29,113 @@ export class Server extends Service {
 			return;
 		}
 
-		this.webApp = express();
-		this.webApp.use(cors());
-		this.webApp.use(json());
-		this.webApp.use(express.static(`../frontend/build`));
+		this.webApp = Fastify();
 
-		this.webApp.options('*', cors());
-
-		// General data route
-		this.webApp.get('/data', (req, res) => {
-			res.json({
-				battery: this.app.battery.status,
-				modem: this.app.modem.status,
-				interfaces: this.app.modem.interfaces
-			});
+		await this.webApp.register(cors, {
+			origin: true,
+			credentials: true
 		});
 
-		// News
-		this.webApp.get('/news/:id', async (req, res) => {
-			try {
-				const id = req.params.id;
-				const items = await this.app.news.getItems(id);
-				res.json(items);
-			} catch (err) {
-				console.error(err);
-				res.status(500).send(err.message);
+		const schema = `
+			type Query {
+				battery: BatteryStatusInfo
+				modem: ModemStatusInfo
+				interfaces: [Interface!]
+				weather: WeatherInfo
+				news(feed: String!): [NewsItem!]
+				recordings: [Recording!]!
 			}
-		});
+
+			type BatteryStatusInfo {
+				isFault: Boolean!
+				isButton: Boolean!
+				batteryStatus: String!
+				powerIn: String!
+				powerIn5vIo: String!
+				charge: Float!
+				voltage: Float!
+				current: Float!
+			}
+
+			type ModemStatusInfo {
+				isConnected: Boolean!
+				time: String!
+				tzOffset: String!
+				operator: String!
+				signal: Float!
+				lat: Float!
+				lng: Float!
+				tzName: String!
+				cached: Boolean!
+			}
+
+			type Interface {
+				name: String!
+				ips: [String!]!
+			}
+
+			type WeatherInfo {
+				forecasts: [WeatherForecast!]!
+				alerts: [WeatherAlert!]!
+				temp: Float!
+				rh: Float!
+			}
+
+			type WeatherForecast {
+				ts: String!
+				img: String!
+				feelsLike: Float!
+			}
+
+			type WeatherAlert {
+				sender: String!
+				event: String!
+				start: String!
+				end: String!
+				description: String!
+				tags: [String!]!
+			}
+
+			type NewsItem {
+				ts: String!
+				title: String!
+				link: String!
+				origLink: String!
+				description: String!
+				img: String!
+			}
+
+			type Recording {
+				ts: String!
+				temp: Float!
+				rh: Float!
+			}
+		`;
+
+		const resolvers: IResolvers = {
+			Query: {
+				battery: () => this.app.battery.status,
+				modem: () => this.app.modem.status,
+				interfaces: () => this.app.modem.interfaces,
+				weather: () => ({
+					forecasts: this.app.weather.forecasts,
+					alerts: this.app.weather.alerts,
+					temp: this.app.sensor.temperature,
+					rh: this.app.sensor.relativeHumidity
+				}),
+				news: (_, { feed }) => this.app.news.getItems(feed),
+				recordings: () => this.app.sensor.getRecordings()
+			}
+		};
+
+		this.webApp.register(mercurius, { schema, resolvers, graphiql: true });
+
 		this.webApp.get('/news/:id/:item', async (req, res) => {
 			try {
-				const id = req.params.id;
-				const item = Number(req.params.item);
+				const id = (req.params as any).id;
+				const item = Number((req.params as any).item);
 				const page = await this.app.news.getArticle(id, item);
+				res.type('text/html');
 				res.send(page);
 			} catch (err) {
 				console.error(err);
@@ -75,30 +143,7 @@ export class Server extends Service {
 			}
 		});
 
-		// Weather
-		this.webApp.get('/weather', (req, res) => {
-			res.json({
-				forecasts: this.app.weather.forecasts,
-				alerts: this.app.weather.alerts,
-				temp: this.app.sensor.temperature,
-				rh: this.app.sensor.relativeHumidity
-			});
-		});
-
-		// Recordings
-		this.webApp.get('/recordings/:year/:month', (req, res) => {
-			try {
-				const year = req.params.year;
-				const month = req.params.month;
-				res.setHeader('content-type', 'text/csv');
-				res.setHeader('content-disposition', `attachment;filename=recordings_${year}_${month}.csv`);
-				this.app.sensor.createReadStream(year, month).pipe(res);
-			} catch (err) {
-				console.error(err);
-				res.status(500).send(err.message);
-			}
-		});
-
+		/*
 		if (!this.uploadEnabled) {
 			console.log('SERVER UPLOAD DISABLED');
 			return;
@@ -110,6 +155,7 @@ export class Server extends Service {
 
 		// TODO: Only expose uploads folder
 		this.webApp.use(express.static(`data`));
+		*/
 
 		const itemsJson = JSON.parse(await readFile(ITEMS_PATH, 'utf-8').catch(() => '[]'));
 		this.items = itemsJson.map((item: any) => ({
@@ -120,6 +166,7 @@ export class Server extends Service {
 		}));
 		console.log(`Loaded ${this.items.length} uploaded images`);
 
+		/*
 		this.webApp.get('/upload', async (req, res) => {
 			res.json(this.items);
 		});
@@ -168,28 +215,16 @@ export class Server extends Service {
 				res.status(500).send(err.message);
 			}
 		});
-	}
-
-	public async register(cb: RegisterCallback) {
-		this.cbs.push(cb);
+		*/
 	}
 
 	public async run() {
-		if (!this.enabled) {
-			this.cbs = [];
-			return;
-		}
-
-		for (const cb of this.cbs) {
-			await cb(this.webApp);
-		}
-		this.cbs = [];
-
 		const port = (process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : 80) || 80;
-		await new Promise<void>((resolve) => this.webApp.listen(port, '0.0.0.0', resolve));
-		console.log(`SERVER RUNNING ON 0.0.0.0:${port}...`);
+		const addr = await this.webApp.listen({ port, host: '0.0.0.0' });
+		console.log(`SERVER RUNNING ON ${addr}...`);
 	}
 
+	/*
 	public async save(image: UploadedFile, title: string, date: Date) {
 		const path = `/upload/${image.md5}${extname(image.name)}`;
 		image.mv(`data/${path}`);
@@ -199,7 +234,7 @@ export class Server extends Service {
 
 		this.items.push({ img: path, title, date, ratio });
 		await writeFile(ITEMS_PATH, JSON.stringify(this.items), 'utf-8');
-	}
+	}*/
 
 	public async edit(img: string, title: string, date: Date) {
 		const idx = this.items.findIndex((i) => i.img === img);

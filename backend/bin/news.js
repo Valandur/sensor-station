@@ -12,7 +12,7 @@ const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>
 class News extends service_1.Service {
     constructor() {
         super(...arguments);
-        this.enabled = !process.env.NEWS_DISABLED;
+        this.enabled = process.env.NEWS_ENABLED === '1';
         this.feedMap = new Map();
         this.update = async () => {
             for (const feed of this.feedMap.values()) {

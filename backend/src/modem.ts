@@ -34,7 +34,7 @@ export interface Interface {
 }
 
 export class Modem extends Service {
-	public readonly enabled = !process.env.MODEM_DISABLED;
+	public readonly enabled = process.env.MODEM_ENABLED === '1';
 
 	private commander: SerialCommander;
 	private timer: NodeJS.Timer;

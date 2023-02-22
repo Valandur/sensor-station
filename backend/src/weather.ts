@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 import { Service } from './service';
-import { Modem } from './modem';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
 const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
@@ -72,8 +71,8 @@ const ICON_MAP: { [key: number]: string } = {
 	804: 'overcast'
 };
 
-interface WeatherEntry {
-	time: Date;
+interface Forecast {
+	ts: string;
 	img: string;
 	feelsLike: number;
 }
@@ -81,19 +80,19 @@ interface WeatherEntry {
 interface Alert {
 	sender: string;
 	event: string;
-	start: Date;
-	end: Date;
+	start: string;
+	end: string;
 	description: string;
 	tags: string[];
 }
 
 export class Weather extends Service {
-	public readonly enabled = !process.env.WEATHER_DISABLED;
+	public readonly enabled = process.env.WEATHER_ENABLED === '1';
 
 	private timer: NodeJS.Timer;
 
 	public updatedAt: Date;
-	public forecasts: WeatherEntry[] = [];
+	public forecasts: Forecast[] = [];
 	public alerts: Alert[] = [];
 
 	public override async init(): Promise<void> {
@@ -124,23 +123,16 @@ export class Weather extends Service {
 
 		try {
 			const alerts: Alert[] = [];
-			const forecasts: WeatherEntry[] = [];
+			const forecasts: Forecast[] = [];
 
 			const { data } = await axios(url);
 
 			const prefix = '/icons/';
 			const suffix = '.png';
 
-			const current = data.current;
-			forecasts.push({
-				time: new Date(current.dt * 1000),
-				img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-				feelsLike: current.feels_like
-			});
-
 			for (const forecast of data.daily) {
 				forecasts.push({
-					time: new Date(forecast.dt * 1000),
+					ts: new Date(forecast.dt * 1000).toISOString(),
 					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
 					feelsLike: forecast.feels_like.day
 				});
@@ -151,8 +143,8 @@ export class Weather extends Service {
 					alerts.push({
 						sender: alert.sender_name,
 						event: alert.event,
-						start: new Date(alert.start * 1000),
-						end: new Date(alert.end * 1000),
+						start: new Date(alert.start * 1000).toISOString(),
+						end: new Date(alert.end * 1000).toISOString(),
 						description: alert.description,
 						tags: alert.tags
 					});

@@ -1,4 +1,3 @@
-import { Application } from 'express';
 import { stat } from 'fs/promises';
 import i2c, { PromisifiedBus } from 'i2c-bus';
 
@@ -53,7 +52,7 @@ export interface StatusInfo {
 }
 
 export class Battery extends Service {
-	public readonly enabled = !process.env.BATTERY_DISABLED;
+	public readonly enabled = process.env.BATTERY_ENABLED === '1';
 
 	private bus: PromisifiedBus;
 	private timer: NodeJS.Timer;
