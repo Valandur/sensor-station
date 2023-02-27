@@ -45,7 +45,7 @@ export class Modem extends Service {
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
-			console.log('MODEM DISABLED');
+			this.log('MODEM DISABLED');
 			return;
 		}
 
@@ -60,9 +60,9 @@ export class Modem extends Service {
 		if (process.env.MODEM_UPDATE_INTERVAL) {
 			const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
 			this.timer = setInterval(this.update, interval);
-			console.log('MODEM UPDATE STARTED', interval);
+			this.log('MODEM UPDATE STARTED', interval);
 		} else {
-			console.log('MODEM UPDATE DISABLED');
+			this.log('MODEM UPDATE DISABLED');
 		}
 	}
 
@@ -75,7 +75,7 @@ export class Modem extends Service {
 		try {
 			this.interfaces = await this.getInterfaces();
 		} catch (err) {
-			console.error(err);
+			this.error(err);
 		}
 
 		try {
@@ -83,7 +83,7 @@ export class Modem extends Service {
 			this.updatedAt = new Date();
 			await writeFile(STATE_PATH, JSON.stringify(this.status), 'utf-8');
 		} catch (err) {
-			console.error(err);
+			this.error(err);
 
 			const status = await readFile(STATE_PATH, 'utf-8').catch(() =>
 				JSON.stringify({

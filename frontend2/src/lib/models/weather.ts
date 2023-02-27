@@ -1,23 +1,7 @@
-export type RawWeatherData = {
-	forecasts: {
-		ts: string;
-		img: string;
-		feelsLike: number;
-	}[];
-	alerts: {
-		sender: string;
-		event: string;
-		start: string;
-		end: string;
-		description: string;
-		tags: string[];
-	}[];
-	temp: number;
-	rh: number;
-};
+import { gql } from '@urql/svelte';
 
-export interface WeatherItem {
-	ts: Date;
+export interface WeatherForecast {
+	ts: string;
 	img: string;
 	feelsLike: number;
 }
@@ -25,8 +9,38 @@ export interface WeatherItem {
 export interface WeatherAlert {
 	sender: string;
 	event: string;
-	start: Date;
-	end: Date;
+	start: string;
+	end: string;
 	description: string;
 	tags: string[];
 }
+
+export interface GetWeatherData {
+	weather: {
+		forecasts: WeatherForecast[];
+		alerts: WeatherAlert[];
+		temp: number;
+		rh: number;
+	};
+}
+export const GET_WEATHER = gql`
+	query GetWeather {
+		weather {
+			forecasts {
+				ts
+				img
+				feelsLike
+			}
+			alerts {
+				sender
+				event
+				start
+				end
+				description
+				tags
+			}
+			temp
+			rh
+		}
+	}
+`;

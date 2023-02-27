@@ -31,7 +31,7 @@ export class News extends Service {
 
 	public async init(): Promise<void> {
 		if (!this.enabled) {
-			console.log('NEWS DISABLED');
+			this.log('NEWS DISABLED');
 			return;
 		}
 
@@ -46,9 +46,9 @@ export class News extends Service {
 		if (process.env.NEWS_UPDATE_INTERVAL) {
 			const interval = 1000 * Number(process.env.NEWS_UPDATE_INTERVAL);
 			this.timer = setInterval(this.update, interval);
-			console.log('NEWS UPDATE STARTED', interval);
+			this.log('NEWS UPDATE STARTED', interval);
 		} else {
-			console.log('NEWS UPDATE DISABLED');
+			this.log('NEWS UPDATE DISABLED');
 		}
 	}
 
@@ -89,7 +89,7 @@ export class News extends Service {
 	public async getItems(feedId: string) {
 		let newsFeed = this.feedMap.get(feedId);
 		if (!newsFeed) {
-			console.log(`NEWS SETTING UP ${feedId}`);
+			this.log(`NEWS SETTING UP ${feedId}`);
 
 			newsFeed = { name: feedId, feedUrl: `https://www.srf.ch/news/bnf/rss/${feedId}`, items: [] };
 			this.feedMap.set(feedId, newsFeed);

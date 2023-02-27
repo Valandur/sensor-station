@@ -1,20 +1,30 @@
 <script lang="ts">
-	import type { NewsItem } from '$lib/models/news';
+	import { getContextClient, queryStore } from '@urql/svelte';
+
+	import { BASE_URL } from '$lib/client';
+	import { GET_NEWS, type GetNewsData, type NewsItem } from '$lib/models/news';
+	import { getIndexStore } from '$lib/stores/news';
+
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	const MAX_ITEMS = 3;
 
-	const url = data.url;
+	$: store = queryStore<GetNewsData>({
+		query: GET_NEWS,
+		client: getContextClient(),
+		variables: { feed: data.category }
+	});
 
-	let idx = 0;
 	let selectedItem: NewsItem | null = null;
 
-	$: newsIdx = (idx < 0 ? data.news.length : 0) + (idx % data.news.length);
+	$: rawNews = $store.data?.news || [];
+	$: index = getIndexStore(data.category);
+	$: newsIdx = ($index < 0 ? rawNews.length : 0) + ($index % rawNews.length);
 	$: news = [
-		...data.news.slice(newsIdx, newsIdx + MAX_ITEMS),
-		...data.news.slice(0, Math.max(MAX_ITEMS - (data.news.length - newsIdx), 0))
+		...rawNews.slice(newsIdx, newsIdx + MAX_ITEMS),
+		...rawNews.slice(0, Math.max(MAX_ITEMS - (rawNews.length - newsIdx), 0))
 	];
 
 	let startY = 0;
@@ -24,9 +34,9 @@
 	const touchEnd = (e: TouchEvent) => {
 		const diff = e.changedTouches[0].clientY - startY;
 		if (diff < -100) {
-			idx++;
+			index.increment();
 		} else if (diff > 100) {
-			idx--;
+			index.decrement();
 		}
 	};
 </script>
@@ -34,7 +44,7 @@
 <div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
 	{#if selectedItem}
 		<div class="details">
-			<iframe title="Story" src={url + selectedItem.link} />
+			<iframe title="Story" src={BASE_URL + selectedItem.link} />
 			<button class="close" on:click={() => (selectedItem = null)}>❌</button>
 		</div>
 	{:else}

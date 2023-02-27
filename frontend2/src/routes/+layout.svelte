@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createClient, setContextClient } from '@urql/svelte';
-	import { de } from 'date-fns/locale';
+	import de from 'date-fns/locale/de/index';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import Holidays from 'date-holidays';
 

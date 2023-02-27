@@ -62,13 +62,13 @@ export class Battery extends Service {
 
 	public async init() {
 		if (!this.enabled) {
-			console.log('BATTERY DISABLED');
+			this.log('BATTERY DISABLED');
 			return;
 		}
 
 		const file = `/dev/i2c-${BUS_NUMBER}`;
 		if (!(await stat(file).catch(() => false))) {
-			console.log(`PiJuice not available @ ${file}`);
+			this.log(`PiJuice not available @ ${file}`);
 			this.status = {
 				isFault: false,
 				isButton: false,
@@ -88,9 +88,9 @@ export class Battery extends Service {
 		if (process.env.BATTERY_UPDATE_INTERVAL) {
 			const interval = 1000 * Number(process.env.BATTERY_UPDATE_INTERVAL);
 			this.timer = setInterval(this.update, interval);
-			console.log('BATTERY UPDATE STARTED', interval);
+			this.log('BATTERY UPDATE STARTED', interval);
 		} else {
-			console.log('BATTERY UPDATE DISABLED');
+			this.log('BATTERY UPDATE DISABLED');
 		}
 	}
 
@@ -104,7 +104,7 @@ export class Battery extends Service {
 			this.status = await this.getStatus();
 			this.updatedAt = new Date();
 		} catch (err) {
-			console.error(err);
+			this.error(err);
 		}
 	};
 

@@ -97,7 +97,7 @@ export class Weather extends Service {
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
-			console.log('WEATHER DISABLED');
+			this.log('WEATHER DISABLED');
 			return;
 		}
 
@@ -106,9 +106,9 @@ export class Weather extends Service {
 		if (process.env.WEATHER_UPDATE_INTERVAL) {
 			const interval = 1000 * Number(process.env.WEATHER_UPDATE_INTERVAL);
 			this.timer = setInterval(this.update, interval);
-			console.log('WEATHER UPDATE STARTED', interval);
+			this.log('WEATHER UPDATE STARTED', interval);
 		} else {
-			console.log('WEATHER UPDATE DISABLED');
+			this.log('WEATHER UPDATE DISABLED');
 		}
 	}
 
@@ -155,7 +155,7 @@ export class Weather extends Service {
 			this.alerts = alerts;
 			this.updatedAt = new Date();
 		} catch (err) {
-			console.error(err);
+			this.error(err);
 		}
 	};
 }

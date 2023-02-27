@@ -1,14 +1,15 @@
 <script lang="ts">
+	import { getContextClient, queryStore } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
-	import { de } from 'date-fns/locale';
+	import de from 'date-fns/locale/de/index';
 
-	import type { PageData } from './$types';
+	import { type GetWeatherData, GET_WEATHER } from '$lib/models/weather';
 
-	export let data: PageData;
+	const NUM_FORECASTS = 4;
 
-	const NUM_FORECASTS = 5;
+	$: store = queryStore<GetWeatherData>({ query: GET_WEATHER, client: getContextClient() });
 
-	$: weather = data.weather;
+	$: weather = $store.data?.weather;
 	$: temp = weather?.temp;
 	$: rh = weather?.rh;
 
