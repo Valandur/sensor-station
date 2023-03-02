@@ -5,6 +5,8 @@ export const time = readable(new Date(), (set) => {
 		set(new Date());
 	}, 30000);
 
+	set(new Date());
+
 	return function stop() {
 		clearInterval(interval);
 	};
