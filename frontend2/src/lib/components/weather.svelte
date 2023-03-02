@@ -1,27 +1,35 @@
 <script lang="ts">
 	import { getContextClient, queryStore } from '@urql/svelte';
-	import { format, parseISO } from 'date-fns';
+	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import { type GetWeatherData, GET_WEATHER } from '$lib/models/weather';
 
-	const NUM_FORECASTS = 4;
+	export let params: string = '';
+	params; // svelte hack to disable unused variable warning
 
-	$: store = queryStore<GetWeatherData>({ query: GET_WEATHER, client: getContextClient() });
+	const NUM_FORECASTS = 6;
 
-	$: weather = $store.data?.weather;
-	$: temp = weather?.temp;
-	$: rh = weather?.rh;
+	$: store = queryStore<GetWeatherData>({
+		query: GET_WEATHER,
+		context: { additionalTypenames: ['WeatherForecast', 'WeatherAlert'] },
+		client: getContextClient()
+	});
 
-	$: numForecasts = NUM_FORECASTS - (temp || rh ? 2 : 0);
-	$: forecasts = weather?.forecasts.slice(0, numForecasts) || [];
+	$: sensors = $store.data?.sensors;
+	$: numForecasts = NUM_FORECASTS - (sensors ? 2 : 0);
+	$: forecasts = $store.data?.forecasts?.slice(0, numForecasts) || [];
 </script>
 
 <div class="container">
-	<div class="sensors">
-		<div class="text" style="color: #23ad00">{temp?.toFixed(0)}°</div>
-		<div class="text" style="color: #0052d6">{rh?.toFixed(0)}%</div>
-	</div>
+	{#if sensors}
+		<div class="sensors">
+			<div />
+			<div class="text" style:color="#23ad00">{sensors.temp.toFixed(0)}°</div>
+			<div class="text" style:color="#0052d6">{sensors.rh.toFixed(0)}%</div>
+			<div class="info">{formatDistanceToNow(parseISO(sensors.ts), { addSuffix: true })}</div>
+		</div>
+	{/if}
 
 	<div class="forecasts">
 		{#each forecasts as forecast}
@@ -50,8 +58,13 @@
 	}
 
 	.sensors > .text {
-		font-size: 100px;
+		font-size: 3rem;
 		text-align: center;
+	}
+
+	.sensors > .info {
+		color: gray;
+		font-size: 0.5rem;
 	}
 
 	.forecasts {
@@ -71,11 +84,11 @@
 	}
 
 	.forecast > img {
-		width: 80%;
+		width: 90%;
 	}
 
 	.forecast > .text {
-		font-size: 80px;
+		font-size: 2.5rem;
 		text-align: center;
 	}
 </style>

@@ -3,6 +3,7 @@ declare module '@westh/serial-commander' {
 		port?: string;
 		defaultDelay?: number;
 		disableLog?: boolean;
+		log?: (arg: string) => void;
 	}
 
 	export interface SendOptions {

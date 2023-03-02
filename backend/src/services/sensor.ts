@@ -16,9 +16,8 @@ export class Sensor extends Service {
 	private updateTimer: NodeJS.Timer;
 	private recordTimer: NodeJS.Timer;
 
-	public updatedAt: Date;
-	public temperature: number = 0;
-	public relativeHumidity: number = 0;
+	public newest: Recording;
+	private lastRecordedTs: Date;
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
@@ -33,7 +32,9 @@ export class Sensor extends Service {
 			this.error(err);
 		}
 
-		await this.app.storage.run('CREATE TABLE IF NOT EXISTS recordings (ts DATETIME, temp DOUBLE, rh DOUBLE)');
+		await this.app.storage.run(
+			'CREATE TABLE IF NOT EXISTS recordings (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, temp DOUBLE, rh DOUBLE)'
+		);
 
 		await this.update();
 
@@ -63,9 +64,11 @@ export class Sensor extends Service {
 		try {
 			const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
 
-			this.temperature = temperature;
-			this.relativeHumidity = humidity;
-			this.updatedAt = new Date();
+			this.newest = {
+				ts: new Date(),
+				temp: temperature,
+				rh: humidity
+			};
 		} catch (err) {
 			this.error(err);
 		}
@@ -73,22 +76,25 @@ export class Sensor extends Service {
 
 	private record = async () => {
 		try {
-			const date = this.updatedAt;
-			const temp = this.temperature;
-			const rh = this.relativeHumidity;
+			if (!this.newest) {
+				this.error('Could not record sensors, no recording present!');
+				return;
+			}
 
-			if (!date || isNaN(temp) || isNaN(rh)) {
-				this.error('Could not record sensors because of invalid values', date, temp, rh);
+			if (this.lastRecordedTs.getTime() === this.newest.ts.getTime()) {
+				this.error('Skipping recording because no new values are available');
 				return;
 			}
 
 			await this.app.storage.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [
-				date.toISOString(),
-				temp,
-				rh
+				this.newest.ts.toISOString(),
+				this.newest.temp,
+				this.newest.rh
 			]);
 
-			this.log(`Recorded temp & rh`, date, temp, rh);
+			this.lastRecordedTs = this.newest.ts;
+
+			this.log(`Recorded temp & rh`, this.newest);
 		} catch (err) {
 			this.error(err);
 		}

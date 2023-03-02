@@ -68,17 +68,20 @@ export class Battery extends Service {
 
 		const file = `/dev/i2c-${BUS_NUMBER}`;
 		if (!(await stat(file).catch(() => false))) {
-			this.log(`PiJuice not available @ ${file}`);
-			this.status = {
-				isFault: false,
-				isButton: false,
-				batteryStatus: 'CHARGING_FROM_IN',
-				powerIn: 'PRESENT',
-				powerIn5vIo: 'NONE',
-				charge: 43,
-				current: -1.132,
-				voltage: 3.942
-			};
+			this.error(`PiJuice not available @ ${file}`);
+
+			if (process.env.DEBUG === '1') {
+				this.status = {
+					isFault: false,
+					isButton: false,
+					batteryStatus: 'CHARGING_FROM_IN',
+					powerIn: 'PRESENT',
+					powerIn5vIo: 'NONE',
+					charge: 43,
+					current: -1.132,
+					voltage: 3.942
+				};
+			}
 			return;
 		}
 

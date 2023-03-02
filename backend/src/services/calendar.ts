@@ -17,7 +17,9 @@ export class Calendar extends Service {
 			return;
 		}
 
-		await this.app.storage.run('CREATE TABLE IF NOT EXISTS events (ts DATETIME, repeat TEXT, description TEXT)');
+		await this.app.storage.run(
+			'CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, repeat TEXT, description TEXT)'
+		);
 		this.events = await this.app.storage.all('SELECT * FROM events');
 		this.log(`Loaded ${this.events.length} events`);
 	}

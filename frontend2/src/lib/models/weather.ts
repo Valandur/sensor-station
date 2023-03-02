@@ -16,29 +16,31 @@ export interface WeatherAlert {
 }
 
 export interface GetWeatherData {
-	weather: {
-		forecasts: WeatherForecast[];
-		alerts: WeatherAlert[];
+	forecasts: WeatherForecast[];
+	alerts: WeatherAlert[];
+	sensors: {
+		ts: string;
 		temp: number;
 		rh: number;
 	};
 }
 export const GET_WEATHER = gql`
 	query GetWeather {
-		weather {
-			forecasts {
-				ts
-				img
-				feelsLike
-			}
-			alerts {
-				sender
-				event
-				start
-				end
-				description
-				tags
-			}
+		forecasts {
+			ts
+			img
+			feelsLike
+		}
+		alerts {
+			sender
+			event
+			start
+			end
+			description
+			tags
+		}
+		sensors {
+			ts
 			temp
 			rh
 		}

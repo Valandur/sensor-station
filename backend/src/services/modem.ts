@@ -49,6 +49,25 @@ export class Modem extends Service {
 			return;
 		}
 
+		if (!(await stat(MODEM_SERIAL).catch(() => false))) {
+			this.error(`Modem not available @ ${MODEM_SERIAL}`);
+
+			if (process.env.DEBUG === '1') {
+				this.status = {
+					isConnected: false,
+					time: new Date().toISOString(),
+					tzOffset: '+01:00',
+					operator: 'DR',
+					signal: 3,
+					lat: BASE_LAT,
+					lng: BASE_LNG,
+					tzName: find(BASE_LAT, BASE_LNG)[0],
+					cached: true
+				};
+			}
+			return;
+		}
+
 		this.commander = new SerialCommander({
 			port: MODEM_SERIAL,
 			defaultDelay: 10,
@@ -85,20 +104,10 @@ export class Modem extends Service {
 		} catch (err) {
 			this.error(err);
 
-			const status = await readFile(STATE_PATH, 'utf-8').catch(() =>
-				JSON.stringify({
-					isConnected: false,
-					time: new Date().toISOString(),
-					tzOffset: '+01:00',
-					operator: 'DR',
-					signal: 3,
-					lat: BASE_LAT,
-					lng: BASE_LNG,
-					tzName: find(BASE_LAT, BASE_LNG)[0],
-					cached: true
-				})
-			);
-			this.status = { ...JSON.parse(status), cached: true };
+			const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
+			if (status) {
+				this.status = { ...JSON.parse(status), cached: true };
+			}
 		}
 	};
 
@@ -126,8 +135,8 @@ export class Modem extends Service {
 	}
 
 	public async getStatus(): Promise<StatusInfo> {
-		if (!(await stat(MODEM_SERIAL).catch(() => false))) {
-			throw new Error(`Modem not available @ ${MODEM_SERIAL}`);
+		if (!this.commander) {
+			throw new Error(`Modem is not available`);
 		}
 
 		let operator: string;

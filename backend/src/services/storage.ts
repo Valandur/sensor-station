@@ -1,5 +1,5 @@
 import { mkdir } from 'fs/promises';
-import sqlite3, { Database } from 'sqlite3';
+import sqlite3, { Database, Statement } from 'sqlite3';
 
 import { Service } from './service';
 
@@ -19,8 +19,24 @@ export class Storage extends Service {
 		}
 	}
 
-	public async run(query: string, params?: any[]): Promise<void> {
-		await new Promise<void>((res, rej) => this.db.run(query, params, (err) => (err ? rej(err) : res())));
+	public async runPrepared(query: string, values: any[]): Promise<void> {
+		const stmt = await new Promise<Statement>((res, rej) =>
+			this.db.prepare(query, function (err) {
+				err ? rej(err) : res(this);
+			})
+		);
+		for (const value of values) {
+			await new Promise<void>((res, rej) => stmt.run(value, (err) => (err ? rej(err) : res())));
+		}
+		await new Promise<void>((res, rej) => stmt.finalize((err) => (err ? rej(err) : res())));
+	}
+
+	public async run(query: string, params?: any[]): Promise<number> {
+		return new Promise<number>((res, rej) =>
+			this.db.run(query, params, function (err) {
+				err ? rej(err) : res(this.lastID);
+			})
+		);
 	}
 
 	public async all<R>(query: string, params?: any[]): Promise<R[]> {

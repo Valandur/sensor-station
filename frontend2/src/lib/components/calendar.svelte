@@ -3,7 +3,14 @@
 
 	import { GET_CALENDAR, type GetCalendarData } from '$lib/models/calendar';
 
-	$: store = queryStore<GetCalendarData>({ query: GET_CALENDAR, client: getContextClient() });
+	export let params: string = '';
+	params; // svelte hack to disable unused variable warning
+
+	$: store = queryStore<GetCalendarData>({
+		query: GET_CALENDAR,
+		context: { additionalTypenames: ['CalendarEvent'] },
+		client: getContextClient()
+	});
 
 	$: events = $store.data?.events || [];
 </script>
@@ -28,6 +35,6 @@
 
 	.text {
 		text-align: center;
-		font-size: 3em;
+		font-size: 1rem;
 	}
 </style>

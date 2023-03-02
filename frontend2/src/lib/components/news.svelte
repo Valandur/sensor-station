@@ -1,26 +1,27 @@
 <script lang="ts">
 	import { getContextClient, queryStore } from '@urql/svelte';
 
+	import { getIndexStore } from '$lib/stores/news';
+	import { screen } from '$lib/stores/screen';
+
 	import { BASE_URL } from '$lib/client';
 	import { GET_NEWS, type GetNewsData, type NewsItem } from '$lib/models/news';
-	import { getIndexStore } from '$lib/stores/news';
 
-	import type { PageData } from './$types';
-
-	export let data: PageData;
+	export let params: string = '';
 
 	const MAX_ITEMS = 3;
 
 	$: store = queryStore<GetNewsData>({
 		query: GET_NEWS,
-		client: getContextClient(),
-		variables: { feed: data.category }
+		variables: { feed: params },
+		context: { additionalTypenames: ['NewsItem'] },
+		client: getContextClient()
 	});
 
 	let selectedItem: NewsItem | null = null;
 
 	$: rawNews = $store.data?.news || [];
-	$: index = getIndexStore(data.category);
+	$: index = getIndexStore(params);
 	$: newsIdx = ($index < 0 ? rawNews.length : 0) + ($index % rawNews.length);
 	$: news = [
 		...rawNews.slice(newsIdx, newsIdx + MAX_ITEMS),
@@ -35,8 +36,19 @@
 		const diff = e.changedTouches[0].clientY - startY;
 		if (diff < -100) {
 			index.increment();
+			screen.reset();
 		} else if (diff > 100) {
 			index.decrement();
+			screen.reset();
+		}
+	};
+
+	const select = (item: NewsItem | null) => {
+		selectedItem = item;
+		if (item) {
+			screen.stop();
+		} else {
+			screen.start();
 		}
 	};
 </script>
@@ -45,15 +57,11 @@
 	{#if selectedItem}
 		<div class="details">
 			<iframe title="Story" src={BASE_URL + selectedItem.link} />
-			<button class="close" on:click={() => (selectedItem = null)}>❌</button>
+			<button class="close" on:click={() => select(null)}>❌</button>
 		</div>
 	{:else}
 		{#each news as item}
-			<div
-				class="item"
-				on:click={() => (selectedItem = item)}
-				on:keypress={() => (selectedItem = item)}
-			>
+			<div class="item" on:click={() => select(item)} on:keypress={() => select(item)}>
 				<img class="image" alt="Thumbnail" src={item.img} />
 				<div class="abstract">{item.title}</div>
 			</div>
@@ -76,40 +84,38 @@
 		flex-direction: row;
 		align-items: center;
 		overflow: hidden;
-		margin-top: 10px;
+		margin-top: 0.5rem;
 	}
 
 	img.image {
 		height: 100%;
-		margin-right: 10px;
+		margin-right: 0.5rem;
 	}
 
 	.abstract {
 		flex: 4;
-		font-size: 38px;
-		line-height: 1.1em;
+		font-size: 1.2rem;
+		line-height: 1.2rem;
 	}
 
 	iframe {
 		width: 100%;
 		height: 100%;
-		border-width: 1px;
-		border-style: solid;
-		border-color: gray;
+		border: 1px solid gray;
 	}
 
 	.details {
 		position: absolute;
-		top: 10px;
-		left: 10px;
-		right: 10px;
-		bottom: 10px;
+		top: 8px;
+		left: 8px;
+		right: 8px;
+		bottom: 8px;
 	}
 
 	button.close {
 		position: absolute;
-		top: 10px;
-		left: 10px;
-		font-size: 40px;
+		top: 8px;
+		left: 8px;
+		font-size: 1rem;
 	}
 </style>
