@@ -1,7 +1,7 @@
 import { Service } from './service';
 
 export interface Recording {
-	ts: Date;
+	ts: string;
 	temp: number;
 	rh: number;
 }
@@ -17,7 +17,7 @@ export class Sensor extends Service {
 	private recordTimer: NodeJS.Timer;
 
 	public newest: Recording;
-	private lastRecordedTs: Date;
+	private lastRecordedTs: string;
 
 	public override async init(): Promise<void> {
 		if (!this.enabled) {
@@ -65,7 +65,7 @@ export class Sensor extends Service {
 			const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
 
 			this.newest = {
-				ts: new Date(),
+				ts: new Date().toISOString(),
 				temp: temperature,
 				rh: humidity
 			};
@@ -81,13 +81,13 @@ export class Sensor extends Service {
 				return;
 			}
 
-			if (this.lastRecordedTs.getTime() === this.newest.ts.getTime()) {
+			if (this.lastRecordedTs === this.newest.ts) {
 				this.error('Skipping recording because no new values are available');
 				return;
 			}
 
 			await this.app.storage.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [
-				this.newest.ts.toISOString(),
+				this.newest.ts,
 				this.newest.temp,
 				this.newest.rh
 			]);

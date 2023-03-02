@@ -49,9 +49,9 @@ type NetworkInterface {
 }
 
 type SensorsStatusInfo {
-	ts: String
-	temp: Float
-	rh: Float
+	ts: String!
+	temp: Float!
+	rh: Float!
 }
 
 type WeatherForecast {

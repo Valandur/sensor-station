@@ -12,7 +12,7 @@ class Sensor extends service_1.Service {
             try {
                 const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
                 this.newest = {
-                    ts: new Date(),
+                    ts: new Date().toISOString(),
                     temp: temperature,
                     rh: humidity
                 };
@@ -27,12 +27,12 @@ class Sensor extends service_1.Service {
                     this.error('Could not record sensors, no recording present!');
                     return;
                 }
-                if (this.lastRecordedTs.getTime() === this.newest.ts.getTime()) {
+                if (this.lastRecordedTs === this.newest.ts) {
                     this.error('Skipping recording because no new values are available');
                     return;
                 }
                 await this.app.storage.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [
-                    this.newest.ts.toISOString(),
+                    this.newest.ts,
                     this.newest.temp,
                     this.newest.rh
                 ]);
