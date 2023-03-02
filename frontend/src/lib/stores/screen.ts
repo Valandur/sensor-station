@@ -1,10 +1,12 @@
 import { tweened } from 'svelte/motion';
 import { writable } from 'svelte/store';
 
+const UPDATE_INTERVAL = 30000;
+
 const { subscribe, update } = writable(0);
 const pause = writable(true);
 
-export const progress = tweened(0, { duration: 10000 });
+export const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
 let timer: NodeJS.Timeout | null = null;
 
@@ -20,7 +22,7 @@ const prev = () => {
 
 const start = () => {
 	pause.set(false);
-	timer = setTimeout(next, 10000);
+	timer = setTimeout(next, UPDATE_INTERVAL);
 	progress.set(100);
 };
 
