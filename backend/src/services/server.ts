@@ -130,13 +130,15 @@ export class Server extends Service {
 		this.items = await this.app.storage.all('SELECT * FROM uploads');
 		this.log(`Loaded ${this.items.length} uploaded images`);
 
-		if (await stat('./data/uploads/items.json').catch(() => false)) {
+		if (await stat('./data/upload/items.json').catch(() => false)) {
 			this.log('Migrating old uploads...');
-			const oldUploads = JSON.parse(await readFile('./data/uploads/items.json', 'utf-8'));
+			const oldUploads = JSON.parse(await readFile('./data/upload/items.json', 'utf-8'));
 			await this.app.storage.runPrepared('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
 				oldUploads.map((u: any) => [u.date, u.title, u.img, u.ratio])
 			]);
-			await rename('./data/uploads/items.json', './data/_items.json');
+			this.log('Migrated ' + oldUploads.length + ' items');
+			await rename('./data/upload/items.json', './data/_items.json');
+			this.items = await this.app.storage.all('SELECT * FROM uploads');
 			this.log('Migration done!');
 		}
 
