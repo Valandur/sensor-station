@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { createClient, setContextClient } from '@urql/svelte';
+	import { setContextClient } from '@urql/svelte';
 
-	const client = createClient({
-		url: 'http://localhost:2000/graphql',
-		fetchOptions: { credentials: 'include' }
-	});
+	import { getClient } from '$lib/client';
+
+	const client = getClient();
 	setContextClient(client);
 </script>
 

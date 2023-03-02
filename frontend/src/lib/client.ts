@@ -11,10 +11,10 @@ export const FETCH_OPTIONS = {
 	credentials: 'include'
 };
 
-export function getClient(fetch: FetchType) {
+export function getClient(fetch?: FetchType) {
 	return createClient({
-		url: `${BASE_URL}/graphql`,
 		fetch,
+		url: `${BASE_URL}/graphql`,
 		fetchOptions: { credentials: 'include' }
 	});
 }
