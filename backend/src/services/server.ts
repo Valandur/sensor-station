@@ -133,10 +133,10 @@ export class Server extends Service {
 		if (await stat('./data/upload/items.json').catch(() => false)) {
 			this.log('Migrating old uploads...');
 			const oldUploads = JSON.parse(await readFile('./data/upload/items.json', 'utf-8'));
-			this.log(oldUploads);
-			await this.app.storage.runPrepared('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
+			await this.app.storage.runPrepared(
+				'INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)',
 				oldUploads.map((u: any) => [u.date, u.title, u.img, u.ratio])
-			]);
+			);
 			this.log('Migrated ' + oldUploads.length + ' items');
 			await rename('./data/upload/items.json', './data/_items.json');
 			this.items = await this.app.storage.all('SELECT * FROM uploads');
