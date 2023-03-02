@@ -214,7 +214,6 @@
 	.battery {
 		width: 3rem;
 		background-color: gray;
-		border: 1px solid black;
 		height: 100%;
 	}
 
@@ -222,6 +221,8 @@
 		color: black;
 		background-color: orange;
 		white-space: nowrap;
+		line-height: 0.8rem;
+		height: 100%;
 	}
 
 	.toolbar {

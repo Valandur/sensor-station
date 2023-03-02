@@ -1,5 +1,5 @@
 import { stat } from 'fs/promises';
-import i2c, { PromisifiedBus } from 'i2c-bus';
+import { PromisifiedBus } from 'i2c-bus';
 
 import { Service } from './service';
 
@@ -85,6 +85,7 @@ export class Battery extends Service {
 			return;
 		}
 
+		const i2c = require('i2c-bus');
 		this.bus = await i2c.openPromisified(BUS_NUMBER);
 		await this.update();
 
