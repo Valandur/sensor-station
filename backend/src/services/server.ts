@@ -107,7 +107,7 @@ export class Server extends Service {
 		});
 
 		this.webApp.register(FastifyStatic, {
-			root: resolve('..', 'frontend2')
+			root: resolve('..', 'frontend/build')
 		});
 
 		// Exit here if we don't need any of the upload stuff

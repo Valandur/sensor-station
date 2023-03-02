@@ -67,7 +67,7 @@ class Server extends service_1.Service {
             res.send(page);
         });
         this.webApp.register(static_1.default, {
-            root: (0, path_1.resolve)('..', 'frontend2')
+            root: (0, path_1.resolve)('..', 'frontend/build')
         });
         // Exit here if we don't need any of the upload stuff
         if (!this.uploadEnabled) {

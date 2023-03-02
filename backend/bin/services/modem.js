@@ -69,7 +69,6 @@ class Modem extends service_1.Service {
             defaultDelay: 10,
             disableLog: true
         });
-        this.commander.test();
         await this.update();
         if (process.env.MODEM_UPDATE_INTERVAL) {
             const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
