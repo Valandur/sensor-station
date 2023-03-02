@@ -59,8 +59,24 @@
 					</div>
 				{/each}
 				<div class="item">
-					<input class="input" type="text" bind:value={newName} />
-					<input class="input" type="text" bind:value={newParams} />
+					<select class="select" bind:value={newName}>
+						<option value="weather">Weather</option>
+						<option value="news">News</option>
+						<option value="uploads">Uploads</option>
+						<option value="calendar">Calendar</option>
+					</select>
+
+					{#if newName === 'news'}
+						<select class="select" bind:value={newParams}>
+							<option value="1646">Allgemein</option>
+							<option value="718">Sport</option>
+							<option value="454">Kultur</option>
+							<option value="630">Wissen</option>
+						</select>
+					{:else}
+						<input class="input" bind:value={newParams} />
+					{/if}
+
 					<button class="btn" on:click={add}><i class="icofont-ui-add" /></button>
 				</div>
 			</div>
@@ -124,7 +140,8 @@
 	}
 
 	.list > .item > div,
-	.list > .item > input {
+	.list > .item > input,
+	.list > .item > select {
 		flex: 1;
 		margin-right: 1rem;
 	}

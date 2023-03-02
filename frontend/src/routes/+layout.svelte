@@ -23,6 +23,7 @@
 	}
 
 	:global(.input),
+	:global(.select),
 	:global(.btn) {
 		color: orange;
 		font-size: 1rem;

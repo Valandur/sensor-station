@@ -134,6 +134,8 @@
 
 	{#if currScreen}
 		<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+	{:else}
+		<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
 	{/if}
 
 	{#if showToolbar}
