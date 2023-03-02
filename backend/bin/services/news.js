@@ -22,7 +22,7 @@ class News extends service_1.Service {
     }
     async init() {
         if (!this.enabled) {
-            console.log('NEWS DISABLED');
+            this.log('NEWS DISABLED');
             return;
         }
         this.parser = new rss_parser_1.default({
@@ -34,10 +34,10 @@ class News extends service_1.Service {
         if (process.env.NEWS_UPDATE_INTERVAL) {
             const interval = 1000 * Number(process.env.NEWS_UPDATE_INTERVAL);
             this.timer = setInterval(this.update, interval);
-            console.log('NEWS UPDATE STARTED', interval);
+            this.log('NEWS UPDATE STARTED', interval);
         }
         else {
-            console.log('NEWS UPDATE DISABLED');
+            this.log('NEWS UPDATE DISABLED');
         }
     }
     dispose() {
@@ -52,7 +52,7 @@ class News extends service_1.Service {
             const [, img, description] = MATCHER.exec(item.description);
             const date = (0, date_fns_1.parse)(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date());
             items.push({
-                date: date,
+                ts: date.toISOString(),
                 title: item.title,
                 link: `/news/${newsFeed.name}/${i}`,
                 origLink: item.link,
@@ -65,7 +65,7 @@ class News extends service_1.Service {
     async getItems(feedId) {
         let newsFeed = this.feedMap.get(feedId);
         if (!newsFeed) {
-            console.log(`NEWS SETTING UP ${feedId}`);
+            this.log(`NEWS SETTING UP ${feedId}`);
             newsFeed = { name: feedId, feedUrl: `https://www.srf.ch/news/bnf/rss/${feedId}`, items: [] };
             this.feedMap.set(feedId, newsFeed);
             await this.updateFeed(newsFeed);

@@ -83,15 +83,9 @@ class Weather extends service_1.Service {
                 const { data } = await (0, axios_1.default)(url);
                 const prefix = '/icons/';
                 const suffix = '.png';
-                /*const current = data.current;
-                forecasts.push({
-                    time: new Date(current.dt * 1000),
-                    img: prefix + ICON_MAP[current.weather[0].id] + suffix,
-                    feelsLike: current.feels_like
-                });*/
                 for (const forecast of data.daily) {
                     forecasts.push({
-                        time: new Date(forecast.dt * 1000),
+                        ts: new Date(forecast.dt * 1000).toISOString(),
                         img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
                         feelsLike: forecast.feels_like.day
                     });
@@ -101,8 +95,8 @@ class Weather extends service_1.Service {
                         alerts.push({
                             sender: alert.sender_name,
                             event: alert.event,
-                            start: new Date(alert.start * 1000),
-                            end: new Date(alert.end * 1000),
+                            start: new Date(alert.start * 1000).toISOString(),
+                            end: new Date(alert.end * 1000).toISOString(),
                             description: alert.description,
                             tags: alert.tags
                         });
@@ -113,23 +107,23 @@ class Weather extends service_1.Service {
                 this.updatedAt = new Date();
             }
             catch (err) {
-                console.error(err);
+                this.error(err);
             }
         };
     }
     async init() {
         if (!this.enabled) {
-            console.log('WEATHER DISABLED');
+            this.log('WEATHER DISABLED');
             return;
         }
         await this.update();
         if (process.env.WEATHER_UPDATE_INTERVAL) {
             const interval = 1000 * Number(process.env.WEATHER_UPDATE_INTERVAL);
             this.timer = setInterval(this.update, interval);
-            console.log('WEATHER UPDATE STARTED', interval);
+            this.log('WEATHER UPDATE STARTED', interval);
         }
         else {
-            console.log('WEATHER UPDATE DISABLED');
+            this.log('WEATHER UPDATE DISABLED');
         }
     }
     dispose() {

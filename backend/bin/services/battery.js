@@ -1,11 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Battery = exports.BatteryChargingTemperature = exports.PowerIn = exports.BatteryStatus = void 0;
 const promises_1 = require("fs/promises");
-const i2c_bus_1 = __importDefault(require("i2c-bus"));
 const service_1 = require("./service");
 const BUS_NUMBER = 0x01;
 const I2C_ADDRESS = 0x14;
@@ -52,7 +48,7 @@ class Battery extends service_1.Service {
                 this.updatedAt = new Date();
             }
             catch (err) {
-                console.error(err);
+                this.error(err);
             }
         };
         this.read = async (cmd, len, retry) => {
@@ -88,33 +84,36 @@ class Battery extends service_1.Service {
     }
     async init() {
         if (!this.enabled) {
-            console.log('BATTERY DISABLED');
+            this.log('BATTERY DISABLED');
             return;
         }
         const file = `/dev/i2c-${BUS_NUMBER}`;
         if (!(await (0, promises_1.stat)(file).catch(() => false))) {
-            console.log(`PiJuice not available @ ${file}`);
-            this.status = {
-                isFault: false,
-                isButton: false,
-                batteryStatus: 'CHARGING_FROM_IN',
-                powerIn: 'PRESENT',
-                powerIn5vIo: 'NONE',
-                charge: 43,
-                current: -1.132,
-                voltage: 3.942
-            };
+            this.error(`PiJuice not available @ ${file}`);
+            if (process.env.DEBUG === '1') {
+                this.status = {
+                    isFault: false,
+                    isButton: false,
+                    batteryStatus: 'CHARGING_FROM_IN',
+                    powerIn: 'PRESENT',
+                    powerIn5vIo: 'NONE',
+                    charge: 43,
+                    current: -1.132,
+                    voltage: 3.942
+                };
+            }
             return;
         }
-        this.bus = await i2c_bus_1.default.openPromisified(BUS_NUMBER);
+        const i2c = require('i2c-bus');
+        this.bus = await i2c.openPromisified(BUS_NUMBER);
         await this.update();
         if (process.env.BATTERY_UPDATE_INTERVAL) {
             const interval = 1000 * Number(process.env.BATTERY_UPDATE_INTERVAL);
             this.timer = setInterval(this.update, interval);
-            console.log('BATTERY UPDATE STARTED', interval);
+            this.log('BATTERY UPDATE STARTED', interval);
         }
         else {
-            console.log('BATTERY UPDATE DISABLED');
+            this.log('BATTERY UPDATE DISABLED');
         }
     }
     async dispose() {

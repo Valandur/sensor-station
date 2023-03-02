@@ -26,7 +26,7 @@ class Modem extends service_1.Service {
                 this.interfaces = await this.getInterfaces();
             }
             catch (err) {
-                console.error(err);
+                this.error(err);
             }
             try {
                 this.status = await this.getStatus();
@@ -34,8 +34,23 @@ class Modem extends service_1.Service {
                 await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
             }
             catch (err) {
-                console.error(err);
-                const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => JSON.stringify({
+                this.error(err);
+                const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => null);
+                if (status) {
+                    this.status = { ...JSON.parse(status), cached: true };
+                }
+            }
+        };
+    }
+    async init() {
+        if (!this.enabled) {
+            this.log('MODEM DISABLED');
+            return;
+        }
+        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
+            this.error(`Modem not available @ ${MODEM_SERIAL}`);
+            if (process.env.DEBUG === '1') {
+                this.status = {
                     isConnected: false,
                     time: new Date().toISOString(),
                     tzOffset: '+01:00',
@@ -45,14 +60,8 @@ class Modem extends service_1.Service {
                     lng: BASE_LNG,
                     tzName: (0, geo_tz_1.find)(BASE_LAT, BASE_LNG)[0],
                     cached: true
-                }));
-                this.status = { ...JSON.parse(status), cached: true };
+                };
             }
-        };
-    }
-    async init() {
-        if (!this.enabled) {
-            console.log('MODEM DISABLED');
             return;
         }
         this.commander = new serial_commander_1.default({
@@ -60,14 +69,15 @@ class Modem extends service_1.Service {
             defaultDelay: 10,
             disableLog: true
         });
+        this.commander.test();
         await this.update();
         if (process.env.MODEM_UPDATE_INTERVAL) {
             const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
             this.timer = setInterval(this.update, interval);
-            console.log('MODEM UPDATE STARTED', interval);
+            this.log('MODEM UPDATE STARTED', interval);
         }
         else {
-            console.log('MODEM UPDATE DISABLED');
+            this.log('MODEM UPDATE DISABLED');
         }
     }
     async dispose() {
@@ -93,8 +103,8 @@ class Modem extends service_1.Service {
         return [...interfaces.entries()].map(([name, ips]) => ({ name, ips }));
     }
     async getStatus() {
-        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
-            throw new Error(`Modem not available @ ${MODEM_SERIAL}`);
+        if (!this.commander) {
+            throw new Error(`Modem is not available`);
         }
         let operator;
         const { response: copsResp } = await this.commander.send('AT+COPS?');
