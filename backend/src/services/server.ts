@@ -1,4 +1,4 @@
-import { rm } from 'fs/promises';
+import { readFile, rename, rm, stat } from 'fs/promises';
 import Fastify, { FastifyInstance } from 'fastify';
 import FastifyStatic from '@fastify/static';
 import FastifyFileUpload from 'fastify-file-upload';
@@ -107,7 +107,7 @@ export class Server extends Service {
 		});
 
 		this.webApp.register(FastifyStatic, {
-			root: resolve('..', 'frontend/build')
+			root: resolve('..', 'frontend', 'build')
 		});
 
 		// Exit here if we don't need any of the upload stuff
@@ -129,6 +129,16 @@ export class Server extends Service {
 		);
 		this.items = await this.app.storage.all('SELECT * FROM uploads');
 		this.log(`Loaded ${this.items.length} uploaded images`);
+
+		if (await stat('./data/uploads/items.json').catch(() => false)) {
+			this.log('Migrating old uploads...');
+			const oldUploads = JSON.parse(await readFile('./data/uploads/items.json', 'utf-8'));
+			await this.app.storage.runPrepared('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
+				oldUploads.map((u: any) => [u.date, u.title, u.img, u.ratio])
+			]);
+			await rename('./data/uploads/items.json', './data/_items.json');
+			this.log('Migration done!');
+		}
 
 		this.webApp.post<{ Body: { title: string; ts: string } }>('/upload', async (req, res) => {
 			const files = req.raw.files;

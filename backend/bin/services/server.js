@@ -67,7 +67,7 @@ class Server extends service_1.Service {
             res.send(page);
         });
         this.webApp.register(static_1.default, {
-            root: (0, path_1.resolve)('..', 'frontend/build')
+            root: (0, path_1.resolve)('..', 'frontend', 'build')
         });
         // Exit here if we don't need any of the upload stuff
         if (!this.uploadEnabled) {
@@ -83,6 +83,15 @@ class Server extends service_1.Service {
         await this.app.storage.run('CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)');
         this.items = await this.app.storage.all('SELECT * FROM uploads');
         this.log(`Loaded ${this.items.length} uploaded images`);
+        if (await (0, promises_1.stat)('./data/uploads/items.json').catch(() => false)) {
+            this.log('Migrating old uploads...');
+            const oldUploads = JSON.parse(await (0, promises_1.readFile)('./data/uploads/items.json', 'utf-8'));
+            await this.app.storage.runPrepared('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
+                oldUploads.map((u) => [u.date, u.title, u.img, u.ratio])
+            ]);
+            await (0, promises_1.rename)('./data/uploads/items.json', './data/_items.json');
+            this.log('Migration done!');
+        }
         this.webApp.post('/upload', async (req, res) => {
             const files = req.raw.files;
             if (!files) {
