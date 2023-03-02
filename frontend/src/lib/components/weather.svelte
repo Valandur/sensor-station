@@ -17,7 +17,7 @@
 	});
 
 	$: sensors = $store.data?.sensors;
-	$: numForecasts = NUM_FORECASTS - (sensors ? 2 : 0);
+	$: numForecasts = NUM_FORECASTS - (sensors ? 1 : 0);
 	$: forecasts = $store.data?.forecasts?.slice(0, numForecasts) || [];
 </script>
 

@@ -33,7 +33,6 @@
 	$: screens = $store.data?.screens || [];
 	$: battery = $store.data?.battery;
 	$: modem = $store.data?.modem;
-
 	$: currScreen = screens[(($screen % screens.length) + screens.length) % screens.length];
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');

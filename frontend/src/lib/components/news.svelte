@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContextClient, queryStore } from '@urql/svelte';
+	import { onDestroy } from 'svelte';
 
 	import { getIndexStore } from '$lib/stores/news';
 	import { screen } from '$lib/stores/screen';
@@ -27,6 +28,10 @@
 		...rawNews.slice(newsIdx, newsIdx + MAX_ITEMS),
 		...rawNews.slice(0, Math.max(MAX_ITEMS - (rawNews.length - newsIdx), 0))
 	];
+
+	onDestroy(async () => {
+		index.increment();
+	});
 
 	let startY = 0;
 	const touchStart = (e: TouchEvent) => {

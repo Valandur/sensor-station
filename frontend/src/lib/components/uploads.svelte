@@ -2,6 +2,7 @@
 	import { getContextClient, queryStore } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
+	import { onDestroy } from 'svelte';
 
 	import { index } from '$lib/stores/uploads';
 	import { screen } from '$lib/stores/screen';
@@ -21,6 +22,10 @@
 	$: uploads = $store.data?.uploads || [];
 	$: uploadIdx = ($index < 0 ? uploads.length : 0) + ($index % uploads.length);
 	$: item = uploads[uploadIdx];
+
+	onDestroy(async () => {
+		index.increment();
+	});
 
 	let startY = 0;
 	const touchStart = (e: TouchEvent) => {
