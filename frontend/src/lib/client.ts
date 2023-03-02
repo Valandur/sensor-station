@@ -1,10 +1,11 @@
+import { dev } from '$app/environment';
 import { PUBLIC_API_URL } from '$env/static/public';
 
 import { createClient } from '@urql/svelte';
 
 type FetchType = typeof fetch;
 
-export const BASE_URL = PUBLIC_API_URL;
+export const BASE_URL = dev ? PUBLIC_API_URL : '';
 
 export const FETCH_OPTIONS = {
 	credentials: 'include'
