@@ -86,6 +86,7 @@ class Server extends service_1.Service {
         if (await (0, promises_1.stat)('./data/upload/items.json').catch(() => false)) {
             this.log('Migrating old uploads...');
             const oldUploads = JSON.parse(await (0, promises_1.readFile)('./data/upload/items.json', 'utf-8'));
+            this.log(oldUploads);
             await this.app.storage.runPrepared('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
                 oldUploads.map((u) => [u.date, u.title, u.img, u.ratio])
             ]);
