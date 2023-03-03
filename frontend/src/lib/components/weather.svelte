@@ -7,7 +7,7 @@
 
 	export let params: string = '';
 
-	const NUM_FORECASTS = 8;
+	const NUM_FORECASTS = 7;
 
 	$: store = queryStore<GetWeatherAndSensorsData>({
 		query: GET_WEATHER_AND_SENSORS,
@@ -95,7 +95,7 @@
 	}
 
 	.forecast > .text {
-		font-size: 2rem;
+		font-size: 2.5rem;
 		text-align: center;
 	}
 </style>
