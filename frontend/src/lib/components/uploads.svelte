@@ -20,7 +20,7 @@
 		client: getContextClient()
 	});
 
-	$: uploads = $store.data?.uploads || [];
+	$: uploads = $store.data?.uploads.items || [];
 	$: uploadIdx = ($index < 0 ? uploads.length : 0) + ($index % uploads.length);
 	$: item = uploads[uploadIdx];
 

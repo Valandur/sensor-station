@@ -3,37 +3,39 @@
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { type GetWeatherData, GET_WEATHER } from '$lib/models/weather';
+	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
 
 	const NUM_FORECASTS = 6;
 
-	$: store = queryStore<GetWeatherData>({
-		query: GET_WEATHER,
+	$: store = queryStore<GetWeatherAndSensorsData>({
+		query: GET_WEATHER_AND_SENSORS,
 		context: { additionalTypenames: ['WeatherForecast', 'WeatherAlert'] },
 		requestPolicy: 'cache-and-network',
 		client: getContextClient()
 	});
 
-	$: sensors = $store.data?.sensors;
-	$: numForecasts = NUM_FORECASTS - (sensors ? 1 : 0);
-	$: forecasts = $store.data?.forecasts?.slice(0, numForecasts) || [];
+	$: newestRecording = $store.data?.sensors.newest;
+	$: numDailyForecasts = NUM_FORECASTS - (newestRecording ? 1 : 0);
+	$: dailyForecasts = $store.data?.weather.daily?.slice(0, numDailyForecasts) || [];
 </script>
 
 <div class="container">
-	{#if sensors}
+	{#if newestRecording}
 		<div class="sensors">
 			<div />
-			<div class="text" style:color="#23ad00">{sensors.temp.toFixed(0)}°</div>
-			<div class="text" style:color="#0052d6">{sensors.rh.toFixed(0)}%</div>
-			<div class="info">{formatDistanceToNow(parseISO(sensors.ts), { addSuffix: true })}</div>
+			<div class="text" style:color="#23ad00">{newestRecording.temp.toFixed(0)}°</div>
+			<div class="text" style:color="#0052d6">{newestRecording.rh.toFixed(0)}%</div>
+			<div class="info">
+				{formatDistanceToNow(parseISO(newestRecording.ts), { addSuffix: true })}
+			</div>
 		</div>
 	{/if}
 
 	<div class="forecasts">
-		{#each forecasts as forecast}
+		{#each dailyForecasts as forecast}
 			<div class="forecast">
 				<div class="text">{format(parseISO(forecast.ts), 'iiiiii', { locale: de })}</div>
 				<img src={forecast.img} alt="Weather icon" />

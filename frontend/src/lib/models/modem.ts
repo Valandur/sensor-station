@@ -1,6 +1,10 @@
 import { gql } from '@urql/svelte';
 
-export interface ModemStatusInfo {
+export interface Modem {
+	status: ModemStatus;
+}
+
+export interface ModemStatus {
 	isConnected: boolean;
 	time: string;
 	tzOffset: string;
@@ -13,20 +17,22 @@ export interface ModemStatusInfo {
 }
 
 export interface GetModemData {
-	modem: ModemStatusInfo;
+	modem: Modem;
 }
 export const GET_MODEM = gql`
 	query GetModem {
 		modem {
-			isConnected
-			time
-			tzOffset
-			operator
-			signal
-			lat
-			lng
-			tzName
-			cached
+			status {
+				isConnected
+				time
+				tzOffset
+				operator
+				signal
+				lat
+				lng
+				tzName
+				cached
+			}
 		}
 	}
 `;

@@ -1,20 +1,26 @@
 import { gql } from '@urql/svelte';
 
+export interface Calendar {
+	events: CalendarEvent[];
+}
+
 export interface CalendarEvent {
 	ts: string;
 	repeats: string;
-	description: string;
+	content: string;
 }
 
 export interface GetCalendarData {
-	events: CalendarEvent[];
+	calendar: Calendar;
 }
 export const GET_CALENDAR = gql`
 	query GetCalendar {
-		events {
-			ts
-			repeats
-			description
+		calendar {
+			events {
+				ts
+				repeats
+				content
+			}
 		}
 	}
 `;

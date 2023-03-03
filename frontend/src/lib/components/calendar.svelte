@@ -13,13 +13,13 @@
 		client: getContextClient()
 	});
 
-	$: events = $store.data?.events || [];
+	$: events = $store.data?.calendar.events || [];
 </script>
 
 <div class="container">
 	{#each events as event}
 		<div>
-			<div class="text">{event.description}</div>
+			<div class="text">{event.content}</div>
 		</div>
 	{/each}
 </div>

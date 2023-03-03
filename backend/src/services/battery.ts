@@ -45,7 +45,7 @@ export enum BatteryChargingTemperature {
 export interface StatusInfo {
 	isFault: boolean;
 	isButton: boolean;
-	batteryStatus: string;
+	status: string;
 	powerIn: string;
 	powerIn5vIo: string;
 	charge: number;
@@ -87,7 +87,7 @@ export class Battery extends Service {
 				this.status = {
 					isFault: false,
 					isButton: false,
-					batteryStatus: 'CHARGING_FROM_IN',
+					status: 'CHARGING_FROM_IN',
 					powerIn: 'PRESENT',
 					powerIn5vIo: 'NONE',
 					charge: 43,
@@ -159,12 +159,12 @@ export class Battery extends Service {
 	private async getStatus(): Promise<StatusInfo> {
 		const data = await this.read(CMD_STATUS, 1);
 
-		const status = data.readUint8(0);
-		const isFault = (status & 0x01) !== 0;
-		const isButton = (status & 0x02) !== 0;
-		const batteryStatus = BatteryStatus[(status >>> 2) & 0x03] || 'UNKNOWN';
-		const powerIn = PowerIn[(status >>> 4) & 0x03] || 'UNKNOWN';
-		const powerIn5vIo = PowerIn[(status >>> 6) & 0x03] || 'UNKNOWN';
+		const rawStatus = data.readUint8(0);
+		const isFault = (rawStatus & 0x01) !== 0;
+		const isButton = (rawStatus & 0x02) !== 0;
+		const status = BatteryStatus[(rawStatus >>> 2) & 0x03] || 'UNKNOWN';
+		const powerIn = PowerIn[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
+		const powerIn5vIo = PowerIn[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
 
 		const charge = await this.getChargeLevel();
 		const voltage = await this.getBatteryVoltage();
@@ -177,7 +177,7 @@ export class Battery extends Service {
 		return {
 			isFault,
 			isButton,
-			batteryStatus,
+			status,
 			powerIn,
 			powerIn5vIo,
 			charge,

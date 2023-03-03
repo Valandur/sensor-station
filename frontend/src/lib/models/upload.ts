@@ -1,5 +1,9 @@
 import { gql } from '@urql/svelte';
 
+export interface Uploads {
+	items: UploadItem[];
+}
+
 export interface UploadItem {
 	ts: string;
 	title: string;
@@ -8,16 +12,18 @@ export interface UploadItem {
 }
 
 export type GetUploadsData = {
-	uploads: UploadItem[];
+	uploads: Uploads;
 };
 
 export const GET_UPLOADS = gql`
 	query GetUploads {
 		uploads {
-			ts
-			title
-			img
-			ratio
+			items {
+				ts
+				title
+				img
+				ratio
+			}
 		}
 	}
 `;

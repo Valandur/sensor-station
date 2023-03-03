@@ -1,5 +1,11 @@
 import { gql } from '@urql/svelte';
 
+export interface Weather {
+	hourly: WeatherForecast[];
+	daily: WeatherForecast[];
+	alerts: WeatherAlert[];
+}
+
 export interface WeatherForecast {
 	ts: string;
 	img: string;
@@ -11,38 +17,34 @@ export interface WeatherAlert {
 	event: string;
 	start: string;
 	end: string;
-	description: string;
+	content: string;
 	tags: string[];
 }
 
 export interface GetWeatherData {
-	forecasts: WeatherForecast[];
-	alerts: WeatherAlert[];
-	sensors: {
-		ts: string;
-		temp: number;
-		rh: number;
-	};
+	weather: Weather;
 }
 export const GET_WEATHER = gql`
 	query GetWeather {
-		forecasts {
-			ts
-			img
-			feelsLike
-		}
-		alerts {
-			sender
-			event
-			start
-			end
-			description
-			tags
-		}
-		sensors {
-			ts
-			temp
-			rh
+		weather {
+			hourly {
+				ts
+				img
+				feelsLike
+			}
+			daily {
+				ts
+				img
+				feelsLike
+			}
+			alerts {
+				sender
+				event
+				start
+				end
+				description
+				tags
+			}
 		}
 	}
 `;

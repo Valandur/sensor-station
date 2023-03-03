@@ -22,7 +22,7 @@ type Battery {
 type BatteryStatus {
 	isFault: Boolean!
 	isButton: Boolean!
-	batteryStatus: String!
+	status: String!
 	powerIn: String!
 	powerIn5vIo: String!
 	charge: Float!

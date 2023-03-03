@@ -1,9 +1,13 @@
 import { gql } from '@urql/svelte';
 
-export interface BatteryStatusInfo {
+export interface Battery {
+	status: BatteryStatus;
+}
+
+export interface BatteryStatus {
 	isFault: boolean;
 	isButton: boolean;
-	batteryStatus: string;
+	status: string;
 	powerIn: string;
 	powerIn5vIo: string;
 	charge: number;
@@ -12,19 +16,21 @@ export interface BatteryStatusInfo {
 }
 
 export interface GetBatteryData {
-	battery: BatteryStatusInfo;
+	battery: Battery;
 }
 export const GET_BATTERY = gql`
 	query GetBattery {
 		battery {
-			isFaul
-			isButton
-			batteryStatus
-			powerIn
-			powerIn5vIo
-			charge
-			voltage
-			current
+			status {
+				isFault
+				isButton
+				status
+				powerIn
+				powerIn5vIo
+				charge
+				voltage
+				current
+			}
 		}
 	}
 `;

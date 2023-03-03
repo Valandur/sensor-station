@@ -22,7 +22,7 @@
 
 	let selectedItem: NewsItem | null = null;
 
-	$: rawNews = $store.data?.news || [];
+	$: rawNews = $store.data?.news.items || [];
 	$: index = getIndexStore(params);
 	$: newsIdx = ($index < 0 ? rawNews.length : 0) + ($index % rawNews.length);
 	$: news = [
@@ -62,7 +62,7 @@
 <div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
 	{#if selectedItem}
 		<div class="details">
-			<iframe title="Story" src={BASE_URL + selectedItem.link} />
+			<iframe title="Story" src={BASE_URL + `/${params}/${selectedItem.id}`} />
 			<button class="close" on:click={() => select(null)}>❌</button>
 		</div>
 	{:else}

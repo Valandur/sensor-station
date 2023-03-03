@@ -1,25 +1,30 @@
 import { gql } from '@urql/svelte';
 
+export interface News {
+	items: NewsItem[];
+}
+
 export interface NewsItem {
-	date: string;
+	id: string;
+	ts: string;
 	title: string;
-	description: string;
+	content: string;
 	img: string;
-	link: string;
 }
 
 export interface GetNewsData {
-	news: NewsItem[];
+	news: News;
 }
 export const GET_NEWS = gql`
 	query GetNews($feed: String!) {
-		news(feed: $feed) {
-			ts
-			title
-			link
-			origLink
-			description
-			img
+		news {
+			items(feed: $feed) {
+				id
+				ts
+				title
+				content
+				img
+			}
 		}
 	}
 `;

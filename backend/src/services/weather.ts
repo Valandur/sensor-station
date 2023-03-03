@@ -80,7 +80,7 @@ interface Alert {
 	event: string;
 	start: string;
 	end: string;
-	description: string;
+	content: string;
 	tags: string[];
 }
 
@@ -158,7 +158,7 @@ export class Weather extends Service {
 						event: alert.event,
 						start: new Date(alert.start * 1000).toISOString(),
 						end: new Date(alert.end * 1000).toISOString(),
-						description: alert.description,
+						content: alert.description,
 						tags: alert.tags
 					});
 				}

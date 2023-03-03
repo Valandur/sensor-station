@@ -3,7 +3,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import FastifyStatic from '@fastify/static';
 import FastifyFileUpload from 'fastify-file-upload';
 import cors from '@fastify/cors';
-import mercurius, { IResolvers } from 'mercurius';
+import mercurius, { IResolverObject, IResolvers } from 'mercurius';
 import { extname, resolve } from 'path';
 import imageSize from 'image-size';
 
@@ -56,37 +56,36 @@ export class Server extends Service {
 
 		this.webApp = Fastify();
 		await this.webApp.register(cors, { origin: true, credentials: true });
-		await this.webApp.register(FastifyStatic, { root: resolve('..', 'frontend', 'build') });
 
 		const resolvers: IResolvers = {
 			Query: {
-				battery: {
+				battery: () => ({
 					status: () => this.app.battery.status
-				},
-				modem: {
+				}),
+				modem: () => ({
 					status: () => this.app.modem.status
-				},
-				network: {
+				}),
+				network: () => ({
 					interfaces: () => this.app.modem.interfaces
-				},
-				weather: {
+				}),
+				weather: () => ({
 					hourly: () => this.app.weather.hourly,
 					daily: () => this.app.weather.daily,
 					alerts: () => this.app.weather.alerts
-				},
-				sensors: {
+				}),
+				sensors: () => ({
 					newest: () => this.app.sensor.newest,
 					recordings: () => this.app.sensor.getRecordings()
-				},
-				news: {
-					items: (_, { feed }) => this.app.news.getItems(feed)
-				},
-				calendar: {
+				}),
+				news: (): IResolverObject => ({
+					items: ({ feed }) => this.app.news.getItems(feed)
+				}),
+				calendar: () => ({
 					events: () => this.app.calendar.events
-				},
-				uploads: {
+				}),
+				uploads: () => ({
 					items: () => this.items
-				},
+				}),
 				screens: () => this.screens
 			},
 			Mutation: {
@@ -105,6 +104,8 @@ export class Server extends Service {
 			}
 		};
 		await this.webApp.register(mercurius, { schema: GQL_SCHEMA, resolvers, graphiql: true });
+
+		await this.webApp.register(FastifyStatic, { root: resolve('..', 'frontend', 'build') });
 
 		this.webApp.get<{ Params: { id: string; item: string } }>('/news/:id/:item', async (req, res) => {
 			const page = await this.app.news.getArticle(req.params.id, req.params.item);

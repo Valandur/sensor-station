@@ -8,7 +8,7 @@
 
 	import { time } from '$lib/stores/time';
 	import { paused, screen, progress } from '$lib/stores/screen';
-	import { GET_DATA, type GetData } from '$lib/models/general';
+	import { GET_GENERAL_DATA, type GetGeneralData } from '$lib/models/_combined';
 
 	import News from '$lib/components/news.svelte';
 	import Calendar from '$lib/components/calendar.svelte';
@@ -25,14 +25,14 @@
 	};
 
 	$: client = getContextClient();
-	$: store = queryStore<GetData>({
-		query: GET_DATA,
+	$: store = queryStore<GetGeneralData>({
+		query: GET_GENERAL_DATA,
 		context: { additionalTypenames: ['Screen'] },
 		client
 	});
 	$: screens = $store.data?.screens || [];
-	$: battery = $store.data?.battery;
-	$: modem = $store.data?.modem;
+	$: batteryStatus = $store.data?.battery.status;
+	$: modemStatus = $store.data?.modem.status;
 	$: currScreen = screens[(($screen % screens.length) + screens.length) % screens.length];
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');
@@ -77,42 +77,42 @@
 		<div class="left" on:click={togglePause} on:keypress={togglePause}>{timeStr}</div>
 		<div class="right">
 			<div class="symbols">
-				{#if battery}
+				{#if batteryStatus}
 					<div class="battery">
-						<div class="charge" style:width={battery.charge + '%'}>
-							{#if battery.batteryStatus.includes('CHARGING')}
+						<div class="charge" style:width={batteryStatus.charge + '%'}>
+							{#if batteryStatus.status.includes('CHARGING')}
 								<i class="icofont-plugin" />
 							{/if}
-							{battery.charge}%
+							{batteryStatus.charge}%
 						</div>
 					</div>
 				{/if}
 
-				{#if modem}
-					{#if modem.operator}
+				{#if modemStatus}
+					{#if modemStatus.operator}
 						<div class="mobile">
 							<div
 								style:height="25%"
-								style:background-color={modem.signal > 0 ? 'orange' : 'gray'}
+								style:background-color={modemStatus.signal > 0 ? 'orange' : 'gray'}
 							/>
 							<div
 								style:height="50%"
-								style:background-color={modem.signal > 1 ? 'orange' : 'gray'}
+								style:background-color={modemStatus.signal > 1 ? 'orange' : 'gray'}
 							/>
 							<div
 								style:height="75%"
-								style:background-color={modem.signal > 2 ? 'orange' : 'gray'}
+								style:background-color={modemStatus.signal > 2 ? 'orange' : 'gray'}
 							/>
 							<div
 								style:height="100%"
-								style:background-color={modem.signal > 3 ? 'orange' : 'gray'}
+								style:background-color={modemStatus.signal > 3 ? 'orange' : 'gray'}
 							/>
 						</div>
 
-						<div><i class="icofont-globe" /> {modem.operator}</div>
+						<div><i class="icofont-globe" /> {modemStatus.operator}</div>
 					{/if}
 
-					{#if modem.lat && modem.lng}
+					{#if modemStatus.lat && modemStatus.lng}
 						<i class="icofont-satellite" />
 					{/if}
 				{/if}
