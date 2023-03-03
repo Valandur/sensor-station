@@ -5,10 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weather = void 0;
 const axios_1 = __importDefault(require("axios"));
-const promises_1 = require("fs/promises");
 const service_1 = require("./service");
 const KEY = process.env['WEATHER_API_KEY'];
-const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=minutely&appid=${KEY}`;
+const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely&appid=${KEY}`;
 const ICON_MAP = {
     200: 'thunderstorm',
     201: 'thunderstorm',
@@ -69,7 +68,8 @@ const ICON_MAP = {
 class Weather extends service_1.Service {
     timer = null;
     updatedAt = null;
-    forecasts = null;
+    hourly = null;
+    daily = null;
     alerts = null;
     async doInit() { }
     async doStart() {
@@ -89,23 +89,31 @@ class Weather extends service_1.Service {
             this.timer = null;
         }
         this.updatedAt = null;
-        this.forecasts = null;
+        this.hourly = null;
+        this.daily = null;
         this.alerts = null;
     }
     async doDispose() { }
     update = async () => {
-        const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863191';
-        const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6519611';
+        const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
+        const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
         const url = `${URL}&lat=${lat}&lon=${lng}`;
         try {
             const alerts = [];
-            const forecasts = [];
+            const daily = [];
+            const hourly = [];
             const { data } = await (0, axios_1.default)(url);
             const prefix = '/icons/';
             const suffix = '.png';
-            await (0, promises_1.writeFile)('./data/weather.json', JSON.stringify(data, null, 2), 'utf-8');
+            for (const forecast of data.hourly) {
+                hourly.push({
+                    ts: new Date(forecast.dt * 1000).toISOString(),
+                    img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+                    feelsLike: forecast.feels_like
+                });
+            }
             for (const forecast of data.daily) {
-                forecasts.push({
+                daily.push({
                     ts: new Date(forecast.dt * 1000).toISOString(),
                     img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
                     feelsLike: forecast.feels_like.day
@@ -118,14 +126,15 @@ class Weather extends service_1.Service {
                         event: alert.event,
                         start: new Date(alert.start * 1000).toISOString(),
                         end: new Date(alert.end * 1000).toISOString(),
-                        description: alert.description,
+                        content: alert.description,
                         tags: alert.tags
                     });
                 }
             }
-            this.forecasts = forecasts;
-            this.alerts = alerts;
             this.updatedAt = new Date();
+            this.hourly = hourly;
+            this.daily = daily;
+            this.alerts = alerts;
         }
         catch (err) {
             this.error(err);

@@ -16,27 +16,43 @@ const service_1 = require("./service");
 const server_gql_1 = require("./server-gql");
 class Server extends service_1.Service {
     uploads = process.env['SERVER_UPLOAD_ENABLED'] === '1';
+    screens = [];
     items = null;
-    screens = null;
     webApp = null;
     async doInit() {
         await this.app.storage.run('CREATE TABLE IF NOT EXISTS screens (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, params TEXT)');
         await this.app.storage.run('CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)');
         this.webApp = (0, fastify_1.default)();
         await this.webApp.register(cors_1.default, { origin: true, credentials: true });
-        await this.webApp.register(static_1.default, { root: (0, path_1.resolve)('..', 'frontend', 'build') });
         const resolvers = {
             Query: {
-                battery: () => this.app.battery.status,
-                modem: () => this.app.modem.status,
-                interfaces: () => this.app.modem.interfaces,
-                forecasts: () => this.app.weather.forecasts,
-                alerts: () => this.app.weather.alerts,
-                sensors: () => this.app.sensor.newest,
-                news: (_, { feed }) => this.app.news.getItems(feed),
-                recordings: () => this.app.sensor.getRecordings(),
-                uploads: () => this.items,
-                events: () => this.app.calendar.events,
+                battery: () => ({
+                    status: () => this.app.battery.status
+                }),
+                modem: () => ({
+                    status: () => this.app.modem.status
+                }),
+                network: () => ({
+                    interfaces: () => this.app.modem.interfaces
+                }),
+                weather: () => ({
+                    hourly: () => this.app.weather.hourly,
+                    daily: () => this.app.weather.daily,
+                    alerts: () => this.app.weather.alerts
+                }),
+                sensors: () => ({
+                    newest: () => this.app.sensor.newest,
+                    recordings: () => this.app.sensor.getRecordings()
+                }),
+                news: () => ({
+                    items: ({ feed }) => this.app.news.getItems(feed)
+                }),
+                calendar: () => ({
+                    events: () => this.app.calendar.events
+                }),
+                uploads: () => ({
+                    items: () => this.items
+                }),
                 screens: () => this.screens
             },
             Mutation: {
@@ -49,6 +65,7 @@ class Server extends service_1.Service {
             }
         };
         await this.webApp.register(mercurius_1.default, { schema: server_gql_1.GQL_SCHEMA, resolvers, graphiql: true });
+        await this.webApp.register(static_1.default, { root: (0, path_1.resolve)('..', 'frontend', 'build') });
         this.webApp.get('/news/:id/:item', async (req, res) => {
             const page = await this.app.news.getArticle(req.params.id, req.params.item);
             res.type('text/html');
@@ -136,8 +153,8 @@ class Server extends service_1.Service {
         if (this.webApp) {
             await this.webApp.close();
         }
+        this.screens = [];
         this.items = null;
-        this.screens = null;
     }
     async doDispose() {
         if (this.webApp) {
