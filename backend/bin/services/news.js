@@ -10,53 +10,68 @@ const rss_parser_1 = __importDefault(require("rss-parser"));
 const service_1 = require("./service");
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 class News extends service_1.Service {
-    constructor() {
-        super(...arguments);
-        this.enabled = process.env.NEWS_ENABLED === '1';
-        this.feedMap = new Map();
-        this.update = async () => {
-            for (const feed of this.feedMap.values()) {
-                await this.updateFeed(feed);
-            }
-        };
-    }
-    async init() {
-        if (!this.enabled) {
-            this.log('NEWS DISABLED');
-            return;
-        }
+    parser = null;
+    feedMap = new Map();
+    timer = null;
+    async doInit() {
         this.parser = new rss_parser_1.default({
             customFields: {
                 item: ['description']
             }
         });
+    }
+    async doStart() {
         await this.update();
-        if (process.env.NEWS_UPDATE_INTERVAL) {
-            const interval = 1000 * Number(process.env.NEWS_UPDATE_INTERVAL);
+        if (process.env['NEWS_UPDATE_INTERVAL']) {
+            const interval = 1000 * Number(process.env['NEWS_UPDATE_INTERVAL']);
             this.timer = setInterval(this.update, interval);
-            this.log('NEWS UPDATE STARTED', interval);
+            this.log('UPDATE STARTED', interval);
         }
         else {
-            this.log('NEWS UPDATE DISABLED');
+            this.log('UPDATE DISABLED');
         }
     }
-    dispose() {
-        clearInterval(this.timer);
+    async doStop() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        this.feedMap.clear();
     }
+    async doDispose() {
+        if (this.parser) {
+            this.parser = null;
+        }
+    }
+    update = async () => {
+        for (const feed of this.feedMap.values()) {
+            await this.updateFeed(feed);
+        }
+    };
     async updateFeed(newsFeed) {
+        if (!this.parser) {
+            throw new Error(`Parser is not available`);
+        }
         const feed = await this.parser.parseURL(newsFeed.feedUrl);
         const items = [];
         const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
-        for (let i = 0; i < feedItems.length; i++) {
-            const item = feedItems[i];
-            const [, img, description] = MATCHER.exec(item.description);
-            const date = (0, date_fns_1.parse)(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date());
+        for (const item of feedItems) {
+            if (!item.guid || !item.title || !item.link) {
+                continue;
+            }
+            const match = MATCHER.exec(item.description);
+            if (!match) {
+                continue;
+            }
+            const [, img, content] = match;
+            const date = item.pubDate ? (0, date_fns_1.parse)(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date()) : new Date();
+            const id = Buffer.from(item.guid, 'utf-8').toString('base64');
             items.push({
+                id,
                 ts: date.toISOString(),
                 title: item.title,
-                link: `/news/${newsFeed.name}/${i}`,
-                origLink: item.link,
-                description: description,
+                link: item.link,
+                content: content || '',
                 img: `https://www.srf.ch/static/cms/images/${img}`
             });
         }
@@ -65,7 +80,7 @@ class News extends service_1.Service {
     async getItems(feedId) {
         let newsFeed = this.feedMap.get(feedId);
         if (!newsFeed) {
-            this.log(`NEWS SETTING UP ${feedId}`);
+            this.log(`SETTING UP ${feedId}`);
             newsFeed = { name: feedId, feedUrl: `https://www.srf.ch/news/bnf/rss/${feedId}`, items: [] };
             this.feedMap.set(feedId, newsFeed);
             await this.updateFeed(newsFeed);
@@ -73,7 +88,11 @@ class News extends service_1.Service {
         return newsFeed.items;
     }
     async getArticle(feedId, itemId) {
-        const { data } = await (0, axios_1.default)(this.feedMap.get(feedId).items[itemId].origLink);
+        const link = this.feedMap.get(feedId)?.items.find((i) => i.id === itemId)?.link;
+        if (!link) {
+            throw new Error(`Article not found ${feedId} - ${itemId}`);
+        }
+        const { data } = await (0, axios_1.default)(link);
         let page = data;
         const headerStart = page.indexOf('<header');
         const mainStart = page.indexOf('<!-- Begin of main wrapper');

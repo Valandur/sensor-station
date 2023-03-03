@@ -1,3 +1,6 @@
+import chalk from 'chalk';
+
+import type { Service } from './services/service';
 import { Battery } from './services/battery';
 import { Modem } from './services/modem';
 import { News } from './services/news';
@@ -5,8 +8,8 @@ import { Sensor } from './services/sensor';
 import { Server } from './services/server';
 import { Weather } from './services/weather';
 import { Storage } from './services/storage';
-import { Service } from './services/service';
 import { Calendar } from './services/calendar';
+import { format } from 'date-fns';
 
 export class Application {
 	public readonly storage: Storage;
@@ -43,23 +46,62 @@ export class Application {
 	}
 
 	public async init() {
+		this.log('MAIN', 'INIT');
+
 		for (const srv of this.services) {
 			await srv.init();
 		}
+
+		this.log('MAIN', 'INITIALIZED');
 	}
 
-	public async run() {
+	public async start() {
+		this.log('MAIN', 'START');
+
 		for (const srv of this.services) {
 			await srv.start();
 		}
+
+		this.log('MAIN', 'STARTED');
+	}
+
+	public async stop() {
+		this.log('MAIN', 'STOP');
+
+		for (const srv of this.services) {
+			await srv.stop();
+		}
+
+		this.log('MAIN', 'STOPPED');
+	}
+
+	public async dispose() {
+		this.log('MAIN', 'DISPOSE');
+
+		for (const srv of this.services) {
+			await srv.dispose();
+		}
+
+		this.log('MAIN', 'DISPOSED');
+	}
+
+	private getDate() {
+		return chalk.grey(format(new Date(), 'HH:mm:ss'));
 	}
 
 	public log(service: string, message: any, ...params: any[]) {
-		const date = new Date().toISOString();
-		console.log(`${date} [LOG] [${service}] ${message}`, ...params);
+		console.log(`${this.getDate()} [${chalk.blue('INFO')}] [${chalk.magenta(service)}] ${message}`, ...params);
+	}
+	public warn(service: string, message: any, ...params: any[]) {
+		console.log(
+			`${this.getDate()} [${chalk.yellow('WARN')}] [${chalk.magenta(service)}] ${chalk.yellow(message)}`,
+			...params
+		);
 	}
 	public error(service: string, message: any, ...params: any[]) {
-		const date = new Date().toISOString();
-		console.error(`${date} [ERROR] [${service}] ${message}`, ...params);
+		console.error(
+			`${this.getDate()} [${chalk.red('ERROR')}] [${chalk.magenta(service)}] ${chalk.red(message)}`,
+			...params
+		);
 	}
 }

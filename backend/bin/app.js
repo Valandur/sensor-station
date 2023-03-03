@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Application = void 0;
+const chalk_1 = __importDefault(require("chalk"));
 const battery_1 = require("./services/battery");
 const modem_1 = require("./services/modem");
 const news_1 = require("./services/news");
@@ -9,9 +13,18 @@ const server_1 = require("./services/server");
 const weather_1 = require("./services/weather");
 const storage_1 = require("./services/storage");
 const calendar_1 = require("./services/calendar");
+const date_fns_1 = require("date-fns");
 class Application {
+    storage;
+    battery;
+    modem;
+    news;
+    sensor;
+    server;
+    weather;
+    calendar;
+    services = [];
     constructor() {
-        this.services = [];
         this.storage = new storage_1.Storage(this);
         this.battery = new battery_1.Battery(this);
         this.modem = new modem_1.Modem(this);
@@ -32,22 +45,44 @@ class Application {
         ];
     }
     async init() {
+        this.log('MAIN', 'INIT');
         for (const srv of this.services) {
             await srv.init();
         }
+        this.log('MAIN', 'INITIALIZED');
     }
-    async run() {
+    async start() {
+        this.log('MAIN', 'START');
         for (const srv of this.services) {
             await srv.start();
         }
+        this.log('MAIN', 'STARTED');
+    }
+    async stop() {
+        this.log('MAIN', 'STOP');
+        for (const srv of this.services) {
+            await srv.stop();
+        }
+        this.log('MAIN', 'STOPPED');
+    }
+    async dispose() {
+        this.log('MAIN', 'DISPOSE');
+        for (const srv of this.services) {
+            await srv.dispose();
+        }
+        this.log('MAIN', 'DISPOSED');
+    }
+    getDate() {
+        return chalk_1.default.grey((0, date_fns_1.format)(new Date(), 'HH:mm:ss'));
     }
     log(service, message, ...params) {
-        const date = new Date().toISOString();
-        console.log(`${date} [LOG] [${service}] ${message}`, ...params);
+        console.log(`${this.getDate()} [${chalk_1.default.blue('INFO')}] [${chalk_1.default.magenta(service)}] ${message}`, ...params);
+    }
+    warn(service, message, ...params) {
+        console.log(`${this.getDate()} [${chalk_1.default.yellow('WARN')}] [${chalk_1.default.magenta(service)}] ${chalk_1.default.yellow(message)}`, ...params);
     }
     error(service, message, ...params) {
-        const date = new Date().toISOString();
-        console.error(`${date} [ERROR] [${service}] ${message}`, ...params);
+        console.error(`${this.getDate()} [${chalk_1.default.red('ERROR')}] [${chalk_1.default.magenta(service)}] ${chalk_1.default.red(message)}`, ...params);
     }
 }
 exports.Application = Application;

@@ -13,6 +13,7 @@
 		"@fastify/static": "6.9.0",
 		"@westh/serial-commander": "1.2.2",
 		"axios": "1.3.4",
+		"chalk": "4.1.2",
 		"date-fns": "2.29.3",
 		"dotenv": "16.0.3",
 		"fastify": "4.13.0",
@@ -27,7 +28,7 @@
 	"devDependencies": {
 		"@types/cors": "2.8.13",
 		"@types/i2c-bus": "5.1.0",
-		"@types/node": "18.14.4",
+		"@types/node": "18.14.5",
 		"@types/node-dht-sensor": "0.4.0",
 		"@typescript-eslint/eslint-plugin": "5.54.0",
 		"@typescript-eslint/parser": "5.54.0",

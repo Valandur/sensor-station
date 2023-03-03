@@ -1,4 +1,7 @@
+import { stat } from 'fs/promises';
 import { Service } from './service';
+
+const DEVICE_PATH = `/dev/gpiomem`;
 
 export interface Recording {
 	ts: string;
@@ -6,22 +9,28 @@ export interface Recording {
 	rh: number;
 }
 
+interface DhtSensor {
+	read(type: number, pin: number): Promise<{ temperature: number; humidity: number }>;
+}
+
 export class Sensor extends Service {
-	public readonly enabled = process.env.SENSOR_ENABLED === '1';
-	private readonly dhtType = process.env.SENSOR_DHT_TYPE ? Number(process.env.SENSOR_DHT_TYPE) : 11;
-	private readonly dhtPin = 17;
+	private readonly dhtType = process.env['SENSOR_DHT_TYPE'] ? Number(process.env['SENSOR_DHT_TYPE']) : 11;
+	private readonly dhtPin = process.env['SENSOR_DHT_PIN'] ? Number(process.env['SENSOR_DHT_PIN']) : 17;
 
-	private dht: any;
+	private dht: DhtSensor | null = null;
+	private lastRecordedTs: string | null = null;
 
-	private updateTimer: NodeJS.Timer;
-	private recordTimer: NodeJS.Timer;
+	private updateTimer: NodeJS.Timer | null = null;
+	private recordTimer: NodeJS.Timer | null = null;
 
-	public newest: Recording;
-	private lastRecordedTs: string;
+	public newest: Recording | null = null;
 
-	public override async init(): Promise<void> {
-		if (!this.enabled) {
-			this.log('SENSOR DISABLED');
+	protected override async doInit(): Promise<void> {
+		await this.app.storage.run(
+			'CREATE TABLE IF NOT EXISTS recordings (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, temp DOUBLE, rh DOUBLE)'
+		);
+
+		if (!(await this.checkDevice())) {
 			return;
 		}
 
@@ -31,36 +40,74 @@ export class Sensor extends Service {
 		} catch (err) {
 			this.error(err);
 		}
+	}
 
-		await this.app.storage.run(
-			'CREATE TABLE IF NOT EXISTS recordings (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, temp DOUBLE, rh DOUBLE)'
-		);
+	protected override async doStart(): Promise<void> {
+		// If we didn't initilialize it's not available, so exit early
+		if (!this.dht) {
+			if (process.env['DEBUG'] === '1') {
+				this.newest = {
+					ts: new Date().toISOString(),
+					temp: 42.0,
+					rh: 69.0
+				};
+			}
+			return;
+		}
 
 		await this.update();
 
-		if (process.env.SENSOR_UPDATE_INTERVAL) {
-			const interval = 1000 * Number(process.env.SENSOR_UPDATE_INTERVAL);
+		if (process.env['SENSOR_UPDATE_INTERVAL']) {
+			const interval = 1000 * Number(process.env['SENSOR_UPDATE_INTERVAL']);
 			this.updateTimer = setInterval(this.update, interval);
-			this.log('SENSOR UPDATE STARTED', interval);
+			this.log('UPDATE STARTED', interval);
 		} else {
-			this.log('SENSOR UPDATE DISABLED');
+			this.log('UPDATE DISABLED');
 		}
 
-		if (process.env.SENSOR_RECORDING_INTERVAL) {
-			const interval = 1000 * Number(process.env.SENSOR_RECORDING_INTERVAL);
+		if (process.env['SENSOR_RECORDING_INTERVAL']) {
+			const interval = 1000 * Number(process.env['SENSOR_RECORDING_INTERVAL']);
 			this.recordTimer = setInterval(this.record, interval);
-			this.log('SENSOR RECORDING STARTED', interval);
+			this.log('RECORDING STARTED', interval);
 		} else {
-			this.log('SENSOR RECORDING DISABLED');
+			this.log('RECORDING DISABLED');
 		}
 	}
 
-	public dispose(): void {
-		clearInterval(this.updateTimer);
-		clearInterval(this.recordTimer);
+	protected override async doStop(): Promise<void> {
+		if (this.updateTimer) {
+			clearInterval(this.updateTimer);
+			this.updateTimer = null;
+		}
+		if (this.recordTimer) {
+			clearInterval(this.recordTimer);
+			this.recordTimer = null;
+		}
+
+		this.newest = null;
 	}
 
-	public update = async () => {
+	protected override async doDispose(): Promise<void> {
+		if (this.dht) {
+			this.dht = null;
+		}
+	}
+
+	private async checkDevice() {
+		try {
+			await stat(DEVICE_PATH);
+			return true;
+		} catch {
+			this.warn(`GPIO not available @ ${DEVICE_PATH}`);
+			return false;
+		}
+	}
+
+	private update = async () => {
+		if (!this.dht) {
+			throw new Error(`DHT is not available`);
+		}
+
 		try {
 			const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
 

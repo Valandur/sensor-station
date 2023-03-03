@@ -18,38 +18,25 @@ const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+),([\d\.]+),/i;
 const STATE_PATH = `data/modem/state.json`;
 class Modem extends service_1.Service {
-    constructor() {
-        super(...arguments);
-        this.enabled = process.env.MODEM_ENABLED === '1';
-        this.update = async () => {
-            try {
-                this.interfaces = await this.getInterfaces();
-            }
-            catch (err) {
-                this.error(err);
-            }
-            try {
-                this.status = await this.getStatus();
-                this.updatedAt = new Date();
-                await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
-            }
-            catch (err) {
-                this.error(err);
-                const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => null);
-                if (status) {
-                    this.status = { ...JSON.parse(status), cached: true };
-                }
-            }
-        };
-    }
-    async init() {
-        if (!this.enabled) {
-            this.log('MODEM DISABLED');
+    commander = null;
+    timer = null;
+    updatedAt = null;
+    status = null;
+    interfaces = null;
+    async doInit() {
+        if (!(await this.checkDevice())) {
             return;
         }
-        if (!(await (0, promises_1.stat)(MODEM_SERIAL).catch(() => false))) {
-            this.error(`Modem not available @ ${MODEM_SERIAL}`);
-            if (process.env.DEBUG === '1') {
+        this.commander = new serial_commander_1.default({
+            port: MODEM_SERIAL,
+            defaultDelay: 10,
+            disableLog: true
+        });
+    }
+    async doStart() {
+        // If we didn't initilialize it's not available, so exit early
+        if (!this.commander) {
+            if (process.env['DEBUG'] === '1') {
                 this.status = {
                     isConnected: false,
                     time: new Date().toISOString(),
@@ -58,36 +45,75 @@ class Modem extends service_1.Service {
                     signal: 3,
                     lat: BASE_LAT,
                     lng: BASE_LNG,
-                    tzName: (0, geo_tz_1.find)(BASE_LAT, BASE_LNG)[0],
+                    tzName: (0, geo_tz_1.find)(BASE_LAT, BASE_LNG)[0] || 'Unknown',
                     cached: true
                 };
             }
             return;
         }
-        this.commander = new serial_commander_1.default({
-            port: MODEM_SERIAL,
-            defaultDelay: 10,
-            disableLog: true
-        });
         await this.update();
-        if (process.env.MODEM_UPDATE_INTERVAL) {
-            const interval = 1000 * Number(process.env.MODEM_UPDATE_INTERVAL);
+        if (process.env['MODEM_UPDATE_INTERVAL']) {
+            const interval = 1000 * Number(process.env['MODEM_UPDATE_INTERVAL']);
             this.timer = setInterval(this.update, interval);
-            this.log('MODEM UPDATE STARTED', interval);
+            this.log('UPDATE STARTED', interval);
         }
         else {
-            this.log('MODEM UPDATE DISABLED');
+            this.log('UPDATE DISABLED');
         }
     }
-    async dispose() {
-        await this.commander.close();
-        clearInterval(this.timer);
+    async doStop() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        this.updatedAt = null;
+        this.status = null;
+        this.interfaces = null;
     }
+    async doDispose() {
+        if (this.commander) {
+            await this.commander.close();
+            this.commander = null;
+        }
+    }
+    async checkDevice() {
+        try {
+            await (0, promises_1.stat)(MODEM_SERIAL);
+            return true;
+        }
+        catch {
+            this.warn(`Modem not available @ ${MODEM_SERIAL}`);
+            return false;
+        }
+    }
+    update = async () => {
+        try {
+            this.interfaces = await this.getInterfaces();
+        }
+        catch (err) {
+            this.error(err);
+        }
+        try {
+            this.status = await this.getStatus();
+            this.updatedAt = new Date();
+            await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
+        }
+        catch (err) {
+            this.error(err);
+            const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => null);
+            if (status) {
+                this.status = { ...JSON.parse(status), cached: true };
+            }
+        }
+    };
     async getInterfaces() {
-        const nets = (0, os_1.networkInterfaces)();
+        const networkInterfacesMap = (0, os_1.networkInterfaces)();
         const interfaces = new Map();
-        for (const name of Object.keys(nets)) {
-            for (const net of nets[name]) {
+        for (const [name, nets] of Object.entries(networkInterfacesMap)) {
+            if (!nets) {
+                continue;
+            }
+            for (const net of nets) {
                 if (net.internal) {
                     continue;
                 }
@@ -105,21 +131,21 @@ class Modem extends service_1.Service {
         if (!this.commander) {
             throw new Error(`Modem is not available`);
         }
-        let operator;
+        let operator = null;
         const { response: copsResp } = await this.commander.send('AT+COPS?');
         const copsMatch = COPS.exec(copsResp);
         if (copsMatch) {
-            operator = copsMatch[3];
+            operator = copsMatch[3] || null;
         }
-        let signal;
+        let signal = null;
         const { response: csqResp } = await this.commander.send('AT+CSQ');
         const csqMatch = CSQ.exec(csqResp);
         if (csqMatch) {
             const rawSig = Number(csqMatch[1]);
             signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
         }
-        let time;
-        let tzOffset;
+        let time = null;
+        let tzOffset = null;
         const { response: cclkResp } = await this.commander.send('AT+CCLK?');
         const cclkMatch = CCLK.exec(cclkResp);
         if (cclkMatch) {
@@ -136,15 +162,15 @@ class Modem extends service_1.Service {
             tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
             time = `${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`;
         }
-        let lat;
-        let lng;
-        let tzName;
+        let lat = null;
+        let lng = null;
+        let tzName = null;
         const { response: gpsResp } = await this.commander.send('AT+CGPSINFO');
         const gpsMatch = GPS.exec(gpsResp);
         if (gpsMatch) {
             lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
             lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
-            tzName = (0, geo_tz_1.find)(lat, lng)[0];
+            tzName = (0, geo_tz_1.find)(lat, lng)[0] || null;
         }
         return { isConnected: true, operator, signal, time, tzOffset, lat, lng, tzName, cached: false };
     }

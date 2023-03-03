@@ -70,11 +70,10 @@ type WeatherAlert {
 }
 
 type NewsItem {
+	id: String!
 	ts: String!
 	title: String!
-	link: String!
-	origLink: String!
-	description: String!
+	content: String!
 	img: String!
 }
 

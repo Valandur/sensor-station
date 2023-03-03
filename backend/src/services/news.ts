@@ -13,47 +13,53 @@ export interface NewsFeed {
 }
 
 export interface FeedItem {
+	id: string;
 	ts: string;
 	title: string;
 	link: string;
-	origLink: string;
-	description: string;
+	content: string;
 	img: string;
 }
 
 export class News extends Service {
-	public readonly enabled = process.env.NEWS_ENABLED === '1';
-
-	private parser: Parser<{}, { description: string }>;
+	private parser: Parser<{}, { description: string }> | null = null;
 	private feedMap: Map<string, NewsFeed> = new Map();
 
-	private timer: NodeJS.Timer;
+	private timer: NodeJS.Timer | null = null;
 
-	public async init(): Promise<void> {
-		if (!this.enabled) {
-			this.log('NEWS DISABLED');
-			return;
-		}
-
+	public async doInit(): Promise<void> {
 		this.parser = new Parser({
 			customFields: {
 				item: ['description']
 			}
 		});
+	}
 
+	protected async doStart(): Promise<void> {
 		await this.update();
 
-		if (process.env.NEWS_UPDATE_INTERVAL) {
-			const interval = 1000 * Number(process.env.NEWS_UPDATE_INTERVAL);
+		if (process.env['NEWS_UPDATE_INTERVAL']) {
+			const interval = 1000 * Number(process.env['NEWS_UPDATE_INTERVAL']);
 			this.timer = setInterval(this.update, interval);
-			this.log('NEWS UPDATE STARTED', interval);
+			this.log('UPDATE STARTED', interval);
 		} else {
-			this.log('NEWS UPDATE DISABLED');
+			this.log('UPDATE DISABLED');
 		}
 	}
 
-	public dispose(): void {
-		clearInterval(this.timer);
+	protected async doStop(): Promise<void> {
+		if (this.timer) {
+			clearInterval(this.timer);
+			this.timer = null;
+		}
+
+		this.feedMap.clear();
+	}
+
+	protected async doDispose(): Promise<void> {
+		if (this.parser) {
+			this.parser = null;
+		}
 	}
 
 	private update = async () => {
@@ -63,22 +69,34 @@ export class News extends Service {
 	};
 
 	private async updateFeed(newsFeed: NewsFeed) {
+		if (!this.parser) {
+			throw new Error(`Parser is not available`);
+		}
+
 		const feed = await this.parser.parseURL(newsFeed.feedUrl);
 
 		const items: FeedItem[] = [];
 		const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
-		for (let i = 0; i < feedItems.length; i++) {
-			const item = feedItems[i];
-			const [, img, description] = MATCHER.exec(item.description);
+		for (const item of feedItems) {
+			if (!item.guid || !item.title || !item.link) {
+				continue;
+			}
 
-			const date = parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date());
+			const match = MATCHER.exec(item.description);
+			if (!match) {
+				continue;
+			}
 
+			const [, img, content] = match;
+			const date = item.pubDate ? parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date()) : new Date();
+
+			const id = Buffer.from(item.guid, 'utf-8').toString('base64');
 			items.push({
+				id,
 				ts: date.toISOString(),
 				title: item.title,
-				link: `/news/${newsFeed.name}/${i}`,
-				origLink: item.link,
-				description: description,
+				link: item.link,
+				content: content || '',
 				img: `https://www.srf.ch/static/cms/images/${img}`
 			});
 		}
@@ -89,7 +107,7 @@ export class News extends Service {
 	public async getItems(feedId: string) {
 		let newsFeed = this.feedMap.get(feedId);
 		if (!newsFeed) {
-			this.log(`NEWS SETTING UP ${feedId}`);
+			this.log(`SETTING UP ${feedId}`);
 
 			newsFeed = { name: feedId, feedUrl: `https://www.srf.ch/news/bnf/rss/${feedId}`, items: [] };
 			this.feedMap.set(feedId, newsFeed);
@@ -99,8 +117,13 @@ export class News extends Service {
 		return newsFeed.items;
 	}
 
-	public async getArticle(feedId: string, itemId: number) {
-		const { data } = await axios(this.feedMap.get(feedId).items[itemId].origLink);
+	public async getArticle(feedId: string, itemId: string) {
+		const link = this.feedMap.get(feedId)?.items.find((i) => i.id === itemId)?.link;
+		if (!link) {
+			throw new Error(`Article not found ${feedId} - ${itemId}`);
+		}
+
+		const { data } = await axios(link);
 		let page = data as string;
 
 		const headerStart = page.indexOf('<header');

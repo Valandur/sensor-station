@@ -1,11 +1,10 @@
 import axios from 'axios';
+import { writeFile } from 'fs/promises';
 
 import { Service } from './service';
 
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/onecall?';
-const URL_OPTIONS = '&mode=json&lang=en&units=metric&exclude=minutely,hourly';
-const URL_APIKEY = '&APPID=7f866f60fad7f88bf9e647a865892400';
-const URL = `${BASE_URL}${URL_OPTIONS}${URL_APIKEY}`;
+const KEY = process.env['WEATHER_API_KEY'];
+const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=minutely&appid=${KEY}`;
 
 const ICON_MAP: { [key: number]: string } = {
 	200: 'thunderstorm',
@@ -87,38 +86,42 @@ interface Alert {
 }
 
 export class Weather extends Service {
-	public readonly enabled = process.env.WEATHER_ENABLED === '1';
+	private timer: NodeJS.Timer | null = null;
 
-	private timer: NodeJS.Timer;
+	public updatedAt: Date | null = null;
+	public forecasts: Forecast[] | null = null;
+	public alerts: Alert[] | null = null;
 
-	public updatedAt: Date;
-	public forecasts: Forecast[] = [];
-	public alerts: Alert[] = [];
+	protected override async doInit(): Promise<void> {}
 
-	public override async init(): Promise<void> {
-		if (!this.enabled) {
-			this.log('WEATHER DISABLED');
-			return;
-		}
-
+	protected override async doStart(): Promise<void> {
 		await this.update();
 
-		if (process.env.WEATHER_UPDATE_INTERVAL) {
-			const interval = 1000 * Number(process.env.WEATHER_UPDATE_INTERVAL);
+		if (process.env['WEATHER_UPDATE_INTERVAL']) {
+			const interval = 1000 * Number(process.env['WEATHER_UPDATE_INTERVAL']);
 			this.timer = setInterval(this.update, interval);
-			this.log('WEATHER UPDATE STARTED', interval);
+			this.log('UPDATE STARTED', interval);
 		} else {
-			this.log('WEATHER UPDATE DISABLED');
+			this.log('UPDATE DISABLED');
 		}
 	}
 
-	public dispose(): void {
-		clearInterval(this.timer);
+	protected override async doStop(): Promise<void> {
+		if (this.timer) {
+			clearInterval(this.timer);
+			this.timer = null;
+		}
+
+		this.updatedAt = null;
+		this.forecasts = null;
+		this.alerts = null;
 	}
 
-	public update = async () => {
-		const lat = this.app.modem?.status?.lat || process.env.WEATHER_LAT || '47.3863191';
-		const lng = this.app.modem?.status?.lng || process.env.WEATHER_LNG || '8.6519611';
+	protected override async doDispose(): Promise<void> {}
+
+	private update = async () => {
+		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863191';
+		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6519611';
 		const url = `${URL}&lat=${lat}&lon=${lng}`;
 
 		try {
@@ -129,6 +132,8 @@ export class Weather extends Service {
 
 			const prefix = '/icons/';
 			const suffix = '.png';
+
+			await writeFile('./data/weather.json', JSON.stringify(data, null, 2), 'utf-8');
 
 			for (const forecast of data.daily) {
 				forecasts.push({
