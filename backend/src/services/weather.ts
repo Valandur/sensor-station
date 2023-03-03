@@ -1,10 +1,9 @@
 import axios from 'axios';
-import { writeFile } from 'fs/promises';
 
 import { Service } from './service';
 
 const KEY = process.env['WEATHER_API_KEY'];
-const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=minutely&appid=${KEY}`;
+const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely&appid=${KEY}`;
 
 const ICON_MAP: { [key: number]: string } = {
 	200: 'thunderstorm',
@@ -89,7 +88,8 @@ export class Weather extends Service {
 	private timer: NodeJS.Timer | null = null;
 
 	public updatedAt: Date | null = null;
-	public forecasts: Forecast[] | null = null;
+	public hourly: Forecast[] | null = null;
+	public daily: Forecast[] | null = null;
 	public alerts: Alert[] | null = null;
 
 	protected override async doInit(): Promise<void> {}
@@ -113,7 +113,8 @@ export class Weather extends Service {
 		}
 
 		this.updatedAt = null;
-		this.forecasts = null;
+		this.hourly = null;
+		this.daily = null;
 		this.alerts = null;
 	}
 
@@ -126,17 +127,24 @@ export class Weather extends Service {
 
 		try {
 			const alerts: Alert[] = [];
-			const forecasts: Forecast[] = [];
+			const daily: Forecast[] = [];
+			const hourly: Forecast[] = [];
 
 			const { data } = await axios(url);
 
 			const prefix = '/icons/';
 			const suffix = '.png';
 
-			await writeFile('./data/weather.json', JSON.stringify(data, null, 2), 'utf-8');
+			for (const forecast of data.hourly) {
+				hourly.push({
+					ts: new Date(forecast.dt * 1000).toISOString(),
+					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+					feelsLike: forecast.feels_like
+				});
+			}
 
 			for (const forecast of data.daily) {
-				forecasts.push({
+				daily.push({
 					ts: new Date(forecast.dt * 1000).toISOString(),
 					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
 					feelsLike: forecast.feels_like.day
@@ -156,9 +164,10 @@ export class Weather extends Service {
 				}
 			}
 
-			this.forecasts = forecasts;
-			this.alerts = alerts;
 			this.updatedAt = new Date();
+			this.hourly = hourly;
+			this.daily = daily;
+			this.alerts = alerts;
 		} catch (err) {
 			this.error(err);
 		}

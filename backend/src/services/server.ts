@@ -41,8 +41,8 @@ declare module 'http' {
 export class Server extends Service {
 	public readonly uploads = process.env['SERVER_UPLOAD_ENABLED'] === '1';
 
+	private screens: Screen[] = [];
 	private items: UploadItem[] | null = null;
-	private screens: Screen[] | null = null;
 
 	private webApp: FastifyInstance | null = null;
 
@@ -60,16 +60,33 @@ export class Server extends Service {
 
 		const resolvers: IResolvers = {
 			Query: {
-				battery: () => this.app.battery.status,
-				modem: () => this.app.modem.status,
-				interfaces: () => this.app.modem.interfaces,
-				forecasts: () => this.app.weather.forecasts,
-				alerts: () => this.app.weather.alerts,
-				sensors: () => this.app.sensor.newest,
-				news: (_, { feed }) => this.app.news.getItems(feed),
-				recordings: () => this.app.sensor.getRecordings(),
-				uploads: () => this.items,
-				events: () => this.app.calendar.events,
+				battery: {
+					status: () => this.app.battery.status
+				},
+				modem: {
+					status: () => this.app.modem.status
+				},
+				network: {
+					interfaces: () => this.app.modem.interfaces
+				},
+				weather: {
+					hourly: () => this.app.weather.hourly,
+					daily: () => this.app.weather.daily,
+					alerts: () => this.app.weather.alerts
+				},
+				sensors: {
+					newest: () => this.app.sensor.newest,
+					recordings: () => this.app.sensor.getRecordings()
+				},
+				news: {
+					items: (_, { feed }) => this.app.news.getItems(feed)
+				},
+				calendar: {
+					events: () => this.app.calendar.events
+				},
+				uploads: {
+					items: () => this.items
+				},
 				screens: () => this.screens
 			},
 			Mutation: {
@@ -202,8 +219,8 @@ export class Server extends Service {
 			await this.webApp.close();
 		}
 
+		this.screens = [];
 		this.items = null;
-		this.screens = null;
 	}
 
 	protected override async doDispose(): Promise<void> {

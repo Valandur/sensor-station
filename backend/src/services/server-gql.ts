@@ -1,15 +1,13 @@
 export const GQL_SCHEMA = `
 type Query {
-	battery: BatteryStatusInfo
-	modem: ModemStatusInfo
-	interfaces: [NetworkInterface!]
-	sensors: SensorsStatusInfo
-	forecasts: [WeatherForecast!]
-	alerts: [WeatherAlert!]
-	news(feed: String!): [NewsItem!]
-	recordings: [Recording!]
-	uploads: [Upload!]
-	events: [CalendarEvent!]
+	battery: Battery!
+	modem: Modem!
+	network: Network!
+	weather: Weather!
+	sensors: Sensors!
+	news: News!
+	calendar: Calendar!
+	uploads: Uploads!
 	screens: [Screen!]!
 }
 
@@ -17,7 +15,11 @@ type Mutation {
 	saveScreens(screens: [ScreenInput!]!): [Screen!]!
 }
 
-type BatteryStatusInfo {
+type Battery {
+	status: BatteryStatus
+}
+
+type BatteryStatus {
 	isFault: Boolean!
 	isButton: Boolean!
 	batteryStatus: String!
@@ -28,7 +30,11 @@ type BatteryStatusInfo {
 	current: Float!
 }
 
-type ModemStatusInfo {
+type Modem {
+	status: ModemStatus
+}
+
+type ModemStatus {
 	isConnected: Boolean!
 	time: String!
 	tzOffset: String!
@@ -40,15 +46,19 @@ type ModemStatusInfo {
 	cached: Boolean!
 }
 
+type Network {
+	interfaces: [NetworkInterface!]
+}
+
 type NetworkInterface {
 	name: String!
 	ips: [String!]!
 }
 
-type SensorsStatusInfo {
-	ts: String!
-	temp: Float!
-	rh: Float!
+type Weather {
+	hourly: [WeatherForecast!]
+	daily: [WeatherForecast!]
+	alerts: [WeatherAlert!]
 }
 
 type WeatherForecast {
@@ -66,6 +76,21 @@ type WeatherAlert {
 	tags: [String!]!
 }
 
+type Sensors {
+	newest: SensorRecording
+	recordings: [SensorRecording!]
+}
+
+type SensorRecording {
+	ts: String!
+	temp: Float!
+	rh: Float!
+}
+
+type News {
+	items(feed: String!): [NewsItem!]
+}
+
 type NewsItem {
 	id: String!
 	ts: String!
@@ -74,23 +99,25 @@ type NewsItem {
 	img: String!
 }
 
-type Recording {
-	ts: String!
-	temp: Float!
-	rh: Float!
-}
-
-type Upload {
-	ts: String!
-	title: String!
-	img: String!
-	ratio: Float!
+type Calendar {
+	events: [CalendarEvent!]
 }
 
 type CalendarEvent {
 	ts: String!
 	repeats: String!
 	description: String!
+}
+
+type Uploads {
+	items: [UploadItem!]
+}
+
+type UploadItem {
+	ts: String!
+	title: String!
+	img: String!
+	ratio: Float!
 }
 
 input ScreenInput {
