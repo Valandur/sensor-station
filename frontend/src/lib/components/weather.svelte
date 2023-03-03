@@ -13,6 +13,7 @@
 	$: store = queryStore<GetWeatherData>({
 		query: GET_WEATHER,
 		context: { additionalTypenames: ['WeatherForecast', 'WeatherAlert'] },
+		requestPolicy: 'cache-and-network',
 		client: getContextClient()
 	});
 

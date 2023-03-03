@@ -9,6 +9,7 @@
 	$: store = queryStore<GetCalendarData>({
 		query: GET_CALENDAR,
 		context: { additionalTypenames: ['CalendarEvent'] },
+		requestPolicy: 'cache-and-network',
 		client: getContextClient()
 	});
 

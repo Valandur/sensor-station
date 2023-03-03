@@ -16,6 +16,7 @@
 		query: GET_NEWS,
 		variables: { feed: params },
 		context: { additionalTypenames: ['NewsItem'] },
+		requestPolicy: 'cache-and-network',
 		client: getContextClient()
 	});
 

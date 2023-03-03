@@ -16,6 +16,7 @@
 	$: store = queryStore<GetUploadsData>({
 		query: GET_UPLOADS,
 		context: { additionalTypenames: ['UploadItem'] },
+		requestPolicy: 'cache-and-network',
 		client: getContextClient()
 	});
 
