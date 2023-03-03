@@ -121,8 +121,8 @@ export class Weather extends Service {
 	protected override async doDispose(): Promise<void> {}
 
 	private update = async () => {
-		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863191';
-		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6519611';
+		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
+		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
 		const url = `${URL}&lat=${lat}&lon=${lng}`;
 
 		try {

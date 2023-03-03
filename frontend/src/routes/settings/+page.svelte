@@ -73,6 +73,11 @@
 							<option value="454">Kultur</option>
 							<option value="630">Wissen</option>
 						</select>
+					{:else if newName === 'weather'}
+						<select class="select" bind:value={newParams}>
+							<option value="daily">Täglich</option>
+							<option value="hourly">Stündlich</option>
+						</select>
 					{:else}
 						<input class="input" bind:value={newParams} />
 					{/if}

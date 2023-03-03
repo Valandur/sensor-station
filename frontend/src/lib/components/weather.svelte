@@ -6,9 +6,8 @@
 	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
 
 	export let params: string = '';
-	params; // svelte hack to disable unused variable warning
 
-	const NUM_FORECASTS = 6;
+	const NUM_FORECASTS = 8;
 
 	$: store = queryStore<GetWeatherAndSensorsData>({
 		query: GET_WEATHER_AND_SENSORS,
@@ -18,8 +17,13 @@
 	});
 
 	$: newestRecording = $store.data?.sensors.newest;
-	$: numDailyForecasts = NUM_FORECASTS - (newestRecording ? 1 : 0);
-	$: dailyForecasts = $store.data?.weather.daily?.slice(0, numDailyForecasts) || [];
+	$: numForecasts = NUM_FORECASTS - (newestRecording ? 2 : 0);
+
+	$: weather = $store.data?.weather;
+	$: list =
+		params === 'hourly' ? weather?.hourly?.slice(1).filter((_, i) => i % 2 === 0) : weather?.daily;
+	$: forecasts = list?.slice(0, numForecasts) || [];
+	$: labelFormat = params === 'hourly' ? "HH''" : 'iiiiii';
 </script>
 
 <div class="container">
@@ -35,9 +39,9 @@
 	{/if}
 
 	<div class="forecasts">
-		{#each dailyForecasts as forecast}
+		{#each forecasts as forecast}
 			<div class="forecast">
-				<div class="text">{format(parseISO(forecast.ts), 'iiiiii', { locale: de })}</div>
+				<div class="text">{format(parseISO(forecast.ts), labelFormat, { locale: de })}</div>
 				<img src={forecast.img} alt="Weather icon" />
 				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
 			</div>
@@ -91,7 +95,7 @@
 	}
 
 	.forecast > .text {
-		font-size: 2.5rem;
+		font-size: 2rem;
 		text-align: center;
 	}
 </style>
