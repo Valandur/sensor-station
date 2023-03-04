@@ -5,8 +5,8 @@ export interface Calendar {
 }
 
 export interface CalendarEvent {
-	ts: string;
-	repeats: string;
+	tsStart: string;
+	tsEnd: string;
 	content: string;
 }
 
@@ -17,8 +17,8 @@ export const GET_CALENDAR = gql`
 	query GetCalendar {
 		calendar {
 			events {
-				ts
-				repeats
+				tsStart
+				tsEnd
 				content
 			}
 		}

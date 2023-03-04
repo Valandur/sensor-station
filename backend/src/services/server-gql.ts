@@ -104,9 +104,9 @@ type Calendar {
 }
 
 type CalendarEvent {
-	ts: String!
-	repeats: String!
-	description: String!
+	tsStart: String!
+	tsEnd: String!
+	content: String!
 }
 
 type Uploads {
