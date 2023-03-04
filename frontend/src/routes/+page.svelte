@@ -70,6 +70,8 @@
 			showToolbar = false;
 		}
 	};
+
+	const refresh = () => window.location.reload();
 </script>
 
 <div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
@@ -140,6 +142,8 @@
 	{#if showToolbar}
 		<div class="toolbar" transition:slide={{ duration: 500 }}>
 			<a href="/settings"><i class="icofont-gears" /></a>
+			<div style:flex="1" />
+			<button on:click={refresh}><i class="icofont-refresh" /></button>
 		</div>
 	{/if}
 </div>
@@ -239,7 +243,10 @@
 		flex-direction: row;
 	}
 
-	.toolbar > a {
+	.toolbar > a,
+	.toolbar > button {
+		border: none;
+		background-color: black;
 		color: orange;
 		text-decoration: none;
 		font-size: 2rem;

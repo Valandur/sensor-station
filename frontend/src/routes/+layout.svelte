@@ -18,6 +18,8 @@
 		font-family: Roboto, sans-serif;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+		overscroll-behavior-x: none;
+		overscroll-behavior-y: none;
 		margin: 0;
 		padding: 0;
 	}
