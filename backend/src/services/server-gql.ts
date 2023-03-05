@@ -13,6 +13,7 @@ type Query {
 
 type Mutation {
 	saveScreens(screens: [ScreenInput!]!): [Screen!]!
+	restart: Boolean!
 }
 
 type Battery {

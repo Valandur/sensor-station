@@ -14,6 +14,7 @@ const path_1 = require("path");
 const image_size_1 = __importDefault(require("image-size"));
 const service_1 = require("./service");
 const server_gql_1 = require("./server-gql");
+const child_process_1 = require("child_process");
 class Server extends service_1.Service {
     uploads = process.env['SERVER_UPLOAD_ENABLED'] === '1';
     screens = [];
@@ -61,6 +62,10 @@ class Server extends service_1.Service {
                     await this.app.storage.runPrepared('INSERT INTO screens (id, name, params) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, params = excluded.params', screens.map((screen) => [screen.id, screen.name, screen.params]));
                     this.screens = await this.app.storage.all('SELECT * FROM screens');
                     return this.screens;
+                },
+                restart: async () => {
+                    (0, child_process_1.exec)('sudo /sbin/shutdown -r now', (msg) => this.log(msg));
+                    return true;
                 }
             }
         };

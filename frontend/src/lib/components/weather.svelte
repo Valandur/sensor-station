@@ -3,7 +3,7 @@
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
+	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/general';
 
 	export let params: string = '';
 

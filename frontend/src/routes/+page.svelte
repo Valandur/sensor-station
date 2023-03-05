@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
+	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
 	import type { ComponentType } from 'svelte';
 	import de from 'date-fns/locale/de/index';
 	import { formatInTimeZone } from 'date-fns-tz';
@@ -8,7 +8,7 @@
 
 	import { time } from '$lib/stores/time';
 	import { paused, screen, progress } from '$lib/stores/screen';
-	import { GET_GENERAL_DATA, type GetGeneralData } from '$lib/models/_combined';
+	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/general';
 
 	import News from '$lib/components/news.svelte';
 	import Calendar from '$lib/components/calendar.svelte';
@@ -72,6 +72,18 @@
 	};
 
 	const refresh = () => window.location.reload();
+
+	$: restart = () => {
+		if (!window.confirm('Are you sure you want to restart the device?')) {
+			return;
+		}
+
+		mutationStore({
+			query: RESTART,
+			context: { additionalTypenames: ['Screen'] },
+			client
+		});
+	};
 </script>
 
 <div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
@@ -144,6 +156,7 @@
 			<a href="/settings"><i class="icofont-gears" /></a>
 			<div style:flex="1" />
 			<button on:click={refresh}><i class="icofont-refresh" /></button>
+			<button on:click={restart}><i class="icofont-power" /></button>
 		</div>
 	{/if}
 </div>

@@ -74,3 +74,9 @@ export const GET_WEATHER_AND_SENSORS = gql`
 		}
 	}
 `;
+
+export const RESTART = gql`
+	mutation Restart {
+		restart
+	}
+`;

@@ -9,6 +9,7 @@ import imageSize from 'image-size';
 
 import { Service } from './service';
 import { GQL_SCHEMA } from './server-gql';
+import { exec } from 'child_process';
 
 export interface File {
 	name: string;
@@ -100,6 +101,10 @@ export class Server extends Service {
 					this.screens = await this.app.storage.all('SELECT * FROM screens');
 
 					return this.screens;
+				},
+				restart: async () => {
+					exec('sudo /sbin/shutdown -r now', (msg) => this.log(msg));
+					return true;
 				}
 			}
 		};
