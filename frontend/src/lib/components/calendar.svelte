@@ -21,10 +21,10 @@
 <div class="container">
 	{#each events as event}
 		<div class="event">
-			<div style:flex="2">{format(parseISO(event.tsStart), 'iii', { locale: de })}</div>
-			<div style:flex="2">{format(parseISO(event.tsStart), 'd.')}</div>
-			<div style:flex="3">{format(parseISO(event.tsStart), 'HH:mm')}</div>
-			<div style:flex="10">{event.content}</div>
+			<div style:flex="1">{format(parseISO(event.tsStart), 'iii', { locale: de })}</div>
+			<div style:flex="1">{format(parseISO(event.tsStart), 'd.')}</div>
+			<div style:flex="1.7">{format(parseISO(event.tsStart), 'HH:mm')}</div>
+			<div style:flex="5">{event.content}</div>
 		</div>
 	{/each}
 </div>
@@ -34,9 +34,8 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		overflow: scroll;
-		font-size: 1.8rem;
-		height: 100%;
+		overflow: hidden;
+		font-size: 2rem;
 	}
 
 	.event {
