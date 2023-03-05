@@ -62,7 +62,7 @@
 <div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
 	{#if selectedItem}
 		<div class="details">
-			<iframe title="Story" src={BASE_URL + `/${params}/${selectedItem.id}`} />
+			<iframe title="Story" src={BASE_URL + `/news/${params}/${selectedItem.id}`} />
 			<button class="close" on:click={() => select(null)}>❌</button>
 		</div>
 	{:else}
@@ -100,8 +100,8 @@
 
 	.abstract {
 		flex: 4;
-		font-size: 1.2rem;
-		line-height: 1.2rem;
+		font-size: 1.6rem;
+		line-height: 1.6rem;
 	}
 
 	iframe {

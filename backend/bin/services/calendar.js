@@ -45,7 +45,7 @@ class Calendar extends service_1.Service {
         const res = await calendar.events.list({
             calendarId: '3isnbvbudasaevou1g6ejr6ni0@group.calendar.google.com',
             timeMin: new Date().toISOString(),
-            maxResults: 15,
+            maxResults: 10,
             singleEvents: true,
             orderBy: 'startTime'
         });

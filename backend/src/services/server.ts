@@ -54,7 +54,7 @@ export class Server extends Service {
 			'CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)'
 		);
 
-		this.webApp = Fastify();
+		this.webApp = Fastify({ maxParamLength: 255 });
 		await this.webApp.register(cors, { origin: true, credentials: true });
 
 		const resolvers: IResolvers = {

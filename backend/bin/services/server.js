@@ -22,7 +22,7 @@ class Server extends service_1.Service {
     async doInit() {
         await this.app.storage.run('CREATE TABLE IF NOT EXISTS screens (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, params TEXT)');
         await this.app.storage.run('CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)');
-        this.webApp = (0, fastify_1.default)();
+        this.webApp = (0, fastify_1.default)({ maxParamLength: 255 });
         await this.webApp.register(cors_1.default, { origin: true, credentials: true });
         const resolvers = {
             Query: {
