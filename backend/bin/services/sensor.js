@@ -26,17 +26,6 @@ class Sensor extends service_1.Service {
         }
     }
     async doStart() {
-        // If we didn't initilialize it's not available, so exit early
-        if (!this.dht) {
-            if (process.env['DEBUG'] === '1') {
-                this.newest = {
-                    ts: new Date().toISOString(),
-                    temp: 42.0,
-                    rh: 69.0
-                };
-            }
-            return;
-        }
         await this.update();
         if (process.env['SENSOR_UPDATE_INTERVAL']) {
             const interval = 1000 * Number(process.env['SENSOR_UPDATE_INTERVAL']);
@@ -83,7 +72,18 @@ class Sensor extends service_1.Service {
     }
     update = async () => {
         if (!this.dht) {
-            throw new Error(`DHT is not available`);
+            if (process.env['DEBUG'] === '1') {
+                this.warn('Updating in DEBUG mode');
+                this.newest = {
+                    ts: new Date().toISOString(),
+                    temp: Math.random() * 50 - 20,
+                    rh: Math.random() * 60 + 20
+                };
+                return;
+            }
+            else {
+                throw new Error(`DHT is not available`);
+            }
         }
         try {
             const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);

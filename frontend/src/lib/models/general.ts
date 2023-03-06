@@ -3,7 +3,7 @@ import { gql } from '@urql/svelte';
 import type { GetBatteryData } from './battery';
 import type { GetModemData } from './modem';
 import type { GetScreensData } from './screen';
-import type { GetSensorsData } from './sensors';
+import type { GetNewestData } from './sensors';
 import type { GetWeatherData } from './weather';
 
 export type GetGeneralData = GetScreensData & GetBatteryData & GetModemData;
@@ -42,7 +42,7 @@ export const GET_GENERAL_DATA = gql`
 	}
 `;
 
-export type GetWeatherAndSensorsData = GetWeatherData & GetSensorsData;
+export type GetWeatherAndSensorsData = GetWeatherData & GetNewestData;
 export const GET_WEATHER_AND_SENSORS = gql`
 	query GetData {
 		weather {
