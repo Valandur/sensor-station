@@ -45,29 +45,35 @@
 </script>
 
 {#if item}
-	<div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
-		<img class:full={item.ratio < 1} src={BASE_URL + item.img} alt="Upload" />
+	<div class="container m-0 d-flex h-100" on:touchstart={touchStart} on:touchend={touchEnd}>
+		<img
+			class:full={item.ratio < 1}
+			class="bg-gray-700 bg-opacity-75"
+			src={BASE_URL + item.img}
+			alt="Upload"
+		/>
 
-		<div class="title" style="max-width: {item.ratio < 1 ? '40%' : undefined}">
-			<div>
-				{#each item.title.split('\n') as line}
-					{line}
-					<br />
-				{/each}
+		<div
+			class="col p-1 d-flex flex-column justify-content-between"
+			style:max-width={item.ratio < 1 ? '48%' : undefined}
+		>
+			<div class="row">
+				<div class="col">
+					{#each item.title.split('\n') as line}
+						{line}
+						<br />
+					{/each}
+				</div>
 			</div>
-			<div>{format(parseISO(item.ts), 'dd. MMM yyyy', { locale: de })}</div>
+
+			<div class="row">
+				<div class="rol">{format(parseISO(item.ts), 'dd. MMM yyyy', { locale: de })}</div>
+			</div>
 		</div>
 	</div>
 {/if}
 
 <style>
-	.container {
-		flex: 1;
-		display: flex;
-		flex-direction: row;
-		overflow: hidden;
-	}
-
 	img {
 		height: auto;
 		max-height: 100%;
@@ -82,25 +88,8 @@
 		right: 0;
 		bottom: 0;
 		padding: 20px;
-		background-color: black;
 		text-align: right;
 		max-height: 100%;
 		max-width: 100%;
-	}
-
-	.title {
-		flex: 1;
-		font-size: 1rem;
-		margin-left: 0.5rem;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.title > div:first-child {
-		flex: 1;
-	}
-
-	.title > div:last-child {
-		margin-bottom: 0.1rem;
 	}
 </style>

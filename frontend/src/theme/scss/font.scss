@@ -1,0 +1,32 @@
+/* chakra-petch-300 - latin_latin-ext */
+@font-face {
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Chakra Petch';
+	font-style: normal;
+	font-weight: 300;
+	src: url('/fonts/chakra-petch-v9-latin_latin-ext-300.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+ */ url('/fonts/chakra-petch-v9-latin_latin-ext-300.woff')
+			format('woff'); /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* chakra-petch-regular - latin_latin-ext */
+@font-face {
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Chakra Petch';
+	font-style: normal;
+	font-weight: 400;
+	src: url('/fonts/chakra-petch-v9-latin_latin-ext-regular.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+ */
+			url('/fonts/chakra-petch-v9-latin_latin-ext-regular.woff') format('woff'); /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* chakra-petch-500 - latin_latin-ext */
+@font-face {
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Chakra Petch';
+	font-style: normal;
+	font-weight: 500;
+	src: url('/fonts/chakra-petch-v9-latin_latin-ext-500.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+ */ url('/fonts/chakra-petch-v9-latin_latin-ext-500.woff')
+			format('woff'); /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}

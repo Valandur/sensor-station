@@ -86,189 +86,113 @@
 	};
 </script>
 
-<div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
-	<div class="header">
-		<div class="left" on:click={togglePause} on:keypress={togglePause}>{timeStr}</div>
-		<div class="right">
-			<div class="symbols">
-				{#if batteryStatus}
-					<div class="battery">
-						<div class="charge" style:width={batteryStatus.charge + '%'}>
-							{#if batteryStatus.status.includes('CHARGING')}
-								<i class="icofont-plugin" />
-							{/if}
-							{batteryStatus.charge}%
-						</div>
+<div
+	class="container-fluid m-0 p-1 vh-100 d-flex flex-column"
+	on:touchstart={touchStart}
+	on:touchend={touchEnd}
+>
+	<div class="row">
+		<div class="col-auto" on:click={togglePause} on:keypress={togglePause}>
+			<h1>{timeStr}</h1>
+		</div>
+
+		<div class="col text-end">
+			<div class="row icons justify-content-end">
+				{#if $paused}
+					<div class="col-auto">
+						<i class="icofont-ui-pause" />
 					</div>
 				{/if}
 
 				{#if modemStatus}
 					{#if modemStatus.operator}
-						<div class="mobile">
-							<div
-								style:height="25%"
-								style:background-color={modemStatus.signal > 0 ? 'orange' : 'gray'}
-							/>
-							<div
-								style:height="50%"
-								style:background-color={modemStatus.signal > 1 ? 'orange' : 'gray'}
-							/>
-							<div
-								style:height="75%"
-								style:background-color={modemStatus.signal > 2 ? 'orange' : 'gray'}
-							/>
-							<div
-								style:height="100%"
-								style:background-color={modemStatus.signal > 3 ? 'orange' : 'gray'}
-							/>
+						<div class="col-auto">
+							<i class="icofont-globe" />
+							{modemStatus.operator}
 						</div>
-
-						<div><i class="icofont-globe" /> {modemStatus.operator}</div>
 					{/if}
 
 					{#if modemStatus.lat && modemStatus.lng}
-						<i class="icofont-satellite" />
+						<div class="col-auto">
+							<i class="icofont-satellite" />
+						</div>
 					{/if}
 				{/if}
 
-				{#if $paused}
-					<i class="icofont-ui-pause" />
+				{#if batteryStatus}
+					<div class="col-auto">
+						<i class="icofont-plugin" />
+						{batteryStatus.charge}%
+					</div>
 				{/if}
 			</div>
-			<div class="date-main">{date}</div>
-			<div class="date-sub">
-				<div>{dateSub}</div>
+
+			<div class="row justify-content-end">
+				<h2 class="col m-0">{date}</h2>
+			</div>
+
+			<div class="row justify-content-end">
 				{#if holiday}
-					<div>&nbsp;•&nbsp;{holiday[0].name}</div>
+					<div class="col-auto">{holiday[0].name}</div>
+					<div class="col-auto">•</div>
 				{/if}
+				<h4 class="col-auto m-0">{dateSub}</h4>
 			</div>
 		</div>
 	</div>
 
-	{#if currScreen}
-		<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
-	{:else}
-		<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
-	{/if}
+	<div class="row flex-fill" style:overflow="hidden">
+		{#if currScreen}
+			<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+		{:else}
+			<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
+		{/if}
+	</div>
 
 	{#if showToolbar}
-		<div class="toolbar" transition:slide={{ duration: 500 }}>
-			<a href="/settings"><i class="icofont-gears" /></a>
-			<div style:flex="1" />
-			<button on:click={refresh}><i class="icofont-refresh" /></button>
-			<button on:click={restart}><i class="icofont-power" /></button>
+		<div class="toolbar row p-2 bg-dark border border-primary" transition:slide={{ duration: 500 }}>
+			<div class="col-auto">
+				<a class="btn btn-primary" href="/settings"><i class="icofont-gears" /></a>
+			</div>
+			<div class="col" />
+			<div class="col-auto">
+				<button class="btn btn-warning" on:click={refresh}><i class="icofont-refresh" /></button>
+			</div>
+			<div class="col-auto">
+				<button class="btn btn-danger" on:click={restart}><i class="icofont-power" /></button>
+			</div>
 		</div>
 	{/if}
 </div>
 
 <div class="progress" style:width={$progress + '%'} />
 
-<style>
-	.container {
-		height: 100vh;
-		width: 100vw;
-		display: flex;
-		flex-direction: column;
-		padding: 0.3rem;
-		box-sizing: border-box;
+<style lang="scss">
+	h1 {
+		font-size: 4.8rem;
 	}
 
-	.header {
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
-		margin-bottom: 0.5rem;
-	}
-
-	.header > .left {
-		font-size: 5rem;
-		line-height: 5rem;
-		padding-right: 1rem;
-	}
-
-	.header > .right {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		overflow-x: hidden;
-	}
-
-	.date-main {
+	h2 {
 		font-size: 2rem;
 	}
 
-	.date-sub {
-		display: flex;
-		flex-direction: row;
-		font-size: 1rem;
-		white-space: nowrap;
-	}
-
-	.symbols {
-		display: flex;
-		flex-direction: row-reverse;
-		align-items: center;
+	.icons {
 		font-size: 0.6rem;
-		height: 0.8rem;
-	}
-
-	.symbols > * {
-		margin-left: 0.5rem;
-	}
-
-	.mobile {
-		display: flex;
-		flex-direction: row;
-		align-items: flex-end;
-		height: 100%;
-	}
-
-	.mobile > div {
-		width: 0.5rem;
-		margin-right: 0.1rem;
-	}
-
-	.battery {
-		width: 3rem;
-		background-color: gray;
-		height: 100%;
-	}
-
-	.battery > .charge {
-		color: black;
-		background-color: orange;
-		white-space: nowrap;
-		line-height: 0.8rem;
-		height: 100%;
 	}
 
 	.toolbar {
 		position: fixed;
 		top: 0;
-		left: 0;
-		right: 0;
-		background-color: black;
-		border-bottom: 1px solid orange;
-		box-sizing: border-box;
+		left: calc(0.5 * var(--bs-gutter-x));
+		right: calc(0.5 * var(--bs-gutter-x));
 		overflow: hidden;
 		display: flex;
 		flex-direction: row;
 	}
 
-	.toolbar > a,
-	.toolbar > button {
-		border: none;
-		background-color: black;
-		color: orange;
-		text-decoration: none;
-		font-size: 2rem;
-		padding: 0.5rem;
-	}
-
 	.progress {
 		position: fixed;
-		background-color: gray;
+		background-color: var(--theme);
 		left: 0;
 		bottom: 0;
 		height: 2px;

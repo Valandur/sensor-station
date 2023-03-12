@@ -59,17 +59,19 @@
 	};
 </script>
 
-<div class="container" on:touchstart={touchStart} on:touchend={touchEnd}>
+<div class="container m-0" on:touchstart={touchStart} on:touchend={touchEnd}>
 	{#if selectedItem}
 		<div class="details">
 			<iframe title="Story" src={BASE_URL + `/news/${params}/${selectedItem.id}`} />
-			<button class="close" on:click={() => select(null)}>❌</button>
+			<button class="btn btn-theme" on:click={() => select(null)}
+				><i class="icofont-ui-close" /></button
+			>
 		</div>
 	{:else}
 		{#each news as item}
-			<div class="item" on:click={() => select(item)} on:keypress={() => select(item)}>
-				<img class="image" alt="Thumbnail" src={item.img} />
-				<div class="abstract">{item.title}</div>
+			<div class="row" on:click={() => select(item)} on:keypress={() => select(item)}>
+				<img class="col-3" alt="Thumbnail" src={item.img} />
+				<div class="col abstract p-1">{item.title}</div>
 			</div>
 		{/each}
 	{/if}
@@ -84,24 +86,9 @@
 		overflow: hidden;
 	}
 
-	.item {
-		flex: 1;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		overflow: hidden;
-		margin-top: 0.5rem;
-	}
-
-	img.image {
-		height: 100%;
-		margin-right: 0.5rem;
-	}
-
 	.abstract {
-		flex: 4;
-		font-size: 1.6rem;
-		line-height: 1.6rem;
+		font-size: 1.5rem;
+		line-height: 1.5rem;
 	}
 
 	iframe {
@@ -118,7 +105,7 @@
 		bottom: 8px;
 	}
 
-	button.close {
+	.btn {
 		position: absolute;
 		top: 8px;
 		left: 8px;

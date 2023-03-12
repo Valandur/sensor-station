@@ -26,21 +26,20 @@
 	$: labelFormat = params === 'hourly' ? "HH''" : 'iiiiii';
 </script>
 
-<div class="container">
-	{#if newestRecording}
-		<div class="sensors">
-			<div />
-			<div class="text" style:color="#23ad00">{newestRecording.temp.toFixed(0)}°</div>
-			<div class="text" style:color="#0052d6">{newestRecording.rh.toFixed(0)}%</div>
-			<div class="info">
-				{formatDistanceToNow(parseISO(newestRecording.ts), { addSuffix: true })}
-			</div>
+{#if newestRecording}
+	<div class="col-3 d-flex flex-column justify-content-center align-items-center">
+		<div class="row text" style:color="#23ad00">{newestRecording.temp.toFixed(0)}°</div>
+		<div class="row text" style:color="#0052d6">{newestRecording.rh.toFixed(0)}%</div>
+		<div class="row info mt-2">
+			{formatDistanceToNow(parseISO(newestRecording.ts), { addSuffix: true })}
 		</div>
-	{/if}
+	</div>
+{/if}
 
-	<div class="forecasts">
+<div class="col">
+	<div class="row row-cols-5">
 		{#each forecasts as forecast}
-			<div class="forecast">
+			<div class="col">
 				<div class="text">{format(parseISO(forecast.ts), labelFormat, { locale: de })}</div>
 				<img src={forecast.img} alt="Weather icon" />
 				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
@@ -50,52 +49,17 @@
 </div>
 
 <style>
-	.container {
-		flex: 1;
-		display: flex;
-		flex-direction: row;
-	}
-
-	.sensors {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-evenly;
-		align-items: center;
-	}
-
-	.sensors > .text {
+	.text {
 		font-size: 3rem;
 		text-align: center;
 	}
 
-	.sensors > .info {
+	.info {
 		color: gray;
-		font-size: 0.5rem;
+		font-size: 0.6rem;
 	}
 
-	.forecasts {
-		flex: 3;
-		display: flex;
-		flex-direction: row;
-		justify-content: space-evenly;
-		align-items: stretch;
-	}
-
-	.forecast {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-evenly;
-		align-items: center;
-	}
-
-	.forecast > img {
-		width: 90%;
-	}
-
-	.forecast > .text {
-		font-size: 2.5rem;
-		text-align: center;
+	img {
+		width: 100%;
 	}
 </style>

@@ -40,118 +40,78 @@
 	};
 </script>
 
-<div class="container">
-	<h1>Settings</h1>
-
-	<a class="btn close" href="/"><i class="icofont-ui-close" /></a>
-
-	<div class="settings">
-		<div class="setting">
-			<div class="name">Screens</div>
-			<div class="value list">
-				{#each screens as screen}
-					<div class="item">
-						<div>{screen.name}</div>
-						<div>{screen.params}</div>
-						<button class="btn" on:click={() => del(screen.id)}
-							><i class="icofont-ui-delete" /></button
-						>
-					</div>
-				{/each}
-				<div class="item">
-					<select class="select" bind:value={newName}>
-						<option value="weather">Weather</option>
-						<option value="news">News</option>
-						<option value="uploads">Uploads</option>
-						<option value="calendar">Calendar</option>
-					</select>
-
-					{#if newName === 'news'}
-						<select class="select" bind:value={newParams}>
-							<option value="1646">Allgemein</option>
-							<option value="718">Sport</option>
-							<option value="454">Kultur</option>
-							<option value="630">Wissen</option>
-						</select>
-					{:else if newName === 'weather'}
-						<select class="select" bind:value={newParams}>
-							<option value="daily">Täglich</option>
-							<option value="hourly">Stündlich</option>
-						</select>
-					{:else}
-						<input class="input" bind:value={newParams} />
-					{/if}
-
-					<button class="btn" on:click={add}><i class="icofont-ui-add" /></button>
-				</div>
-			</div>
+<div class="container-fluid m-0 p-1 vh-100">
+	<div class="row">
+		<div class="col">
+			<h1>Settings</h1>
+		</div>
+		<div class="col-auto">
+			<a class="btn btn-sm btn-outline-secondary" href="/"><i class="icofont-ui-close" /></a>
 		</div>
 	</div>
+
+	<div class="row">
+		<table class="table table-sm">
+			<colgroup>
+				<col width="50%" />
+				<col width="50%" />
+				<col />
+			</colgroup>
+			<thead>
+				<tr>
+					<th scope="col">Screen</th>
+					<th scope="col">Type</th>
+					<th scope="col" />
+				</tr>
+			</thead>
+			<tbody>
+				{#each screens as screen}
+					<tr>
+						<td>{screen.name}</td>
+						<td>{screen.params}</td>
+						<td>
+							<button class="btn btn-sm btn-outline-danger" on:click={() => del(screen.id)}>
+								<i class="icofont-ui-delete" />
+							</button>
+						</td>
+					</tr>
+				{/each}
+
+				<tr>
+					<td>
+						<select class="form-control form-control-sm" bind:value={newName}>
+							<option value="weather">Weather</option>
+							<option value="news">News</option>
+							<option value="uploads">Uploads</option>
+							<option value="calendar">Calendar</option>
+						</select>
+					</td>
+
+					<td>
+						{#if newName === 'news'}
+							<select class="form-control form-control-sm" bind:value={newParams}>
+								<option value="1646">Allgemein</option>
+								<option value="718">Sport</option>
+								<option value="454">Kultur</option>
+								<option value="630">Wissen</option>
+							</select>
+						{:else if newName === 'weather'}
+							<select class="form-control form-control-sm" bind:value={newParams}>
+								<option value="daily">Täglich</option>
+								<option value="hourly">Stündlich</option>
+							</select>
+						{:else}
+							<input class="form-control form-control-sm" bind:value={newParams} />
+						{/if}
+					</td>
+
+					<td>
+						<button class="btn btn-sm btn-outline-success" on:click={add}>
+							<i class="icofont-ui-add" />
+						</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 </div>
-
-<style>
-	.container {
-		height: 100vh;
-		width: 100vw;
-		padding: 0.3rem;
-		box-sizing: border-box;
-	}
-
-	.container > .close {
-		position: fixed;
-		top: 10px;
-		right: 10px;
-		text-decoration: none;
-	}
-
-	.container > h1 {
-		font-size: 1.5rem;
-		line-height: 1.5rem;
-		margin-top: 0;
-		margin-bottom: 1rem;
-	}
-
-	.settings {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.setting {
-		display: flex;
-		flex-direction: row;
-		border-bottom: 1px dashed orange;
-	}
-
-	.name {
-		flex: 1;
-		font-size: 1rem;
-	}
-
-	.value {
-		flex: 3;
-		font-size: 1rem;
-	}
-
-	.list {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.list > .item {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		margin-bottom: 0.5rem;
-	}
-
-	.list > .item > div,
-	.list > .item > input,
-	.list > .item > select {
-		flex: 1;
-		margin-right: 1rem;
-	}
-
-	.list > .item > button {
-		width: 1.5rem;
-	}
-</style>
