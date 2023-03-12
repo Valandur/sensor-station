@@ -1,14 +1,15 @@
 export const GQL_SCHEMA = `
 type Query {
 	battery: Battery!
+	calendar: Calendar!
+	games: Games!
 	modem: Modem!
 	network: Network!
-	weather: Weather!
-	sensors: Sensors!
 	news: News!
-	calendar: Calendar!
-	uploads: Uploads!
 	screens: [Screen!]!
+	sensors: Sensors!
+	uploads: Uploads!
+	weather: Weather!
 }
 
 type Mutation {
@@ -29,6 +30,27 @@ type BatteryStatus {
 	charge: Float!
 	voltage: Float!
 	current: Float!
+}
+
+type Calendar {
+	events: [CalendarEvent!]
+}
+
+type CalendarEvent {
+	tsStart: String!
+	tsEnd: String!
+	content: String!
+}
+
+type Games {
+	freeEpic: [Game!]
+}
+
+type Game {
+	title: String!
+	startsAt: String!
+	endsAt: String!
+	image: String
 }
 
 type Modem {
@@ -56,6 +78,52 @@ type NetworkInterface {
 	ips: [String!]!
 }
 
+type News {
+	items(feed: String!): [NewsItem!]
+}
+
+type NewsItem {
+	id: String!
+	ts: String!
+	title: String!
+	content: String!
+	img: String!
+}
+
+type Screen {
+	id: Int!
+	name: String!
+	params: String!
+}
+
+input ScreenInput {
+	id: Int
+	name: String!
+	params: String!
+}
+
+type Sensors {
+	newest: SensorRecording
+	recordings: [SensorRecording!]
+}
+
+type SensorRecording {
+	ts: String!
+	temp: Float!
+	rh: Float!
+}
+
+type Uploads {
+	items: [UploadItem!]
+}
+
+type UploadItem {
+	ts: String!
+	title: String!
+	img: String!
+	ratio: Float!
+}
+
 type Weather {
 	hourly: [WeatherForecast!]
 	daily: [WeatherForecast!]
@@ -77,59 +145,4 @@ type WeatherAlert {
 	tags: [String!]!
 }
 
-type Sensors {
-	newest: SensorRecording
-	recordings: [SensorRecording!]
-}
-
-type SensorRecording {
-	ts: String!
-	temp: Float!
-	rh: Float!
-}
-
-type News {
-	items(feed: String!): [NewsItem!]
-}
-
-type NewsItem {
-	id: String!
-	ts: String!
-	title: String!
-	content: String!
-	img: String!
-}
-
-type Calendar {
-	events: [CalendarEvent!]
-}
-
-type CalendarEvent {
-	tsStart: String!
-	tsEnd: String!
-	content: String!
-}
-
-type Uploads {
-	items: [UploadItem!]
-}
-
-type UploadItem {
-	ts: String!
-	title: String!
-	img: String!
-	ratio: Float!
-}
-
-input ScreenInput {
-	id: Int
-	name: String!
-	params: String!
-}
-
-type Screen {
-	id: Int!
-	name: String!
-	params: String!
-}
 `;

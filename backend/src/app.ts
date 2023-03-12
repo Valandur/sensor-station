@@ -1,19 +1,22 @@
 import chalk from 'chalk';
+import { format } from 'date-fns';
 
 import type { Service } from './services/service';
+
 import { Battery } from './services/battery';
+import { Calendar } from './services/calendar';
+import { Games } from './services/games';
 import { Modem } from './services/modem';
 import { News } from './services/news';
 import { Sensor } from './services/sensor';
 import { Server } from './services/server';
-import { Weather } from './services/weather';
 import { Storage } from './services/storage';
-import { Calendar } from './services/calendar';
-import { format } from 'date-fns';
+import { Weather } from './services/weather';
 
 export class Application {
 	public readonly storage: Storage;
 	public readonly battery: Battery;
+	public readonly games: Games;
 	public readonly modem: Modem;
 	public readonly news: News;
 	public readonly sensor: Sensor;
@@ -26,6 +29,7 @@ export class Application {
 	public constructor() {
 		this.storage = new Storage(this);
 		this.battery = new Battery(this);
+		this.games = new Games(this);
 		this.modem = new Modem(this);
 		this.news = new News(this);
 		this.sensor = new Sensor(this);
@@ -36,6 +40,7 @@ export class Application {
 		this.services = [
 			this.storage,
 			this.battery,
+			this.games,
 			this.modem,
 			this.news,
 			this.sensor,

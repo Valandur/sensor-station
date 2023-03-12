@@ -57,13 +57,7 @@
 				<col width="50%" />
 				<col />
 			</colgroup>
-			<thead>
-				<tr>
-					<th scope="col">Screen</th>
-					<th scope="col">Type</th>
-					<th scope="col" />
-				</tr>
-			</thead>
+
 			<tbody>
 				{#each screens as screen}
 					<tr>
@@ -80,10 +74,11 @@
 				<tr>
 					<td>
 						<select class="form-control form-control-sm" bind:value={newName}>
-							<option value="weather">Weather</option>
+							<option value="calendar">Calendar</option>
+							<option value="games">Games</option>
 							<option value="news">News</option>
 							<option value="uploads">Uploads</option>
-							<option value="calendar">Calendar</option>
+							<option value="weather">Weather</option>
 						</select>
 					</td>
 

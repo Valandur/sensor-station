@@ -10,16 +10,18 @@
 	import { paused, screen, progress } from '$lib/stores/screen';
 	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/general';
 
-	import News from '$lib/components/news.svelte';
 	import Calendar from '$lib/components/calendar.svelte';
+	import Games from '$lib/components/games.svelte';
+	import News from '$lib/components/news.svelte';
 	import Uploads from '$lib/components/uploads.svelte';
 	import Weather from '$lib/components/weather.svelte';
 
 	const tz = 'Europe/Zurich';
 	const holidays = new Holidays('CH', 'ZH');
 	const COMPONENT_MAP: { [key: string]: ComponentType } = {
-		news: News,
 		calendar: Calendar,
+		games: Games,
+		news: News,
 		uploads: Uploads,
 		weather: Weather
 	};

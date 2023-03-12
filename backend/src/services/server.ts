@@ -6,10 +6,10 @@ import cors from '@fastify/cors';
 import mercurius, { IResolverObject, IResolvers } from 'mercurius';
 import { extname, resolve } from 'path';
 import imageSize from 'image-size';
+import { exec } from 'child_process';
 
 import { Service } from './service';
 import { GQL_SCHEMA } from './server-gql';
-import { exec } from 'child_process';
 
 export interface File {
 	name: string;
@@ -63,31 +63,34 @@ export class Server extends Service {
 				battery: () => ({
 					status: () => this.app.battery.status
 				}),
+				calendar: () => ({
+					events: () => this.app.calendar.events
+				}),
+				games: () => ({
+					freeEpic: () => this.app.games.freeEpic
+				}),
 				modem: () => ({
 					status: () => this.app.modem.status
 				}),
 				network: () => ({
 					interfaces: () => this.app.modem.interfaces
 				}),
-				weather: () => ({
-					hourly: () => this.app.weather.hourly,
-					daily: () => this.app.weather.daily,
-					alerts: () => this.app.weather.alerts
+				news: (): IResolverObject => ({
+					items: ({ feed }) => this.app.news.getItems(feed)
 				}),
+				screens: () => this.screens,
 				sensors: () => ({
 					newest: () => this.app.sensor.newest,
 					recordings: () => this.app.sensor.getRecordings()
 				}),
-				news: (): IResolverObject => ({
-					items: ({ feed }) => this.app.news.getItems(feed)
-				}),
-				calendar: () => ({
-					events: () => this.app.calendar.events
-				}),
 				uploads: () => ({
 					items: () => this.items
 				}),
-				screens: () => this.screens
+				weather: () => ({
+					hourly: () => this.app.weather.hourly,
+					daily: () => this.app.weather.daily,
+					alerts: () => this.app.weather.alerts
+				})
 			},
 			Mutation: {
 				saveScreens: async (_, { screens }: { screens: Screen[] }) => {
