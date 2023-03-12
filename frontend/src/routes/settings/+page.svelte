@@ -50,7 +50,7 @@
 		</div>
 	</div>
 
-	<div class="row overflow-scroll">
+	<div class="row overflow-auto">
 		<table class="table table-sm">
 			<colgroup>
 				<col width="50%" />

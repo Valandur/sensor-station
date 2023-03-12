@@ -23,7 +23,8 @@
 <style>
 	:global(html),
 	:global(body) {
-		overflow: hidden;
 		font-size: 30px;
+		overflow: hidden;
+		overscroll-behavior: none;
 	}
 </style>
