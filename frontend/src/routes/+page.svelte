@@ -165,7 +165,7 @@
 	{/if}
 </div>
 
-<div class="progress" style:width={$progress + '%'} />
+<div class="progress bg-theme" style:width={$progress + '%'} />
 
 <style lang="scss">
 	h1 {
@@ -192,7 +192,6 @@
 
 	.progress {
 		position: fixed;
-		background-color: var(--theme);
 		left: 0;
 		bottom: 0;
 		height: 2px;
