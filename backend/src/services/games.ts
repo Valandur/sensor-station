@@ -21,8 +21,8 @@ export class Games extends Service {
 	protected override async doStart(): Promise<void> {
 		await this.update();
 
-		if (process.env['EPIC_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['EPIC_UPDATE_INTERVAL']);
+		if (process.env['GAMES_UPDATE_INTERVAL']) {
+			const interval = 1000 * Number(process.env['GAMES_UPDATE_INTERVAL']);
 			this.timer = setInterval(this.update, interval);
 			this.log('UPDATE STARTED', interval);
 		} else {
