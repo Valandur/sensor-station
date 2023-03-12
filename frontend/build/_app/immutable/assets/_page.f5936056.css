@@ -4076,7 +4076,7 @@ div.cds--cc--legend.clickable div.legend-item:not(.additional):hover div.checkbo
   width: auto;
   fill: var(--cds-layer-inverse-absolute, #000000);
 }
-.cds--cc--tooltip .content-box .datapoint-tooltip.bold {
+.cds--cc--tooltip .content-box .datapoint-tooltip.bold div.label p {
   font-weight: 600;
 }
 .cds--cc--tooltip .content-box .datapoint-tooltip p {
