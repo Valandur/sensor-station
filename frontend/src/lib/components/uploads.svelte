@@ -21,8 +21,8 @@
 	});
 
 	$: uploads = $store.data?.uploads.items || [];
-	$: uploadIdx = ($index < 0 ? uploads.length : 0) + ($index % uploads.length);
-	$: item = uploads[uploadIdx];
+	$: index.setMax(uploads.length);
+	$: item = uploads[$index];
 
 	onDestroy(async () => {
 		index.increment();
@@ -45,17 +45,23 @@
 </script>
 
 {#if item}
-	<div class="container m-0 d-flex h-100" on:touchstart={touchStart} on:touchend={touchEnd}>
-		<img
+	<div
+		class="container-fluid m-0 h-100 d-flex justify-content-between"
+		on:touchstart={touchStart}
+		on:touchend={touchEnd}
+	>
+		<div
+			class="m-0 p-0 bg-dark bg-opacity-75 image"
 			class:full={item.ratio < 1}
-			class="bg-gray-700 bg-opacity-75"
-			src={BASE_URL + item.img}
-			alt="Upload"
-		/>
+			class:m-1={item.ratio < 1}
+		>
+			<img src={BASE_URL + item.img} alt="Upload" />
+		</div>
 
 		<div
-			class="col p-1 d-flex flex-column justify-content-between"
-			style:max-width={item.ratio < 1 ? '48%' : undefined}
+			class="col d-flex flex-column justify-content-between description"
+			class:ps-2={item.ratio >= 1}
+			class:text-end={item.ratio >= 1}
 		>
 			<div class="row">
 				<div class="col">
@@ -74,22 +80,34 @@
 {/if}
 
 <style>
-	img {
-		height: auto;
-		max-height: 100%;
-		width: auto;
-		max-width: 70%;
+	.image {
+		min-width: 50%;
 	}
 
-	img.full {
-		position: absolute;
-		box-sizing: border-box;
+	img {
+		max-height: 100%;
+		max-width: 100%;
+	}
+
+	.full {
+		position: fixed;
 		top: 0;
 		right: 0;
 		bottom: 0;
-		padding: 20px;
-		text-align: right;
-		max-height: 100%;
-		max-width: 100%;
+		background-color: transparent !important;
+		background-image: linear-gradient(
+			to left,
+			rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) 50%,
+			transparent
+		);
+	}
+
+	.full > img {
+		position: absolute;
+		right: 0;
+	}
+
+	.description {
+		max-width: 45%;
 	}
 </style>

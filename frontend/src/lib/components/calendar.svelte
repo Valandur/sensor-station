@@ -18,7 +18,7 @@
 	$: events = $store.data?.calendar.events || [];
 </script>
 
-<div class="container m-0">
+<div class="container-fluid m-0 h-100">
 	{#each events as event}
 		<div class="row">
 			<div class="col-1">{format(parseISO(event.tsStart), 'iii', { locale: de })}</div>

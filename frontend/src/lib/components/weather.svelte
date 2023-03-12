@@ -26,25 +26,29 @@
 	$: labelFormat = params === 'hourly' ? "HH''" : 'iiiiii';
 </script>
 
-{#if newestRecording}
-	<div class="col-3 d-flex flex-column justify-content-center align-items-center">
-		<div class="row text" style:color="#23ad00">{newestRecording.temp.toFixed(0)}°</div>
-		<div class="row text" style:color="#0052d6">{newestRecording.rh.toFixed(0)}%</div>
-		<div class="row info mt-2">
-			{formatDistanceToNow(parseISO(newestRecording.ts), { addSuffix: true })}
-		</div>
-	</div>
-{/if}
-
-<div class="col">
-	<div class="row row-cols-5">
-		{#each forecasts as forecast}
-			<div class="col">
-				<div class="text">{format(parseISO(forecast.ts), labelFormat, { locale: de })}</div>
-				<img src={forecast.img} alt="Weather icon" />
-				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
+<div class="container-fluid h-100 m-0">
+	<div class="row">
+		{#if newestRecording}
+			<div class="col-3 d-flex flex-column justify-content-center align-items-center">
+				<div class="row text" style:color="#23ad00">{newestRecording.temp.toFixed(0)}°</div>
+				<div class="row text" style:color="#0052d6">{newestRecording.rh.toFixed(0)}%</div>
+				<div class="row info mt-2">
+					{formatDistanceToNow(parseISO(newestRecording.ts), { addSuffix: true })}
+				</div>
 			</div>
-		{/each}
+		{/if}
+
+		<div class="col">
+			<div class="row row-cols-5">
+				{#each forecasts as forecast}
+					<div class="col">
+						<div class="text">{format(parseISO(forecast.ts), labelFormat, { locale: de })}</div>
+						<img src={forecast.img} alt="Weather icon" />
+						<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
+					</div>
+				{/each}
+			</div>
+		</div>
 	</div>
 </div>
 

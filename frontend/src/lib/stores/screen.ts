@@ -1,7 +1,7 @@
 import { tweened } from 'svelte/motion';
 import { writable } from 'svelte/store';
 
-const UPDATE_INTERVAL = 30000;
+const UPDATE_INTERVAL = 20000;
 
 const { subscribe, update } = writable(0);
 const pause = writable(true);
@@ -9,14 +9,15 @@ const pause = writable(true);
 export const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
 let timer: NodeJS.Timeout | null = null;
+let max = 1;
 
 const next = () => {
-	update((value) => value + 1);
+	update((value) => (value + 1) % max);
 	reset();
 };
 
 const prev = () => {
-	update((value) => value - 1);
+	update((value) => (value <= 0 ? max : value) - 1);
 	reset();
 };
 
@@ -44,6 +45,7 @@ start();
 
 export const screen = {
 	subscribe,
+	setMax: (newMax: number) => (max = newMax),
 	reset,
 	next,
 	prev,

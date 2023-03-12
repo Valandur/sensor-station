@@ -1,9 +1,11 @@
 import { readable } from 'svelte/store';
 
+const UPDATE_INTERVAL = 10000;
+
 export const time = readable(new Date(), (set) => {
 	const interval = setInterval(() => {
 		set(new Date());
-	}, 30000);
+	}, UPDATE_INTERVAL);
 
 	set(new Date());
 

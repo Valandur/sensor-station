@@ -40,7 +40,7 @@
 	};
 </script>
 
-<div class="container-fluid m-0 p-1 vh-100">
+<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
 	<div class="row">
 		<div class="col">
 			<h1>Settings</h1>
@@ -50,7 +50,7 @@
 		</div>
 	</div>
 
-	<div class="row">
+	<div class="row overflow-scroll">
 		<table class="table table-sm">
 			<colgroup>
 				<col width="50%" />

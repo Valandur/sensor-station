@@ -4,7 +4,7 @@
 	import de from 'date-fns/locale/de/index';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import Holidays from 'date-holidays';
-	import { slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 
 	import { time } from '$lib/stores/time';
 	import { paused, screen, progress } from '$lib/stores/screen';
@@ -33,7 +33,8 @@
 	$: screens = $store.data?.screens || [];
 	$: batteryStatus = $store.data?.battery.status;
 	$: modemStatus = $store.data?.modem.status;
-	$: currScreen = screens[(($screen % screens.length) + screens.length) % screens.length];
+	$: screen.setMax(screens.length);
+	$: currScreen = screens[$screen];
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');
 	$: holiday = holidays.isHoliday($time);
@@ -91,12 +92,16 @@
 	on:touchstart={touchStart}
 	on:touchend={touchEnd}
 >
-	<div class="row">
-		<div class="col-auto" on:click={togglePause} on:keypress={togglePause}>
-			<h1>{timeStr}</h1>
+	<div class="row mb-3">
+		<div
+			class="col-auto d-flex flex-column justify-content-end"
+			on:click={togglePause}
+			on:keypress={togglePause}
+		>
+			<h1 class="m-0 mt-2 p-0">{timeStr}</h1>
 		</div>
 
-		<div class="col text-end">
+		<div class="col text-end d-flex flex-column justify-content-end">
 			<div class="row icons justify-content-end">
 				{#if $paused}
 					<div class="col-auto">
@@ -141,39 +146,55 @@
 		</div>
 	</div>
 
-	<div class="row flex-fill" style:overflow="hidden">
-		{#if currScreen}
-			<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
-		{:else}
-			<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
-		{/if}
+	<div class="row flex-fill position-relative">
+		{#key currScreen}
+			<div
+				class="container h-100 w-100 m-0 p-0 position-absolute"
+				style:overflow="hidden"
+				transition:fade
+			>
+				{#if currScreen}
+					<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+				{:else}
+					<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
+				{/if}
+			</div>
+		{/key}
 	</div>
 
 	{#if showToolbar}
-		<div class="toolbar row p-2 bg-dark border border-primary" transition:slide={{ duration: 500 }}>
+		<div class="toolbar row p-2 bg-dark" transition:slide={{ duration: 500 }}>
 			<div class="col-auto">
-				<a class="btn btn-primary" href="/settings"><i class="icofont-gears" /></a>
+				<a class="btn btn-primary" href="/settings">
+					<i class="icofont-gears icofont-2x" />
+				</a>
 			</div>
 			<div class="col" />
 			<div class="col-auto">
-				<button class="btn btn-warning" on:click={refresh}><i class="icofont-refresh" /></button>
+				<button class="btn btn-warning" on:click={refresh}>
+					<i class="icofont-refresh icofont-2x" />
+				</button>
 			</div>
 			<div class="col-auto">
-				<button class="btn btn-danger" on:click={restart}><i class="icofont-power" /></button>
+				<button class="btn btn-danger" on:click={restart}>
+					<i class="icofont-power icofont-2x" />
+				</button>
 			</div>
 		</div>
 	{/if}
 </div>
 
-<div class="progress bg-theme" style:width={$progress + '%'} />
+<div class="progress bg-secondary" style:width={$progress + '%'} />
 
 <style lang="scss">
 	h1 {
-		font-size: 4.8rem;
+		font-size: 5rem;
+		line-height: 4rem;
 	}
 
 	h2 {
 		font-size: 2rem;
+		line-height: 2rem;
 	}
 
 	.icons {
