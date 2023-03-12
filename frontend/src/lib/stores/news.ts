@@ -19,8 +19,9 @@ export function getIndexStore(category: string, max: number) {
 	let store = stores.get(category);
 	if (!store) {
 		store = createStore();
-		store.setMax(max);
 		stores.set(category, store);
 	}
+
+	store.setMax(max);
 	return store;
 }
