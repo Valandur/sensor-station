@@ -5,18 +5,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Application = void 0;
 const chalk_1 = __importDefault(require("chalk"));
+const date_fns_1 = require("date-fns");
 const battery_1 = require("./services/battery");
+const calendar_1 = require("./services/calendar");
+const games_1 = require("./services/games");
 const modem_1 = require("./services/modem");
 const news_1 = require("./services/news");
 const sensor_1 = require("./services/sensor");
 const server_1 = require("./services/server");
-const weather_1 = require("./services/weather");
 const storage_1 = require("./services/storage");
-const calendar_1 = require("./services/calendar");
-const date_fns_1 = require("date-fns");
+const weather_1 = require("./services/weather");
 class Application {
     storage;
     battery;
+    games;
     modem;
     news;
     sensor;
@@ -27,6 +29,7 @@ class Application {
     constructor() {
         this.storage = new storage_1.Storage(this);
         this.battery = new battery_1.Battery(this);
+        this.games = new games_1.Games(this);
         this.modem = new modem_1.Modem(this);
         this.news = new news_1.News(this);
         this.sensor = new sensor_1.Sensor(this);
@@ -36,6 +39,7 @@ class Application {
         this.services = [
             this.storage,
             this.battery,
+            this.games,
             this.modem,
             this.news,
             this.sensor,

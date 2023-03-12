@@ -12,9 +12,9 @@ const cors_1 = __importDefault(require("@fastify/cors"));
 const mercurius_1 = __importDefault(require("mercurius"));
 const path_1 = require("path");
 const image_size_1 = __importDefault(require("image-size"));
+const child_process_1 = require("child_process");
 const service_1 = require("./service");
 const server_gql_1 = require("./server-gql");
-const child_process_1 = require("child_process");
 class Server extends service_1.Service {
     uploads = process.env['SERVER_UPLOAD_ENABLED'] === '1';
     screens = [];
@@ -30,31 +30,34 @@ class Server extends service_1.Service {
                 battery: () => ({
                     status: () => this.app.battery.status
                 }),
+                calendar: () => ({
+                    events: () => this.app.calendar.events
+                }),
+                games: () => ({
+                    freeEpic: () => this.app.games.freeEpic
+                }),
                 modem: () => ({
                     status: () => this.app.modem.status
                 }),
                 network: () => ({
                     interfaces: () => this.app.modem.interfaces
                 }),
-                weather: () => ({
-                    hourly: () => this.app.weather.hourly,
-                    daily: () => this.app.weather.daily,
-                    alerts: () => this.app.weather.alerts
+                news: () => ({
+                    items: ({ feed }) => this.app.news.getItems(feed)
                 }),
+                screens: () => this.screens,
                 sensors: () => ({
                     newest: () => this.app.sensor.newest,
                     recordings: () => this.app.sensor.getRecordings()
                 }),
-                news: () => ({
-                    items: ({ feed }) => this.app.news.getItems(feed)
-                }),
-                calendar: () => ({
-                    events: () => this.app.calendar.events
-                }),
                 uploads: () => ({
                     items: () => this.items
                 }),
-                screens: () => this.screens
+                weather: () => ({
+                    hourly: () => this.app.weather.hourly,
+                    daily: () => this.app.weather.daily,
+                    alerts: () => this.app.weather.alerts
+                })
             },
             Mutation: {
                 saveScreens: async (_, { screens }) => {
