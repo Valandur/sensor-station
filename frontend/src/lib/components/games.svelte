@@ -25,6 +25,8 @@
 	onDestroy(async () => {
 		index.increment();
 	});
+
+	const fmt = (date: string) => format(parseISO(date), 'dd MMM');
 </script>
 
 <div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
@@ -32,8 +34,11 @@
 		{#each games as game}
 			<div class="col">
 				<div class="card">
-					<div class="card-header fw-bold">
-						{format(parseISO(game.startsAt), 'dd MMM')} - {format(parseISO(game.endsAt), 'dd MMM')}
+					<div class="card-header fw-bold d-flex justify-content-between">
+						<div>
+							{fmt(game.startsAt)} - {fmt(game.endsAt)}
+						</div>
+						<div>Free</div>
 					</div>
 
 					<div class="card-body p-1 overflow-hidden">
