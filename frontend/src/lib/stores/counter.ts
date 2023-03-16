@@ -7,7 +7,10 @@ function createStore() {
 
 	return {
 		subscribe,
-		setMax: (newMax: number) => (max = newMax),
+		setMax: (newMax: number) => {
+			max = Math.max(1, newMax);
+			update((value) => value % max);
+		},
 		increment: () => update((n) => (n + 1) % max),
 		decrement: () => update((n) => (n <= 0 ? max : n) - 1)
 	};
@@ -15,11 +18,11 @@ function createStore() {
 
 const stores: Map<string, ReturnType<typeof createStore>> = new Map();
 
-export function getIndexStore(category: string, max: number) {
-	let store = stores.get(category);
+export function getStore(name: string, max: number) {
+	let store = stores.get(name);
 	if (!store) {
 		store = createStore();
-		stores.set(category, store);
+		stores.set(name, store);
 	}
 
 	store.setMax(max);

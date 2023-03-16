@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { getContextClient, queryStore } from '@urql/svelte';
+	import { format, parseISO } from 'date-fns';
 
 	import { GET_GAMES, type GetGames } from '$lib/models/games';
-	import { format, parseISO } from 'date-fns';
+	import { getStore } from '$lib/stores/counter';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
+
+	const MAX_ITEMS = 2;
 
 	$: store = queryStore<GetGames>({
 		query: GET_GAMES,
@@ -14,7 +18,13 @@
 		client: getContextClient()
 	});
 
-	$: games = $store.data?.games.freeEpic || [];
+	$: rawGames = $store.data?.games.freeEpic || [];
+	$: index = getStore('games', rawGames.length - 1);
+	$: games = [...rawGames.slice($index, $index + MAX_ITEMS)];
+
+	onDestroy(async () => {
+		index.increment();
+	});
 </script>
 
 <div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">

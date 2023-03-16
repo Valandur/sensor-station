@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
 	import { onDestroy } from 'svelte';
+	import { getContextClient, queryStore } from '@urql/svelte';
 
-	import { getIndexStore } from '$lib/stores/news';
+	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
 
 	import { BASE_URL } from '$lib/client';
@@ -23,7 +23,7 @@
 	let selectedItem: NewsItem | null = null;
 
 	$: rawNews = $store.data?.news.items || [];
-	$: index = getIndexStore(params, rawNews.length);
+	$: index = getStore('news_' + params, rawNews.length);
 	$: news = [
 		...rawNews.slice($index, $index + MAX_ITEMS),
 		...rawNews.slice(0, Math.max(MAX_ITEMS - (rawNews.length - $index), 0))

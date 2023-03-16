@@ -4,7 +4,7 @@
 	import de from 'date-fns/locale/de/index';
 	import { onDestroy } from 'svelte';
 
-	import { index } from '$lib/stores/uploads';
+	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
 
 	import { BASE_URL } from '$lib/client';
@@ -21,7 +21,7 @@
 	});
 
 	$: uploads = $store.data?.uploads.items || [];
-	$: index.setMax(uploads.length);
+	$: index = getStore('uploads', uploads.length);
 	$: item = uploads[$index];
 
 	onDestroy(async () => {
