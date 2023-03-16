@@ -20,7 +20,8 @@
 		"noUnusedParameters": true,
 		"importsNotUsedAsValues": "error",
 		"checkJs": true,
-		"outDir": "bin"
+		"outDir": "bin",
+		"sourceMap": true
 	},
 	"include": ["src/**/*"]
 }
