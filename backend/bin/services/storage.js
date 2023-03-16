@@ -62,3 +62,4 @@ class Storage extends service_1.Service {
     }
 }
 exports.Storage = Storage;
+//# sourceMappingURL=storage.js.map

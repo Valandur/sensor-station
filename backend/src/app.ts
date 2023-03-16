@@ -8,45 +8,49 @@ import { Calendar } from './services/calendar';
 import { Games } from './services/games';
 import { Modem } from './services/modem';
 import { News } from './services/news';
+import { SBB } from './services/sbb';
 import { Sensor } from './services/sensor';
 import { Server } from './services/server';
 import { Storage } from './services/storage';
 import { Weather } from './services/weather';
 
 export class Application {
-	public readonly storage: Storage;
 	public readonly battery: Battery;
+	public readonly calendar: Calendar;
 	public readonly games: Games;
 	public readonly modem: Modem;
 	public readonly news: News;
+	public readonly sbb: SBB;
 	public readonly sensor: Sensor;
 	public readonly server: Server;
+	public readonly storage: Storage;
 	public readonly weather: Weather;
-	public readonly calendar: Calendar;
 
 	private readonly services: Service[] = [];
 
 	public constructor() {
-		this.storage = new Storage(this);
 		this.battery = new Battery(this);
+		this.calendar = new Calendar(this);
 		this.games = new Games(this);
 		this.modem = new Modem(this);
 		this.news = new News(this);
+		this.sbb = new SBB(this);
 		this.sensor = new Sensor(this);
-		this.weather = new Weather(this);
 		this.server = new Server(this);
-		this.calendar = new Calendar(this);
+		this.storage = new Storage(this);
+		this.weather = new Weather(this);
 
 		this.services = [
-			this.storage,
+			this.storage, // Load storage first because others might need it
 			this.battery,
+			this.calendar,
 			this.games,
 			this.modem,
 			this.news,
+			this.sbb,
 			this.sensor,
-			this.weather,
 			this.server,
-			this.calendar
+			this.weather
 		];
 	}
 

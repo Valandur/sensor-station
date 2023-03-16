@@ -107,3 +107,4 @@ class News extends service_1.Service {
     }
 }
 exports.News = News;
+//# sourceMappingURL=news.js.map

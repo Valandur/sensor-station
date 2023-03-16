@@ -11,41 +11,45 @@ const calendar_1 = require("./services/calendar");
 const games_1 = require("./services/games");
 const modem_1 = require("./services/modem");
 const news_1 = require("./services/news");
+const sbb_1 = require("./services/sbb");
 const sensor_1 = require("./services/sensor");
 const server_1 = require("./services/server");
 const storage_1 = require("./services/storage");
 const weather_1 = require("./services/weather");
 class Application {
-    storage;
     battery;
+    calendar;
     games;
     modem;
     news;
+    sbb;
     sensor;
     server;
+    storage;
     weather;
-    calendar;
     services = [];
     constructor() {
-        this.storage = new storage_1.Storage(this);
         this.battery = new battery_1.Battery(this);
+        this.calendar = new calendar_1.Calendar(this);
         this.games = new games_1.Games(this);
         this.modem = new modem_1.Modem(this);
         this.news = new news_1.News(this);
+        this.sbb = new sbb_1.SBB(this);
         this.sensor = new sensor_1.Sensor(this);
-        this.weather = new weather_1.Weather(this);
         this.server = new server_1.Server(this);
-        this.calendar = new calendar_1.Calendar(this);
+        this.storage = new storage_1.Storage(this);
+        this.weather = new weather_1.Weather(this);
         this.services = [
             this.storage,
             this.battery,
+            this.calendar,
             this.games,
             this.modem,
             this.news,
+            this.sbb,
             this.sensor,
-            this.weather,
             this.server,
-            this.calendar
+            this.weather
         ];
     }
     async init() {
@@ -90,3 +94,4 @@ class Application {
     }
 }
 exports.Application = Application;
+//# sourceMappingURL=app.js.map

@@ -45,6 +45,9 @@ class Server extends service_1.Service {
                 news: () => ({
                     items: ({ feed }) => this.app.news.getItems(feed)
                 }),
+                sbb: () => ({
+                    alerts: () => this.app.sbb.alerts
+                }),
                 screens: () => this.screens,
                 sensors: () => ({
                     newest: () => this.app.sensor.newest,
@@ -171,3 +174,4 @@ class Server extends service_1.Service {
     }
 }
 exports.Server = Server;
+//# sourceMappingURL=server.js.map

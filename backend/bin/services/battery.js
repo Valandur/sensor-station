@@ -241,3 +241,4 @@ class Battery extends service_1.Service {
     };
 }
 exports.Battery = Battery;
+//# sourceMappingURL=battery.js.map

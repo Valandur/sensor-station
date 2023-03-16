@@ -142,3 +142,4 @@ class Weather extends service_1.Service {
     };
 }
 exports.Weather = Weather;
+//# sourceMappingURL=weather.js.map

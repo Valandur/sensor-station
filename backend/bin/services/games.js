@@ -7,6 +7,7 @@ exports.Games = void 0;
 const axios_1 = __importDefault(require("axios"));
 const date_fns_1 = require("date-fns");
 const service_1 = require("./service");
+const URL = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=CH&allowCountries=CH';
 class Games extends service_1.Service {
     timer = null;
     updatedAt = null;
@@ -36,7 +37,7 @@ class Games extends service_1.Service {
         try {
             const { data } = await axios_1.default.request({
                 method: 'GET',
-                url: 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=CH&allowCountries=CH'
+                url: URL
             });
             const rawGames = data.data.Catalog.searchStore.elements;
             const games = [];
@@ -70,3 +71,4 @@ class Games extends service_1.Service {
     };
 }
 exports.Games = Games;
+//# sourceMappingURL=games.js.map

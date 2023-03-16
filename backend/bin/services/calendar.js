@@ -61,7 +61,7 @@ class Calendar extends service_1.Service {
                 this.warn('Invalid calendar event', event);
                 continue;
             }
-            events?.push({ tsStart: start, tsEnd: end, content: event.summary });
+            events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
         }
         this.events = events;
     };
@@ -103,3 +103,4 @@ class Calendar extends service_1.Service {
     }
 }
 exports.Calendar = Calendar;
+//# sourceMappingURL=calendar.js.map

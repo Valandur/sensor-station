@@ -3,6 +3,9 @@ import { parseISO } from 'date-fns';
 
 import { Service } from './service';
 
+const URL =
+	'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=CH&allowCountries=CH';
+
 export interface Game {
 	title: string;
 	startsAt: string;
@@ -46,7 +49,7 @@ export class Games extends Service {
 		try {
 			const { data } = await axios.request({
 				method: 'GET',
-				url: 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=CH&allowCountries=CH'
+				url: URL
 			});
 
 			const rawGames = data.data.Catalog.searchStore.elements;

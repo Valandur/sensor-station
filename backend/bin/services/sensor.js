@@ -124,3 +124,4 @@ class Sensor extends service_1.Service {
     };
 }
 exports.Sensor = Sensor;
+//# sourceMappingURL=sensor.js.map

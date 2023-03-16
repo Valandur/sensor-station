@@ -16,3 +16,4 @@ const main = async () => {
     process.on('SIGINT', shutdown);
 };
 main().catch((err) => console.error(err));
+//# sourceMappingURL=main.js.map

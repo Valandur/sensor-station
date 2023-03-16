@@ -67,7 +67,7 @@ export class Storage extends Service {
 				throw new Error(`Database is not available`);
 			}
 
-			return this.db.all(query, params, (err, rows) => (err ? rej(err) : res(rows)));
+			return this.db.all(query, params, (err, rows: any[]) => (err ? rej(err) : res(rows)));
 		});
 	}
 }
