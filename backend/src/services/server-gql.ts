@@ -40,6 +40,7 @@ type CalendarEvent {
 	tsStart: String!
 	tsEnd: String!
 	content: String!
+	isWholeDay: Boolean!
 }
 
 type Games {

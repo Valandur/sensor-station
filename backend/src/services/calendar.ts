@@ -14,6 +14,7 @@ export interface CalendarEvent {
 	tsStart: string;
 	tsEnd: string;
 	content: string;
+	isWholeDay: boolean;
 }
 
 export class Calendar extends Service {
@@ -79,7 +80,7 @@ export class Calendar extends Service {
 				continue;
 			}
 
-			events?.push({ tsStart: start, tsEnd: end, content: event.summary });
+			events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
 		}
 		this.events = events;
 	};

@@ -8,6 +8,7 @@ export interface CalendarEvent {
 	tsStart: string;
 	tsEnd: string;
 	content: string;
+	isWholeDay: boolean;
 }
 
 export interface GetCalendarData {
@@ -20,6 +21,7 @@ export const GET_CALENDAR = gql`
 				tsStart
 				tsEnd
 				content
+				isWholeDay
 			}
 		}
 	}

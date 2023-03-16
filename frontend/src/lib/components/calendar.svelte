@@ -23,7 +23,11 @@
 		<div class="row">
 			<div class="col-1">{format(parseISO(event.tsStart), 'iii', { locale: de })}</div>
 			<div class="col-1">{format(parseISO(event.tsStart), 'd.')}</div>
-			<div class="col-2">{format(parseISO(event.tsStart), 'HH:mm')}</div>
+			{#if event.isWholeDay}
+				<div class="col-2">-------</div>
+			{:else}
+				<div class="col-2">{format(parseISO(event.tsStart), 'HH:mm')}</div>
+			{/if}
 			<div class="col">{event.content}</div>
 		</div>
 	{/each}
