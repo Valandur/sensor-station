@@ -1,7 +1,6 @@
-import { mkdir, readdir, readFile, rm, writeFile } from 'fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import Fastify, { FastifyInstance } from 'fastify';
 import FastifyStatic from '@fastify/static';
-import FastifyFileUpload from 'fastify-file-upload';
 import cors from '@fastify/cors';
 import mercurius, { IResolverObject, IResolvers } from 'mercurius';
 import { resolve } from 'path';
@@ -159,11 +158,20 @@ export class Server extends Service {
 			return;
 		}
 
-		await this.webApp.register(FastifyFileUpload);
 		await this.webApp.register(FastifyStatic, {
 			root: resolve('data', 'server', 'uploads'),
 			prefix: '/data/server/uploads',
 			decorateReply: false
+		});
+
+		// Serve any frontend .html files on their respective routes
+		this.webApp.get<{ Params: { path: string } }>('/:path', async (req, res) => {
+			const fileName = `${req.params.path}.html`;
+			if (await stat(`../frontend/build/${fileName}`).catch(() => false)) {
+				return res.sendFile(fileName);
+			} else {
+				return undefined;
+			}
 		});
 	}
 

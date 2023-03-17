@@ -7,7 +7,6 @@ exports.Server = void 0;
 const promises_1 = require("fs/promises");
 const fastify_1 = __importDefault(require("fastify"));
 const static_1 = __importDefault(require("@fastify/static"));
-const fastify_file_upload_1 = __importDefault(require("fastify-file-upload"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const mercurius_1 = __importDefault(require("mercurius"));
 const path_1 = require("path");
@@ -123,11 +122,20 @@ class Server extends service_1.Service {
             this.log('UPLOADS DISABLED');
             return;
         }
-        await this.webApp.register(fastify_file_upload_1.default);
         await this.webApp.register(static_1.default, {
             root: (0, path_1.resolve)('data', 'server', 'uploads'),
             prefix: '/data/server/uploads',
             decorateReply: false
+        });
+        // Serve any frontend .html files on their respective routes
+        this.webApp.get('/:path', async (req, res) => {
+            const fileName = `${req.params.path}.html`;
+            if (await (0, promises_1.stat)(`../frontend/build/${fileName}`).catch(() => false)) {
+                return res.sendFile(fileName);
+            }
+            else {
+                return undefined;
+            }
         });
     }
     async doStart() {
