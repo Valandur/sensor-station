@@ -30,6 +30,7 @@ export interface UploadItem {
 export interface Screen {
 	id: number;
 	name: string;
+	sort: number;
 	params: string;
 }
 
@@ -49,7 +50,7 @@ export class Server extends Service {
 
 	protected override async doInit(): Promise<void> {
 		await this.app.storage.run(
-			'CREATE TABLE IF NOT EXISTS screens (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, params TEXT)'
+			'CREATE TABLE IF NOT EXISTS screens (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, sort INTEGER, params TEXT)'
 		);
 		await this.app.storage.run(
 			'CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)'
@@ -100,11 +101,12 @@ export class Server extends Service {
 					await this.app.storage.run('DELETE FROM screens');
 
 					await this.app.storage.runPrepared(
-						'INSERT INTO screens (id, name, params) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, params = excluded.params',
-						screens.map((screen) => [screen.id, screen.name, screen.params])
+						'INSERT INTO screens (id, name, sort, params) ' +
+							'VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, sort = excluded.sort, params = excluded.params',
+						screens.map((screen, i) => [screen.id, screen.name, i + 1, screen.params])
 					);
 
-					this.screens = await this.app.storage.all('SELECT * FROM screens');
+					this.screens = await this.app.storage.all('SELECT * FROM screens ORDER BY sort');
 
 					return this.screens;
 				},
@@ -209,7 +211,7 @@ export class Server extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
-		this.screens = await this.app.storage.all('SELECT * FROM screens');
+		this.screens = await this.app.storage.all('SELECT * FROM screens ORDER BY sort');
 		this.log(`Loaded ${this.screens.length} screens`);
 
 		if (this.uploads) {

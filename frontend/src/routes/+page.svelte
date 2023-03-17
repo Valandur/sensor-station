@@ -15,6 +15,7 @@
 	import News from '$lib/components/news.svelte';
 	import Uploads from '$lib/components/uploads.svelte';
 	import Weather from '$lib/components/weather.svelte';
+	import Sbb from '$lib/components/sbb.svelte';
 
 	const tz = 'Europe/Zurich';
 	const holidays = new Holidays('CH', 'ZH');
@@ -22,6 +23,7 @@
 		calendar: Calendar,
 		games: Games,
 		news: News,
+		sbb: Sbb,
 		uploads: Uploads,
 		weather: Weather
 	};
@@ -156,9 +158,17 @@
 				transition:fade
 			>
 				{#if currScreen}
-					<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+					{#if currScreen.name in COMPONENT_MAP}
+						<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+					{:else}
+						<p class="alert alert-danger m-2">Unknown screen type '{currScreen.name}'</p>
+					{/if}
 				{:else}
-					<p>There are no screens setup! Check the <a href="/settings">settings</a> to add some.</p>
+					<p class="alert alert-info m-2">
+						There are no screens setup! Check the
+						<a class="alert-link" href="/settings">settings</a>
+						to add some.
+					</p>
 				{/if}
 			</div>
 		{/key}
@@ -167,7 +177,7 @@
 	{#if showToolbar}
 		<div class="toolbar row p-2 bg-dark" transition:slide={{ duration: 500 }}>
 			<div class="col-auto">
-				<a class="btn btn-primary" href="/settings">
+				<a class="btn btn-theme" href="/settings">
 					<i class="icofont-gears icofont-2x" />
 				</a>
 			</div>
