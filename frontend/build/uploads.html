@@ -7,7 +7,7 @@
 		<meta name="viewport" content="width=device-width" />
 		<meta http-equiv="content-security-policy" content="">
 		<link href="./_app/immutable/assets/_layout.f7ae5332.css" rel="stylesheet">
-		<link href="./_app/immutable/assets/_page.cca83e5b.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/_page.99eaf8cf.css" rel="stylesheet">
 		<link rel="modulepreload" href="./_app/immutable/entry/start.61dd87c6.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/index.6bf2a23c.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/singletons.8f80860e.js">
@@ -18,35 +18,28 @@
 		<link rel="modulepreload" href="./_app/immutable/chunks/client.d806a174.js">
 		<link rel="modulepreload" href="./_app/immutable/entry/_layout.ts.984db11e.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/_layout.da46b06b.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/_page.svelte.7afe0a68.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/_commonjsHelpers.042e6b4d.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/uploads-page.svelte.603edfe2.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/upload.62040776.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
 
 
-<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column"><div class="row mb-3"><div class="col-auto d-flex flex-column justify-content-end"><h1 class="m-0 mt-2 p-0 svelte-19i45pf">16:23</h1></div>
+<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column"><div class="row"><div class="col"><h1>Uploads</h1></div></div>
 
-		<div class="col text-end d-flex flex-column justify-content-end"><div class="row icons justify-content-end svelte-19i45pf">
+	<div class="row overflow-auto"><table class="table table-sm"><colgroup><col width="10%">
+				<col width="15%">
+				<col width="75%">
+				<col></colgroup>
 
-				
+			<tbody><tr><td><button class="btn btn-sm"><i class="icofont-image icofont-2x"></i></button>
+						<input type="file" accept=".jpg, .jpeg, .png .mp4" class="svelte-1h3r0r0" style="display: none;"></td>
+					<td><input type="date" class="form-control form-control-sm svelte-1h3r0r0" value="2023-03-17"></td>
+					<td><input type="text" class="form-control form-control-sm svelte-1h3r0r0" value=""></td>
+					<td><button class="btn btn-sm  btn-outline-secondary" disabled><i class="icofont-ui-add"></i></button></td></tr>
 
-				</div>
-
-			<div class="row justify-content-end"><h2 class="col m-0 svelte-19i45pf">17. März</h2></div>
-
-			<div class="row justify-content-end">
-				<h4 class="col-auto m-0">Freitag</h4></div></div></div>
-
-	<div class="row flex-fill position-relative"><div class="container h-100 w-100 m-0 p-0 position-absolute" style="overflow: hidden;"><p class="alert alert-info m-2">There are no screens setup! Check the
-						<a class="alert-link" href="/settings">settings</a>
-						to add some.
-					</p></div></div>
-
-	</div>
-
-<div class="progress bg-secondary svelte-19i45pf" style="width: 0%;"></div>
+				</tbody></table></div>
+</div>
 
 
 			
@@ -65,7 +58,7 @@
 						import("./_app/immutable/entry/app.f14bfb73.js")
 					]).then(([kit, app]) => {
 						kit.start(app, __sveltekit_e9skzb.element, {
-							node_ids: [0, 2],
+							node_ids: [0, 5],
 							data,
 							form: null,
 							error: null
