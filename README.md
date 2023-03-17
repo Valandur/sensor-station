@@ -40,6 +40,7 @@ chromium-browser http://localhost \
   --overscroll-history-navigation=0 \
   --disable-pinch \
   --check-for-update-interval=31536000 \
+  --no-user-gesture-required \
   --force-dark-mode
 ```
 
