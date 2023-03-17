@@ -27,8 +27,4 @@
 		overflow: hidden;
 		overscroll-behavior: none;
 	}
-
-	:global(option) {
-		background-color: var(--bs-dark);
-	}
 </style>

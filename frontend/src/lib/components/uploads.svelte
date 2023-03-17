@@ -50,15 +50,11 @@
 		on:touchstart={touchStart}
 		on:touchend={touchEnd}
 	>
-		<div
-			class="m-0 p-0 bg-dark bg-opacity-75 image-container"
-			class:full={item.ratio < 1}
-			class:m-1={item.ratio < 1}
-		>
+		<div class="m-0 p-0 image-container" class:full={item.ratio < 1} class:m-1={item.ratio < 1}>
 			{#if item.img.endsWith('.mp4')}
-				<video src={BASE_URL + '/uploads/' + item.img} autoplay muted loop />
+				<video src={BASE_URL + '/data/server/uploads/' + item.img} autoplay muted loop />
 			{:else}
-				<img src={BASE_URL + '/uploads/' + item.img} alt="Upload" />
+				<img src={BASE_URL + '/data/server/uploads/' + item.img} alt="Upload" />
 			{/if}
 		</div>
 
@@ -86,30 +82,25 @@
 <style lang="scss">
 	.image-container {
 		min-width: 50%;
-	}
 
-	img,
-	video {
-		max-height: 100%;
-		max-width: 100%;
-	}
-
-	.full {
-		position: fixed;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		background-color: transparent !important;
-		background-image: linear-gradient(
-			to left,
-			rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) 50%,
-			transparent
-		);
-
-		> img,
+		img,
 		video {
-			position: absolute;
+			max-height: 100%;
+			max-width: 100%;
+		}
+
+		&.full {
+			position: fixed;
+			top: 0;
 			right: 0;
+			bottom: 0;
+			background-image: linear-gradient(to left, rgba(var(--bs-dark-rgb), 1) 50%, transparent);
+
+			> img,
+			video {
+				position: absolute;
+				right: 0;
+			}
 		}
 	}
 

@@ -4,10 +4,13 @@ import FastifyStatic from '@fastify/static';
 import FastifyFileUpload from 'fastify-file-upload';
 import cors from '@fastify/cors';
 import mercurius, { IResolverObject, IResolvers } from 'mercurius';
-import { extname, resolve } from 'path';
+import { resolve } from 'path';
 import imageSize from 'image-size';
 import getDimensions from 'get-video-dimensions';
 import { exec } from 'child_process';
+import { createHash } from 'crypto';
+import mime from 'mime-types';
+import { parseISO } from 'date-fns';
 
 import { Service } from './service';
 import { GQL_SCHEMA } from './server-gql';
@@ -95,6 +98,45 @@ export class Server extends Service {
 					await writeFile('./data/server/screens.json', JSON.stringify(screens), 'utf-8');
 					return this.screens;
 				},
+				saveUpload: async (_, { img, ts, title }: { img: string; ts: string; title: string }) => {
+					// If 'img' looks like a data url then we're uploading a new image, otherwise upading an existing one
+					if (img.startsWith('data:')) {
+						const data = Buffer.from(img.substring(img.indexOf(',')), 'base64');
+						const hash = createHash('md5').update(ts, 'utf-8').update(title, 'utf-8').update(data).digest('hex');
+						const ext = mime.extension(img.substring(5, img.indexOf(';')));
+
+						img = `${hash}.${ext}`;
+						const fileName = `./data/server/uploads/${img}`;
+
+						await writeFile(fileName, data);
+						const ratio = await this.getRatio(fileName, data);
+
+						if (this.uploadItems) {
+							this.uploadItems.push({ ts, title, img, ratio });
+							await this.saveUploadItems();
+						}
+					} else {
+						if (this.uploadItems) {
+							this.uploadItems = this.uploadItems.map((item) => (item.img !== img ? item : { ...item, ts, title }));
+							await this.saveUploadItems();
+						}
+					}
+
+					return this.uploadItems;
+				},
+				deleteUpload: async (_, { img }: { img: string }) => {
+					if (this.uploadItems) {
+						if (!this.uploadItems.some((item) => item.img === img)) {
+							throw new Error(`Image not found`);
+						}
+
+						await rm(`./data/server/uploads/${img}`);
+						this.uploadItems = this.uploadItems.filter((item) => item.img !== img);
+						await this.saveUploadItems();
+					}
+
+					return this.uploadItems;
+				},
 				restart: async () => {
 					exec('sudo /sbin/shutdown -r now', (msg) => this.log(msg));
 					return true;
@@ -120,64 +162,8 @@ export class Server extends Service {
 		await this.webApp.register(FastifyFileUpload);
 		await this.webApp.register(FastifyStatic, {
 			root: resolve('data', 'server', 'uploads'),
-			prefix: '/uploads',
+			prefix: '/data/server/uploads',
 			decorateReply: false
-		});
-
-		this.webApp.post<{ Body: { title: string; ts: string } }>('/uploads', async (req, res) => {
-			const files = req.raw.files;
-			const file = files?.[0];
-			if (!file) {
-				res.status(400);
-				res.send({ error: 'No file uploaded' });
-				return;
-			}
-
-			const ts = req.body.ts;
-			const title = req.body.title;
-			const img = `${file.md5}${extname(file.name).toLowerCase()}`;
-
-			const fileName = `./data/server/uploads/${img}`;
-			file.mv(fileName);
-
-			const ratio = await this.getRatio(fileName, file.data);
-
-			if (this.uploadItems) {
-				this.uploadItems.push({ ts, title, img, ratio });
-				await writeFile('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
-			}
-
-			res.status(201).send();
-		});
-		this.webApp.put<{ Params: { img: string }; Body: { title: string; ts: string } }>(
-			'/uploads/:img',
-			async (req, res) => {
-				const img = req.params.img;
-				const ts = req.body.ts;
-				const title = req.body.title;
-
-				if (this.uploadItems) {
-					this.uploadItems = this.uploadItems.map((item) => (item.img !== img ? item : { ...item, ts, title }));
-					await writeFile('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
-				}
-
-				res.status(200).send();
-			}
-		);
-		this.webApp.delete<{ Params: { img: string } }>('/uploads/:img', async (req, res) => {
-			const img = req.params.img;
-
-			if (this.uploadItems) {
-				if (!this.uploadItems.some((item) => item.img === img)) {
-					throw new Error(`Image not found`);
-				}
-
-				await rm(`./data/server/uploads/${img}`);
-				this.uploadItems = this.uploadItems.filter((item) => item.img !== img);
-				await writeFile('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
-			}
-
-			res.status(200).send();
 		});
 	}
 
@@ -205,7 +191,7 @@ export class Server extends Service {
 			this.uploadItems = items;
 
 			if (added) {
-				await writeFile('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
+				await this.saveUploadItems();
 			}
 		}
 
@@ -255,5 +241,14 @@ export class Server extends Service {
 		}
 
 		return 1;
+	}
+
+	private async saveUploadItems() {
+		if (!this.uploadItems) {
+			return;
+		}
+
+		this.uploadItems = this.uploadItems.sort((a, b) => parseISO(a.ts).getTime() - parseISO(b.ts).getTime());
+		await writeFile('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
 	}
 }

@@ -15,6 +15,8 @@ type Query {
 
 type Mutation {
 	saveScreens(screens: [ScreenInput!]!): [Screen!]!
+	saveUpload(img: String!, ts: String!, title: String!): [UploadItem!]
+	deleteUpload(img: String!): [UploadItem!]
 	restart: Boolean!
 }
 

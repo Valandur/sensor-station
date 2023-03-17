@@ -75,6 +75,32 @@
 			</colgroup>
 
 			<tbody>
+				<tr>
+					<td>
+						<select class="form-select form-select-sm" bind:value={newName}>
+							{#each Object.entries(screenNames) as [value, name]}
+								<option {value}>{name}</option>
+							{/each}
+						</select>
+					</td>
+					<td>
+						{#if newName in screenParams}
+							<select class="form-select form-select-sm" bind:value={newParams}>
+								{#each Object.entries(screenParams[newName]) as [value, name]}
+									<option {value}>{name}</option>
+								{/each}
+							</select>
+						{/if}
+					</td>
+					<td />
+					<td />
+					<td>
+						<button class="btn btn-sm btn-outline-success" on:click={add}>
+							<i class="icofont-ui-add" />
+						</button>
+					</td>
+				</tr>
+
 				{#each screens as screen, i}
 					<tr>
 						<td>{screenNames[screen.name] || screen.name}</td>
@@ -108,35 +134,6 @@
 						</td>
 					</tr>
 				{/each}
-
-				<tr>
-					<td>
-						<select class="form-control form-control-sm" bind:value={newName}>
-							{#each Object.entries(screenNames) as [value, name]}
-								<option {value}>{name}</option>
-							{/each}
-						</select>
-					</td>
-
-					<td>
-						{#if newName in screenParams}
-							<select class="form-control form-control-sm" bind:value={newParams}>
-								{#each Object.entries(screenParams[newName]) as [value, name]}
-									<option {value}>{name}</option>
-								{/each}
-							</select>
-						{/if}
-					</td>
-
-					<td />
-					<td />
-
-					<td>
-						<button class="btn btn-sm btn-outline-success" on:click={add}>
-							<i class="icofont-ui-add" />
-						</button>
-					</td>
-				</tr>
 			</tbody>
 		</table>
 	</div>
