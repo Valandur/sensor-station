@@ -14,7 +14,6 @@ const news_1 = require("./services/news");
 const sbb_1 = require("./services/sbb");
 const sensor_1 = require("./services/sensor");
 const server_1 = require("./services/server");
-const storage_1 = require("./services/storage");
 const weather_1 = require("./services/weather");
 class Application {
     battery;
@@ -25,7 +24,6 @@ class Application {
     sbb;
     sensor;
     server;
-    storage;
     weather;
     services = [];
     constructor() {
@@ -37,10 +35,8 @@ class Application {
         this.sbb = new sbb_1.SBB(this);
         this.sensor = new sensor_1.Sensor(this);
         this.server = new server_1.Server(this);
-        this.storage = new storage_1.Storage(this);
         this.weather = new weather_1.Weather(this);
         this.services = [
-            this.storage,
             this.battery,
             this.calendar,
             this.games,

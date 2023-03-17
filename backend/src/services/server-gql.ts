@@ -109,7 +109,6 @@ type SBBAlert {
 }
 
 type Screen {
-	id: Int!
 	name: String!
 	params: String!
 }

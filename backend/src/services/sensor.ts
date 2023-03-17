@@ -1,4 +1,6 @@
-import { stat } from 'fs/promises';
+import { isValid, parseISO } from 'date-fns';
+import { appendFile, mkdir, readFile, stat } from 'fs/promises';
+
 import { Service } from './service';
 
 const DEVICE_PATH = `/dev/gpiomem`;
@@ -26,9 +28,7 @@ export class Sensor extends Service {
 	public newest: Recording | null = null;
 
 	protected override async doInit(): Promise<void> {
-		await this.app.storage.run(
-			'CREATE TABLE IF NOT EXISTS recordings (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, temp DOUBLE, rh DOUBLE)'
-		);
+		await mkdir('./data/sensor', { recursive: true });
 
 		if (!(await this.checkDevice())) {
 			return;
@@ -131,11 +131,11 @@ export class Sensor extends Service {
 				return;
 			}
 
-			await this.app.storage.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [
-				this.newest.ts,
-				this.newest.temp,
-				this.newest.rh
-			]);
+			await appendFile(
+				'./data/sensor/recordings.csv',
+				`${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`,
+				'utf-8'
+			);
 
 			this.lastRecordedTs = this.newest.ts;
 
@@ -146,6 +146,11 @@ export class Sensor extends Service {
 	};
 
 	public getRecordings = async (): Promise<Recording[]> => {
-		return this.app.storage.all('SELECT ts, temp, rh FROM recordings');
+		const lines = await readFile('./data/sensor/recordings.csv', 'utf-8');
+		return lines
+			.split('\n')
+			.map((line) => line.split(','))
+			.map(([ts, temp, rh]) => ({ ts: ts!, temp: Number(temp), rh: Number(rh) }))
+			.filter((rec) => isValid(parseISO(rec.ts)) && isFinite(rec.temp) && isFinite(rec.rh));
 	};
 }

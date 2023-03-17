@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sensor = void 0;
+const date_fns_1 = require("date-fns");
 const promises_1 = require("fs/promises");
 const service_1 = require("./service");
 const DEVICE_PATH = `/dev/gpiomem`;
@@ -13,7 +14,7 @@ class Sensor extends service_1.Service {
     recordTimer = null;
     newest = null;
     async doInit() {
-        await this.app.storage.run('CREATE TABLE IF NOT EXISTS recordings (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, temp DOUBLE, rh DOUBLE)');
+        await (0, promises_1.mkdir)('./data/sensor', { recursive: true });
         if (!(await this.checkDevice())) {
             return;
         }
@@ -107,11 +108,7 @@ class Sensor extends service_1.Service {
                 this.error('Skipping recording because no new values are available');
                 return;
             }
-            await this.app.storage.run('INSERT INTO recordings (ts, temp, rh) VALUES (?, ?, ?)', [
-                this.newest.ts,
-                this.newest.temp,
-                this.newest.rh
-            ]);
+            await (0, promises_1.appendFile)('./data/sensor/recordings.csv', `${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`, 'utf-8');
             this.lastRecordedTs = this.newest.ts;
             this.log(`Recorded temp & rh`, this.newest);
         }
@@ -120,7 +117,12 @@ class Sensor extends service_1.Service {
         }
     };
     getRecordings = async () => {
-        return this.app.storage.all('SELECT ts, temp, rh FROM recordings');
+        const lines = await (0, promises_1.readFile)('./data/sensor/recordings.csv', 'utf-8');
+        return lines
+            .split('\n')
+            .map((line) => line.split(','))
+            .map(([ts, temp, rh]) => ({ ts: ts, temp: Number(temp), rh: Number(rh) }))
+            .filter((rec) => (0, date_fns_1.isValid)((0, date_fns_1.parseISO)(rec.ts)) && isFinite(rec.temp) && isFinite(rec.rh));
     };
 }
 exports.Sensor = Sensor;

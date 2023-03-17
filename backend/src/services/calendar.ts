@@ -24,7 +24,6 @@ export class Calendar extends Service {
 	public events: CalendarEvent[] | null = null;
 
 	protected override async doInit(): Promise<void> {
-		await this.app.storage.run('DROP TABLE IF EXISTS events');
 		this.creds = await this.authorize();
 	}
 

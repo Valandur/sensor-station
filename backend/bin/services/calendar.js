@@ -14,7 +14,6 @@ class Calendar extends service_1.Service {
     timer = null;
     events = null;
     async doInit() {
-        await this.app.storage.run('DROP TABLE IF EXISTS events');
         this.creds = await this.authorize();
     }
     async doStart() {

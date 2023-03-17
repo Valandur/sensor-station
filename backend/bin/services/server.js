@@ -12,17 +12,17 @@ const cors_1 = __importDefault(require("@fastify/cors"));
 const mercurius_1 = __importDefault(require("mercurius"));
 const path_1 = require("path");
 const image_size_1 = __importDefault(require("image-size"));
+const get_video_dimensions_1 = __importDefault(require("get-video-dimensions"));
 const child_process_1 = require("child_process");
 const service_1 = require("./service");
 const server_gql_1 = require("./server-gql");
 class Server extends service_1.Service {
-    uploads = process.env['SERVER_UPLOAD_ENABLED'] === '1';
+    uploadsEnabled = process.env['SERVER_UPLOAD_ENABLED'] === '1';
     screens = [];
-    items = null;
+    uploadItems = null;
     webApp = null;
     async doInit() {
-        await this.app.storage.run('CREATE TABLE IF NOT EXISTS screens (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, params TEXT)');
-        await this.app.storage.run('CREATE TABLE IF NOT EXISTS uploads (id INTEGER PRIMARY KEY AUTOINCREMENT, ts DATETIME, title TEXT, img TEXT, ratio DOUBLE)');
+        await (0, promises_1.mkdir)('./data/server/uploads', { recursive: true });
         this.webApp = (0, fastify_1.default)({ maxParamLength: 255 });
         await this.webApp.register(cors_1.default, { origin: true, credentials: true });
         const resolvers = {
@@ -54,7 +54,7 @@ class Server extends service_1.Service {
                     recordings: () => this.app.sensor.getRecordings()
                 }),
                 uploads: () => ({
-                    items: () => this.items
+                    items: () => this.uploadItems
                 }),
                 weather: () => ({
                     hourly: () => this.app.weather.hourly,
@@ -64,9 +64,8 @@ class Server extends service_1.Service {
             },
             Mutation: {
                 saveScreens: async (_, { screens }) => {
-                    await this.app.storage.run('DELETE FROM screens');
-                    await this.app.storage.runPrepared('INSERT INTO screens (id, name, params) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, params = excluded.params', screens.map((screen) => [screen.id, screen.name, screen.params]));
-                    this.screens = await this.app.storage.all('SELECT * FROM screens');
+                    this.screens = screens;
+                    await (0, promises_1.writeFile)('./data/server/screens.json', JSON.stringify(screens), 'utf-8');
                     return this.screens;
                 },
                 restart: async () => {
@@ -83,17 +82,17 @@ class Server extends service_1.Service {
             res.send(page);
         });
         // Exit here if we don't need any of the upload stuff
-        if (!this.uploads) {
+        if (!this.uploadsEnabled) {
             this.log('UPLOADS DISABLED');
             return;
         }
         await this.webApp.register(fastify_file_upload_1.default);
         await this.webApp.register(static_1.default, {
-            root: (0, path_1.resolve)('data', 'upload'),
-            prefix: '/upload',
+            root: (0, path_1.resolve)('data', 'server', 'uploads'),
+            prefix: '/uploads',
             decorateReply: false
         });
-        this.webApp.post('/upload', async (req, res) => {
+        this.webApp.post('/uploads', async (req, res) => {
             const files = req.raw.files;
             const file = files?.[0];
             if (!file) {
@@ -101,57 +100,57 @@ class Server extends service_1.Service {
                 res.send({ error: 'No file uploaded' });
                 return;
             }
-            const title = req.body.title;
             const ts = req.body.ts;
-            const path = `/upload/${file.md5}${(0, path_1.extname)(file.name)}`;
-            file.mv(`data/${path}`);
-            const size = (0, image_size_1.default)(file.data);
-            if (!size.height || !size.width || !size.orientation) {
-                throw new Error('Could not get size & orientation from image');
-            }
-            const ratio = size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
-            const id = await this.app.storage.run('INSERT INTO uploads (ts, title, img, ratio) VALUES (?, ?, ?, ?)', [
-                ts,
-                title,
-                path,
-                ratio
-            ]);
-            if (this.items) {
-                this.items.push({ id, ts, title, img: path, ratio });
+            const title = req.body.title;
+            const img = `${file.md5}${(0, path_1.extname)(file.name).toLowerCase()}`;
+            const fileName = `./data/server/uploads/${img}`;
+            file.mv(fileName);
+            const ratio = await this.getRatio(fileName, file.data);
+            if (this.uploadItems) {
+                this.uploadItems.push({ ts, title, img, ratio });
+                await (0, promises_1.writeFile)('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
             }
             res.status(201).send();
         });
-        this.webApp.put('/upload/:id', async (req, res) => {
-            const id = req.params.id;
+        this.webApp.put('/uploads/:img', async (req, res) => {
+            const img = req.params.img;
             const ts = req.body.ts;
             const title = req.body.title;
-            const img = req.body.img;
-            await this.app.storage.run('UPDATE uploads SET ts = ?, title = ?, img = ? WHERE id = ?', [ts, title, img, id]);
-            if (this.items) {
-                this.items = this.items.map((item) => (item.id !== id ? item : { ...item, ts, title, img }));
+            if (this.uploadItems) {
+                this.uploadItems = this.uploadItems.map((item) => (item.img !== img ? item : { ...item, ts, title }));
+                await (0, promises_1.writeFile)('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
             }
             res.status(200).send();
         });
-        this.webApp.delete('/upload/:id', async (req, res) => {
-            const id = req.params.id;
-            if (this.items) {
-                const item = this.items.find((item) => item.id === id);
-                if (!item) {
+        this.webApp.delete('/uploads/:img', async (req, res) => {
+            const img = req.params.img;
+            if (this.uploadItems) {
+                if (!this.uploadItems.some((item) => item.img === img)) {
                     throw new Error(`Image not found`);
                 }
-                await (0, promises_1.rm)(`data/${item.img}`);
-                this.items = this.items.filter((item) => item.id !== id);
+                await (0, promises_1.rm)(`./data/server/uploads/${img}`);
+                this.uploadItems = this.uploadItems.filter((item) => item.img !== img);
+                await (0, promises_1.writeFile)('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
             }
-            await this.app.storage.run('DELETE FROM uploads WHERE id = ?', [id]);
             res.status(200).send();
         });
     }
     async doStart() {
-        this.screens = await this.app.storage.all('SELECT * FROM screens');
+        this.screens = JSON.parse(await (0, promises_1.readFile)('./data/server/screens.json', 'utf-8').catch(() => '[]'));
         this.log(`Loaded ${this.screens.length} screens`);
-        if (this.uploads) {
-            this.items = await this.app.storage.all('SELECT * FROM uploads');
-            this.log(`Loaded ${this.items.length} uploaded images`);
+        if (this.uploadsEnabled) {
+            const items = JSON.parse(await (0, promises_1.readFile)('./data/server/uploads.json', 'utf-8').catch(() => '[]'));
+            this.log(`Loaded ${items.length} uploaded images`);
+            const files = await (0, promises_1.readdir)('./data/server/uploads');
+            for (const file of files) {
+                if (items.some((item) => item.img === file)) {
+                    continue;
+                }
+                this.warn(`Found upload file without data entry: ${file}`);
+                const ratio = await this.getRatio(`./data/server/uploads/${file}`);
+                items.push({ ts: new Date().toISOString(), title: '', img: file, ratio });
+            }
+            this.uploadItems = items;
         }
         if (!this.webApp) {
             throw new Error('WebApp not available');
@@ -165,12 +164,36 @@ class Server extends service_1.Service {
             await this.webApp.close();
         }
         this.screens = [];
-        this.items = null;
+        this.uploadItems = null;
     }
     async doDispose() {
         if (this.webApp) {
             this.webApp = null;
         }
+    }
+    async getRatio(fileName, data) {
+        if (fileName.endsWith('.mp4')) {
+            try {
+                const dims = await (0, get_video_dimensions_1.default)(fileName);
+                return dims.width / dims.height;
+            }
+            catch (err) {
+                this.error('Could not get video size', err);
+            }
+        }
+        else {
+            try {
+                const size = (0, image_size_1.default)(data ? data : await (0, promises_1.readFile)(fileName));
+                if (!size.height || !size.width || !size.orientation) {
+                    throw new Error(`Missing size information: ${JSON.stringify(size)}`);
+                }
+                return size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
+            }
+            catch (err) {
+                this.error('Could not get image size', err);
+            }
+        }
+        return 1;
     }
 }
 exports.Server = Server;

@@ -11,7 +11,6 @@ import { News } from './services/news';
 import { SBB } from './services/sbb';
 import { Sensor } from './services/sensor';
 import { Server } from './services/server';
-import { Storage } from './services/storage';
 import { Weather } from './services/weather';
 
 export class Application {
@@ -23,7 +22,6 @@ export class Application {
 	public readonly sbb: SBB;
 	public readonly sensor: Sensor;
 	public readonly server: Server;
-	public readonly storage: Storage;
 	public readonly weather: Weather;
 
 	private readonly services: Service[] = [];
@@ -37,11 +35,9 @@ export class Application {
 		this.sbb = new SBB(this);
 		this.sensor = new Sensor(this);
 		this.server = new Server(this);
-		this.storage = new Storage(this);
 		this.weather = new Weather(this);
 
 		this.services = [
-			this.storage, // Load storage first because others might need it
 			this.battery,
 			this.calendar,
 			this.games,
