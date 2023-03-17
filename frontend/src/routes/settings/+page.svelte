@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
 
-	import { GET_SCREENS, SAVE_SCREENS, type GetScreensData } from '$lib/models/screen';
+	import {
+		GET_SCREENS,
+		SAVE_SCREENS,
+		screenNames,
+		screenParams,
+		type GetScreensData,
+		type Screen
+	} from '$lib/models/screen';
 
 	let newName = '';
 	let newParams = '';
@@ -14,30 +21,37 @@
 	});
 	$: screens = $store.data?.screens || [];
 
-	$: add = () => {
+	$: save = (newScreens: Screen[]) =>
 		mutationStore({
 			query: SAVE_SCREENS,
 			variables: {
-				screens: [{ name: newName, params: newParams }].concat(
-					screens.map((screen) => ({ id: screen.id, name: screen.name, params: screen.params }))
-				)
+				screens: newScreens.map((screen) => ({
+					name: screen.name,
+					params: Object.keys(screenParams[screen.name] || {}).includes(screen.params)
+						? screen.params
+						: ''
+				}))
 			},
 			context: { additionalTypenames: ['Screen'] },
 			client
 		});
-	};
-	$: del = (id: number) => {
-		mutationStore({
-			query: SAVE_SCREENS,
-			variables: {
-				screens: screens
-					.filter((screen) => screen.id !== id)
-					.map((screen) => ({ id: screen.id, name: screen.name, params: screen.params }))
-			},
-			context: { additionalTypenames: ['Screen'] },
-			client
-		});
-	};
+
+	$: add = () => save([...screens, { name: newName, params: newParams }]);
+	$: del = (index: number) => save(screens.filter((screen, i) => i !== index));
+	$: moveUp = (index: number) =>
+		save([
+			...screens.slice(0, index - 1),
+			screens[index],
+			screens[index - 1],
+			...screens.slice(index + 1)
+		]);
+	$: moveDown = (index: number) =>
+		save([
+			...screens.slice(0, index),
+			screens[index + 1],
+			screens[index],
+			...screens.slice(index + 2)
+		]);
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
@@ -46,7 +60,7 @@
 			<h1>Settings</h1>
 		</div>
 		<div class="col-auto">
-			<a class="btn btn-sm btn-outline-secondary" href="/"><i class="icofont-ui-close" /></a>
+			<a class="btn btn-sm btn-outline-theme" href="/"><i class="icofont-ui-close" /></a>
 		</div>
 	</div>
 
@@ -56,15 +70,39 @@
 				<col width="50%" />
 				<col width="50%" />
 				<col />
+				<col />
+				<col />
 			</colgroup>
 
 			<tbody>
-				{#each screens as screen}
+				{#each screens as screen, i}
 					<tr>
-						<td>{screen.name}</td>
-						<td>{screen.params}</td>
+						<td>{screenNames[screen.name] || screen.name}</td>
+						<td>{screenParams[screen.name]?.[screen.params] || screen.params}</td>
 						<td>
-							<button class="btn btn-sm btn-outline-danger" on:click={() => del(screen.id)}>
+							<button
+								class="btn btn-sm"
+								class:btn-outline-theme={i > 0}
+								class:btn-outline-secondary={i === 0}
+								disabled={i === 0}
+								on:click={() => moveUp(i)}
+							>
+								<i class="icofont-caret-up" />
+							</button>
+						</td>
+						<td>
+							<button
+								class="btn btn-sm"
+								class:btn-outline-theme={i < screens.length - 1}
+								class:btn-outline-secondary={i === screens.length - 1}
+								disabled={i === screens.length - 1}
+								on:click={() => moveDown(i)}
+							>
+								<i class="icofont-caret-down" />
+							</button>
+						</td>
+						<td>
+							<button class="btn btn-sm btn-outline-danger" on:click={() => del(i)}>
 								<i class="icofont-ui-delete" />
 							</button>
 						</td>
@@ -74,31 +112,24 @@
 				<tr>
 					<td>
 						<select class="form-control form-control-sm" bind:value={newName}>
-							<option value="calendar">Calendar</option>
-							<option value="games">Games</option>
-							<option value="news">News</option>
-							<option value="uploads">Uploads</option>
-							<option value="weather">Weather</option>
+							{#each Object.entries(screenNames) as [value, name]}
+								<option {value}>{name}</option>
+							{/each}
 						</select>
 					</td>
 
 					<td>
-						{#if newName === 'news'}
+						{#if newName in screenParams}
 							<select class="form-control form-control-sm" bind:value={newParams}>
-								<option value="1646">Allgemein</option>
-								<option value="718">Sport</option>
-								<option value="454">Kultur</option>
-								<option value="630">Wissen</option>
+								{#each Object.entries(screenParams[newName]) as [value, name]}
+									<option {value}>{name}</option>
+								{/each}
 							</select>
-						{:else if newName === 'weather'}
-							<select class="form-control form-control-sm" bind:value={newParams}>
-								<option value="daily">Täglich</option>
-								<option value="hourly">Stündlich</option>
-							</select>
-						{:else}
-							<input class="form-control form-control-sm" bind:value={newParams} />
 						{/if}
 					</td>
+
+					<td />
+					<td />
 
 					<td>
 						<button class="btn btn-sm btn-outline-success" on:click={add}>
