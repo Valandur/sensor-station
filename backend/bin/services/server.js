@@ -127,16 +127,6 @@ class Server extends service_1.Service {
             prefix: '/data/server/uploads',
             decorateReply: false
         });
-        // Serve any frontend .html files on their respective routes
-        this.webApp.get('/:path', async (req, res) => {
-            const fileName = `${req.params.path}.html`;
-            if (await (0, promises_1.stat)(`../frontend/build/${fileName}`).catch(() => false)) {
-                return res.sendFile(fileName);
-            }
-            else {
-                return undefined;
-            }
-        });
     }
     async doStart() {
         this.screens = JSON.parse(await (0, promises_1.readFile)('./data/server/screens.json', 'utf-8').catch(() => '[]'));

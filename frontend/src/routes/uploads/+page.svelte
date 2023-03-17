@@ -26,7 +26,7 @@
 		context: { additionalTypenames: ['UploadItem'] },
 		client
 	});
-	$: items = $store.data?.uploads.items.reverse() || [];
+	$: items = $store.data?.uploads.items?.reverse() || [];
 
 	$: del = (img: string) => {
 		mutationStore({

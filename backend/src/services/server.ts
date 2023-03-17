@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'fs/promises';
 import Fastify, { FastifyInstance } from 'fastify';
 import FastifyStatic from '@fastify/static';
 import cors from '@fastify/cors';
@@ -162,16 +162,6 @@ export class Server extends Service {
 			root: resolve('data', 'server', 'uploads'),
 			prefix: '/data/server/uploads',
 			decorateReply: false
-		});
-
-		// Serve any frontend .html files on their respective routes
-		this.webApp.get<{ Params: { path: string } }>('/:path', async (req, res) => {
-			const fileName = `${req.params.path}.html`;
-			if (await stat(`../frontend/build/${fileName}`).catch(() => false)) {
-				return res.sendFile(fileName);
-			} else {
-				return undefined;
-			}
 		});
 	}
 
