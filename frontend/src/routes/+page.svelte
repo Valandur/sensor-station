@@ -8,7 +8,7 @@
 
 	import { time } from '$lib/stores/time';
 	import { paused, screen, progress } from '$lib/stores/screen';
-	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/general';
+	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/_combined';
 
 	import Calendar from '$lib/components/calendar.svelte';
 	import Games from '$lib/components/games.svelte';

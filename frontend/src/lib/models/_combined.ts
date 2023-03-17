@@ -10,7 +10,6 @@ export type GetGeneralData = GetScreensData & GetBatteryData & GetModemData;
 export const GET_GENERAL_DATA = gql`
 	query GetData {
 		screens {
-			id
 			name
 			params
 		}

@@ -3,12 +3,13 @@
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/general';
+	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
 
 	export let params: string = '';
 
 	const NUM_FORECASTS = 7;
 
+	$: isHourly = params === 'hourly';
 	$: store = queryStore<GetWeatherAndSensorsData>({
 		query: GET_WEATHER_AND_SENSORS,
 		context: { additionalTypenames: ['WeatherForecast', 'WeatherAlert'] },
@@ -20,10 +21,9 @@
 	$: numForecasts = NUM_FORECASTS - (newestRecording ? 2 : 0);
 
 	$: weather = $store.data?.weather;
-	$: list =
-		params === 'hourly' ? weather?.hourly?.slice(1).filter((_, i) => i % 2 === 0) : weather?.daily;
+	$: list = isHourly ? weather?.hourly?.slice(1).filter((_, i) => i % 2 === 0) : weather?.daily;
 	$: forecasts = list?.slice(0, numForecasts) || [];
-	$: labelFormat = params === 'hourly' ? "HH''" : 'iiiiii';
+	$: labelFormat = isHourly ? "HH''" : 'iiiiii';
 </script>
 
 <div class="container-fluid h-100 m-0">

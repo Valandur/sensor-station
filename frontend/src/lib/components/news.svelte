@@ -11,10 +11,12 @@
 	export let params: string = '';
 
 	const MAX_ITEMS = 3;
+	const DEFAULT = '1646';
 
+	$: feed = params || DEFAULT;
 	$: store = queryStore<GetNewsData>({
 		query: GET_NEWS,
-		variables: { feed: params },
+		variables: { feed },
 		context: { additionalTypenames: ['NewsItem'] },
 		requestPolicy: 'cache-and-network',
 		client: getContextClient()
@@ -23,7 +25,7 @@
 	let selectedItem: NewsItem | null = null;
 
 	$: rawNews = $store.data?.news.items || [];
-	$: index = getStore('news_' + params, rawNews.length);
+	$: index = getStore('news_' + feed, rawNews.length);
 	$: news = [
 		...rawNews.slice($index, $index + MAX_ITEMS),
 		...rawNews.slice(0, Math.max(MAX_ITEMS - (rawNews.length - $index), 0))
