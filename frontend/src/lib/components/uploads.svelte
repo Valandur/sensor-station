@@ -51,11 +51,15 @@
 		on:touchend={touchEnd}
 	>
 		<div
-			class="m-0 p-0 bg-dark bg-opacity-75 image"
+			class="m-0 p-0 bg-dark bg-opacity-75 image-container"
 			class:full={item.ratio < 1}
 			class:m-1={item.ratio < 1}
 		>
-			<img src={BASE_URL + item.img} alt="Upload" />
+			{#if item.img.endsWith('.mp4')}
+				<video src={BASE_URL + '/uploads/' + item.img} autoplay muted loop />
+			{:else}
+				<img src={BASE_URL + '/uploads/' + item.img} alt="Upload" />
+			{/if}
 		</div>
 
 		<div
@@ -79,12 +83,13 @@
 	</div>
 {/if}
 
-<style>
-	.image {
+<style lang="scss">
+	.image-container {
 		min-width: 50%;
 	}
 
-	img {
+	img,
+	video {
 		max-height: 100%;
 		max-width: 100%;
 	}
@@ -100,11 +105,12 @@
 			rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) 50%,
 			transparent
 		);
-	}
 
-	.full > img {
-		position: absolute;
-		right: 0;
+		> img,
+		video {
+			position: absolute;
+			right: 0;
+		}
 	}
 
 	.description {
