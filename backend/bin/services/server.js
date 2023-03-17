@@ -141,6 +141,7 @@ class Server extends service_1.Service {
         if (this.uploadsEnabled) {
             const items = JSON.parse(await (0, promises_1.readFile)('./data/server/uploads.json', 'utf-8').catch(() => '[]'));
             this.log(`Loaded ${items.length} uploaded images`);
+            let added = false;
             const files = await (0, promises_1.readdir)('./data/server/uploads');
             for (const file of files) {
                 if (items.some((item) => item.img === file)) {
@@ -149,8 +150,12 @@ class Server extends service_1.Service {
                 this.warn(`Found upload file without data entry: ${file}`);
                 const ratio = await this.getRatio(`./data/server/uploads/${file}`);
                 items.push({ ts: new Date().toISOString(), title: '', img: file, ratio });
+                added = true;
             }
             this.uploadItems = items;
+            if (added) {
+                await (0, promises_1.writeFile)('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
+            }
         }
         if (!this.webApp) {
             throw new Error('WebApp not available');
@@ -184,10 +189,10 @@ class Server extends service_1.Service {
         else {
             try {
                 const size = (0, image_size_1.default)(data ? data : await (0, promises_1.readFile)(fileName));
-                if (!size.height || !size.width || !size.orientation) {
+                if (!size.height || !size.width) {
                     throw new Error(`Missing size information: ${JSON.stringify(size)}`);
                 }
-                return size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
+                return size.orientation && size.orientation >= 5 ? size.height / size.width : size.width / size.height; // If the image is rotated 90° switch the ratio
             }
             catch (err) {
                 this.error('Could not get image size', err);
