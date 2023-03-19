@@ -10,11 +10,11 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 const TOKEN_PATH = 'data/calendar/token.json';
 const CREDENTIALS_PATH = 'data/calendar/credentials.json';
 class Calendar extends service_1.Service {
-    creds = null;
+    client = null;
     timer = null;
     events = null;
     async doInit() {
-        this.creds = await this.authorize();
+        this.client = await this.authorize();
     }
     async doStart() {
         await this.update();
@@ -36,33 +36,45 @@ class Calendar extends service_1.Service {
     }
     async doDispose() { }
     update = async () => {
-        if (!this.creds) {
+        if (!this.client) {
             this.warn('No calendar credentials');
             return;
         }
-        const calendar = googleapis_1.google.calendar({ version: 'v3', auth: this.creds });
-        const res = await calendar.events.list({
-            calendarId: '3isnbvbudasaevou1g6ejr6ni0@group.calendar.google.com',
-            timeMin: new Date().toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime'
-        });
-        if (!res.data.items) {
-            this.warn('No calendar events');
-            return;
-        }
-        const events = [];
-        for (const event of res.data.items) {
-            const start = event.start?.dateTime || event.start?.date;
-            const end = event.end?.dateTime || event.end?.date;
-            if (!start || !end || !event.summary) {
-                this.warn('Invalid calendar event', event);
-                continue;
+        try {
+            if (!this.client) {
+                this.client = await this.authorize();
             }
-            events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
+            const calendar = googleapis_1.google.calendar({ version: 'v3', auth: this.client });
+            const res = await calendar.events.list({
+                calendarId: '3isnbvbudasaevou1g6ejr6ni0@group.calendar.google.com',
+                timeMin: new Date().toISOString(),
+                maxResults: 10,
+                singleEvents: true,
+                orderBy: 'startTime'
+            });
+            if (!res.data.items) {
+                this.warn('No calendar events');
+                return;
+            }
+            const events = [];
+            for (const event of res.data.items) {
+                const start = event.start?.dateTime || event.start?.date;
+                const end = event.end?.dateTime || event.end?.date;
+                if (!start || !end || !event.summary) {
+                    this.warn('Invalid calendar event', event);
+                    continue;
+                }
+                events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
+            }
+            this.events = events;
         }
-        this.events = events;
+        catch (err) {
+            if (err.code === '401') {
+                await (0, promises_1.rm)(TOKEN_PATH);
+                this.client = null;
+            }
+            this.error(JSON.stringify(err));
+        }
     };
     async loadSavedCredentialsIfExist() {
         try {
