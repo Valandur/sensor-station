@@ -42,3 +42,9 @@
 		<div class="alert alert-info m-1 p-2">Keine Einschränkungen im ÖV in der Region Zürich</div>
 	{/if}
 </div>
+
+<style lang="scss">
+	.alert {
+		font-size: 1.5rem;
+	}
+</style>
