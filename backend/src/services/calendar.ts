@@ -1,5 +1,5 @@
 import { authenticate } from '@google-cloud/local-auth';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, rm, writeFile } from 'fs/promises';
 import type { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import { resolve } from 'path';
@@ -18,13 +18,13 @@ export interface CalendarEvent {
 }
 
 export class Calendar extends Service {
-	private creds: OAuth2Client | null = null;
+	private client: OAuth2Client | null = null;
 	private timer: NodeJS.Timer | null = null;
 
 	public events: CalendarEvent[] | null = null;
 
 	protected override async doInit(): Promise<void> {
-		this.creds = await this.authorize();
+		this.client = await this.authorize();
 	}
 
 	protected override async doStart(): Promise<void> {
@@ -51,37 +51,49 @@ export class Calendar extends Service {
 	protected override async doDispose(): Promise<void> {}
 
 	private update = async () => {
-		if (!this.creds) {
+		if (!this.client) {
 			this.warn('No calendar credentials');
 			return;
 		}
 
-		const calendar = google.calendar({ version: 'v3', auth: this.creds });
-		const res = await calendar.events.list({
-			calendarId: '3isnbvbudasaevou1g6ejr6ni0@group.calendar.google.com',
-			timeMin: new Date().toISOString(),
-			maxResults: 10,
-			singleEvents: true,
-			orderBy: 'startTime'
-		});
-
-		if (!res.data.items) {
-			this.warn('No calendar events');
-			return;
-		}
-
-		const events: CalendarEvent[] = [];
-		for (const event of res.data.items) {
-			const start = event.start?.dateTime || event.start?.date;
-			const end = event.end?.dateTime || event.end?.date;
-			if (!start || !end || !event.summary) {
-				this.warn('Invalid calendar event', event);
-				continue;
+		try {
+			if (!this.client) {
+				this.client = await this.authorize();
 			}
 
-			events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
+			const calendar = google.calendar({ version: 'v3', auth: this.client });
+			const res = await calendar.events.list({
+				calendarId: '3isnbvbudasaevou1g6ejr6ni0@group.calendar.google.com',
+				timeMin: new Date().toISOString(),
+				maxResults: 10,
+				singleEvents: true,
+				orderBy: 'startTime'
+			});
+
+			if (!res.data.items) {
+				this.warn('No calendar events');
+				return;
+			}
+
+			const events: CalendarEvent[] = [];
+			for (const event of res.data.items) {
+				const start = event.start?.dateTime || event.start?.date;
+				const end = event.end?.dateTime || event.end?.date;
+				if (!start || !end || !event.summary) {
+					this.warn('Invalid calendar event', event);
+					continue;
+				}
+
+				events?.push({ tsStart: start, tsEnd: end, content: event.summary, isWholeDay: !!event.start?.date });
+			}
+			this.events = events;
+		} catch (err: any) {
+			if (err.code === '401') {
+				await rm(TOKEN_PATH);
+				this.client = null;
+			}
+			this.error(JSON.stringify(err));
 		}
-		this.events = events;
 	};
 
 	private async loadSavedCredentialsIfExist(): Promise<OAuth2Client | null> {
@@ -112,6 +124,7 @@ export class Calendar extends Service {
 		if (client) {
 			return client;
 		}
+
 		client = await authenticate({
 			scopes: SCOPES,
 			keyfilePath: resolve(CREDENTIALS_PATH)
