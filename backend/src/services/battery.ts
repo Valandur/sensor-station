@@ -76,8 +76,12 @@ export class Battery extends Service {
 			return;
 		}
 
-		const i2c = require('i2c-bus');
-		this.bus = await i2c.openPromisified(BUS_NUMBER);
+		try {
+			const i2c = require('i2c-bus');
+			this.bus = await i2c.openPromisified(BUS_NUMBER);
+		} catch (err) {
+			this.error(err);
+		}
 	}
 
 	protected override async doStart(): Promise<void> {

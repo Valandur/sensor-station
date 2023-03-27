@@ -1,7 +1,7 @@
 import { networkInterfaces } from 'os';
 import { readFile, stat, writeFile } from 'fs/promises';
-import SerialCommander from '@westh/serial-commander';
 import { find } from 'geo-tz';
+import type SerialCommander from '@westh/serial-commander';
 
 import { Service } from './service';
 
@@ -46,11 +46,16 @@ export class Modem extends Service {
 			return;
 		}
 
-		this.commander = new SerialCommander({
-			port: MODEM_SERIAL,
-			defaultDelay: 10,
-			disableLog: true
-		});
+		try {
+			const SerialCommander = require('@westh/serial-commander');
+			this.commander = new SerialCommander({
+				port: MODEM_SERIAL,
+				defaultDelay: 10,
+				disableLog: true
+			});
+		} catch (err) {
+			this.error(err);
+		}
 	}
 
 	protected override async doStart(): Promise<void> {
