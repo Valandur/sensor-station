@@ -48,8 +48,13 @@ class Battery extends service_1.Service {
         if (!(await this.checkDevice())) {
             return;
         }
-        const i2c = require('i2c-bus');
-        this.bus = await i2c.openPromisified(BUS_NUMBER);
+        try {
+            const i2c = require('i2c-bus');
+            this.bus = await i2c.openPromisified(BUS_NUMBER);
+        }
+        catch (err) {
+            this.error(err);
+        }
     }
     async doStart() {
         // If we didn't initilialize it's not available, so exit early

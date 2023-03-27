@@ -1,12 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Modem = void 0;
 const os_1 = require("os");
 const promises_1 = require("fs/promises");
-const serial_commander_1 = __importDefault(require("@westh/serial-commander"));
 const geo_tz_1 = require("geo-tz");
 const service_1 = require("./service");
 const MODEM_SERIAL = '/dev/ttyUSB2';
@@ -27,11 +23,17 @@ class Modem extends service_1.Service {
         if (!(await this.checkDevice())) {
             return;
         }
-        this.commander = new serial_commander_1.default({
-            port: MODEM_SERIAL,
-            defaultDelay: 10,
-            disableLog: true
-        });
+        try {
+            const SerialCommander = require('@westh/serial-commander');
+            this.commander = new SerialCommander({
+                port: MODEM_SERIAL,
+                defaultDelay: 10,
+                disableLog: true
+            });
+        }
+        catch (err) {
+            this.error(err);
+        }
     }
     async doStart() {
         // If we didn't initilialize it's not available, so exit early
