@@ -24,6 +24,11 @@ gpu_mem=64
 
 `swaymsg -t get_outputs`
 
+## Luakit
+
+`/usr/share/luakit/lib/window.lua`
+"Pack status bar elements" and "Pack Input bar"
+
 ## asdf NodeJS permissions for port 80
 
 `sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/18.15.0/bin/node`
