@@ -1,5 +1,4 @@
-import axios from 'axios';
-
+import superagent from 'superagent';
 import { Service } from './service';
 
 const KEY = process.env['WEATHER_API_KEY'];
@@ -130,12 +129,12 @@ export class Weather extends Service {
 			const daily: Forecast[] = [];
 			const hourly: Forecast[] = [];
 
-			const { data } = await axios(url);
+			const { body } = await superagent.get(url);
 
 			const prefix = '/icons/';
 			const suffix = '.png';
 
-			for (const forecast of data.hourly) {
+			for (const forecast of body.hourly) {
 				hourly.push({
 					ts: new Date(forecast.dt * 1000).toISOString(),
 					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
@@ -143,7 +142,7 @@ export class Weather extends Service {
 				});
 			}
 
-			for (const forecast of data.daily) {
+			for (const forecast of body.daily) {
 				daily.push({
 					ts: new Date(forecast.dt * 1000).toISOString(),
 					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
@@ -151,8 +150,8 @@ export class Weather extends Service {
 				});
 			}
 
-			if (data.alerts) {
-				for (const alert of data.alerts) {
+			if (body.alerts) {
+				for (const alert of body.alerts) {
 					alerts.push({
 						sender: alert.sender_name,
 						event: alert.event,

@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Games = void 0;
-const axios_1 = __importDefault(require("axios"));
+const superagent_1 = __importDefault(require("superagent"));
 const date_fns_1 = require("date-fns");
 const service_1 = require("./service");
 const URL = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=CH&allowCountries=CH';
@@ -35,11 +35,8 @@ class Games extends service_1.Service {
     async doDispose() { }
     update = async () => {
         try {
-            const { data } = await axios_1.default.request({
-                method: 'GET',
-                url: URL
-            });
-            const rawGames = data.data.Catalog.searchStore.elements;
+            const { body } = await superagent_1.default.get(URL);
+            const rawGames = body.data.Catalog.searchStore.elements;
             const games = [];
             for (const game of rawGames) {
                 if (!game.promotions) {

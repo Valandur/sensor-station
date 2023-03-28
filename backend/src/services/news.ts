@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { parse } from 'date-fns';
 import Parser from 'rss-parser';
+import superagent from 'superagent';
 
 import { Service } from './service';
 
@@ -123,8 +123,8 @@ export class News extends Service {
 			throw new Error(`Article not found ${feedId} - ${itemId}`);
 		}
 
-		const { data } = await axios(link);
-		let page = data as string;
+		const { text } = await superagent.get(link);
+		let page = text;
 
 		const headerStart = page.indexOf('<header');
 		const mainStart = page.indexOf('<!-- Begin of main wrapper');

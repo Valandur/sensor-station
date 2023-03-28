@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.News = void 0;
-const axios_1 = __importDefault(require("axios"));
 const date_fns_1 = require("date-fns");
 const rss_parser_1 = __importDefault(require("rss-parser"));
+const superagent_1 = __importDefault(require("superagent"));
 const service_1 = require("./service");
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 class News extends service_1.Service {
@@ -92,8 +92,8 @@ class News extends service_1.Service {
         if (!link) {
             throw new Error(`Article not found ${feedId} - ${itemId}`);
         }
-        const { data } = await (0, axios_1.default)(link);
-        let page = data;
+        const { text } = await superagent_1.default.get(link);
+        let page = text;
         const headerStart = page.indexOf('<header');
         const mainStart = page.indexOf('<!-- Begin of main wrapper');
         page = page.substring(0, headerStart) + page.substring(mainStart);

@@ -110,7 +110,7 @@ class Sensor extends service_1.Service {
             }
             await (0, promises_1.appendFile)('./data/sensor/recordings.csv', `${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`, 'utf-8');
             this.lastRecordedTs = this.newest.ts;
-            this.log(`Recorded temp & rh`, this.newest);
+            this.log(`Recorded temp & rh`, this.newest.ts, this.newest.temp, this.newest.rh);
         }
         catch (err) {
             this.error(err);

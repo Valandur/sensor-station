@@ -74,6 +74,9 @@ export class Server extends Service {
 				news: (): IResolverObject => ({
 					items: ({ feed }) => this.app.news.getItems(feed)
 				}),
+				post: () => ({
+					shipments: () => this.app.post.shipments
+				}),
 				sbb: () => ({
 					alerts: () => this.app.sbb.alerts
 				}),

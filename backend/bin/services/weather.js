@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weather = void 0;
-const axios_1 = __importDefault(require("axios"));
+const superagent_1 = __importDefault(require("superagent"));
 const service_1 = require("./service");
 const KEY = process.env['WEATHER_API_KEY'];
 const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely&appid=${KEY}`;
@@ -102,25 +102,25 @@ class Weather extends service_1.Service {
             const alerts = [];
             const daily = [];
             const hourly = [];
-            const { data } = await (0, axios_1.default)(url);
+            const { body } = await superagent_1.default.get(url);
             const prefix = '/icons/';
             const suffix = '.png';
-            for (const forecast of data.hourly) {
+            for (const forecast of body.hourly) {
                 hourly.push({
                     ts: new Date(forecast.dt * 1000).toISOString(),
                     img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
                     feelsLike: forecast.feels_like
                 });
             }
-            for (const forecast of data.daily) {
+            for (const forecast of body.daily) {
                 daily.push({
                     ts: new Date(forecast.dt * 1000).toISOString(),
                     img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
                     feelsLike: forecast.feels_like.day
                 });
             }
-            if (data.alerts) {
-                for (const alert of data.alerts) {
+            if (body.alerts) {
+                for (const alert of body.alerts) {
                     alerts.push({
                         sender: alert.sender_name,
                         event: alert.event,

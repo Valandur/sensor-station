@@ -47,6 +47,9 @@ class Server extends service_1.Service {
                 news: () => ({
                     items: ({ feed }) => this.app.news.getItems(feed)
                 }),
+                post: () => ({
+                    shipments: () => this.app.post.shipments
+                }),
                 sbb: () => ({
                     alerts: () => this.app.sbb.alerts
                 }),

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { format } from 'date-fns';
+import { inspect } from 'util';
 
 import type { Service } from './services/service';
 
@@ -8,6 +9,7 @@ import { Calendar } from './services/calendar';
 import { Games } from './services/games';
 import { Modem } from './services/modem';
 import { News } from './services/news';
+import { Post } from './services/post';
 import { SBB } from './services/sbb';
 import { Sensor } from './services/sensor';
 import { Server } from './services/server';
@@ -19,6 +21,7 @@ export class Application {
 	public readonly games: Games;
 	public readonly modem: Modem;
 	public readonly news: News;
+	public readonly post: Post;
 	public readonly sbb: SBB;
 	public readonly sensor: Sensor;
 	public readonly server: Server;
@@ -32,6 +35,7 @@ export class Application {
 		this.games = new Games(this);
 		this.modem = new Modem(this);
 		this.news = new News(this);
+		this.post = new Post(this);
 		this.sbb = new SBB(this);
 		this.sensor = new Sensor(this);
 		this.server = new Server(this);
@@ -43,6 +47,7 @@ export class Application {
 			this.games,
 			this.modem,
 			this.news,
+			this.post,
 			this.sbb,
 			this.sensor,
 			this.server,
@@ -95,18 +100,15 @@ export class Application {
 	}
 
 	public log(service: string, message: any, ...params: any[]) {
-		console.log(`${this.getDate()} [${chalk.blue('INFO')}] [${chalk.magenta(service)}] ${message}`, ...params);
+		const msg = typeof message === 'string' ? message : inspect(message);
+		console.log(`${this.getDate()} [${chalk.blue('INFO')}] [${chalk.magenta(service)}] ${msg}`, ...params);
 	}
 	public warn(service: string, message: any, ...params: any[]) {
-		console.log(
-			`${this.getDate()} [${chalk.yellow('WARN')}] [${chalk.magenta(service)}] ${chalk.yellow(message)}`,
-			...params
-		);
+		const msg = chalk.yellow(typeof message === 'string' ? message : inspect(message));
+		console.log(`${this.getDate()} [${chalk.yellow('WARN')}] [${chalk.magenta(service)}] ${msg}`, ...params);
 	}
 	public error(service: string, message: any, ...params: any[]) {
-		console.error(
-			`${this.getDate()} [${chalk.red('ERROR')}] [${chalk.magenta(service)}] ${chalk.red(message)}`,
-			...params
-		);
+		const msg = chalk.red(typeof message === 'string' ? message : inspect(message));
+		console.error(`${this.getDate()} [${chalk.red('ERROR')}] [${chalk.magenta(service)}] ${msg}`, ...params);
 	}
 }

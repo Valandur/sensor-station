@@ -139,7 +139,7 @@ export class Sensor extends Service {
 
 			this.lastRecordedTs = this.newest.ts;
 
-			this.log(`Recorded temp & rh`, this.newest);
+			this.log(`Recorded temp & rh`, this.newest.ts, this.newest.temp, this.newest.rh);
 		} catch (err) {
 			this.error(err);
 		}

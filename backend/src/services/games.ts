@@ -1,4 +1,4 @@
-import axios from 'axios';
+import superagent from 'superagent';
 import { parseISO } from 'date-fns';
 
 import { Service } from './service';
@@ -47,12 +47,9 @@ export class Games extends Service {
 
 	private update = async () => {
 		try {
-			const { data } = await axios.request({
-				method: 'GET',
-				url: URL
-			});
+			const { body } = await superagent.get(URL);
 
-			const rawGames = data.data.Catalog.searchStore.elements;
+			const rawGames = body.data.Catalog.searchStore.elements;
 
 			const games: Game[] = [];
 			for (const game of rawGames) {

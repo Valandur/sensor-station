@@ -1,4 +1,4 @@
-import axios from 'axios';
+import superagent from 'superagent';
 import { Parser } from 'xml2js';
 
 import { Service } from './service';
@@ -12,11 +12,11 @@ export interface Alert {
 	end: string;
 	planned: boolean;
 	summary: string;
-	reason: string;
-	description: string;
-	consequence: string;
-	duration: string;
-	recommendation: string;
+	reason: string | null;
+	description: string | null;
+	consequence: string | null;
+	duration: string | null;
+	recommendation: string | null;
 	affects: any;
 }
 
@@ -55,15 +55,9 @@ export class SBB extends Service {
 
 	private update = async () => {
 		try {
-			const { data } = await axios.request({
-				method: 'GET',
-				url: URL,
-				headers: {
-					Authorization: `Bearer ${KEY}`
-				}
-			});
+			const { text } = await superagent.get(URL).set('Authorization', `Bearer ${KEY}`);
 
-			const res = await this.parser.parseStringPromise(data);
+			const res = await this.parser.parseStringPromise(text);
 			const sits: any[] = res.Siri.ServiceDelivery[0].SituationExchangeDelivery[0].Situations[0].PtSituationElement;
 			const alerts: Alert[] = sits
 				.filter((i) => this.alertIsRelevant(JSON.stringify(i)))
@@ -93,6 +87,24 @@ export class SBB extends Service {
 				});
 
 			this.alerts = alerts.filter((a) => !a.planned);
+
+			if (process.env['DEBUG'] === '1' && this.alerts.length === 0) {
+				this.warn('Updating in DEBUG mode');
+				this.alerts = [
+					{
+						start: '2023-03-27T18:32:00+02:00',
+						end: '2023-03-27T19:30:00+02:00',
+						planned: false,
+						summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
+						reason: 'Grund: Streckenblockierung',
+						description: 'Linien S4, S10',
+						consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
+						duration: 'Dauer: unbestimmt',
+						recommendation: null,
+						affects: {}
+					}
+				];
+			}
 		} catch (err) {
 			this.error(err);
 		}

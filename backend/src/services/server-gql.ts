@@ -6,6 +6,7 @@ type Query {
 	modem: Modem!
 	network: Network!
 	news: News!
+	post: Post!
 	sbb: SBB!
 	screens: [Screen!]!
 	sensors: Sensors!
@@ -92,6 +93,16 @@ type NewsItem {
 	title: String!
 	content: String!
 	img: String!
+}
+
+type Post {
+	shipments: [Shipment!]
+}
+
+type Shipment {
+	id: String!
+	arrival: String!
+	sender: String!
 }
 
 type SBB {
