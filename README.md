@@ -4,20 +4,42 @@
 
 `sudo apt install --no-install-recommends vim htop chromium-browser xserver-xorg x11-xserver-utils xinit unclutter fonts-noto-color-emoji`
 
+## Wayland & GL driver
+
+```conf
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+gpu_mem=64
+```
+
+`sudo apt install vim htop sway luakit`
+
+`export SWAYSOCK=/run/user/1000/sway-ipc.1000.*`
+
+`swaymsg input 3823:5:WaveShare_WS170120 map_to_output HDMI-A-1`
+
+`swaymsg output HDMI-A-1 transform 180`
+
+`swaymsg -t get_inputs`
+
+`swaymsg -t get_outputs`
+
+## asdf NodeJS permissions for port 80
+
+`sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/18.15.0/bin/node`
+
 ## Autostart Web UI
 
 ### .bash_profile
 
-```
+```bash
 [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
-
-. .bashrc
 ```
 
 ### .xinitrc
 
-```
-#!/usr/bin/env sh
+```bash
+#!/bin/bash
 xset -dpms
 xset s off
 xset s noblank
@@ -45,6 +67,10 @@ chromium-browser http://localhost \
 ```
 
 ## Modem config
+
+`sudo apt install minicom`
+
+`sudo minicom -D /dev/ttyUSB2`
 
 ```shell
 # deregister from network
