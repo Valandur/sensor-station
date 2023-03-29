@@ -1,26 +1,41 @@
+<script lang="ts" context="module">
+	export const weatherMeta: ComponentMeta<GetWeatherAndSensorsData> = {
+		getData: async () => {
+			const client = getClient();
+			const res = await client
+				.query<GetWeatherAndSensorsData>(
+					GET_WEATHER_AND_SENSORS,
+					{},
+					{
+						additionalTypenames: ['WeatherForecast', 'WeatherAlert'],
+						requestPolicy: 'cache-and-network'
+					}
+				)
+				.toPromise();
+			return res.data || null;
+		}
+	};
+</script>
+
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
+	import { getClient } from '$lib/client';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
+	export let data: GetWeatherAndSensorsData;
 
 	const NUM_FORECASTS = 7;
 
 	$: isHourly = params === 'hourly';
-	$: store = queryStore<GetWeatherAndSensorsData>({
-		query: GET_WEATHER_AND_SENSORS,
-		context: { additionalTypenames: ['WeatherForecast', 'WeatherAlert'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
 
-	$: newestRecording = $store.data?.sensors.newest;
+	$: newestRecording = data.sensors.newest;
 	$: numForecasts = NUM_FORECASTS - (newestRecording ? 2 : 0);
 
-	$: weather = $store.data?.weather;
+	$: weather = data.weather;
 	$: list = isHourly ? weather?.hourly?.slice(1).filter((_, i) => i % 2 === 0) : weather?.daily;
 	$: forecasts = list?.slice(0, numForecasts) || [];
 	$: labelFormat = isHourly ? "HH''" : 'iiiiii';

@@ -1,21 +1,35 @@
+<script lang="ts" context="module">
+	export const calendarMeta: ComponentMeta<GetCalendarData> = {
+		getData: async () => {
+			const client = getClient();
+			const res = await client
+				.query<GetCalendarData>(
+					GET_CALENDAR,
+					{},
+					{
+						additionalTypenames: ['CalendarEvent'],
+						requestPolicy: 'cache-and-network'
+					}
+				)
+				.toPromise();
+			return res.data || null;
+		}
+	};
+</script>
+
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import { GET_CALENDAR, type GetCalendarData } from '$lib/models/calendar';
+	import { getClient } from '$lib/client';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
+	export let data: GetCalendarData;
 
-	$: store = queryStore<GetCalendarData>({
-		query: GET_CALENDAR,
-		context: { additionalTypenames: ['CalendarEvent'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
-
-	$: events = $store.data?.calendar.events || [];
+	$: events = data.calendar.events || [];
 </script>
 
 <div class="container-fluid m-0 h-100">

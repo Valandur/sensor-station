@@ -1,30 +1,43 @@
+<script lang="ts" context="module">
+	const DEFAULT = '1646';
+
+	export const newsMeta: ComponentMeta<GetNewsData> = {
+		getData: async (params = DEFAULT) => {
+			const client = getClient();
+			const res = await client
+				.query<GetNewsData>(
+					GET_NEWS,
+					{ feed: params },
+					{
+						additionalTypenames: ['NewsItem'],
+						requestPolicy: 'cache-and-network'
+					}
+				)
+				.toPromise();
+			return res.data || null;
+		}
+	};
+</script>
+
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { getContextClient, queryStore } from '@urql/svelte';
 
 	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
 
-	import { BASE_URL } from '$lib/client';
+	import { BASE_URL, getClient } from '$lib/client';
 	import { GET_NEWS, type GetNewsData, type NewsItem } from '$lib/models/news';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
+	export let data: GetNewsData;
 
 	const MAX_ITEMS = 3;
-	const DEFAULT = '1646';
 
 	$: feed = params || DEFAULT;
-	$: store = queryStore<GetNewsData>({
-		query: GET_NEWS,
-		variables: { feed },
-		context: { additionalTypenames: ['NewsItem'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
-
 	let selectedItem: NewsItem | null = null;
 
-	$: rawNews = $store.data?.news.items || [];
+	$: rawNews = data.news.items || [];
 	$: index = getStore('news_' + feed, rawNews.length);
 	$: news = [
 		...rawNews.slice($index, $index + MAX_ITEMS),

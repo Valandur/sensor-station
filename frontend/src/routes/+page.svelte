@@ -1,44 +1,66 @@
 <script lang="ts">
-	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
-	import type { ComponentType } from 'svelte';
-	import de from 'date-fns/locale/de/index';
-	import { formatInTimeZone } from 'date-fns-tz';
-	import Holidays from 'date-holidays';
 	import { fade, slide } from 'svelte/transition';
+	import { formatInTimeZone } from 'date-fns-tz';
+	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
+	import de from 'date-fns/locale/de/index';
+	import Holidays from 'date-holidays';
+	import { browser } from '$app/environment';
 
-	import { time } from '$lib/stores/time';
-	import { paused, screen, progress } from '$lib/stores/screen';
+	import { COMPONENT_MAP } from '$lib/component';
 	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/_combined';
-
-	import Calendar from '$lib/components/calendar.svelte';
-	import Games from '$lib/components/games.svelte';
-	import News from '$lib/components/news.svelte';
-	import Uploads from '$lib/components/uploads.svelte';
-	import Weather from '$lib/components/weather.svelte';
-	import Sbb from '$lib/components/sbb.svelte';
+	import { paused, screen, progress } from '$lib/stores/screen';
+	import { time } from '$lib/stores/time';
+	import type { Screen } from '$lib/models/screen';
 
 	const tz = 'Europe/Zurich';
 	const holidays = new Holidays('CH', 'ZH');
-	const COMPONENT_MAP: { [key: string]: ComponentType } = {
-		calendar: Calendar,
-		games: Games,
-		news: News,
-		sbb: Sbb,
-		uploads: Uploads,
-		weather: Weather
-	};
+
+	let loading = false;
+	let currScreen: Screen | null = null;
+	let currData: any = null;
 
 	$: client = getContextClient();
 	$: store = queryStore<GetGeneralData>({
 		query: GET_GENERAL_DATA,
 		context: { additionalTypenames: ['Screen'] },
+		requestPolicy: 'cache-and-network',
 		client
 	});
-	$: screens = $store.data?.screens || [];
+
+	$: screens =
+		$store.data?.screens ||
+		(browser ? JSON.parse(window.localStorage.getItem('screens') || '[]') : []);
+	$: browser && localStorage.setItem('screens', JSON.stringify(screens));
 	$: batteryStatus = $store.data?.battery.status;
 	$: modemStatus = $store.data?.modem.status;
 	$: screen.setMax(screens.length);
-	$: currScreen = screens[$screen];
+
+	$: if (!loading) {
+		loading = true;
+
+		const nextScreen = screens[$screen];
+		const [, nextMeta] = COMPONENT_MAP[nextScreen?.name] || [];
+
+		if (nextScreen?.name !== currScreen?.name && nextMeta) {
+			nextMeta
+				.getData(nextScreen.params)
+				.then(async (data) => {
+					if (nextMeta.skip && (await nextMeta.skip(nextScreen.params, data))) {
+						screen.skip();
+					} else {
+						currData = data;
+						currScreen = nextScreen;
+					}
+				})
+				.catch((err) => {
+					console.error(err);
+				})
+				.finally(() => (loading = false));
+		} else {
+			screen.reset();
+			loading = false;
+		}
+	}
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');
 	$: holiday = holidays.isHoliday($time);
@@ -46,7 +68,7 @@
 	$: dateSubFormat = holiday ? 'eee' : 'eeee';
 	$: dateSub = formatInTimeZone($time, tz, dateSubFormat, { locale: de }).replace('.', '');
 
-	$: togglePause = () => {
+	const togglePause = () => {
 		if ($paused) {
 			screen.start();
 		} else {
@@ -77,8 +99,7 @@
 	};
 
 	const refresh = () => window.location.reload();
-
-	$: restart = () => {
+	const restart = () => {
 		if (!window.confirm('Are you sure you want to restart the device?')) {
 			return;
 		}
@@ -159,7 +180,8 @@
 			>
 				{#if currScreen}
 					{#if currScreen.name in COMPONENT_MAP}
-						<svelte:component this={COMPONENT_MAP[currScreen.name]} params={currScreen.params} />
+						{@const [comp] = COMPONENT_MAP[currScreen.name]}
+						<svelte:component this={comp} params={currScreen.params} data={currData} />
 					{:else}
 						<p class="alert alert-danger m-2">Unknown screen type '{currScreen.name}'</p>
 					{/if}

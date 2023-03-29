@@ -91,18 +91,18 @@ export class SBB extends Service {
 			if (process.env['DEBUG'] === '1' && this.alerts.length === 0) {
 				this.warn('Updating in DEBUG mode');
 				this.alerts = [
-					{
-						start: '2023-03-27T18:32:00+02:00',
-						end: '2023-03-27T19:30:00+02:00',
-						planned: false,
-						summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
-						reason: 'Grund: Streckenblockierung',
-						description: 'Linien S4, S10',
-						consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
-						duration: 'Dauer: unbestimmt',
-						recommendation: null,
-						affects: {}
-					}
+					// {
+					// 	start: '2023-03-27T18:32:00+02:00',
+					// 	end: '2023-03-27T19:30:00+02:00',
+					// 	planned: false,
+					// 	summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
+					// 	reason: 'Grund: Streckenblockierung',
+					// 	description: 'Linien S4, S10',
+					// 	consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
+					// 	duration: 'Dauer: unbestimmt',
+					// 	recommendation: null,
+					// 	affects: {}
+					// }
 				];
 			}
 		} catch (err) {

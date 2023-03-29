@@ -1,24 +1,35 @@
+<script lang="ts" context="module">
+	export const gamesMeta: ComponentMeta<GetGames> = {
+		getData: async () => {
+			const client = getClient();
+			const res = await client
+				.query<GetGames>(
+					GET_GAMES,
+					{},
+					{ additionalTypenames: ['Game'], requestPolicy: 'cache-and-network' }
+				)
+				.toPromise();
+			return res.data || null;
+		}
+	};
+</script>
+
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { getContextClient, queryStore } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
 
 	import { GET_GAMES, type GetGames } from '$lib/models/games';
+	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
+	export let data: GetGames;
 
 	const MAX_ITEMS = 2;
 
-	$: store = queryStore<GetGames>({
-		query: GET_GAMES,
-		context: { additionalTypenames: ['Game'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
-
-	$: rawGames = $store.data?.games.freeEpic || [];
+	$: rawGames = data.games.freeEpic || [];
 	$: index = getStore('games', rawGames.length - 1);
 	$: games = [...rawGames.slice($index, $index + MAX_ITEMS)];
 

@@ -1,26 +1,36 @@
+<script lang="ts" context="module">
+	export const uploadsMeta: ComponentMeta<GetUploadsData> = {
+		getData: async () => {
+			const client = getClient();
+			const res = await client
+				.query<GetUploadsData>(
+					GET_UPLOADS,
+					{},
+					{ additionalTypenames: ['UploadItem'], requestPolicy: 'cache-and-network' }
+				)
+				.toPromise();
+			return res.data || null;
+		}
+	};
+</script>
+
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
+	import { onDestroy } from 'svelte';
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
-	import { onDestroy } from 'svelte';
 
 	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
 
-	import { BASE_URL } from '$lib/client';
+	import { BASE_URL, getClient } from '$lib/client';
 	import { type GetUploadsData, GET_UPLOADS } from '$lib/models/upload';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
+	export let data: GetUploadsData;
 
-	$: store = queryStore<GetUploadsData>({
-		query: GET_UPLOADS,
-		context: { additionalTypenames: ['UploadItem'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
-
-	$: uploads = $store.data?.uploads.items || [];
+	$: uploads = data.uploads.items || [];
 	$: index = getStore('uploads', uploads.length);
 	$: item = uploads[$index];
 

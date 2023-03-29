@@ -10,15 +10,26 @@ export const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
 let timer: NodeJS.Timeout | null = null;
 let max = 1;
+let lastOp = 1;
 
 const next = () => {
+	lastOp = 1;
 	update((value) => (value + 1) % max);
 	reset();
 };
 
 const prev = () => {
+	lastOp = -1;
 	update((value) => (value <= 0 ? max : value) - 1);
 	reset();
+};
+
+const skip = () => {
+	if (lastOp > 0) {
+		next();
+	} else {
+		prev();
+	}
 };
 
 const start = () => {
@@ -49,6 +60,7 @@ export const screen = {
 	reset,
 	next,
 	prev,
+	skip,
 	start,
 	stop
 };

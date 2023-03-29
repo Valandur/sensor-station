@@ -16,7 +16,7 @@ export interface SBBAlert {
 	recommendation: string;
 }
 
-export interface GetSBB {
+export interface GetSBBData {
 	sbb: SBB;
 }
 export const GET_SBB = gql`

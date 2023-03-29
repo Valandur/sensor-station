@@ -1,23 +1,38 @@
+<script lang="ts" context="module">
+	export const sbbMeta: ComponentMeta<GetSBBData> = {
+		getData: async () => {
+			const client = getClient();
+			const res = await client
+				.query<GetSBBData>(
+					GET_SBB,
+					{},
+					{ additionalTypenames: ['SBBAlert'], requestPolicy: 'cache-and-network' }
+				)
+				.toPromise();
+			return res.data || null;
+		},
+		skip: async (params, data) => {
+			return data?.sbb.alerts.length === 0;
+		}
+	};
+</script>
+
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { getContextClient, queryStore } from '@urql/svelte';
 
-	import { GET_SBB, type GetSBB } from '$lib/models/sbb';
+	import { GET_SBB, type GetSBBData } from '$lib/models/sbb';
+
+	import type { ComponentMeta } from '$lib/component';
 	import { getStore } from '$lib/stores/counter';
+	import { getClient } from '$lib/client';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
+	export let data: GetSBBData;
 
 	const MAX_ITEMS = 3;
 
-	$: store = queryStore<GetSBB>({
-		query: GET_SBB,
-		context: { additionalTypenames: ['SBBAlert'] },
-		requestPolicy: 'cache-and-network',
-		client: getContextClient()
-	});
-
-	$: rawAlerts = $store.data?.sbb.alerts || [];
+	$: rawAlerts = data.sbb.alerts || [];
 	$: index = getStore('alerts', rawAlerts.length);
 	$: alerts = [...rawAlerts.slice($index, $index + MAX_ITEMS)];
 
@@ -59,8 +74,9 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="row">
-			<div class="col">
+		<div class="row mb-5">
+			<div class="col" />
+			<div class="col-6">
 				<div class="card bg-success border-success bg-opacity-25">
 					<div class="card-body">
 						<h5 class="card-title mb-0">Keine Einschränkungen im ÖV in der Region Zürich</h5>
@@ -74,6 +90,7 @@
 					</div>
 				</div>
 			</div>
+			<div class="col" />
 		</div>
 	{/if}
 </div>
