@@ -218,6 +218,11 @@
 					<i class="icofont-globe icofont-2x" />
 				</a>
 			</div>
+			<div class="col-auto">
+				<a class="btn btn-theme" href="/battery">
+					<i class="icofont-battery-half icofont-2x" />
+				</a>
+			</div>
 			<div class="col" />
 			<div class="col-auto">
 				<button class="btn btn-warning" on:click={refresh}>

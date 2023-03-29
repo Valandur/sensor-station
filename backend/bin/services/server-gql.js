@@ -28,15 +28,30 @@ type Battery {
 	status: BatteryStatus
 }
 
+type BatteryPowerInfo {
+	state: String!
+	voltage: Float!
+	current: Float!
+}
+
+type BatteryFaultInfo {
+	buttonPowerOff: Boolean!
+	forcedPowerOff: Boolean!
+	forcedSysPowerOff: Boolean!
+	watchdogReset: Boolean!
+	batteryProfileInvalid: Boolean!
+	chargingTemperatureFault: String!
+}
+
 type BatteryStatus {
 	isFault: Boolean!
 	isButton: Boolean!
 	status: String!
-	powerIn: String!
-	powerIn5vIo: String!
 	charge: Float!
-	voltage: Float!
-	current: Float!
+	temperature: Float!
+	powerIn: BatteryPowerInfo!
+	powerIn5vIo: BatteryPowerInfo!
+	fault: BatteryFaultInfo!
 }
 
 type Calendar {

@@ -64,14 +64,18 @@ class Battery extends service_1.Service {
                     isFault: false,
                     isButton: false,
                     status: 'CHARGING_FROM_IN',
-                    powerIn: 'PRESENT',
-                    powerIn5vIo: 'NONE',
                     charge: 43,
-                    current: -1.132,
-                    voltage: 3.942,
                     temperature: 56.2,
-                    ioVoltage: 5.23,
-                    ioCurrent: 1.02,
+                    powerIn: {
+                        state: 'PRESENT',
+                        current: -1.132,
+                        voltage: 3.942
+                    },
+                    powerIn5vIo: {
+                        state: 'NONE',
+                        voltage: 5.23,
+                        current: 1.02
+                    },
                     fault: {
                         batteryProfileInvalid: false,
                         buttonPowerOff: false,
@@ -136,24 +140,28 @@ class Battery extends service_1.Service {
         const powerIn = PowerIn[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
         const powerIn5vIo = PowerIn[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
         const charge = await this.getChargeLevel();
+        const temperature = await this.getBatteryTemperature();
+        const fault = await this.getFaultStatus();
         const voltage = await this.getBatteryVoltage();
         const current = await this.getBatteryCurrent();
-        const temperature = await this.getBatteryTemperature();
         const ioVoltage = await this.getIOVoltage();
         const ioCurrent = await this.getIOCurrent();
-        const fault = await this.getFaultStatus();
         return {
             isFault,
             isButton,
             status,
-            powerIn,
-            powerIn5vIo,
             charge,
-            voltage,
-            current,
             temperature,
-            ioVoltage,
-            ioCurrent,
+            powerIn: {
+                state: powerIn,
+                voltage: voltage,
+                current: current
+            },
+            powerIn5vIo: {
+                state: powerIn5vIo,
+                voltage: ioVoltage,
+                current: ioCurrent
+            },
             fault
         };
     }

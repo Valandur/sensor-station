@@ -18,11 +18,26 @@ export const GET_GENERAL_DATA = gql`
 				isFault
 				isButton
 				status
-				powerIn
-				powerIn5vIo
 				charge
-				voltage
-				current
+				temperature
+				powerIn {
+					state
+					voltage
+					current
+				}
+				powerIn5vIo {
+					state
+					voltage
+					current
+				}
+				fault {
+					buttonPowerOff
+					forcedPowerOff
+					forcedSysPowerOff
+					watchdogReset
+					batteryProfileInvalid
+					chargingTemperatureFault
+				}
 			}
 		}
 		modem {

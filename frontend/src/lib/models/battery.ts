@@ -8,11 +8,26 @@ export interface BatteryStatus {
 	isFault: boolean;
 	isButton: boolean;
 	status: string;
-	powerIn: string;
-	powerIn5vIo: string;
 	charge: number;
-	voltage: number;
-	current: number;
+	temperature: number;
+	powerIn: {
+		state: string;
+		voltage: number;
+		current: number;
+	};
+	powerIn5vIo: {
+		state: string;
+		voltage: number;
+		current: number;
+	};
+	fault: {
+		buttonPowerOff: boolean;
+		forcedPowerOff: boolean;
+		forcedSysPowerOff: boolean;
+		watchdogReset: boolean;
+		batteryProfileInvalid: boolean;
+		chargingTemperatureFault: string;
+	};
 }
 
 export interface GetBatteryData {
@@ -25,11 +40,26 @@ export const GET_BATTERY = gql`
 				isFault
 				isButton
 				status
-				powerIn
-				powerIn5vIo
 				charge
-				voltage
-				current
+				temperature
+				powerIn {
+					state
+					voltage
+					current
+				}
+				powerIn5vIo {
+					state
+					voltage
+					current
+				}
+				fault {
+					buttonPowerOff
+					forcedPowerOff
+					forcedSysPowerOff
+					watchdogReset
+					batteryProfileInvalid
+					chargingTemperatureFault
+				}
 			}
 		}
 	}
