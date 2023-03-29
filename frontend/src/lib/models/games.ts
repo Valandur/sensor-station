@@ -11,7 +11,7 @@ export interface Game {
 	image: string | null;
 }
 
-export interface GetGames {
+export interface GetGamesData {
 	games: Games;
 }
 export const GET_GAMES = gql`

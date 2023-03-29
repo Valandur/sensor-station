@@ -5,10 +5,9 @@ export interface Screen {
 	params: string;
 }
 
-export type GetScreensData = {
+export interface GetScreensData {
 	screens: Screen[];
-};
-
+}
 export const GET_SCREENS = gql`
 	query GetScreens {
 		screens {
@@ -31,6 +30,7 @@ export const screenNames: { [key: string]: string } = {
 	uploads: 'Bilder',
 	calendar: 'Kalender',
 	news: 'News',
+	post: 'Post',
 	sbb: 'SBB',
 	games: 'Spiele',
 	weather: 'Wetter'

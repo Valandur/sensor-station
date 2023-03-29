@@ -1,9 +1,9 @@
 <script lang="ts" context="module">
-	export const gamesMeta: ComponentMeta<GetGames> = {
+	export const gamesMeta: ComponentMeta<GetGamesData> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetGames>(
+				.query<GetGamesData>(
 					GET_GAMES,
 					{},
 					{ additionalTypenames: ['Game'], requestPolicy: 'cache-and-network' }
@@ -18,14 +18,14 @@
 	import { onDestroy } from 'svelte';
 	import { format, parseISO } from 'date-fns';
 
-	import { GET_GAMES, type GetGames } from '$lib/models/games';
+	import { GET_GAMES, type GetGamesData } from '$lib/models/games';
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetGames;
+	export let data: GetGamesData;
 
 	const MAX_ITEMS = 2;
 

@@ -12,13 +12,21 @@ const FORM_REGEX = /<form .*?action="((?:.|\n)*?)"/i;
 const INPUT_REGEX = /<input .*?name="(.*?)" .*?value="(.*?)".*?\/>/gi;
 const URL_USER = 'https://service.post.ch/ekp-web/api/user';
 const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
+const URL_TEXTS = 'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
 const USERNAME = process.env['POST_USERNAME'];
 const PASSWORD = process.env['POST_PASSWORD'];
 
 export interface Shipment {
 	id: string;
+	type: string;
 	sender: string;
 	arrival: string;
+	dims: {
+		x: number;
+		y: number;
+		z: number;
+	};
+	weight: number;
 }
 
 export class Post extends Service {
@@ -125,14 +133,38 @@ export class Post extends Service {
 				throw new Error('Shipment status did not change to DONE');
 			}
 
+			const resTexts = await this.request('texts', this.agent.get(URL_TEXTS));
+			const texts = resTexts.body['shipment-text--'];
+
 			const shipments: any[] = resShipments.body.shipments;
 			this.shipments = shipments
 				.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
 				.map(({ shipment }) => ({
 					id: shipment.formattedShipmentNumber,
+					type: texts[shipment.product] || shipment.product,
 					arrival: shipment.calculatedDeliveryDate,
-					sender: shipment.debitorDescription
+					sender: shipment.debitorDescription,
+					dims: {
+						x: shipment.physicalProperties.dimension1,
+						y: shipment.physicalProperties.dimension2,
+						z: shipment.physicalProperties.dimension3
+					},
+					weight: shipment.physicalProperties.weight
 				}));
+
+			if (process.env['DEBUG'] === '1' && this.shipments.length === 0) {
+				this.warn('Updating in DEBUG mode');
+				this.shipments = [
+					{
+						id: '99.xx.yyyyyy.zzzzzzzz',
+						type: 'PostPac Priority',
+						arrival: '2023-03-29T00:00:00+02:00',
+						sender: 'Digitec Galaxus AG',
+						dims: { x: 310, y: 240, z: 215 },
+						weight: 4320
+					}
+				];
+			}
 		} catch (err) {
 			this.error(err);
 		}

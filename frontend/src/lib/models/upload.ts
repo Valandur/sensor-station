@@ -11,10 +11,9 @@ export interface UploadItem {
 	ratio: number;
 }
 
-export type GetUploadsData = {
+export interface GetUploadsData {
 	uploads: Uploads;
-};
-
+}
 export const GET_UPLOADS = gql`
 	query GetUploads {
 		uploads {
