@@ -102,10 +102,19 @@ type Post {
 	shipments: [Shipment!]
 }
 
+type ShipmentDimensions {
+	x: Int!
+	y: Int!
+	z: Int!
+}
+
 type Shipment {
 	id: String!
+	type: String!
 	arrival: String!
 	sender: String!
+	dims: ShipmentDimensions!
+	weight: Int!
 }
 
 type SBB {
