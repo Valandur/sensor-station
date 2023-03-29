@@ -155,8 +155,19 @@
 
 				{#if batteryStatus}
 					<div class="col-auto">
-						<i class="icofont-plugin" />
+						{#if batteryStatus.status.includes('CHARGING')}
+							<i class="icofont-plugin" />
+						{/if}
 						{batteryStatus.charge}%
+						{#if batteryStatus.charge > 70}
+							<i class="icofont-battery-full" />
+						{:else if batteryStatus.charge > 40}
+							<i class="icofont-battery-half" />
+						{:else if batteryStatus.charge > 10}
+							<i class="icofont-battery-low" />
+						{:else}
+							<i class="icofont-battery-empty" />
+						{/if}
 					</div>
 				{/if}
 			</div>
