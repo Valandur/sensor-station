@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-	export const postMeta: ComponentMeta<GetPostData> = {
+	export const postMeta: ComponentMeta<Post> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
@@ -12,10 +12,13 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for post');
+			}
+			return res.data.post;
 		},
-		skip: async (params, data) => {
-			return data?.post.shipments.length === 0;
+		skip: (params, data) => {
+			return (data.shipments?.length || 0) === 0;
 		}
 	};
 </script>
@@ -26,16 +29,16 @@
 	import type { ComponentMeta } from '$lib/component';
 	import { getStore } from '$lib/stores/counter';
 	import { getClient } from '$lib/client';
-	import { GET_POST, type GetPostData } from '$lib/models/post';
+	import { GET_POST, type GetPostData, type Post } from '$lib/models/post';
 	import { format, parseISO } from 'date-fns';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetPostData;
+	export let data: Post;
 
 	const MAX_ITEMS = 3;
 
-	$: rawShipments = data.post.shipments || [];
+	$: rawShipments = data.shipments || [];
 	$: index = getStore('shipments', rawShipments.length);
 	$: shipments = [...rawShipments.slice($index, $index + MAX_ITEMS)];
 

@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Calendar {
-	events: CalendarEvent[];
+	events: CalendarEvent[] | null;
 }
 
 export interface CalendarEvent {

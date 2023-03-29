@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Post {
-	shipments: PostShipment[];
+	shipments: PostShipment[] | null;
 }
 
 export interface PostShipment {

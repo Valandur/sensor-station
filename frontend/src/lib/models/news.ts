@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface News {
-	items: NewsItem[];
+	items: NewsItem[] | null;
 }
 
 export interface NewsItem {

@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Battery {
-	status: BatteryStatus;
+	status: BatteryStatus | null;
 }
 
 export interface BatteryStatus {

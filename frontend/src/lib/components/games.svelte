@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-	export const gamesMeta: ComponentMeta<GetGamesData> = {
+	export const gamesMeta: ComponentMeta<Games> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
@@ -12,7 +12,10 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for games');
+			}
+			return res.data.games;
 		}
 	};
 </script>
@@ -21,18 +24,18 @@
 	import { onDestroy } from 'svelte';
 	import { format, parseISO } from 'date-fns';
 
-	import { GET_GAMES, type GetGamesData } from '$lib/models/games';
+	import { GET_GAMES, type Games, type GetGamesData } from '$lib/models/games';
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetGamesData;
+	export let data: Games;
 
 	const MAX_ITEMS = 2;
 
-	$: rawGames = data.games.freeEpic || [];
+	$: rawGames = data.freeEpic || [];
 	$: index = getStore('games', rawGames.length - 1);
 	$: games = [...rawGames.slice($index, $index + MAX_ITEMS)];
 

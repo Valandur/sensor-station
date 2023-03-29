@@ -1,9 +1,9 @@
 import { gql } from '@urql/svelte';
 
 export interface Weather {
-	hourly: WeatherForecast[];
-	daily: WeatherForecast[];
-	alerts: WeatherAlert[];
+	hourly: WeatherForecast[] | null;
+	daily: WeatherForecast[] | null;
+	alerts: WeatherAlert[] | null;
 }
 
 export interface WeatherForecast {

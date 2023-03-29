@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Games {
-	freeEpic: Game[];
+	freeEpic: Game[] | null;
 }
 
 export interface Game {

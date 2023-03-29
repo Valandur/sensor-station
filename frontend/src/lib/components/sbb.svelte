@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-	export const sbbMeta: ComponentMeta<GetSBBData> = {
+	export const sbbMeta: ComponentMeta<SBB> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
@@ -12,10 +12,13 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for sbb');
+			}
+			return res.data.sbb;
 		},
-		skip: async (params, data) => {
-			return data?.sbb.alerts.length === 0;
+		skip: (params, data) => {
+			return (data?.alerts?.length || 0) === 0;
 		}
 	};
 </script>
@@ -23,7 +26,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 
-	import { GET_SBB, type GetSBBData } from '$lib/models/sbb';
+	import { GET_SBB, type GetSBBData, type SBB } from '$lib/models/sbb';
 
 	import type { ComponentMeta } from '$lib/component';
 	import { getStore } from '$lib/stores/counter';
@@ -31,11 +34,11 @@
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetSBBData;
+	export let data: SBB;
 
 	const MAX_ITEMS = 3;
 
-	$: rawAlerts = data.sbb.alerts || [];
+	$: rawAlerts = data.alerts || [];
 	$: index = getStore('alerts', rawAlerts.length);
 	$: alerts = [...rawAlerts.slice($index, $index + MAX_ITEMS)];
 

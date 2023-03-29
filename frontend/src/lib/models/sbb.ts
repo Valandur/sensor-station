@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface SBB {
-	alerts: SBBAlert[];
+	alerts: SBBAlert[] | null;
 }
 
 export interface SBBAlert {

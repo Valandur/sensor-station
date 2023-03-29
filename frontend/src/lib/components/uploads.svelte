@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-	export const uploadsMeta: ComponentMeta<GetUploadsData> = {
+	export const uploadsMeta: ComponentMeta<Uploads> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
@@ -12,7 +12,10 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for uploads');
+			}
+			return res.data.uploads;
 		}
 	};
 </script>
@@ -26,14 +29,14 @@
 	import { screen } from '$lib/stores/screen';
 
 	import { BASE_URL, getClient } from '$lib/client';
-	import { type GetUploadsData, GET_UPLOADS } from '$lib/models/upload';
+	import { type GetUploadsData, GET_UPLOADS, type Uploads } from '$lib/models/upload';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetUploadsData;
+	export let data: Uploads;
 
-	$: uploads = data.uploads.items || [];
+	$: uploads = data.items || [];
 	$: index = getStore('uploads', uploads.length);
 	$: item = uploads[$index];
 

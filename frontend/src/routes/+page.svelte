@@ -45,8 +45,8 @@
 		if (nextScreen?.name !== currScreen?.name && nextMeta) {
 			nextMeta
 				.getData(nextScreen.params)
-				.then(async (data) => {
-					if (nextMeta.skip && (await nextMeta.skip(nextScreen.params, data))) {
+				.then((data) => {
+					if (nextMeta.skip && nextMeta.skip(nextScreen.params, data)) {
 						screen.skip();
 					} else {
 						currError = null;

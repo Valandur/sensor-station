@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-	export const calendarMeta: ComponentMeta<GetCalendarData> = {
+	export const calendarMeta: ComponentMeta<Calendar> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
@@ -15,7 +15,10 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for calendar');
+			}
+			return res.data.calendar;
 		}
 	};
 </script>
@@ -24,15 +27,15 @@
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { GET_CALENDAR, type GetCalendarData } from '$lib/models/calendar';
+	import { GET_CALENDAR, type Calendar, type GetCalendarData } from '$lib/models/calendar';
 	import { getClient } from '$lib/client';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: GetCalendarData;
+	export let data: Calendar;
 
-	$: events = data.calendar.events || [];
+	$: events = data.events || [];
 </script>
 
 <div class="container-fluid m-0 h-100">

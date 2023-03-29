@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Modem {
-	status: ModemStatus;
+	status: ModemStatus | null;
 }
 
 export interface ModemStatus {

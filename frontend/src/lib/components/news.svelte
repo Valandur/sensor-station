@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
 	const DEFAULT = '1646';
 
-	export const newsMeta: ComponentMeta<GetNewsData> = {
+	export const newsMeta: ComponentMeta<News> = {
 		getData: async (params = DEFAULT) => {
 			const client = getClient();
 			const res = await client
@@ -17,7 +17,10 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for news');
+			}
+			return res.data.news;
 		}
 	};
 </script>
@@ -29,18 +32,18 @@
 	import { screen } from '$lib/stores/screen';
 
 	import { BASE_URL, getClient } from '$lib/client';
-	import { GET_NEWS, type GetNewsData, type NewsItem } from '$lib/models/news';
+	import { GET_NEWS, type GetNewsData, type News, type NewsItem } from '$lib/models/news';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
-	export let data: GetNewsData;
+	export let data: News;
 
 	const MAX_ITEMS = 3;
 
 	$: feed = params || DEFAULT;
 	let selectedItem: NewsItem | null = null;
 
-	$: rawNews = data.news.items || [];
+	$: rawNews = data.items || [];
 	$: index = getStore('news_' + feed, rawNews.length);
 	$: news = [
 		...rawNews.slice($index, $index + MAX_ITEMS),

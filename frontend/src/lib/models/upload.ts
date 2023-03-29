@@ -1,7 +1,7 @@
 import { gql } from '@urql/svelte';
 
 export interface Uploads {
-	items: UploadItem[];
+	items: UploadItem[] | null;
 }
 
 export interface UploadItem {

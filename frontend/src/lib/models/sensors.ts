@@ -1,8 +1,8 @@
 import { gql } from '@urql/svelte';
 
 export interface Sensors {
-	newest: SensorRecording;
-	recordings: SensorRecording[];
+	newest: SensorRecording | null;
+	recordings: SensorRecording[] | null;
 }
 
 export interface SensorRecording {
@@ -12,7 +12,7 @@ export interface SensorRecording {
 }
 
 export interface GetNewestData {
-	sensors: Omit<Sensors, 'recordings'>;
+	sensors: Pick<Sensors, 'newest'>;
 }
 export const GET_NEWEST = gql`
 	query GetNewest {
@@ -27,7 +27,7 @@ export const GET_NEWEST = gql`
 `;
 
 export interface GetRecordingsData {
-	sensors: Omit<Sensors, 'newest'>;
+	sensors: Pick<Sensors, 'recordings'>;
 }
 export const GET_RECORDINGS = gql`
 	query GetRecordings {

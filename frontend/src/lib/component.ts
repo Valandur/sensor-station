@@ -10,8 +10,8 @@ import Post, { postMeta } from './components/post.svelte';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ComponentMeta<T = any> {
-	getData: (params: string) => Promise<T | null>;
-	skip?: (params: string, data: T | null) => Promise<boolean>;
+	getData: (params: string) => Promise<T>;
+	skip?: (params: string, data: T) => boolean;
 }
 
 export type ComponentMap = { [key: string]: [ComponentType, ComponentMeta] };

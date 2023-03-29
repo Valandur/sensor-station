@@ -15,7 +15,10 @@
 			if (res.error) {
 				throw res.error;
 			}
-			return res.data || null;
+			if (!res.data) {
+				throw new Error('Could not get data for weather');
+			}
+			return res.data;
 		}
 	};
 </script>
