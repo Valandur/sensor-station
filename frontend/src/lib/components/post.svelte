@@ -9,6 +9,9 @@
 					{ additionalTypenames: ['PostShipment'], requestPolicy: 'cache-and-network' }
 				)
 				.toPromise();
+			if (res.error) {
+				throw res.error;
+			}
 			return res.data || null;
 		},
 		skip: async (params, data) => {
@@ -54,7 +57,7 @@
 			{#each shipments as shipment}
 				<div class="col">
 					<div class="card bg-theme border-theme bg-opacity-25">
-						<div class="card-header fw-bold small d-flex justify-content-between">
+						<div class="card-header border-theme fw-bold small d-flex justify-content-between">
 							<div>{shipment.type}</div>
 							<div>
 								<i class="icofont-calendar" />

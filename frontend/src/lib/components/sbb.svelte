@@ -9,6 +9,9 @@
 					{ additionalTypenames: ['SBBAlert'], requestPolicy: 'cache-and-network' }
 				)
 				.toPromise();
+			if (res.error) {
+				throw res.error;
+			}
 			return res.data || null;
 		},
 		skip: async (params, data) => {
@@ -51,7 +54,7 @@
 			{#each alerts as alert}
 				<div class="col">
 					<div class="card bg-warning border-warning bg-opacity-25">
-						<div class="card-header fw-bold small d-flex justify-content-between">
+						<div class="card-header border-warning fw-bold small d-flex justify-content-between">
 							<div>{formatLines(alert.description)}</div>
 							<div><i class="icofont-clock-time" /> {formatDuration(alert.duration)}</div>
 						</div>

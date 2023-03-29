@@ -9,6 +9,9 @@
 					{ additionalTypenames: ['UploadItem'], requestPolicy: 'cache-and-network' }
 				)
 				.toPromise();
+			if (res.error) {
+				throw res.error;
+			}
 			return res.data || null;
 		}
 	};

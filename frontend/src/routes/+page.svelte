@@ -18,6 +18,7 @@
 	let loading = false;
 	let currScreen: Screen | null = null;
 	let currData: any = null;
+	let currError: any = null;
 
 	$: client = getContextClient();
 	$: store = queryStore<GetGeneralData>({
@@ -48,12 +49,15 @@
 					if (nextMeta.skip && (await nextMeta.skip(nextScreen.params, data))) {
 						screen.skip();
 					} else {
+						currError = null;
 						currData = data;
 						currScreen = nextScreen;
 					}
 				})
 				.catch((err) => {
-					console.error(err);
+					currError = err;
+					currData = null;
+					currScreen = nextScreen;
 				})
 				.finally(() => (loading = false));
 		} else {
@@ -180,8 +184,14 @@
 			>
 				{#if currScreen}
 					{#if currScreen.name in COMPONENT_MAP}
-						{@const [comp] = COMPONENT_MAP[currScreen.name]}
-						<svelte:component this={comp} params={currScreen.params} data={currData} />
+						{#if currData}
+							{@const [comp] = COMPONENT_MAP[currScreen.name]}
+							<svelte:component this={comp} params={currScreen.params} data={currData} />
+						{:else}
+							<p class="alert alert-danger m-2">
+								Error loading screen '{currScreen.name}': {currError}
+							</p>
+						{/if}
 					{:else}
 						<p class="alert alert-danger m-2">Unknown screen type '{currScreen.name}'</p>
 					{/if}
