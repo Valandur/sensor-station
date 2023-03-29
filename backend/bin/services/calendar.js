@@ -36,13 +36,12 @@ class Calendar extends service_1.Service {
     }
     async doDispose() { }
     update = async () => {
-        if (!this.client) {
-            this.warn('No calendar credentials');
-            return;
-        }
         try {
             if (!this.client) {
                 this.client = await this.authorize();
+            }
+            else {
+                await this.client.refreshAccessToken();
             }
             const calendar = googleapis_1.google.calendar({ version: 'v3', auth: this.client });
             const res = await calendar.events.list({
@@ -69,7 +68,7 @@ class Calendar extends service_1.Service {
             this.events = events;
         }
         catch (err) {
-            if (err.code === '401') {
+            if (err.code === '400') {
                 await (0, promises_1.rm)(TOKEN_PATH);
                 this.client = null;
             }

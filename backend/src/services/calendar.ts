@@ -51,14 +51,11 @@ export class Calendar extends Service {
 	protected override async doDispose(): Promise<void> {}
 
 	private update = async () => {
-		if (!this.client) {
-			this.warn('No calendar credentials');
-			return;
-		}
-
 		try {
 			if (!this.client) {
 				this.client = await this.authorize();
+			} else {
+				await this.client.refreshAccessToken();
 			}
 
 			const calendar = google.calendar({ version: 'v3', auth: this.client });
@@ -88,7 +85,7 @@ export class Calendar extends Service {
 			}
 			this.events = events;
 		} catch (err: any) {
-			if (err.code === '401') {
+			if (err.code === '400') {
 				await rm(TOKEN_PATH);
 				this.client = null;
 			}
