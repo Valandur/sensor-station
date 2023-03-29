@@ -138,27 +138,35 @@
 					</div>
 				{/if}
 
-				{#if modemStatus}
-					{#if modemStatus.operator}
-						<div class="col-auto">
-							<i class="icofont-globe" />
-							{modemStatus.operator}
-						</div>
-					{/if}
+				{#if modemStatus?.operator}
+					<div class="col-auto">
+						<i class="icofont-globe" />
+						{modemStatus.operator}
+					</div>
+				{/if}
 
-					{#if modemStatus.lat && modemStatus.lng}
-						<div class="col-auto">
-							<i class="icofont-satellite" />
-						</div>
-					{/if}
+				{#if modemStatus?.signal}
+					<div class="col-auto">
+						<i class="icofont-signal" />
+						{(modemStatus.signal / 4) * 100}%
+					</div>
+				{/if}
+
+				{#if modemStatus?.lat && modemStatus?.lng}
+					<div class="col-auto">
+						<i class="icofont-satellite" />
+						{modemStatus.lat.toFixed(2)} | {modemStatus.lng.toFixed(2)}
+					</div>
+				{/if}
+
+				{#if batteryStatus?.status.includes('CHARGING')}
+					<div class="col-auto">
+						<i class="icofont-plugin" />
+					</div>
 				{/if}
 
 				{#if batteryStatus}
 					<div class="col-auto">
-						{#if batteryStatus.status.includes('CHARGING')}
-							<i class="icofont-plugin" />
-						{/if}
-						{batteryStatus.charge}%
 						{#if batteryStatus.charge > 70}
 							<i class="icofont-battery-full" />
 						{:else if batteryStatus.charge > 40}
@@ -168,6 +176,7 @@
 						{:else}
 							<i class="icofont-battery-empty" />
 						{/if}
+						{batteryStatus.charge}%
 					</div>
 				{/if}
 			</div>
