@@ -7,7 +7,6 @@
 		<meta name="viewport" content="width=device-width" />
 		<meta http-equiv="content-security-policy" content="">
 		<link href="../_app/immutable/assets/_layout.f7ae5332.css" rel="stylesheet">
-		<link href="../_app/immutable/assets/_page.99eaf8cf.css" rel="stylesheet">
 		<link rel="modulepreload" href="../_app/immutable/entry/start.4aff83ed.js">
 		<link rel="modulepreload" href="../_app/immutable/chunks/index.48f35f74.js">
 		<link rel="modulepreload" href="../_app/immutable/chunks/singletons.02c07901.js">
@@ -18,29 +17,19 @@
 		<link rel="modulepreload" href="../_app/immutable/chunks/client.417eeaef.js">
 		<link rel="modulepreload" href="../_app/immutable/entry/_layout.ts.822e9be0.js">
 		<link rel="modulepreload" href="../_app/immutable/chunks/_layout.79cb23d1.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/uploads-page.svelte.17dbbf3b.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/upload.331a16ad.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/modem-page.svelte.bf4fb668.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/index.1895fc39.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/_commonjsHelpers.042e6b4d.js">
 		<link rel="modulepreload" href="../_app/immutable/chunks/index.25dd6626.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
 
 
-<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column"><div class="row"><div class="col"><h1>Uploads</h1></div></div>
+<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column"><div class="row"><div class="col"><h1>Modem</h1></div>
+		<div class="col-auto"><a class="btn btn-sm btn-outline-theme" href="/"><i class="icofont-ui-close"></i></a></div></div>
 
-	<div class="row overflow-auto"><table class="table table-sm"><colgroup><col width="10%">
-				<col width="15%">
-				<col width="75%">
-				<col></colgroup>
-
-			<tbody><tr><td><button class="btn btn-sm"><i class="icofont-image icofont-2x"></i></button>
-						<input type="file" accept=".jpg, .jpeg, .png .mp4" class="svelte-1h3r0r0" style="display: none;"></td>
-					<td><input type="date" class="form-control form-control-sm svelte-1h3r0r0" value="2023-03-29"></td>
-					<td><input type="text" class="form-control form-control-sm svelte-1h3r0r0" value=""></td>
-					<td><button class="btn btn-sm  btn-outline-secondary" disabled><i class="icofont-ui-add"></i></button></td></tr>
-
-				</tbody></table></div>
-</div>
+	<div class="row overflow-auto"><div class="col"><div class="alert alert-danger">No modem data!</div></div></div></div>
 
 
 			
@@ -59,7 +48,7 @@
 						import("../_app/immutable/entry/app.e244628a.js")
 					]).then(([kit, app]) => {
 						kit.start(app, __sveltekit_oa6flh.element, {
-							node_ids: [0, 6],
+							node_ids: [0, 3],
 							data,
 							form: null,
 							error: null
