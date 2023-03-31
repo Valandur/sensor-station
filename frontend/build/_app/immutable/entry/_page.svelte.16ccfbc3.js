@@ -216,7 +216,7 @@ P.version="2.29.4";ro(L0);P.fn=T;P.min=$t;P.max=e4;P.now=a4;P.utc=f1;P.unix=gO;P
 				event
 				start
 				end
-				description
+				content
 				tags
 			}
 		}

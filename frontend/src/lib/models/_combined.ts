@@ -75,7 +75,7 @@ export const GET_WEATHER_AND_SENSORS = gql`
 				event
 				start
 				end
-				description
+				content
 				tags
 			}
 		}

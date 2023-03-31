@@ -196,7 +196,7 @@ type WeatherAlert {
 	event: String!
 	start: String!
 	end: String!
-	description: String!
+	content: String!
 	tags: [String!]!
 }
 

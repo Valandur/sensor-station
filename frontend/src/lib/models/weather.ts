@@ -42,7 +42,7 @@ export const GET_WEATHER = gql`
 				event
 				start
 				end
-				description
+				content
 				tags
 			}
 		}
