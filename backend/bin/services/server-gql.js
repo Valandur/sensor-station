@@ -124,12 +124,13 @@ type ShipmentDimensions {
 }
 
 type Shipment {
-	id: String!
+	number: String!
 	type: String!
-	arrival: String!
+	arrival: String
+	status: String
 	sender: String!
-	dims: ShipmentDimensions!
-	weight: Int!
+	dims: ShipmentDimensions
+	weight: Int
 }
 
 type SBB {

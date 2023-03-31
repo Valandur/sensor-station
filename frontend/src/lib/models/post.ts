@@ -5,16 +5,13 @@ export interface Post {
 }
 
 export interface PostShipment {
-	id: string;
+	number: string;
 	type: string;
-	arrival: string;
+	arrival: string | null;
+	status: string | null;
 	sender: string;
-	dims: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	weight: number;
+	dims: { x: number; y: number; z: number } | null;
+	weight: number | null;
 }
 
 export interface GetPostData {
@@ -24,9 +21,10 @@ export const GET_POST = gql`
 	query GetPost {
 		post {
 			shipments {
-				id
+				number
 				type
 				arrival
+				status
 				sender
 				dims {
 					x

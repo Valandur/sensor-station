@@ -62,23 +62,36 @@
 					<div class="card bg-theme border-theme bg-opacity-25">
 						<div class="card-header border-theme fw-bold small d-flex justify-content-between">
 							<div>{shipment.type}</div>
-							<div>
-								<i class="icofont-calendar" />
-								{format(parseISO(shipment.arrival), 'dd.MM.yy')}
-							</div>
+							{#if shipment.arrival}
+								<div>
+									<i class="icofont-calendar" />
+									{format(parseISO(shipment.arrival), 'dd.MM.yy')}
+								</div>
+							{/if}
 						</div>
 						<div class="card-body">
 							<h5 class="card-title">{shipment.sender}</h5>
 							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-								{shipment.id}
+								{shipment.number}
 							</h6>
-							<p class="card-text">
-								<i class="icofont-drag3" />
-								{formatDims(shipment.dims)}
-								<br />
-								<i class="icofont-measure" />
-								{formatWeight(shipment.weight)}
-							</p>
+							{#if shipment.dims}
+								<p class="card-text">
+									<i class="icofont-drag3" />
+									{formatDims(shipment.dims)}
+								</p>
+							{/if}
+							{#if shipment.weight}
+								<p>
+									<i class="icofont-measure" />
+									{formatWeight(shipment.weight)}
+								</p>
+							{/if}
+							{#if shipment.status}
+								<p>
+									<i class="icofont-bullhorn" />
+									{shipment.status}
+								</p>
+							{/if}
 						</div>
 
 						<div class="card-arrow">

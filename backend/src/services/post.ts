@@ -12,26 +12,28 @@ const FORM_REGEX = /<form .*?action="((?:.|\n)*?)"/i;
 const INPUT_REGEX = /<input .*?name="(.*?)" .*?value="(.*?)".*?\/>/gi;
 const URL_USER = 'https://service.post.ch/ekp-web/api/user';
 const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
+const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/events/';
 const URL_TEXTS = 'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
 const USERNAME = process.env['POST_USERNAME'];
 const PASSWORD = process.env['POST_PASSWORD'];
 
 export interface Shipment {
 	id: string;
+	number: string;
 	type: string;
 	sender: string;
-	arrival: string;
-	dims: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	weight: number;
+	arrival: string | null;
+	status: string | null;
+	dims: { x: number; y: number; z: number } | null;
+	weight: number | null;
 }
+
+type RecursiveMap = Map<string, [string, RecursiveMap]>;
 
 export class Post extends Service {
 	private agent = superagent.agent().withCredentials();
 	private timer: NodeJS.Timer | null = null;
+	private shipmentTexts: RecursiveMap = new Map();
 
 	public updatedAt: Date | null = null;
 	public shipments: Shipment[] | null = null;
@@ -39,6 +41,23 @@ export class Post extends Service {
 	protected override async doInit(): Promise<void> {}
 
 	protected override async doStart(): Promise<void> {
+		const resTexts = await this.request('texts', this.agent.get(URL_TEXTS));
+		const texts: Record<string, string> = resTexts.body['shipment-text--'];
+		for (const [key, value] of Object.entries(texts)) {
+			const splits = key.split('.');
+			let entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+			while (splits.length > 0) {
+				const split = splits.shift()!;
+				let subEntry = entry[1].get(split);
+				if (typeof subEntry === 'undefined') {
+					subEntry = ['', new Map()];
+					entry[1].set(split, subEntry);
+				}
+				entry = subEntry;
+			}
+			entry[0] = value.trim();
+		}
+
 		await this.update();
 
 		if (process.env['POST_UPDATE_INTERVAL']) {
@@ -133,32 +152,59 @@ export class Post extends Service {
 				throw new Error('Shipment status did not change to DONE');
 			}
 
-			const resTexts = await this.request('texts', this.agent.get(URL_TEXTS));
-			const texts = resTexts.body['shipment-text--'];
-
 			const shipments: any[] = resShipments.body.shipments;
+			this.updatedAt = new Date();
 			this.shipments = shipments
 				.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
-				.map(({ shipment }) => ({
-					id: shipment.formattedShipmentNumber,
-					type: texts[shipment.product] || shipment.product,
-					arrival: shipment.calculatedDeliveryDate,
-					sender: shipment.debitorDescription,
-					dims: {
-						x: shipment.physicalProperties.dimension1,
-						y: shipment.physicalProperties.dimension2,
-						z: shipment.physicalProperties.dimension3
-					},
-					weight: shipment.physicalProperties.weight
-				}));
+				.map(({ shipment }) => {
+					const phys = shipment.physicalProperties;
+
+					return {
+						id: shipment.identity,
+						number: shipment.formattedShipmentNumber,
+						type: shipment.internationalProduct
+							? this.getText(shipment.internationalProduct)
+							: this.getText(shipment.product),
+						arrival: shipment.calculatedDeliveryDate || null,
+						status: null,
+						sender: shipment.debitorDescription,
+						dims: phys.dimension1 ? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 } : null,
+						weight: phys.weight || null
+					};
+				});
+
+			for (const shipment of this.shipments) {
+				const events = await this.request(
+					`events-${shipment.number}`,
+					this.agent.get(URL_EVENTS.replace('$id', shipment.id))
+				);
+				const event = events.body[0];
+				if (!event) {
+					continue;
+				}
+
+				shipment.status = this.getText(event.eventCode);
+			}
 
 			if (process.env['DEBUG'] === '1' && this.shipments.length === 0) {
 				this.warn('Updating in DEBUG mode');
 				this.shipments = [
 					{
-						id: '99.xx.yyyyyy.zzzzzzzz',
+						id: '__unknown__',
+						number: '99.xx.yyyyyy.zzzzzzzz',
 						type: 'PostPac Priority',
 						arrival: '2023-03-29T00:00:00+02:00',
+						status: null,
+						sender: 'Digitec Galaxus AG',
+						dims: { x: 310, y: 240, z: 215 },
+						weight: 4320
+					},
+					{
+						id: '__unknown__',
+						number: '88.xx.yyyyyy.zzzzzzzz',
+						type: 'International PostPac Priority',
+						arrival: null,
+						status: 'Verzollungsprozess',
 						sender: 'Digitec Galaxus AG',
 						dims: { x: 310, y: 240, z: 215 },
 						weight: 4320
@@ -178,5 +224,44 @@ export class Post extends Service {
 		}*/
 		this.log(name, 'status:', resp.status);
 		return resp;
+	};
+
+	private getText = (code: string) => {
+		let splits = code.split('.');
+		let entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+		const text = this.getRecursiveTexts(entry, splits, 0);
+		return text || code;
+	};
+	private getRecursiveTexts = (entry: [string, RecursiveMap], splits: string[], index: number): string | undefined => {
+		const split = splits[index];
+		if (!split) {
+			// Find the text -> Either the current entry if there is text, or the first sub entry with key '*' and text (recursivly)
+			let subEntry = entry;
+			while (!subEntry[0]) {
+				const nextSubEntry = entry[1].get('*');
+				if (!nextSubEntry) {
+					break;
+				}
+				subEntry = nextSubEntry;
+			}
+			return subEntry[0];
+		}
+
+		const specific = entry[1].get(split);
+		if (specific) {
+			const res = this.getRecursiveTexts(specific, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+		const generic = entry[1].get('*');
+		if (generic) {
+			const res = this.getRecursiveTexts(generic, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+
+		return undefined;
 	};
 }
