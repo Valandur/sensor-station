@@ -61,7 +61,6 @@
 				})
 				.finally(() => (loading = false));
 		} else {
-			screen.reset();
 			loading = false;
 		}
 	}

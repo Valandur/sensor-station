@@ -61,16 +61,20 @@
 				<div class="col">
 					<div class="card bg-theme border-theme bg-opacity-25">
 						<div class="card-header border-theme fw-bold small d-flex justify-content-between">
-							<div>{shipment.type}</div>
+							<div class="shipment-type">
+								{shipment.type}
+							</div>
 							{#if shipment.arrival}
-								<div>
+								<div class="shipment-arrival">
 									<i class="icofont-calendar" />
 									{format(parseISO(shipment.arrival), 'dd.MM.yy')}
 								</div>
 							{/if}
 						</div>
 						<div class="card-body">
-							<h5 class="card-title">{shipment.sender}</h5>
+							<h5 class="card-title">
+								{shipment.sender}
+							</h5>
 							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
 								{shipment.number}
 							</h6>
@@ -125,3 +129,17 @@
 		</div>
 	{/if}
 </div>
+
+<style lang="scss">
+	.shipment-type {
+		white-space: nowrap;
+		overflow: hidden;
+		margin-right: 16px;
+		mask-image: linear-gradient(90deg, #000 60%, transparent);
+		-webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
+	}
+
+	.shipment-arrival {
+		white-space: nowrap;
+	}
+</style>
