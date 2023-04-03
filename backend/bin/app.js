@@ -84,9 +84,13 @@ class Application {
     getDate() {
         return chalk_1.default.grey((0, date_fns_1.format)(new Date(), 'HH:mm:ss'));
     }
+    debug(service, message, ...params) {
+        const msg = chalk_1.default.gray(typeof message === 'string' ? message : (0, util_1.inspect)(message));
+        console.log(`${this.getDate()} [${chalk_1.default.gray('DEBUG')}] [${chalk_1.default.magenta(service)}] ${msg}`, ...params);
+    }
     log(service, message, ...params) {
         const msg = typeof message === 'string' ? message : (0, util_1.inspect)(message);
-        console.log(`${this.getDate()} [${chalk_1.default.blue('INFO')}] [${chalk_1.default.magenta(service)}] ${msg}`, ...params);
+        console.log(`${this.getDate()} [${chalk_1.default.cyan('INFO')}] [${chalk_1.default.magenta(service)}] ${msg}`, ...params);
     }
     warn(service, message, ...params) {
         const msg = chalk_1.default.yellow(typeof message === 'string' ? message : (0, util_1.inspect)(message));

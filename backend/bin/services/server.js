@@ -153,12 +153,18 @@ class Server extends service_1.Service {
                 await this.saveUploadItems();
             }
         }
+        else {
+            this.uploadItems = null;
+        }
         if (!this.webApp) {
             throw new Error('WebApp not available');
         }
         const port = (process.env['SERVER_PORT'] ? Number(process.env['SERVER_PORT']) : 80) || 80;
         const addr = await this.webApp.listen({ port, host: '0.0.0.0' });
         this.log(`RUNNING ON ${addr}...`);
+    }
+    async doUpdate() {
+        // NO-OP
     }
     async doStop() {
         if (this.webApp) {

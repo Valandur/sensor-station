@@ -35,9 +35,7 @@ export interface Interface {
 
 export class Modem extends Service {
 	private commander: SerialCommander | null = null;
-	private timer: NodeJS.Timer | null = null;
 
-	public updatedAt: Date | null = null;
 	public status: StatusInfo | null = null;
 	public interfaces: Interface[] | null = null;
 
@@ -59,9 +57,20 @@ export class Modem extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
+		this.status = null;
+		this.interfaces = null;
+
+		// TODO: Read cached data
+		/*const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
+		if (status) {
+			this.status = { ...JSON.parse(status), cached: true };
+		}*/
+	}
+
+	protected override async doUpdate(): Promise<void> {
 		// If we didn't initilialize it's not available, so exit early
 		if (!this.commander) {
-			if (process.env['DEBUG'] === '1') {
+			if (this.isDebug) {
 				this.status = {
 					isConnected: false,
 					time: new Date().toISOString(),
@@ -77,24 +86,13 @@ export class Modem extends Service {
 			return;
 		}
 
-		await this.update();
+		this.interfaces = await this.getInterfaces();
 
-		if (process.env['MODEM_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['MODEM_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
-		}
+		this.status = await this.getStatus();
+		await writeFile(STATE_PATH, JSON.stringify(this.status), 'utf-8');
 	}
 
 	protected override async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
-		this.updatedAt = null;
 		this.status = null;
 		this.interfaces = null;
 	}
@@ -115,27 +113,6 @@ export class Modem extends Service {
 			return false;
 		}
 	}
-
-	private update = async () => {
-		try {
-			this.interfaces = await this.getInterfaces();
-		} catch (err) {
-			this.error(err);
-		}
-
-		try {
-			this.status = await this.getStatus();
-			this.updatedAt = new Date();
-			await writeFile(STATE_PATH, JSON.stringify(this.status), 'utf-8');
-		} catch (err) {
-			this.error(err);
-
-			const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
-			if (status) {
-				this.status = { ...JSON.parse(status), cached: true };
-			}
-		}
-	};
 
 	private async getInterfaces(): Promise<Interface[]> {
 		const networkInterfacesMap = networkInterfaces();

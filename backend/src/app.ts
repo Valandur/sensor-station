@@ -99,9 +99,13 @@ export class Application {
 		return chalk.grey(format(new Date(), 'HH:mm:ss'));
 	}
 
+	public debug(service: string, message: any, ...params: any[]) {
+		const msg = chalk.gray(typeof message === 'string' ? message : inspect(message));
+		console.log(`${this.getDate()} [${chalk.gray('DEBUG')}] [${chalk.magenta(service)}] ${msg}`, ...params);
+	}
 	public log(service: string, message: any, ...params: any[]) {
 		const msg = typeof message === 'string' ? message : inspect(message);
-		console.log(`${this.getDate()} [${chalk.blue('INFO')}] [${chalk.magenta(service)}] ${msg}`, ...params);
+		console.log(`${this.getDate()} [${chalk.cyan('INFO')}] [${chalk.magenta(service)}] ${msg}`, ...params);
 	}
 	public warn(service: string, message: any, ...params: any[]) {
 		const msg = chalk.yellow(typeof message === 'string' ? message : inspect(message));

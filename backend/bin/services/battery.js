@@ -41,8 +41,6 @@ var BatteryChargingTemperature;
 })(BatteryChargingTemperature = exports.BatteryChargingTemperature || (exports.BatteryChargingTemperature = {}));
 class Battery extends service_1.Service {
     bus = null;
-    timer = null;
-    updatedAt = null;
     status = null;
     async doInit() {
         if (!(await this.checkDevice())) {
@@ -57,9 +55,12 @@ class Battery extends service_1.Service {
         }
     }
     async doStart() {
+        this.status = null;
+    }
+    async doUpdate() {
         // If we didn't initilialize it's not available, so exit early
         if (!this.bus) {
-            if (process.env['DEBUG'] === '1') {
+            if (this.isDebug) {
                 this.status = {
                     isFault: false,
                     isButton: false,
@@ -88,22 +89,9 @@ class Battery extends service_1.Service {
             }
             return;
         }
-        await this.update();
-        if (process.env['BATTERY_UPDATE_INTERVAL']) {
-            const interval = 1000 * Number(process.env['BATTERY_UPDATE_INTERVAL']);
-            this.timer = setInterval(this.update, interval);
-            this.log('UPDATE STARTED', interval);
-        }
-        else {
-            this.log('UPDATE DISABLED');
-        }
+        this.status = await this.getStatus();
     }
     async doStop() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
-        this.updatedAt = null;
         this.status = null;
     }
     async doDispose() {
@@ -122,15 +110,6 @@ class Battery extends service_1.Service {
             return false;
         }
     }
-    update = async () => {
-        try {
-            this.status = await this.getStatus();
-            this.updatedAt = new Date();
-        }
-        catch (err) {
-            this.error(err);
-        }
-    };
     async getStatus() {
         const data = await this.read(CMD_STATUS, 1);
         const rawStatus = data.readUint8(0);

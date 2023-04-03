@@ -21,12 +21,11 @@ const USERNAME = process.env['POST_USERNAME'];
 const PASSWORD = process.env['POST_PASSWORD'];
 class Post extends service_1.Service {
     agent = superagent_1.default.agent().withCredentials();
-    timer = null;
     shipmentTexts = new Map();
-    updatedAt = null;
     shipments = null;
     async doInit() { }
     async doStart() {
+        this.shipments = null;
         const resTexts = await this.request('texts', this.agent.get(URL_TEXTS));
         const texts = resTexts.body['shipment-text--'];
         for (const [key, value] of Object.entries(texts)) {
@@ -43,124 +42,102 @@ class Post extends service_1.Service {
             }
             entry[0] = value.trim();
         }
-        await this.update();
-        if (process.env['POST_UPDATE_INTERVAL']) {
-            const interval = 1000 * Number(process.env['POST_UPDATE_INTERVAL']);
-            this.timer = setInterval(this.update, interval);
-            this.log('UPDATE STARTED', interval);
+    }
+    async doUpdate() {
+        const resPre = await this.request('pre', this.agent.get(URL_START).accept('html'));
+        let url = (0, html_entities_1.decode)(FORM_REGEX.exec(resPre.text)[1].trim());
+        const resStart = await this.request('start', this.agent.post(url).type('form').send({ externalIDP: 'externalIDP' }));
+        const params = new URL(resStart.redirects.pop()).searchParams.toString();
+        url = `${URL_INIT}?${params}`;
+        const resInit = await this.request('init', this.agent.post(url).type('json').send({}));
+        url = `${URL_LOGIN}?${params}`;
+        let authId = resInit.body.tokens.authId;
+        const loginData = { username: USERNAME, password: PASSWORD };
+        const resBasic = await this.request('basic', this.agent.post(url).type('json').set('authId', authId).send(loginData));
+        authId = resBasic.body.tokens.authId;
+        url = `${URL_ANOMALY}?${params}`;
+        const resAnomaly = await this.request('anomaly', this.agent.post(url).type('json').set('authId', authId).send({}));
+        url = decodeURI(resAnomaly.body.nextAction.successUrl.trim());
+        const resAuth = await this.request('auth', this.agent.get(url).accept('html'));
+        url = (0, html_entities_1.decode)(FORM_REGEX.exec(resAuth.text)[1].trim());
+        const resDone = await this.request('done', this.agent.post(url).type('form'));
+        url = (0, html_entities_1.decode)(FORM_REGEX.exec(resDone.text)[1].trim());
+        let matches = INPUT_REGEX.exec(resDone.text);
+        const data = {};
+        while (matches !== null) {
+            data[matches[1]] = matches[2];
+            matches = INPUT_REGEX.exec(resDone.text);
         }
-        else {
-            this.log('UPDATE DISABLED');
+        await this.request('post', this.agent.post(url).type('form').send(data));
+        const resUser = await this.request('user', this.agent.get(URL_USER));
+        url = `${URL_SHIPMENTS}/user/${resUser.body.userIdentifier}`;
+        const resShipmentReq = await this.request('shipments-req', this.agent.get(url));
+        url = `${URL_SHIPMENTS}/result/${resShipmentReq.body}`;
+        let resShipments = await this.request('shipments', this.agent.get(url));
+        for (let i = 0; i < 5; i++) {
+            if (resShipments.body.status === 'DONE') {
+                break;
+            }
+            await new Promise((res) => setTimeout(res, 1000));
+            resShipments = await this.request('shipments', this.agent.get(url));
         }
+        if (resShipments.body.status !== 'DONE') {
+            throw new Error('Shipment status did not change to DONE');
+        }
+        const rawShipments = resShipments.body.shipments;
+        const shipments = rawShipments
+            .filter((s) => s.shipment.globalStatus !== 'DELIVERED')
+            .map(({ shipment }) => {
+            const phys = shipment.physicalProperties;
+            return {
+                id: shipment.identity,
+                number: shipment.formattedShipmentNumber,
+                type: shipment.internationalProduct
+                    ? this.getText(shipment.internationalProduct)
+                    : this.getText(shipment.product),
+                arrival: shipment.calculatedDeliveryDate || null,
+                status: null,
+                sender: shipment.debitorDescription,
+                dims: phys.dimension1 ? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 } : null,
+                weight: phys.weight || null
+            };
+        });
+        for (const shipment of shipments) {
+            const events = await this.request(`events-${shipment.number}`, this.agent.get(URL_EVENTS.replace('$id', shipment.id)));
+            const event = events.body[0];
+            if (!event) {
+                continue;
+            }
+            shipment.status = this.getText(event.eventCode);
+        }
+        if (this.isDebug && shipments.length === 0) {
+            this.warn('Updating in DEBUG mode');
+            shipments.push({
+                id: '__unknown__',
+                number: '99.xx.yyyyyy.zzzzzzzz',
+                type: 'PostPac Priority',
+                arrival: '2023-03-29T00:00:00+02:00',
+                status: null,
+                sender: 'Digitec Galaxus AG',
+                dims: { x: 310, y: 240, z: 215 },
+                weight: 4320
+            }, {
+                id: '__unknown__',
+                number: '88.xx.yyyyyy.zzzzzzzz',
+                type: 'International PostPac Priority',
+                arrival: null,
+                status: 'Verzollungsprozess',
+                sender: 'Digitec Galaxus AG',
+                dims: { x: 310, y: 240, z: 215 },
+                weight: 4320
+            });
+        }
+        this.shipments = shipments;
     }
     async doStop() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
-        this.updatedAt = null;
         this.shipments = null;
     }
     async doDispose() { }
-    update = async () => {
-        try {
-            const resPre = await this.request('pre', this.agent.get(URL_START).accept('html'));
-            let url = (0, html_entities_1.decode)(FORM_REGEX.exec(resPre.text)[1].trim());
-            const resStart = await this.request('start', this.agent.post(url).type('form').send({ externalIDP: 'externalIDP' }));
-            const params = new URL(resStart.redirects.pop()).searchParams.toString();
-            url = `${URL_INIT}?${params}`;
-            const resInit = await this.request('init', this.agent.post(url).type('json').send({}));
-            url = `${URL_LOGIN}?${params}`;
-            let authId = resInit.body.tokens.authId;
-            const loginData = { username: USERNAME, password: PASSWORD };
-            const resBasic = await this.request('basic', this.agent.post(url).type('json').set('authId', authId).send(loginData));
-            authId = resBasic.body.tokens.authId;
-            url = `${URL_ANOMALY}?${params}`;
-            const resAnomaly = await this.request('anomaly', this.agent.post(url).type('json').set('authId', authId).send({}));
-            url = decodeURI(resAnomaly.body.nextAction.successUrl.trim());
-            const resAuth = await this.request('auth', this.agent.get(url).accept('html'));
-            url = (0, html_entities_1.decode)(FORM_REGEX.exec(resAuth.text)[1].trim());
-            const resDone = await this.request('done', this.agent.post(url).type('form'));
-            url = (0, html_entities_1.decode)(FORM_REGEX.exec(resDone.text)[1].trim());
-            let matches = INPUT_REGEX.exec(resDone.text);
-            const data = {};
-            while (matches !== null) {
-                data[matches[1]] = matches[2];
-                matches = INPUT_REGEX.exec(resDone.text);
-            }
-            await this.request('post', this.agent.post(url).type('form').send(data));
-            const resUser = await this.request('user', this.agent.get(URL_USER));
-            url = `${URL_SHIPMENTS}/user/${resUser.body.userIdentifier}`;
-            const resShipmentReq = await this.request('shipments-req', this.agent.get(url));
-            url = `${URL_SHIPMENTS}/result/${resShipmentReq.body}`;
-            let resShipments = await this.request('shipments', this.agent.get(url));
-            for (let i = 0; i < 5; i++) {
-                if (resShipments.body.status === 'DONE') {
-                    break;
-                }
-                await new Promise((res) => setTimeout(res, 1000));
-                resShipments = await this.request('shipments', this.agent.get(url));
-            }
-            if (resShipments.body.status !== 'DONE') {
-                throw new Error('Shipment status did not change to DONE');
-            }
-            const shipments = resShipments.body.shipments;
-            this.updatedAt = new Date();
-            this.shipments = shipments
-                .filter((s) => s.shipment.globalStatus !== 'DELIVERED')
-                .map(({ shipment }) => {
-                const phys = shipment.physicalProperties;
-                return {
-                    id: shipment.identity,
-                    number: shipment.formattedShipmentNumber,
-                    type: shipment.internationalProduct
-                        ? this.getText(shipment.internationalProduct)
-                        : this.getText(shipment.product),
-                    arrival: shipment.calculatedDeliveryDate || null,
-                    status: null,
-                    sender: shipment.debitorDescription,
-                    dims: phys.dimension1 ? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 } : null,
-                    weight: phys.weight || null
-                };
-            });
-            for (const shipment of this.shipments) {
-                const events = await this.request(`events-${shipment.number}`, this.agent.get(URL_EVENTS.replace('$id', shipment.id)));
-                const event = events.body[0];
-                if (!event) {
-                    continue;
-                }
-                shipment.status = this.getText(event.eventCode);
-            }
-            if (process.env['DEBUG'] === '1' && this.shipments.length === 0) {
-                this.warn('Updating in DEBUG mode');
-                this.shipments = [
-                    {
-                        id: '__unknown__',
-                        number: '99.xx.yyyyyy.zzzzzzzz',
-                        type: 'PostPac Priority',
-                        arrival: '2023-03-29T00:00:00+02:00',
-                        status: null,
-                        sender: 'Digitec Galaxus AG',
-                        dims: { x: 310, y: 240, z: 215 },
-                        weight: 4320
-                    },
-                    {
-                        id: '__unknown__',
-                        number: '88.xx.yyyyyy.zzzzzzzz',
-                        type: 'International PostPac Priority',
-                        arrival: null,
-                        status: 'Verzollungsprozess',
-                        sender: 'Digitec Galaxus AG',
-                        dims: { x: 310, y: 240, z: 215 },
-                        weight: 4320
-                    }
-                ];
-            }
-        }
-        catch (err) {
-            this.error(err);
-        }
-    };
     request = async (name, req) => {
         // this.log(name, req.method, req.url.substring(0, 150));
         const resp = await req;

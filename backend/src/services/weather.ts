@@ -84,9 +84,6 @@ interface Alert {
 }
 
 export class Weather extends Service {
-	private timer: NodeJS.Timer | null = null;
-
-	public updatedAt: Date | null = null;
 	public hourly: Forecast[] | null = null;
 	public daily: Forecast[] | null = null;
 	public alerts: Alert[] | null = null;
@@ -94,81 +91,87 @@ export class Weather extends Service {
 	protected override async doInit(): Promise<void> {}
 
 	protected override async doStart(): Promise<void> {
-		await this.update();
+		this.hourly = null;
+		this.daily = null;
+		this.alerts = null;
+	}
 
-		if (process.env['WEATHER_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['WEATHER_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
+	protected override async doUpdate(): Promise<void> {
+		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
+		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
+		const url = `${URL}&lat=${lat}&lon=${lng}`;
+
+		const alerts: Alert[] = [];
+		const daily: Forecast[] = [];
+		const hourly: Forecast[] = [];
+
+		const { body } = await superagent.get(url);
+
+		const prefix = '/icons/';
+		const suffix = '.png';
+
+		for (const forecast of body.hourly) {
+			hourly.push({
+				ts: new Date(forecast.dt * 1000).toISOString(),
+				img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+				feelsLike: forecast.feels_like
+			});
 		}
+
+		for (const forecast of body.daily) {
+			daily.push({
+				ts: new Date(forecast.dt * 1000).toISOString(),
+				img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
+				feelsLike: forecast.feels_like.day
+			});
+		}
+
+		if (body.alerts) {
+			for (const alert of body.alerts) {
+				alerts.push({
+					sender: alert.sender_name,
+					event: alert.event,
+					start: new Date(alert.start * 1000).toISOString(),
+					end: new Date(alert.end * 1000).toISOString(),
+					content: alert.description,
+					tags: alert.tags
+				});
+			}
+		}
+
+		if (this.isDebug && alerts.length === 0) {
+			this.alerts = [
+				{
+					sender: 'MeteoSwiss',
+					event: 'Yellow Wind Warning',
+					start: '2023-03-31T07:00:00.000Z',
+					end: '2023-03-31T19:00:00.000Z',
+					content:
+						'- Highest wind gusts in exposed locations: 70 - 90 km/h, above 1000 m 80 - 110 km/h\n- Main wind direction southwest to west',
+					tags: ['Wind']
+				},
+				{
+					sender: 'MeteoSwiss',
+					event: 'Orange Wind Warning',
+					start: '2023-03-31T06:00:00.000Z',
+					end: '2023-03-31T19:00:00.000Z',
+					content:
+						'- Highest wind gusts in exposed locations: 80 - 110 km/h, above 1000 m  100 - 140 km/h\n- Main wind direction: west to southwest\n- Peak phase of the event: Fri 12 - Fri 17\n- Intensifying conditions: -',
+					tags: ['Wind']
+				}
+			];
+		}
+
+		this.hourly = hourly;
+		this.daily = daily;
+		this.alerts = alerts;
 	}
 
 	protected override async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
-		this.updatedAt = null;
 		this.hourly = null;
 		this.daily = null;
 		this.alerts = null;
 	}
 
 	protected override async doDispose(): Promise<void> {}
-
-	private update = async () => {
-		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
-		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
-		const url = `${URL}&lat=${lat}&lon=${lng}`;
-
-		try {
-			const alerts: Alert[] = [];
-			const daily: Forecast[] = [];
-			const hourly: Forecast[] = [];
-
-			const { body } = await superagent.get(url);
-
-			const prefix = '/icons/';
-			const suffix = '.png';
-
-			for (const forecast of body.hourly) {
-				hourly.push({
-					ts: new Date(forecast.dt * 1000).toISOString(),
-					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-					feelsLike: forecast.feels_like
-				});
-			}
-
-			for (const forecast of body.daily) {
-				daily.push({
-					ts: new Date(forecast.dt * 1000).toISOString(),
-					img: prefix + ICON_MAP[forecast.weather[0].id] + suffix,
-					feelsLike: forecast.feels_like.day
-				});
-			}
-
-			if (body.alerts) {
-				for (const alert of body.alerts) {
-					alerts.push({
-						sender: alert.sender_name,
-						event: alert.event,
-						start: new Date(alert.start * 1000).toISOString(),
-						end: new Date(alert.end * 1000).toISOString(),
-						content: alert.description,
-						tags: alert.tags
-					});
-				}
-			}
-
-			this.updatedAt = new Date();
-			this.hourly = hourly;
-			this.daily = daily;
-			this.alerts = alerts;
-		} catch (err) {
-			this.error(err);
-		}
-	};
 }

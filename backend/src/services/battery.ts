@@ -70,9 +70,7 @@ export interface StatusInfo {
 
 export class Battery extends Service {
 	private bus: PromisifiedBus | null = null;
-	private timer: NodeJS.Timer | null = null;
 
-	public updatedAt: Date | null = null;
 	public status: StatusInfo | null = null;
 
 	protected override async doInit(): Promise<void> {
@@ -89,9 +87,13 @@ export class Battery extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
+		this.status = null;
+	}
+
+	protected override async doUpdate(): Promise<void> {
 		// If we didn't initilialize it's not available, so exit early
 		if (!this.bus) {
-			if (process.env['DEBUG'] === '1') {
+			if (this.isDebug) {
 				this.status = {
 					isFault: false,
 					isButton: false,
@@ -121,24 +123,10 @@ export class Battery extends Service {
 			return;
 		}
 
-		await this.update();
-
-		if (process.env['BATTERY_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['BATTERY_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
-		}
+		this.status = await this.getStatus();
 	}
 
 	protected override async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
-		this.updatedAt = null;
 		this.status = null;
 	}
 
@@ -158,15 +146,6 @@ export class Battery extends Service {
 			return false;
 		}
 	}
-
-	private update = async () => {
-		try {
-			this.status = await this.getStatus();
-			this.updatedAt = new Date();
-		} catch (err) {
-			this.error(err);
-		}
-	};
 
 	private async getStatus(): Promise<StatusInfo> {
 		const data = await this.read(CMD_STATUS, 1);

@@ -21,94 +21,70 @@ export interface Alert {
 }
 
 export class SBB extends Service {
-	private timer: NodeJS.Timer | null = null;
 	private parser = new Parser({ async: true });
 
-	public updatedAt: Date | null = null;
 	public alerts: Alert[] | null = null;
 
 	protected override async doInit(): Promise<void> {}
 
 	protected override async doStart(): Promise<void> {
-		await this.update();
+		this.alerts = null;
+	}
 
-		if (process.env['SBB_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['SBB_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
+	protected override async doUpdate(): Promise<void> {
+		const { text } = await superagent.get(URL).set('Authorization', `Bearer ${KEY}`);
+
+		const res = await this.parser.parseStringPromise(text);
+		const sits: any[] = res.Siri.ServiceDelivery[0].SituationExchangeDelivery[0].Situations[0].PtSituationElement;
+		const alerts: Alert[] = sits
+			.filter((i) => this.alertIsRelevant(JSON.stringify(i)))
+			.map((i: any) => {
+				const pubAct = i.PublishingActions[0].PublishingAction[0];
+				const textCont = pubAct.PassengerInformationAction[0].TextualContent;
+				const pub = textCont.find((c: any) => c.TextualContentSize[0] === 'S');
+
+				return {
+					start: i.ValidityPeriod[0].StartTime[0],
+					end: i.ValidityPeriod[0].EndTime[0],
+					planned: i.Planned?.[0] === 'true',
+					summary: pub.SummaryContent?.[0].SummaryText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
+					reason: pub.ReasonContent?.[0].ReasonText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
+					description: pub.DescriptionContent?.[0].DescriptionText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
+					consequence: pub.ConsequenceContent?.[0].ConsequenceText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
+					duration: pub.DurationContent?.[0].DurationText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
+					recommendation: pub.RecommendationContent?.[0].RecommendationText.find(
+						(s: any) => s['$']['xml:lang'] === 'DE'
+					)?.['_'],
+					affects: i.Affects
+				};
+			});
+
+		this.alerts = alerts.filter((a) => !a.planned);
+
+		if (this.isDebug && this.alerts.length === 0) {
+			this.warn('Updating in DEBUG mode');
+			this.alerts = [
+				{
+					start: '2023-03-27T18:32:00+02:00',
+					end: '2023-03-27T19:30:00+02:00',
+					planned: false,
+					summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
+					reason: 'Grund: Streckenblockierung',
+					description: 'Linien S4, S10',
+					consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
+					duration: 'Dauer: unbestimmt',
+					recommendation: null,
+					affects: {}
+				}
+			];
 		}
 	}
 
 	protected override async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
-		this.updatedAt = null;
 		this.alerts = null;
 	}
 
 	protected override async doDispose(): Promise<void> {}
-
-	private update = async () => {
-		try {
-			const { text } = await superagent.get(URL).set('Authorization', `Bearer ${KEY}`);
-
-			const res = await this.parser.parseStringPromise(text);
-			const sits: any[] = res.Siri.ServiceDelivery[0].SituationExchangeDelivery[0].Situations[0].PtSituationElement;
-			const alerts: Alert[] = sits
-				.filter((i) => this.alertIsRelevant(JSON.stringify(i)))
-				.map((i: any) => {
-					const pubAct = i.PublishingActions[0].PublishingAction[0];
-					const textCont = pubAct.PassengerInformationAction[0].TextualContent;
-					const pub = textCont.find((c: any) => c.TextualContentSize[0] === 'S');
-
-					return {
-						start: i.ValidityPeriod[0].StartTime[0],
-						end: i.ValidityPeriod[0].EndTime[0],
-						planned: i.Planned?.[0] === 'true',
-						summary: pub.SummaryContent?.[0].SummaryText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
-						reason: pub.ReasonContent?.[0].ReasonText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
-						description: pub.DescriptionContent?.[0].DescriptionText.find((s: any) => s['$']['xml:lang'] === 'DE')?.[
-							'_'
-						],
-						consequence: pub.ConsequenceContent?.[0].ConsequenceText.find((s: any) => s['$']['xml:lang'] === 'DE')?.[
-							'_'
-						],
-						duration: pub.DurationContent?.[0].DurationText.find((s: any) => s['$']['xml:lang'] === 'DE')?.['_'],
-						recommendation: pub.RecommendationContent?.[0].RecommendationText.find(
-							(s: any) => s['$']['xml:lang'] === 'DE'
-						)?.['_'],
-						affects: i.Affects
-					};
-				});
-
-			this.alerts = alerts.filter((a) => !a.planned);
-
-			if (process.env['DEBUG'] === '1' && this.alerts.length === 0) {
-				this.warn('Updating in DEBUG mode');
-				this.alerts = [
-					{
-						start: '2023-03-27T18:32:00+02:00',
-						end: '2023-03-27T19:30:00+02:00',
-						planned: false,
-						summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
-						reason: 'Grund: Streckenblockierung',
-						description: 'Linien S4, S10',
-						consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
-						duration: 'Dauer: unbestimmt',
-						recommendation: null,
-						affects: {}
-					}
-				];
-			}
-		} catch (err) {
-			this.error(err);
-		}
-	};
 
 	private alertIsRelevant(text: string) {
 		return WORDS.some((w) => text.includes(w));

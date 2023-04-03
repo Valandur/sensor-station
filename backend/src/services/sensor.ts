@@ -21,8 +21,6 @@ export class Sensor extends Service {
 
 	private dht: DhtSensor | null = null;
 	private lastRecordedTs: string | null = null;
-
-	private updateTimer: NodeJS.Timer | null = null;
 	private recordTimer: NodeJS.Timer | null = null;
 
 	public newest: Recording | null = null;
@@ -43,30 +41,40 @@ export class Sensor extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
-		await this.update();
-
-		if (process.env['SENSOR_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['SENSOR_UPDATE_INTERVAL']);
-			this.updateTimer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
-		}
+		this.newest = null;
 
 		if (process.env['SENSOR_RECORDING_INTERVAL']) {
 			const interval = 1000 * Number(process.env['SENSOR_RECORDING_INTERVAL']);
 			this.recordTimer = setInterval(this.record, interval);
-			this.log('RECORDING STARTED', interval);
+			this.log('RECORDING SCHEDULED', interval);
 		} else {
 			this.log('RECORDING DISABLED');
 		}
 	}
 
-	protected override async doStop(): Promise<void> {
-		if (this.updateTimer) {
-			clearInterval(this.updateTimer);
-			this.updateTimer = null;
+	protected override async doUpdate(): Promise<void> {
+		if (!this.dht) {
+			if (this.isDebug) {
+				this.warn('Updating in DEBUG mode');
+				this.newest = {
+					ts: new Date().toISOString(),
+					temp: Math.random() * 50 - 20,
+					rh: Math.random() * 60 + 20
+				};
+			}
+			return;
 		}
+
+		const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
+
+		this.newest = {
+			ts: new Date().toISOString(),
+			temp: temperature,
+			rh: humidity
+		};
+	}
+
+	protected override async doStop(): Promise<void> {
 		if (this.recordTimer) {
 			clearInterval(this.recordTimer);
 			this.recordTimer = null;
@@ -90,34 +98,6 @@ export class Sensor extends Service {
 			return false;
 		}
 	}
-
-	private update = async () => {
-		if (!this.dht) {
-			if (process.env['DEBUG'] === '1') {
-				this.warn('Updating in DEBUG mode');
-				this.newest = {
-					ts: new Date().toISOString(),
-					temp: Math.random() * 50 - 20,
-					rh: Math.random() * 60 + 20
-				};
-				return;
-			} else {
-				throw new Error(`DHT is not available`);
-			}
-		}
-
-		try {
-			const { temperature, humidity } = await this.dht.read(this.dhtType, this.dhtPin);
-
-			this.newest = {
-				ts: new Date().toISOString(),
-				temp: temperature,
-				rh: humidity
-			};
-		} catch (err) {
-			this.error(err);
-		}
-	};
 
 	private record = async () => {
 		try {

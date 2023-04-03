@@ -194,6 +194,8 @@ export class Server extends Service {
 			if (added) {
 				await this.saveUploadItems();
 			}
+		} else {
+			this.uploadItems = null;
 		}
 
 		if (!this.webApp) {
@@ -203,6 +205,10 @@ export class Server extends Service {
 		const port = (process.env['SERVER_PORT'] ? Number(process.env['SERVER_PORT']) : 80) || 80;
 		const addr = await this.webApp.listen({ port, host: '0.0.0.0' });
 		this.log(`RUNNING ON ${addr}...`);
+	}
+
+	protected override async doUpdate(): Promise<void> {
+		// NO-OP
 	}
 
 	protected override async doStop(): Promise<void> {

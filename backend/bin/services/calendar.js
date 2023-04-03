@@ -11,31 +11,14 @@ const TOKEN_PATH = 'data/calendar/token.json';
 const CREDENTIALS_PATH = 'data/calendar/credentials.json';
 class Calendar extends service_1.Service {
     client = null;
-    timer = null;
     events = null;
     async doInit() {
         this.client = await this.authorize();
     }
     async doStart() {
-        await this.update();
-        if (process.env['CALENDAR_UPDATE_INTERVAL']) {
-            const interval = 1000 * Number(process.env['CALENDAR_UPDATE_INTERVAL']);
-            this.timer = setInterval(this.update, interval);
-            this.log('UPDATE STARTED', interval);
-        }
-        else {
-            this.log('UPDATE DISABLED');
-        }
-    }
-    async doStop() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
         this.events = null;
     }
-    async doDispose() { }
-    update = async () => {
+    async doUpdate() {
         try {
             if (!this.client) {
                 this.client = await this.authorize();
@@ -72,9 +55,15 @@ class Calendar extends service_1.Service {
                 await (0, promises_1.rm)(TOKEN_PATH);
                 this.client = null;
             }
-            this.error(JSON.stringify(err));
+            else {
+                throw err;
+            }
         }
-    };
+    }
+    async doStop() {
+        this.events = null;
+    }
+    async doDispose() { }
     async loadSavedCredentialsIfExist() {
         try {
             const content = await (0, promises_1.readFile)(TOKEN_PATH, 'utf-8');

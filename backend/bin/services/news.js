@@ -12,7 +12,6 @@ const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>
 class News extends service_1.Service {
     parser = null;
     feedMap = new Map();
-    timer = null;
     async doInit() {
         this.parser = new rss_parser_1.default({
             customFields: {
@@ -21,21 +20,14 @@ class News extends service_1.Service {
         });
     }
     async doStart() {
-        await this.update();
-        if (process.env['NEWS_UPDATE_INTERVAL']) {
-            const interval = 1000 * Number(process.env['NEWS_UPDATE_INTERVAL']);
-            this.timer = setInterval(this.update, interval);
-            this.log('UPDATE STARTED', interval);
-        }
-        else {
-            this.log('UPDATE DISABLED');
+        this.feedMap = new Map();
+    }
+    async doUpdate() {
+        for (const feed of this.feedMap.values()) {
+            await this.updateFeed(feed);
         }
     }
     async doStop() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
         this.feedMap.clear();
     }
     async doDispose() {
@@ -43,11 +35,6 @@ class News extends service_1.Service {
             this.parser = null;
         }
     }
-    update = async () => {
-        for (const feed of this.feedMap.values()) {
-            await this.updateFeed(feed);
-        }
-    };
     async updateFeed(newsFeed) {
         if (!this.parser) {
             throw new Error(`Parser is not available`);

@@ -19,7 +19,6 @@ export interface CalendarEvent {
 
 export class Calendar extends Service {
 	private client: OAuth2Client | null = null;
-	private timer: NodeJS.Timer | null = null;
 
 	public events: CalendarEvent[] | null = null;
 
@@ -28,29 +27,10 @@ export class Calendar extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
-		await this.update();
-
-		if (process.env['CALENDAR_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['CALENDAR_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
-		}
-	}
-
-	protected override async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
 		this.events = null;
 	}
 
-	protected override async doDispose(): Promise<void> {}
-
-	private update = async () => {
+	protected override async doUpdate(): Promise<void> {
 		try {
 			if (!this.client) {
 				this.client = await this.authorize();
@@ -88,10 +68,17 @@ export class Calendar extends Service {
 			if (err.code === '400') {
 				await rm(TOKEN_PATH);
 				this.client = null;
+			} else {
+				throw err;
 			}
-			this.error(JSON.stringify(err));
 		}
-	};
+	}
+
+	protected override async doStop(): Promise<void> {
+		this.events = null;
+	}
+
+	protected override async doDispose(): Promise<void> {}
 
 	private async loadSavedCredentialsIfExist(): Promise<OAuth2Client | null> {
 		try {

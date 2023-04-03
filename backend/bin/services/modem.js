@@ -15,8 +15,6 @@ const GPS = /\+CGPSINFO: ([\d\.]+),(\w),([\d\.]+),(\w),(\d+),([\d\.]+),([\d\.]+)
 const STATE_PATH = `data/modem/state.json`;
 class Modem extends service_1.Service {
     commander = null;
-    timer = null;
-    updatedAt = null;
     status = null;
     interfaces = null;
     async doInit() {
@@ -36,9 +34,18 @@ class Modem extends service_1.Service {
         }
     }
     async doStart() {
+        this.status = null;
+        this.interfaces = null;
+        // TODO: Read cached data
+        /*const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
+        if (status) {
+            this.status = { ...JSON.parse(status), cached: true };
+        }*/
+    }
+    async doUpdate() {
         // If we didn't initilialize it's not available, so exit early
         if (!this.commander) {
-            if (process.env['DEBUG'] === '1') {
+            if (this.isDebug) {
                 this.status = {
                     isConnected: false,
                     time: new Date().toISOString(),
@@ -53,22 +60,11 @@ class Modem extends service_1.Service {
             }
             return;
         }
-        await this.update();
-        if (process.env['MODEM_UPDATE_INTERVAL']) {
-            const interval = 1000 * Number(process.env['MODEM_UPDATE_INTERVAL']);
-            this.timer = setInterval(this.update, interval);
-            this.log('UPDATE STARTED', interval);
-        }
-        else {
-            this.log('UPDATE DISABLED');
-        }
+        this.interfaces = await this.getInterfaces();
+        this.status = await this.getStatus();
+        await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
     }
     async doStop() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
-        this.updatedAt = null;
         this.status = null;
         this.interfaces = null;
     }
@@ -88,26 +84,6 @@ class Modem extends service_1.Service {
             return false;
         }
     }
-    update = async () => {
-        try {
-            this.interfaces = await this.getInterfaces();
-        }
-        catch (err) {
-            this.error(err);
-        }
-        try {
-            this.status = await this.getStatus();
-            this.updatedAt = new Date();
-            await (0, promises_1.writeFile)(STATE_PATH, JSON.stringify(this.status), 'utf-8');
-        }
-        catch (err) {
-            this.error(err);
-            const status = await (0, promises_1.readFile)(STATE_PATH, 'utf-8').catch(() => null);
-            if (status) {
-                this.status = { ...JSON.parse(status), cached: true };
-            }
-        }
-    };
     async getInterfaces() {
         const networkInterfacesMap = (0, os_1.networkInterfaces)();
         const interfaces = new Map();

@@ -25,8 +25,6 @@ export class News extends Service {
 	private parser: Parser<{}, { description: string }> | null = null;
 	private feedMap: Map<string, NewsFeed> = new Map();
 
-	private timer: NodeJS.Timer | null = null;
-
 	public async doInit(): Promise<void> {
 		this.parser = new Parser({
 			customFields: {
@@ -36,23 +34,16 @@ export class News extends Service {
 	}
 
 	protected async doStart(): Promise<void> {
-		await this.update();
+		this.feedMap = new Map();
+	}
 
-		if (process.env['NEWS_UPDATE_INTERVAL']) {
-			const interval = 1000 * Number(process.env['NEWS_UPDATE_INTERVAL']);
-			this.timer = setInterval(this.update, interval);
-			this.log('UPDATE STARTED', interval);
-		} else {
-			this.log('UPDATE DISABLED');
+	protected override async doUpdate(): Promise<void> {
+		for (const feed of this.feedMap.values()) {
+			await this.updateFeed(feed);
 		}
 	}
 
 	protected async doStop(): Promise<void> {
-		if (this.timer) {
-			clearInterval(this.timer);
-			this.timer = null;
-		}
-
 		this.feedMap.clear();
 	}
 
@@ -61,12 +52,6 @@ export class News extends Service {
 			this.parser = null;
 		}
 	}
-
-	private update = async () => {
-		for (const feed of this.feedMap.values()) {
-			await this.updateFeed(feed);
-		}
-	};
 
 	private async updateFeed(newsFeed: NewsFeed) {
 		if (!this.parser) {
