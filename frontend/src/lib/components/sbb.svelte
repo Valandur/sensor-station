@@ -31,20 +31,24 @@
 	import type { ComponentMeta } from '$lib/component';
 	import { getStore } from '$lib/stores/counter';
 	import { getClient } from '$lib/client';
+	import { format } from 'date-fns';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
 	export let data: SBB;
 
-	const MAX_ITEMS = 3;
-
 	$: rawAlerts = data.alerts || [];
 	$: index = getStore('alerts', rawAlerts.length);
-	$: alerts = [...rawAlerts.slice($index, $index + MAX_ITEMS)];
+	$: alert = rawAlerts[$index];
 
-	const formatDuration = (duration: string) => duration.replace('Dauer: ', '');
-	const formatLines = (lines: string) => lines.replace('Linien ', '');
-	const formatReason = (reason: string) => reason.replace('Grund: ', '');
+	const formatTitle = (title: string) => title.replace('Einschränkung', '').trim();
+	const formatDuration = (duration: string) =>
+		duration
+			.replace('Dauer:', '')
+			.replaceAll(`${format(new Date(), 'dd.MM.yyyy')},`, '')
+			.trim();
+	const formatLines = (lines: string) => lines.replace('Linien', '').trim();
+	const formatReason = (reason: string) => reason.replace('Grund:', '').trim();
 
 	onDestroy(async () => {
 		index.increment();
@@ -52,32 +56,39 @@
 </script>
 
 <div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
-	{#if alerts.length > 0}
-		<div class="row row-cols-2">
-			{#each alerts as alert}
-				<div class="col">
-					<div class="card bg-warning border-warning bg-opacity-25">
-						<div class="card-header border-warning fw-bold small d-flex justify-content-between">
-							<div>{formatLines(alert.description)}</div>
-							<div><i class="icofont-clock-time" /> {formatDuration(alert.duration)}</div>
+	{#if alert}
+		<div class="row">
+			<div class="col-1" />
+			<div class="col-10">
+				<div class="card bg-warning border-warning bg-opacity-25">
+					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
+						<div>
+							{formatLines(alert.description)}
 						</div>
-						<div class="card-body">
-							<h5 class="card-title">{alert.summary}</h5>
-							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-								{formatReason(alert.reason)}
-							</h6>
-							<p class="card-text">{alert.consequence}</p>
-						</div>
-
-						<div class="card-arrow">
-							<div class="card-arrow-top-left" />
-							<div class="card-arrow-top-right" />
-							<div class="card-arrow-bottom-left" />
-							<div class="card-arrow-bottom-right" />
+						<div>
+							<i class="icofont-clock-time" />
+							{formatDuration(alert.duration)}
 						</div>
 					</div>
+					<div class="card-body">
+						<h5 class="card-title">
+							{formatTitle(alert.summary)}
+						</h5>
+						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
+							{formatReason(alert.reason)}
+						</h6>
+						<p class="card-text">{alert.consequence}</p>
+					</div>
+
+					<div class="card-arrow">
+						<div class="card-arrow-top-left" />
+						<div class="card-arrow-top-right" />
+						<div class="card-arrow-bottom-left" />
+						<div class="card-arrow-bottom-right" />
+					</div>
 				</div>
-			{/each}
+			</div>
+			<div class="col-1" />
 		</div>
 	{:else}
 		<div class="row mb-5">

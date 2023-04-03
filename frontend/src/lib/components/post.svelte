@@ -36,11 +36,9 @@
 	params; // svelte hack to disable unused variable warning
 	export let data: Post;
 
-	const MAX_ITEMS = 3;
-
 	$: rawShipments = data.shipments || [];
 	$: index = getStore('shipments', rawShipments.length);
-	$: shipments = [...rawShipments.slice($index, $index + MAX_ITEMS)];
+	$: shipment = rawShipments[$index];
 
 	const formatDims = ({ x, y, z }: { x: number; y: number; z: number }) => {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;
@@ -55,58 +53,54 @@
 </script>
 
 <div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
-	{#if shipments.length > 0}
-		<div class="row row-cols-2">
-			{#each shipments as shipment}
-				<div class="col">
-					<div class="card bg-theme border-theme bg-opacity-25">
-						<div class="card-header border-theme fw-bold small d-flex justify-content-between">
-							<div class="shipment-type">
-								{shipment.type}
+	{#if shipment}
+		<div class="row">
+			<div class="col-2" />
+			<div class="col-8">
+				<div class="card bg-theme border-theme bg-opacity-25">
+					<div class="card-header border-theme fw-bold small d-flex justify-content-between">
+						<div>
+							{shipment.number}
+						</div>
+						{#if shipment.arrival}
+							<div>
+								<i class="icofont-calendar" />
+								{format(parseISO(shipment.arrival), 'dd.MM.yy')}
 							</div>
-							{#if shipment.arrival}
-								<div class="shipment-arrival">
-									<i class="icofont-calendar" />
-									{format(parseISO(shipment.arrival), 'dd.MM.yy')}
-								</div>
-							{/if}
-						</div>
-						<div class="card-body">
-							<h5 class="card-title">
-								{shipment.sender}
-							</h5>
-							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-								{shipment.number}
-							</h6>
-							{#if shipment.dims}
-								<p class="card-text">
-									<i class="icofont-drag3" />
-									{formatDims(shipment.dims)}
-								</p>
-							{/if}
-							{#if shipment.weight}
-								<p>
-									<i class="icofont-measure" />
-									{formatWeight(shipment.weight)}
-								</p>
-							{/if}
-							{#if shipment.status}
-								<p>
-									<i class="icofont-bullhorn" />
-									{shipment.status}
-								</p>
-							{/if}
-						</div>
+						{/if}
+					</div>
+					<div class="card-body">
+						<h5 class="card-title">
+							{shipment.sender}
+						</h5>
+						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
+							{shipment.type}
+						</h6>
+						{#if shipment.dims}
+							<i class="icofont-drag3" />
+							{formatDims(shipment.dims)}
+							<br />
+						{/if}
+						{#if shipment.weight}
+							<i class="icofont-measure" />
+							{formatWeight(shipment.weight)}
+							<br />
+						{/if}
+						{#if shipment.status}
+							<i class="icofont-bullhorn" />
+							{shipment.status}
+						{/if}
+					</div>
 
-						<div class="card-arrow">
-							<div class="card-arrow-top-left" />
-							<div class="card-arrow-top-right" />
-							<div class="card-arrow-bottom-left" />
-							<div class="card-arrow-bottom-right" />
-						</div>
+					<div class="card-arrow">
+						<div class="card-arrow-top-left" />
+						<div class="card-arrow-top-right" />
+						<div class="card-arrow-bottom-left" />
+						<div class="card-arrow-bottom-right" />
 					</div>
 				</div>
-			{/each}
+			</div>
+			<div class="col-2" />
 		</div>
 	{:else}
 		<div class="row mb-5">
@@ -129,17 +123,3 @@
 		</div>
 	{/if}
 </div>
-
-<style lang="scss">
-	.shipment-type {
-		white-space: nowrap;
-		overflow: hidden;
-		margin-right: 16px;
-		mask-image: linear-gradient(90deg, #000 60%, transparent);
-		-webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
-	}
-
-	.shipment-arrival {
-		white-space: nowrap;
-	}
-</style>
