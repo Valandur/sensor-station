@@ -22,15 +22,10 @@ export interface FeedItem {
 }
 
 export class News extends Service {
-	private parser: Parser<{}, { description: string }> | null = null;
 	private feedMap: Map<string, NewsFeed> = new Map();
 
 	public async doInit(): Promise<void> {
-		this.parser = new Parser({
-			customFields: {
-				item: ['description']
-			}
-		});
+		// NO-OP
 	}
 
 	protected async doStart(): Promise<void> {
@@ -48,17 +43,12 @@ export class News extends Service {
 	}
 
 	protected async doDispose(): Promise<void> {
-		if (this.parser) {
-			this.parser = null;
-		}
+		// NO-OP
 	}
 
 	private async updateFeed(newsFeed: NewsFeed) {
-		if (!this.parser) {
-			throw new Error(`Parser is not available`);
-		}
-
-		const feed = await this.parser.parseURL(newsFeed.feedUrl);
+		const parser = new Parser({ customFields: { item: ['description'] } });
+		const feed = await parser.parseURL(newsFeed.feedUrl);
 
 		const items: FeedItem[] = [];
 		const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);

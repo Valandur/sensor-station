@@ -11,7 +11,6 @@ const KEY = process.env['SBB_API_KEY'] || '';
 const URL = 'https://api.opentransportdata.swiss/siri-sx';
 const WORDS = ['ZH', 'Zürich', 'Zurich', 'Schwerzenbach', 'Hinwil'];
 class SBB extends service_1.Service {
-    parser = new xml2js_1.Parser({ async: true });
     alerts = null;
     async doInit() { }
     async doStart() {
@@ -19,7 +18,8 @@ class SBB extends service_1.Service {
     }
     async doUpdate() {
         const { text } = await superagent_1.default.get(URL).set('Authorization', `Bearer ${KEY}`);
-        const res = await this.parser.parseStringPromise(text);
+        const parser = new xml2js_1.Parser({ async: true });
+        const res = await parser.parseStringPromise(text);
         const sits = res.Siri.ServiceDelivery[0].SituationExchangeDelivery[0].Situations[0].PtSituationElement;
         const alerts = sits
             .filter((i) => this.alertIsRelevant(JSON.stringify(i)))

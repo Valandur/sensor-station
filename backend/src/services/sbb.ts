@@ -21,8 +21,6 @@ export interface Alert {
 }
 
 export class SBB extends Service {
-	private parser = new Parser({ async: true });
-
 	public alerts: Alert[] | null = null;
 
 	protected override async doInit(): Promise<void> {}
@@ -34,7 +32,8 @@ export class SBB extends Service {
 	protected override async doUpdate(): Promise<void> {
 		const { text } = await superagent.get(URL).set('Authorization', `Bearer ${KEY}`);
 
-		const res = await this.parser.parseStringPromise(text);
+		const parser = new Parser({ async: true });
+		const res = await parser.parseStringPromise(text);
 		const sits: any[] = res.Siri.ServiceDelivery[0].SituationExchangeDelivery[0].Situations[0].PtSituationElement;
 		const alerts: Alert[] = sits
 			.filter((i) => this.alertIsRelevant(JSON.stringify(i)))

@@ -10,14 +10,9 @@ const superagent_1 = __importDefault(require("superagent"));
 const service_1 = require("./service");
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 class News extends service_1.Service {
-    parser = null;
     feedMap = new Map();
     async doInit() {
-        this.parser = new rss_parser_1.default({
-            customFields: {
-                item: ['description']
-            }
-        });
+        // NO-OP
     }
     async doStart() {
         this.feedMap = new Map();
@@ -31,15 +26,11 @@ class News extends service_1.Service {
         this.feedMap.clear();
     }
     async doDispose() {
-        if (this.parser) {
-            this.parser = null;
-        }
+        // NO-OP
     }
     async updateFeed(newsFeed) {
-        if (!this.parser) {
-            throw new Error(`Parser is not available`);
-        }
-        const feed = await this.parser.parseURL(newsFeed.feedUrl);
+        const parser = new rss_parser_1.default({ customFields: { item: ['description'] } });
+        const feed = await parser.parseURL(newsFeed.feedUrl);
         const items = [];
         const feedItems = feed.items.filter((item) => !item.description.includes('Hier finden Sie')).slice(0, 10);
         for (const item of feedItems) {
