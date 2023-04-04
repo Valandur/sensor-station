@@ -1,11 +1,18 @@
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
+	import { getContextClient, gql, queryStore } from '@urql/svelte';
 
-	import { GET_BATTERY, type GetBatteryData } from '$lib/models/battery';
+	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
+
+	const QUERY = gql`
+		query Battery {
+			...BatteryStatus
+		}
+		${BATTERY_STATUS}
+	`;
 
 	$: client = getContextClient();
-	$: store = queryStore<GetBatteryData>({
-		query: GET_BATTERY,
+	$: store = queryStore<BatteryStatus>({
+		query: QUERY,
 		requestPolicy: 'cache-and-network',
 		client
 	});
@@ -25,7 +32,11 @@
 
 	<div class="row overflow-auto">
 		<div class="col">
-			{#if battery}
+			{#if $store.fetching}
+				<p class="alert alert-info m-2">
+					<i class="icofont-spinner" /> Loading...
+				</p>
+			{:else if battery}
 				<table class="table table-sm">
 					<colgroup>
 						<col />
@@ -120,7 +131,7 @@
 					</tbody>
 				</table>
 			{:else}
-				<div class="alert alert-danger">No battery data!</div>
+				<div class="alert alert-danger m-2">No battery data!</div>
 			{/if}
 		</div>
 	</div>

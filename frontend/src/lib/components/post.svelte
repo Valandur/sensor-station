@@ -1,10 +1,17 @@
 <script lang="ts" context="module">
-	export const postMeta: ComponentMeta<Post> = {
+	const QUERY = gql`
+		query Post {
+			...PostShipments
+		}
+		${POST_SHIPMENTS}
+	`;
+
+	export const postMeta: ComponentMeta<PostShipment[]> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetPostData>(
-					GET_POST,
+				.query<PostShipments>(
+					QUERY,
 					{},
 					{ additionalTypenames: ['PostShipment'], requestPolicy: 'cache-and-network' }
 				)
@@ -15,30 +22,30 @@
 			if (!res.data) {
 				throw new Error('Could not get data for post');
 			}
-			return res.data.post;
+			return res.data.post.shipments || [];
 		},
 		skip: (params, data) => {
-			return (data.shipments?.length || 0) === 0;
+			return data.length === 0;
 		}
 	};
 </script>
 
 <script lang="ts">
+	import { gql } from '@urql/svelte';
+	import { format, parseISO } from 'date-fns';
 	import { onDestroy } from 'svelte';
 
-	import type { ComponentMeta } from '$lib/component';
-	import { getStore } from '$lib/stores/counter';
 	import { getClient } from '$lib/client';
-	import { GET_POST, type GetPostData, type Post } from '$lib/models/post';
-	import { format, parseISO } from 'date-fns';
+	import { getStore } from '$lib/stores/counter';
+	import { POST_SHIPMENTS, type PostShipments, type PostShipment } from '$lib/models/post';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: Post;
+	export let data: PostShipment[];
 
-	$: rawShipments = data.shipments || [];
-	$: index = getStore('shipments', rawShipments.length);
-	$: shipment = rawShipments[$index];
+	$: index = getStore('shipments', data.length);
+	$: shipment = data[$index];
 
 	const formatDims = ({ x, y, z }: { x: number; y: number; z: number }) => {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;

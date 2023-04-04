@@ -1,5 +1,5 @@
-import{g as t}from"./urql-svelte.e148a647.js";const e=t`
-	query GetUploads {
+import{g as t}from"./urql-svelte.2b4923b5.js";const e=t`
+	fragment UploadItems on Query {
 		uploads {
 			items {
 				ts
@@ -27,4 +27,4 @@ import{g as t}from"./urql-svelte.e148a647.js";const e=t`
 			ratio
 		}
 	}
-`;export{o as D,e as G,a as S};
+`;export{o as D,a as S,e as U};

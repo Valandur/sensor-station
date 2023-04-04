@@ -1,10 +1,17 @@
 <script lang="ts" context="module">
-	export const gamesMeta: ComponentMeta<Games> = {
+	const QUERY = gql`
+		query Games {
+			...GamesFree
+		}
+		${GAMES_FREE}
+	`;
+
+	export const gamesMeta: ComponentMeta<Game[]> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetGamesData>(
-					GET_GAMES,
+				.query<GamesFree>(
+					QUERY,
 					{},
 					{ additionalTypenames: ['Game'], requestPolicy: 'cache-and-network' }
 				)
@@ -15,29 +22,29 @@
 			if (!res.data) {
 				throw new Error('Could not get data for games');
 			}
-			return res.data.games;
+			return res.data.games.freeEpic || [];
 		}
 	};
 </script>
 
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { gql } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
+	import { onDestroy } from 'svelte';
 
-	import { GET_GAMES, type Games, type GetGamesData } from '$lib/models/games';
+	import { GAMES_FREE, type Game, type GamesFree } from '$lib/models/games';
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: Games;
+	export let data: Game[];
 
 	const MAX_ITEMS = 2;
 
-	$: rawGames = data.freeEpic || [];
-	$: index = getStore('games', rawGames.length - 1);
-	$: games = [...rawGames.slice($index, $index + MAX_ITEMS)];
+	$: index = getStore('games', data.length - 1);
+	$: games = [...data.slice($index, $index + MAX_ITEMS)];
 
 	onDestroy(async () => {
 		index.increment();

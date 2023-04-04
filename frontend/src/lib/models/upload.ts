@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface Uploads {
-	items: UploadItem[] | null;
-}
-
 export interface UploadItem {
 	ts: string;
 	title: string;
@@ -11,11 +7,13 @@ export interface UploadItem {
 	ratio: number;
 }
 
-export interface GetUploadsData {
-	uploads: Uploads;
+export interface UploadItems {
+	uploads: {
+		items: UploadItem[] | null;
+	};
 }
-export const GET_UPLOADS = gql`
-	query GetUploads {
+export const UPLOAD_ITEMS = gql`
+	fragment UploadItems on Query {
 		uploads {
 			items {
 				ts

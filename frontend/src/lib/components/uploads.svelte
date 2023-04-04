@@ -1,10 +1,17 @@
 <script lang="ts" context="module">
-	export const uploadsMeta: ComponentMeta<Uploads> = {
+	const QUERY = gql`
+		query Uploads {
+			...UploadItems
+		}
+		${UPLOAD_ITEMS}
+	`;
+
+	export const uploadsMeta: ComponentMeta<UploadItem[]> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetUploadsData>(
-					GET_UPLOADS,
+				.query<UploadItems>(
+					QUERY,
 					{},
 					{ additionalTypenames: ['UploadItem'], requestPolicy: 'cache-and-network' }
 				)
@@ -15,30 +22,29 @@
 			if (!res.data) {
 				throw new Error('Could not get data for uploads');
 			}
-			return res.data.uploads;
+			return res.data.uploads.items || [];
 		}
 	};
 </script>
 
 <script lang="ts">
+	import { gql } from '@urql/svelte';
 	import { onDestroy } from 'svelte';
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
+	import { BASE_URL, getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
-
-	import { BASE_URL, getClient } from '$lib/client';
-	import { type GetUploadsData, GET_UPLOADS, type Uploads } from '$lib/models/upload';
+	import { type UploadItems, UPLOAD_ITEMS, type UploadItem } from '$lib/models/upload';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: Uploads;
+	export let data: UploadItem[];
 
-	$: uploads = data.items || [];
-	$: index = getStore('uploads', uploads.length);
-	$: item = uploads[$index];
+	$: index = getStore('uploads', data.length);
+	$: item = data[$index];
 
 	onDestroy(async () => {
 		index.increment();

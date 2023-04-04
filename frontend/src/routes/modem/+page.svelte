@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { getContextClient, queryStore } from '@urql/svelte';
+	import { getContextClient, gql, queryStore } from '@urql/svelte';
 	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { GET_MODEM, type GetModemData } from '$lib/models/modem';
+	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
+
+	const QUERY = gql`
+		query Modem {
+			...ModemStatus
+		}
+		${MODEM_STATUS}
+	`;
 
 	$: client = getContextClient();
-	$: store = queryStore<GetModemData>({
-		query: GET_MODEM,
+	$: store = queryStore<ModemStatus>({
+		query: QUERY,
 		requestPolicy: 'cache-and-network',
 		client
 	});
@@ -27,7 +34,11 @@
 
 	<div class="row overflow-auto">
 		<div class="col">
-			{#if modem}
+			{#if $store.fetching}
+				<p class="alert alert-info m-2">
+					<i class="icofont-spinner" /> Loading...
+				</p>
+			{:else if modem}
 				<table class="table table-sm">
 					<colgroup>
 						<col />
@@ -80,7 +91,7 @@
 					</tbody>
 				</table>
 			{:else}
-				<div class="alert alert-danger">No modem data!</div>
+				<div class="alert alert-danger m-2">No modem data!</div>
 			{/if}
 		</div>
 	</div>

@@ -140,7 +140,7 @@ export class Weather extends Service {
 		}
 
 		if (this.isDebug && alerts.length === 0) {
-			this.alerts = [
+			alerts.push(
 				{
 					sender: 'MeteoSwiss',
 					event: 'Yellow Wind Warning',
@@ -159,7 +159,7 @@ export class Weather extends Service {
 						'- Highest wind gusts in exposed locations: 80 - 110 km/h, above 1000 m  100 - 140 km/h\n- Main wind direction: west to southwest\n- Peak phase of the event: Fri 12 - Fri 17\n- Intensifying conditions: -',
 					tags: ['Wind']
 				}
-			];
+			);
 		}
 
 		this.hourly = hourly;

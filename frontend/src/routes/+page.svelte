@@ -1,16 +1,31 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
-	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
+	import { getContextClient, gql, mutationStore, queryStore } from '@urql/svelte';
 	import de from 'date-fns/locale/de/index';
 	import Holidays from 'date-holidays';
 	import { browser } from '$app/environment';
 
 	import { COMPONENT_MAP } from '$lib/component';
-	import { GET_GENERAL_DATA, RESTART, type GetGeneralData } from '$lib/models/_combined';
 	import { paused, screen, progress } from '$lib/stores/screen';
 	import { time } from '$lib/stores/time';
-	import type { Screen } from '$lib/models/screen';
+
+	import { SCREENS, type Screen, type Screens } from '$lib/models/screen';
+	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
+	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
+	import { RESTART } from '$lib/models/actions';
+
+	type GeneralData = Screens & BatteryStatus & ModemStatus;
+	const QUERY = gql`
+		query GeneralData {
+			...Screens
+			...BatteryStatus
+			...ModemStatus
+		}
+		${SCREENS}
+		${BATTERY_STATUS}
+		${MODEM_STATUS}
+	`;
 
 	const tz = 'Europe/Zurich';
 	const holidays = new Holidays('CH', 'ZH');
@@ -21,16 +36,17 @@
 	let currError: any = null;
 
 	$: client = getContextClient();
-	$: store = queryStore<GetGeneralData>({
-		query: GET_GENERAL_DATA,
+	$: store = queryStore<GeneralData>({
+		query: QUERY,
 		context: { additionalTypenames: ['Screen'] },
 		requestPolicy: 'cache-and-network',
 		client
 	});
 
-	$: screens =
-		$store.data?.screens ||
-		(browser ? JSON.parse(window.localStorage.getItem('screens') || '[]') : []);
+	const cachedScreens: Screen[] = browser
+		? JSON.parse(window.localStorage.getItem('screens') || '[]')
+		: [];
+	$: screens = $store.data?.screens || cachedScreens;
 	$: browser && localStorage.setItem('screens', JSON.stringify(screens));
 	$: batteryStatus = $store.data?.battery.status;
 	$: modemStatus = $store.data?.modem.status;
@@ -42,7 +58,7 @@
 		const nextScreen = screens[$screen];
 		const [, nextMeta] = COMPONENT_MAP[nextScreen?.name] || [];
 
-		if (nextScreen?.name !== currScreen?.name && nextMeta) {
+		if (nextScreen !== currScreen && nextMeta) {
 			nextMeta
 				.getData(nextScreen.params)
 				.then((data) => {
@@ -201,7 +217,11 @@
 				style:overflow="hidden"
 				transition:fade
 			>
-				{#if currScreen}
+				{#if $store.fetching}
+					<p class="alert alert-info m-2">
+						<i class="icofont-spinner" /> Loading...
+					</p>
+				{:else if currScreen}
 					{#if currScreen.name in COMPONENT_MAP}
 						{#if currData}
 							{@const [comp] = COMPONENT_MAP[currScreen.name]}

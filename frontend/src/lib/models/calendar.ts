@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface Calendar {
-	events: CalendarEvent[] | null;
-}
-
 export interface CalendarEvent {
 	tsStart: string;
 	tsEnd: string;
@@ -11,11 +7,13 @@ export interface CalendarEvent {
 	isWholeDay: boolean;
 }
 
-export interface GetCalendarData {
-	calendar: Calendar;
+export interface CalendarEvents {
+	calendar: {
+		events: CalendarEvent[] | null;
+	};
 }
-export const GET_CALENDAR = gql`
-	query GetCalendar {
+export const CALENDAR_EVENTS = gql`
+	fragment CalendarEvents on Query {
 		calendar {
 			events {
 				tsStart

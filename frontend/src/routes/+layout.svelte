@@ -4,8 +4,6 @@
 
 	import { getClient } from '$lib/client';
 
-	import 'pace-js/themes/black/pace-theme-flash.css';
-
 	import '$lib/theme/scss/styles.scss';
 	import '$lib/theme/scss/font.scss';
 

@@ -1,10 +1,17 @@
 <script lang="ts" context="module">
-	export const sbbMeta: ComponentMeta<SBB> = {
+	const QUERY = gql`
+		query SBB {
+			...SBBAlerts
+		}
+		${SBB_ALERTS}
+	`;
+
+	export const sbbMeta: ComponentMeta<SBBAlert[]> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetSBBData>(
-					GET_SBB,
+				.query<SBBAlerts>(
+					QUERY,
 					{},
 					{ additionalTypenames: ['SBBAlert'], requestPolicy: 'cache-and-network' }
 				)
@@ -15,31 +22,30 @@
 			if (!res.data) {
 				throw new Error('Could not get data for sbb');
 			}
-			return res.data.sbb;
+			return res.data.sbb.alerts || [];
 		},
 		skip: (params, data) => {
-			return (data?.alerts?.length || 0) === 0;
+			return data.length === 0;
 		}
 	};
 </script>
 
 <script lang="ts">
+	import { gql } from '@urql/svelte';
+	import { format } from 'date-fns';
 	import { onDestroy } from 'svelte';
 
-	import { GET_SBB, type GetSBBData, type SBB } from '$lib/models/sbb';
-
-	import type { ComponentMeta } from '$lib/component';
-	import { getStore } from '$lib/stores/counter';
 	import { getClient } from '$lib/client';
-	import { format } from 'date-fns';
+	import { getStore } from '$lib/stores/counter';
+	import { SBB_ALERTS, type SBBAlert, type SBBAlerts } from '$lib/models/sbb';
+	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
-	export let data: SBB;
+	export let data: SBBAlert[];
 
-	$: rawAlerts = data.alerts || [];
-	$: index = getStore('alerts', rawAlerts.length);
-	$: alert = rawAlerts[$index];
+	$: index = getStore('alerts', data.length);
+	$: alert = data[$index];
 
 	const formatTitle = (title: string) => title.replace('Einschränkung', '').trim();
 	const formatDuration = (duration: string) =>

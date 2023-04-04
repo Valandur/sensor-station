@@ -1,5 +1,5 @@
 import { networkInterfaces } from 'os';
-import { readFile, stat, writeFile } from 'fs/promises';
+import { stat, writeFile } from 'fs/promises';
 import { find } from 'geo-tz';
 import type SerialCommander from '@westh/serial-commander';
 

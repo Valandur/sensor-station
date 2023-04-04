@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface Games {
-	freeEpic: Game[] | null;
-}
-
 export interface Game {
 	title: string;
 	startsAt: string;
@@ -11,11 +7,13 @@ export interface Game {
 	image: string | null;
 }
 
-export interface GetGamesData {
-	games: Games;
+export interface GamesFree {
+	games: {
+		freeEpic: Game[] | null;
+	};
 }
-export const GET_GAMES = gql`
-	query GetGames {
+export const GAMES_FREE = gql`
+	fragment GamesFree on Query {
 		games {
 			freeEpic {
 				title

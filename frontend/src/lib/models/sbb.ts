@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface SBB {
-	alerts: SBBAlert[] | null;
-}
-
 export interface SBBAlert {
 	start: Date;
 	end: Date;
@@ -16,11 +12,13 @@ export interface SBBAlert {
 	recommendation: string;
 }
 
-export interface GetSBBData {
-	sbb: SBB;
+export interface SBBAlerts {
+	sbb: {
+		alerts: SBBAlert[] | null;
+	};
 }
-export const GET_SBB = gql`
-	query GetSBB {
+export const SBB_ALERTS = gql`
+	fragment SBBAlerts on Query {
 		sbb {
 			alerts {
 				start

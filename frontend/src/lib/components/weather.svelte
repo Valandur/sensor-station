@@ -1,13 +1,23 @@
 <script lang="ts" context="module">
-	export const weatherMeta: ComponentMeta<GetWeatherAndSensorsData> = {
+	type WeatherAndSensorsNewest = WeatherForecasts & SensorsNewest;
+	const QUERY = gql`
+		query WeatherAndSensorsNewest {
+			...WeatherForecasts
+			...SensorsNewest
+		}
+		${WEATHER_FORECASTS}
+		${SENSORS_NEWEST}
+	`;
+
+	export const weatherMeta: ComponentMeta<WeatherAndSensorsNewest> = {
 		getData: async () => {
 			const client = getClient();
 			const res = await client
-				.query<GetWeatherAndSensorsData>(
-					GET_WEATHER_AND_SENSORS,
+				.query<WeatherAndSensorsNewest>(
+					QUERY,
 					{},
 					{
-						additionalTypenames: ['WeatherForecast', 'WeatherAlert'],
+						additionalTypenames: ['WeatherForecast', 'SensorRecording'],
 						requestPolicy: 'cache-and-network'
 					}
 				)
@@ -24,15 +34,17 @@
 </script>
 
 <script lang="ts">
+	import { gql } from '@urql/svelte';
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { GET_WEATHER_AND_SENSORS, type GetWeatherAndSensorsData } from '$lib/models/_combined';
 	import { getClient } from '$lib/client';
 	import type { ComponentMeta } from '$lib/component';
+	import { SENSORS_NEWEST, type SensorsNewest } from '$lib/models/sensors';
+	import { WEATHER_FORECASTS, type WeatherForecasts } from '$lib/models/weather';
 
 	export let params: string = '';
-	export let data: GetWeatherAndSensorsData;
+	export let data: WeatherAndSensorsNewest;
 
 	const NUM_FORECASTS = 7;
 

@@ -1,10 +1,6 @@
 import { gql } from '@urql/svelte';
 
-export interface Battery {
-	status: BatteryStatus | null;
-}
-
-export interface BatteryStatus {
+export interface Status {
 	isFault: boolean;
 	isButton: boolean;
 	status: string;
@@ -30,11 +26,13 @@ export interface BatteryStatus {
 	};
 }
 
-export interface GetBatteryData {
-	battery: Battery;
+export interface BatteryStatus {
+	battery: {
+		status: Status | null;
+	};
 }
-export const GET_BATTERY = gql`
-	query GetBattery {
+export const BATTERY_STATUS = gql`
+	fragment BatteryStatus on Query {
 		battery {
 			status {
 				isFault

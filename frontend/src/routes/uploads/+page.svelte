@@ -1,9 +1,16 @@
 <script lang="ts">
-	import { getContextClient, mutationStore, queryStore } from '@urql/svelte';
+	import { getContextClient, gql, mutationStore, queryStore } from '@urql/svelte';
 
 	import { BASE_URL } from '$lib/client';
-	import { DELETE_UPLOAD, GET_UPLOADS, SAVE_UPLOAD, type GetUploadsData } from '$lib/models/upload';
+	import { DELETE_UPLOAD, SAVE_UPLOAD, UPLOAD_ITEMS, type UploadItems } from '$lib/models/upload';
 	import { format, parseISO } from 'date-fns';
+
+	const QUERY = gql`
+		query Uploads {
+			...UploadItems
+		}
+		${UPLOAD_ITEMS}
+	`;
 
 	let fileInput: HTMLInputElement;
 	let newImg: string | null = null;
@@ -21,8 +28,8 @@
 	};
 
 	$: client = getContextClient();
-	$: store = queryStore<GetUploadsData>({
-		query: GET_UPLOADS,
+	$: store = queryStore<UploadItems>({
+		query: QUERY,
 		context: { additionalTypenames: ['UploadItem'] },
 		client
 	});

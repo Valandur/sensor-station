@@ -6,18 +6,19 @@
 		<link rel="stylesheet" type="text/css" href="../icofont.min.css" />
 		<meta name="viewport" content="width=device-width" />
 		<meta http-equiv="content-security-policy" content="">
-		<link href="../_app/immutable/assets/_layout.f7ae5332.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.10cdd72f.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/index.48f35f74.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/singletons.c957c7cd.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/index.9f66bae2.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.2cad8188.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/_layout.svelte.44d4ca75.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/urql-svelte.e148a647.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/client.417eeaef.js">
+		<link href="../_app/immutable/assets/_layout.502fb413.css" rel="stylesheet">
+		<link rel="modulepreload" href="../_app/immutable/entry/start.9c58ad33.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/index.847de1ed.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/singletons.722ae3f7.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/index.ab07e4d1.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/app.57ac6958.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/_layout.svelte.25395aec.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/urql-svelte.2b4923b5.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/client.b9f6382e.js">
 		<link rel="modulepreload" href="../_app/immutable/entry/_layout.ts.822e9be0.js">
 		<link rel="modulepreload" href="../_app/immutable/chunks/_layout.79cb23d1.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/settings-page.svelte.532a5735.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/settings-page.svelte.e43c755b.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/screen.de20502f.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
@@ -26,25 +27,14 @@
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column"><div class="row"><div class="col"><h1>Settings</h1></div>
 		<div class="col-auto"><a class="btn btn-sm btn-outline-theme" href="/"><i class="icofont-ui-close"></i></a></div></div>
 
-	<div class="row overflow-auto"><table class="table table-sm"><colgroup><col width="50%">
-				<col width="50%">
-				<col>
-				<col>
-				<col></colgroup>
-
-			<tbody><tr><td><select class="form-select form-select-sm"><option value="uploads">Bilder</option><option value="calendar">Kalender</option><option value="news">News</option><option value="post">Post</option><option value="sbb">SBB</option><option value="games">Spiele</option><option value="weather">Wetter</option></select></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td><button class="btn btn-sm btn-outline-success"><i class="icofont-ui-add"></i></button></td></tr>
-
-				</tbody></table></div></div>
+	<div class="row overflow-auto"><div class="col"><p class="alert alert-info m-2"><i class="icofont-spinner"></i> Loading...
+				</p></div></div></div>
 
 
 			
 			<script>
 				{
-					__sveltekit_1c0rwdu = {
+					__sveltekit_px7a2g = {
 						env: {"PUBLIC_API_URL":"http://localhost:2000"},
 						base: new URL("..", location).pathname.slice(0, -1),
 						element: document.currentScript.parentElement
@@ -53,11 +43,11 @@
 					const data = [null,null];
 
 					Promise.all([
-						import("../_app/immutable/entry/start.10cdd72f.js"),
-						import("../_app/immutable/entry/app.2cad8188.js")
+						import("../_app/immutable/entry/start.9c58ad33.js"),
+						import("../_app/immutable/entry/app.57ac6958.js")
 					]).then(([kit, app]) => {
-						kit.start(app, __sveltekit_1c0rwdu.element, {
-							node_ids: [0, 6],
+						kit.start(app, __sveltekit_px7a2g.element, {
+							node_ids: [0, 5],
 							data,
 							form: null,
 							error: null

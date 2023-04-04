@@ -5,11 +5,11 @@ export interface Screen {
 	params: string;
 }
 
-export interface GetScreensData {
+export interface Screens {
 	screens: Screen[];
 }
-export const GET_SCREENS = gql`
-	query GetScreens {
+export const SCREENS = gql`
+	fragment Screens on Query {
 		screens {
 			name
 			params

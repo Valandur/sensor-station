@@ -112,24 +112,21 @@ class Weather extends service_1.Service {
             }
         }
         if (this.isDebug && alerts.length === 0) {
-            this.alerts = [
-                {
-                    sender: 'MeteoSwiss',
-                    event: 'Yellow Wind Warning',
-                    start: '2023-03-31T07:00:00.000Z',
-                    end: '2023-03-31T19:00:00.000Z',
-                    content: '- Highest wind gusts in exposed locations: 70 - 90 km/h, above 1000 m 80 - 110 km/h\n- Main wind direction southwest to west',
-                    tags: ['Wind']
-                },
-                {
-                    sender: 'MeteoSwiss',
-                    event: 'Orange Wind Warning',
-                    start: '2023-03-31T06:00:00.000Z',
-                    end: '2023-03-31T19:00:00.000Z',
-                    content: '- Highest wind gusts in exposed locations: 80 - 110 km/h, above 1000 m  100 - 140 km/h\n- Main wind direction: west to southwest\n- Peak phase of the event: Fri 12 - Fri 17\n- Intensifying conditions: -',
-                    tags: ['Wind']
-                }
-            ];
+            alerts.push({
+                sender: 'MeteoSwiss',
+                event: 'Yellow Wind Warning',
+                start: '2023-03-31T07:00:00.000Z',
+                end: '2023-03-31T19:00:00.000Z',
+                content: '- Highest wind gusts in exposed locations: 70 - 90 km/h, above 1000 m 80 - 110 km/h\n- Main wind direction southwest to west',
+                tags: ['Wind']
+            }, {
+                sender: 'MeteoSwiss',
+                event: 'Orange Wind Warning',
+                start: '2023-03-31T06:00:00.000Z',
+                end: '2023-03-31T19:00:00.000Z',
+                content: '- Highest wind gusts in exposed locations: 80 - 110 km/h, above 1000 m  100 - 140 km/h\n- Main wind direction: west to southwest\n- Peak phase of the event: Fri 12 - Fri 17\n- Intensifying conditions: -',
+                tags: ['Wind']
+            });
         }
         this.hourly = hourly;
         this.daily = daily;

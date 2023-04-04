@@ -1,12 +1,19 @@
 <script lang="ts" context="module">
+	const QUERY = gql`
+		query News($feed: String!) {
+			...NewsItems
+		}
+		${NEWS_ITEMS}
+	`;
+
 	const DEFAULT = '1646';
 
-	export const newsMeta: ComponentMeta<News> = {
+	export const newsMeta: ComponentMeta<NewsItem[]> = {
 		getData: async (params = DEFAULT) => {
 			const client = getClient();
 			const res = await client
-				.query<GetNewsData>(
-					GET_NEWS,
+				.query<NewsItems>(
+					QUERY,
 					{ feed: params },
 					{
 						additionalTypenames: ['NewsItem'],
@@ -20,34 +27,33 @@
 			if (!res.data) {
 				throw new Error('Could not get data for news');
 			}
-			return res.data.news;
+			return res.data.news.items || [];
 		}
 	};
 </script>
 
 <script lang="ts">
+	import { gql } from '@urql/svelte';
 	import { onDestroy } from 'svelte';
 
-	import { getStore } from '$lib/stores/counter';
-	import { screen } from '$lib/stores/screen';
-
 	import { BASE_URL, getClient } from '$lib/client';
-	import { GET_NEWS, type GetNewsData, type News, type NewsItem } from '$lib/models/news';
+	import { getStore } from '$lib/stores/counter';
+	import { NEWS_ITEMS, type NewsItems, type NewsItem } from '$lib/models/news';
+	import { screen } from '$lib/stores/screen';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
-	export let data: News;
+	export let data: NewsItem[];
 
 	const MAX_ITEMS = 3;
 
 	$: feed = params || DEFAULT;
 	let selectedItem: NewsItem | null = null;
 
-	$: rawNews = data.items || [];
-	$: index = getStore('news_' + feed, rawNews.length);
+	$: index = getStore('news_' + feed, data.length);
 	$: news = [
-		...rawNews.slice($index, $index + MAX_ITEMS),
-		...rawNews.slice(0, Math.max(MAX_ITEMS - (rawNews.length - $index), 0))
+		...data.slice($index, $index + MAX_ITEMS),
+		...data.slice(0, Math.max(MAX_ITEMS - (data.length - $index), 0))
 	];
 
 	onDestroy(async () => {

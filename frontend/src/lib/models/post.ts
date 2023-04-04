@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface Post {
-	shipments: PostShipment[] | null;
-}
-
 export interface PostShipment {
 	number: string;
 	type: string;
@@ -14,11 +10,13 @@ export interface PostShipment {
 	weight: number | null;
 }
 
-export interface GetPostData {
-	post: Post;
+export interface PostShipments {
+	post: {
+		shipments: PostShipment[] | null;
+	};
 }
-export const GET_POST = gql`
-	query GetPost {
+export const POST_SHIPMENTS = gql`
+	fragment PostShipments on Query {
 		post {
 			shipments {
 				number

@@ -1,7 +1,7 @@
 import { dev } from '$app/environment';
 import { PUBLIC_API_URL } from '$env/static/public';
 
-import { createClient } from '@urql/svelte';
+import { cacheExchange, createClient, fetchExchange } from '@urql/svelte';
 
 type FetchType = typeof fetch;
 
@@ -15,6 +15,7 @@ export function getClient(fetch?: FetchType) {
 	return createClient({
 		fetch,
 		url: `${BASE_URL}/graphql`,
-		fetchOptions: { credentials: 'include' }
+		fetchOptions: { credentials: 'include' },
+		exchanges: [cacheExchange, fetchExchange]
 	});
 }

@@ -1,9 +1,5 @@
 import { gql } from '@urql/svelte';
 
-export interface News {
-	items: NewsItem[] | null;
-}
-
 export interface NewsItem {
 	id: string;
 	ts: string;
@@ -12,11 +8,13 @@ export interface NewsItem {
 	img: string;
 }
 
-export interface GetNewsData {
-	news: News;
+export interface NewsItems {
+	news: {
+		items: NewsItem[] | null;
+	};
 }
-export const GET_NEWS = gql`
-	query GetNews($feed: String!) {
+export const NEWS_ITEMS = gql`
+	fragment NewsItems on Query {
 		news {
 			items(feed: $feed) {
 				id
