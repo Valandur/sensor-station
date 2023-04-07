@@ -15,14 +15,17 @@
 	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
 	import { RESTART } from '$lib/models/actions';
 
-	type GeneralData = Screens & BatteryStatus & ModemStatus;
-	const QUERY = gql`
-		query GeneralData {
+	const QUERY_SCREENS = gql`
+		query Screens {
 			...Screens
+		}
+		${SCREENS}
+	`;
+	const QUERY_STATUS = gql`
+		query GeneralData {
 			...BatteryStatus
 			...ModemStatus
 		}
-		${SCREENS}
 		${BATTERY_STATUS}
 		${MODEM_STATUS}
 	`;
@@ -36,17 +39,20 @@
 	let currError: any = null;
 
 	$: client = getContextClient();
-	$: store = queryStore<GeneralData>({
-		query: QUERY,
+	$: screenStore = queryStore<Screens>({
+		query: QUERY_SCREENS,
 		context: { additionalTypenames: ['Screen'] },
 		requestPolicy: 'cache-and-network',
 		client
 	});
+	$: statusStore = queryStore<BatteryStatus & ModemStatus>({
+		query: QUERY_STATUS,
+		requestPolicy: 'cache-and-network',
+		client
+	});
 	const refreshData = () => {
-		console.log('refreshing');
 		queryStore({
-			query: QUERY,
-			context: { additionalTypenames: ['Screen'] },
+			query: QUERY_STATUS,
 			requestPolicy: 'network-only',
 			client
 		});
@@ -56,10 +62,10 @@
 	const cachedScreens: Screen[] = browser
 		? JSON.parse(window.localStorage.getItem('screens') || '[]')
 		: [];
-	$: screens = $store.data?.screens || cachedScreens;
+	$: screens = $screenStore.data?.screens || cachedScreens;
 	$: browser && localStorage.setItem('screens', JSON.stringify(screens));
-	$: batteryStatus = $store.data?.battery.status;
-	$: modemStatus = $store.data?.modem.status;
+	$: batteryStatus = $statusStore.data?.battery.status;
+	$: modemStatus = $statusStore.data?.modem.status;
 	$: screen.setMax(screens.length);
 
 	$: if (!loading) {
@@ -227,7 +233,7 @@
 				style:overflow="hidden"
 				transition:fade
 			>
-				{#if $store.fetching}
+				{#if $statusStore.fetching}
 					<p class="alert alert-info m-2">
 						<i class="icofont-spinner" /> Loading...
 					</p>
