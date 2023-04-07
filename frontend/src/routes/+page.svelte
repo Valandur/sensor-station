@@ -42,6 +42,16 @@
 		requestPolicy: 'cache-and-network',
 		client
 	});
+	const refreshData = () => {
+		console.log('refreshing');
+		queryStore({
+			query: QUERY,
+			context: { additionalTypenames: ['Screen'] },
+			requestPolicy: 'network-only',
+			client
+		});
+	};
+	$: $time, refreshData();
 
 	const cachedScreens: Screen[] = browser
 		? JSON.parse(window.localStorage.getItem('screens') || '[]')
@@ -117,7 +127,7 @@
 		}
 	};
 
-	const refresh = () => window.location.reload();
+	const reload = () => window.location.reload();
 	const restart = () => {
 		if (!window.confirm('Are you sure you want to restart the device?')) {
 			return;
@@ -264,7 +274,7 @@
 			</div>
 			<div class="col" />
 			<div class="col-auto">
-				<button class="btn btn-warning" on:click={refresh}>
+				<button class="btn btn-warning" on:click={reload}>
 					<i class="icofont-refresh icofont-2x" />
 				</button>
 			</div>

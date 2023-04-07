@@ -1,4 +1,4 @@
-import{g as t}from"./urql-svelte.2b4923b5.js";const r=t`
+import{g as t}from"./urql-svelte.bf611f93.js";const r=t`
 	fragment BatteryStatus on Query {
 		battery {
 			status {

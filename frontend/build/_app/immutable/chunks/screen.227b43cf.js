@@ -1,4 +1,4 @@
-import{g as e}from"./urql-svelte.2b4923b5.js";const a=e`
+import{g as e}from"./urql-svelte.bf611f93.js";const a=e`
 	fragment Screens on Query {
 		screens {
 			name
