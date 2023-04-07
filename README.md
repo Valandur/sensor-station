@@ -1,49 +1,24 @@
 # Weather Station
 
-## Dependencies
+## Chromium & X-server
 
-`sudo apt install --no-install-recommends vim htop chromium-browser xserver-xorg x11-xserver-utils xinit unclutter fonts-noto-color-emoji`
+### Install
 
-## Wayland & GL driver
-
-```conf
-dtoverlay=vc4-kms-v3d
-max_framebuffers=2
-gpu_mem=64
+```shell
+sudo apt install --no-install-recommends vim htop chromium-browser xserver-xorg x11-xserver-utils xinit unclutter
 ```
 
-`sudo apt install vim htop sway luakit`
+### Boot
 
-`export SWAYSOCK=/run/user/1000/sway-ipc.1000.*`
+#### .bash_profile
 
-`swaymsg input 3823:5:WaveShare_WS170120 map_to_output HDMI-A-1`
-
-`swaymsg output HDMI-A-1 transform 180`
-
-`swaymsg -t get_inputs`
-
-`swaymsg -t get_outputs`
-
-## Luakit
-
-`/usr/share/luakit/lib/window.lua`
-"Pack status bar elements" and "Pack Input bar"
-
-## asdf NodeJS permissions for port 80
-
-`sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/18.15.0/bin/node`
-
-## Autostart Web UI
-
-### .bash_profile
-
-```bash
+```shell
 [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx -- -nocursor
 ```
 
-### .xinitrc
+#### .xinitrc
 
-```bash
+```shell
 #!/bin/bash
 xset -dpms
 xset s off
@@ -71,11 +46,67 @@ chromium-browser http://localhost \
   --force-dark-mode
 ```
 
-## Modem config
+## Wayland & GL driver
 
-`sudo apt install minicom`
+### Install
 
-`sudo minicom -D /dev/ttyUSB2`
+```
+sudo apt install vim htop sway luakit
+```
+
+### Setup & Commands
+
+```conf
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+gpu_mem=64
+```
+
+```shell
+swaymsg -t get_inputs
+swaymsg -t get_outputs
+```
+
+> `/usr/share/luakit/lib/window.lua`  
+> Disable "Pack status bar elements" and "Pack Input bar"
+
+### Boot
+
+#### start.sh
+
+```shell
+#!/bin/bash
+cd ~/sensor-station/backend
+node bin/main.js > ~/.sensor.log 2>&1 &
+
+cd ~
+sway > ~/.sway.log 2>&1 &
+
+sleep 10
+export SWAYSOCK=/run/user/$(id -u)/sway-ipc.$(id -u).$(pgrep -x sway).sock
+sleep 1
+swaymsg output HDMI-A-1 transform 180 >> ~/.sway.log 2>&1
+sleep 1
+swaymsg input "*" map_to_output HDMI-A-1 >> ~/.sway.log 2>&1
+sleep 1
+swaymsg output HDMI-A-1 transform 0 >> ~/.sway.log 2>&1
+
+#sleep 20
+#luakit -U http://localhost &
+```
+
+## Node.JS
+
+```shell
+sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/18.15.0/bin/node
+```
+
+## Modem
+
+```shell
+sudo apt install minicom
+sudo minicom -D /dev/ttyUSB2
+```
 
 ```shell
 # deregister from network
