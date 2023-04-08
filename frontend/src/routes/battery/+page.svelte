@@ -3,6 +3,7 @@
 
 	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
 	import { formatDistanceToNow, parseISO } from 'date-fns';
+	import { time } from '$lib/stores/time';
 
 	const QUERY = gql`
 		query Battery {
@@ -28,6 +29,11 @@
 
 	$: battery = $store.data?.battery;
 	$: status = battery?.status;
+
+	let timeStr = '';
+	$: if (battery?.updatedAt) {
+		$time, (timeStr = formatDistanceToNow(parseISO(battery.updatedAt), { addSuffix: true }));
+	}
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
@@ -36,9 +42,7 @@
 			<h1>Battery</h1>
 		</div>
 		<div class="col align-self-center text-secondary">
-			{#if battery?.updatedAt}
-				(@ {formatDistanceToNow(parseISO(battery.updatedAt), { addSuffix: true })})
-			{/if}
+			{timeStr ? `(@ ${timeStr})` : ''}
 		</div>
 		<div class="col-auto">
 			<button class="btn btn-sm btn-outline-theme" on:click={() => refresh()}>

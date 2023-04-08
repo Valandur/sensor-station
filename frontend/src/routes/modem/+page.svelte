@@ -4,6 +4,7 @@
 	import de from 'date-fns/locale/de/index';
 
 	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
+	import { time } from '$lib/stores/time';
 
 	const QUERY = gql`
 		query Modem {
@@ -29,6 +30,11 @@
 
 	$: modem = $store.data?.modem;
 	$: status = modem?.status;
+
+	let timeStr = '';
+	$: if (modem?.updatedAt) {
+		$time, (timeStr = formatDistanceToNow(parseISO(modem.updatedAt), { addSuffix: true }));
+	}
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
@@ -37,9 +43,7 @@
 			<h1>Modem</h1>
 		</div>
 		<div class="col align-self-center text-secondary">
-			{#if modem?.updatedAt}
-				(@ {formatDistanceToNow(parseISO(modem.updatedAt), { addSuffix: true })})
-			{/if}
+			{timeStr ? `(@ ${timeStr})` : ''}
 		</div>
 		<div class="col-auto">
 			<button class="btn btn-sm btn-outline-theme" on:click={() => refresh()}>
