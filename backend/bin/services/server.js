@@ -4,57 +4,71 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = void 0;
+const crypto_1 = require("crypto");
+const child_process_1 = require("child_process");
 const promises_1 = require("fs/promises");
+const date_fns_1 = require("date-fns");
+const path_1 = require("path");
+const cors_1 = __importDefault(require("@fastify/cors"));
 const fastify_1 = __importDefault(require("fastify"));
 const static_1 = __importDefault(require("@fastify/static"));
-const cors_1 = __importDefault(require("@fastify/cors"));
-const mercurius_1 = __importDefault(require("mercurius"));
-const path_1 = require("path");
-const image_size_1 = __importDefault(require("image-size"));
 const get_video_dimensions_1 = __importDefault(require("get-video-dimensions"));
-const child_process_1 = require("child_process");
-const crypto_1 = require("crypto");
+const image_size_1 = __importDefault(require("image-size"));
+const mercurius_1 = __importDefault(require("mercurius"));
 const mime_types_1 = __importDefault(require("mime-types"));
-const date_fns_1 = require("date-fns");
 const service_1 = require("./service");
 const server_gql_1 = require("./server-gql");
+const UPLOADS_DIR = 'data/server/uploads';
+const UPLOADS_PATH = 'data/server/uploads.json';
+const SCREENS_PATH = 'data/server/screens.json';
 class Server extends service_1.Service {
+    port = process.env['SERVER_PORT'] ? Number(process.env['SERVER_PORT']) : 80;
+    host = process.env['SERVER_HOST'] || '0.0.0.0';
     uploadsEnabled = process.env['SERVER_UPLOAD_ENABLED'] === '1';
     screens = [];
     uploadItems = null;
     webApp = null;
     async doInit() {
-        await (0, promises_1.mkdir)('./data/server/uploads', { recursive: true });
+        await (0, promises_1.mkdir)(UPLOADS_DIR, { recursive: true });
         this.webApp = (0, fastify_1.default)({ maxParamLength: 255 });
         await this.webApp.register(cors_1.default, { origin: true, credentials: true });
         const resolvers = {
             Query: {
                 battery: () => ({
+                    updatedAt: () => this.app.battery.updatedAt?.toISOString(),
                     status: () => this.app.battery.status
                 }),
                 calendar: () => ({
+                    updatedAt: () => this.app.calendar.updatedAt?.toISOString(),
                     events: () => this.app.calendar.events
                 }),
                 games: () => ({
+                    updatedAt: () => this.app.games.updatedAt?.toISOString(),
                     freeEpic: () => this.app.games.freeEpic
                 }),
                 modem: () => ({
+                    updatedAt: () => this.app.modem.updatedAt?.toISOString(),
                     status: () => this.app.modem.status
                 }),
                 network: () => ({
+                    updatedAt: () => this.app.modem.updatedAt?.toISOString(),
                     interfaces: () => this.app.modem.interfaces
                 }),
                 news: () => ({
+                    updatedAt: () => this.app.news.updatedAt?.toISOString(),
                     items: ({ feed }) => this.app.news.getItems(feed)
                 }),
                 post: () => ({
+                    updatedAt: () => this.app.post.updatedAt?.toISOString(),
                     shipments: () => this.app.post.shipments
                 }),
                 sbb: () => ({
+                    updatedAt: () => this.app.sbb.updatedAt?.toISOString(),
                     alerts: () => this.app.sbb.alerts
                 }),
                 screens: () => this.screens,
                 sensors: () => ({
+                    updatedAt: () => this.app.sensor.updatedAt?.toISOString(),
                     newest: () => this.app.sensor.newest,
                     recordings: () => this.app.sensor.getRecordings()
                 }),
@@ -62,6 +76,7 @@ class Server extends service_1.Service {
                     items: () => this.uploadItems
                 }),
                 weather: () => ({
+                    updatedAt: () => this.app.weather.updatedAt?.toISOString(),
                     hourly: () => this.app.weather.hourly,
                     daily: () => this.app.weather.daily,
                     alerts: () => this.app.weather.alerts
@@ -70,7 +85,7 @@ class Server extends service_1.Service {
             Mutation: {
                 saveScreens: async (_, { screens }) => {
                     this.screens = screens;
-                    await (0, promises_1.writeFile)('./data/server/screens.json', JSON.stringify(screens), 'utf-8');
+                    await (0, promises_1.writeFile)(SCREENS_PATH, JSON.stringify(screens), 'utf-8');
                     return this.screens;
                 },
                 saveUpload: async (_, { img, ts, title }) => {
@@ -80,7 +95,7 @@ class Server extends service_1.Service {
                         const hash = (0, crypto_1.createHash)('md5').update(ts, 'utf-8').update(title, 'utf-8').update(data).digest('hex');
                         const ext = mime_types_1.default.extension(img.substring(5, img.indexOf(';')));
                         img = `${hash}.${ext}`;
-                        const fileName = `./data/server/uploads/${img}`;
+                        const fileName = `${UPLOADS_DIR}/${img}`;
                         await (0, promises_1.writeFile)(fileName, data);
                         const ratio = await this.getRatio(fileName, data);
                         if (this.uploadItems) {
@@ -101,7 +116,7 @@ class Server extends service_1.Service {
                         if (!this.uploadItems.some((item) => item.img === img)) {
                             throw new Error(`Image not found`);
                         }
-                        await (0, promises_1.rm)(`./data/server/uploads/${img}`);
+                        await (0, promises_1.rm)(`${UPLOADS_DIR}/${img}`);
                         this.uploadItems = this.uploadItems.filter((item) => item.img !== img);
                         await this.saveUploadItems();
                     }
@@ -126,25 +141,25 @@ class Server extends service_1.Service {
             return;
         }
         await this.webApp.register(static_1.default, {
-            root: (0, path_1.resolve)('data', 'server', 'uploads'),
-            prefix: '/data/server/uploads',
+            root: (0, path_1.resolve)(UPLOADS_DIR),
+            prefix: '/' + UPLOADS_DIR,
             decorateReply: false
         });
     }
     async doStart() {
-        this.screens = JSON.parse(await (0, promises_1.readFile)('./data/server/screens.json', 'utf-8').catch(() => '[]'));
+        this.screens = JSON.parse(await (0, promises_1.readFile)(SCREENS_PATH, 'utf-8').catch(() => '[]'));
         this.log(`Loaded ${this.screens.length} screens`);
         if (this.uploadsEnabled) {
-            const items = JSON.parse(await (0, promises_1.readFile)('./data/server/uploads.json', 'utf-8').catch(() => '[]'));
+            const items = JSON.parse(await (0, promises_1.readFile)(UPLOADS_PATH, 'utf-8').catch(() => '[]'));
             this.log(`Loaded ${items.length} uploaded images`);
             let added = false;
-            const files = await (0, promises_1.readdir)('./data/server/uploads');
+            const files = await (0, promises_1.readdir)(UPLOADS_DIR);
             for (const file of files) {
                 if (items.some((item) => item.img === file)) {
                     continue;
                 }
                 this.warn(`Found upload file without data entry: ${file}`);
-                const ratio = await this.getRatio(`./data/server/uploads/${file}`);
+                const ratio = await this.getRatio(`${UPLOADS_DIR}/${file}`);
                 items.push({ ts: new Date().toISOString(), title: '', img: file, ratio });
                 added = true;
             }
@@ -159,8 +174,7 @@ class Server extends service_1.Service {
         if (!this.webApp) {
             throw new Error('WebApp not available');
         }
-        const port = (process.env['SERVER_PORT'] ? Number(process.env['SERVER_PORT']) : 80) || 80;
-        const addr = await this.webApp.listen({ port, host: '0.0.0.0' });
+        const addr = await this.webApp.listen({ port: this.port, host: this.host });
         this.log(`RUNNING ON ${addr}...`);
     }
     async doUpdate() {
@@ -207,7 +221,7 @@ class Server extends service_1.Service {
             return;
         }
         this.uploadItems = this.uploadItems.sort((a, b) => (0, date_fns_1.parseISO)(a.ts).getTime() - (0, date_fns_1.parseISO)(b.ts).getTime());
-        await (0, promises_1.writeFile)('./data/server/uploads.json', JSON.stringify(this.uploadItems), 'utf-8');
+        await (0, promises_1.writeFile)(UPLOADS_PATH, JSON.stringify(this.uploadItems), 'utf-8');
     }
 }
 exports.Server = Server;

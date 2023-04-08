@@ -3,7 +3,6 @@ import { Parser } from 'xml2js';
 
 import { Service } from './service';
 
-const KEY = process.env['SBB_API_KEY'] || '';
 const URL = 'https://api.opentransportdata.swiss/siri-sx';
 const WORDS = ['ZH', 'Zürich', 'Zurich', 'Schwerzenbach', 'Hinwil'];
 
@@ -21,6 +20,8 @@ export interface Alert {
 }
 
 export class SBB extends Service {
+	private readonly apiKey = process.env['SBB_API_KEY'] || '';
+
 	public alerts: Alert[] | null = null;
 
 	protected override async doInit(): Promise<void> {}
@@ -30,7 +31,7 @@ export class SBB extends Service {
 	}
 
 	protected override async doUpdate(): Promise<void> {
-		const { text } = await superagent.get(URL).set('Authorization', `Bearer ${KEY}`);
+		const { text } = await superagent.get(URL).set('Authorization', `Bearer ${this.apiKey}`);
 
 		const parser = new Parser({ async: true });
 		const res = await parser.parseStringPromise(text);

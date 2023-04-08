@@ -21,3 +21,17 @@ declare module '@westh/serial-commander' {
 declare module 'get-video-dimensions' {
 	export default function getDimensions(fileName: string): Promise<{ width: number; height: number }>;
 }
+
+declare module 'http' {
+	interface File {
+		name: string;
+		mimetype: string;
+		data: Buffer;
+		md5: string;
+		mv: (path: string) => void;
+	}
+
+	interface IncomingMessage {
+		files: File[];
+	}
+}

@@ -1,8 +1,8 @@
 import { authenticate } from '@google-cloud/local-auth';
-import { readFile, rm, writeFile } from 'fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'fs/promises';
 import type { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 
 import { Service } from './service';
 
@@ -23,6 +23,8 @@ export class Calendar extends Service {
 	public events: CalendarEvent[] | null = null;
 
 	protected override async doInit(): Promise<void> {
+		await mkdir(dirname(CREDENTIALS_PATH), { recursive: true });
+
 		this.client = await this.authorize();
 	}
 

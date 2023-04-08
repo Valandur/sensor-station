@@ -87,6 +87,8 @@ export abstract class Service {
 		this.debug('STOP');
 		await this.doStop();
 		this.log('STOPPED');
+
+		this.updatedAt = null;
 	}
 
 	protected abstract doStop(): Promise<void>;

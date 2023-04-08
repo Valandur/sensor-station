@@ -68,6 +68,7 @@ class Service {
         this.debug('STOP');
         await this.doStop();
         this.log('STOPPED');
+        this.updatedAt = null;
     }
     async dispose() {
         if (!this.enabled) {

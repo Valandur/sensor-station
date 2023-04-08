@@ -28,12 +28,14 @@ export interface Status {
 
 export interface BatteryStatus {
 	battery: {
+		updatedAt: string | null;
 		status: Status | null;
 	};
 }
 export const BATTERY_STATUS = gql`
 	fragment BatteryStatus on Query {
 		battery {
+			updatedAt
 			status {
 				isFault
 				isButton

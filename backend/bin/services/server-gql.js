@@ -25,6 +25,7 @@ type Mutation {
 }
 
 type Battery {
+	updatedAt: String
 	status: BatteryStatus
 }
 
@@ -55,6 +56,7 @@ type BatteryStatus {
 }
 
 type Calendar {
+	updatedAt: String
 	events: [CalendarEvent!]
 }
 
@@ -66,6 +68,7 @@ type CalendarEvent {
 }
 
 type Games {
+	updatedAt: String
 	freeEpic: [Game!]
 }
 
@@ -77,6 +80,7 @@ type Game {
 }
 
 type Modem {
+	updatedAt: String
 	status: ModemStatus
 }
 
@@ -93,6 +97,7 @@ type ModemStatus {
 }
 
 type Network {
+	updatedAt: String
 	interfaces: [NetworkInterface!]
 }
 
@@ -102,6 +107,7 @@ type NetworkInterface {
 }
 
 type News {
+	updatedAt: String
 	items(feed: String!): [NewsItem!]
 }
 
@@ -114,6 +120,7 @@ type NewsItem {
 }
 
 type Post {
+	updatedAt: String
 	shipments: [Shipment!]
 }
 
@@ -134,6 +141,7 @@ type Shipment {
 }
 
 type SBB {
+	updatedAt: String
 	alerts: [SBBAlert!]
 }
 
@@ -161,6 +169,7 @@ input ScreenInput {
 }
 
 type Sensors {
+	updatedAt: String
 	newest: SensorRecording
 	recordings: [SensorRecording!]
 }
@@ -172,6 +181,7 @@ type SensorRecording {
 }
 
 type Uploads {
+	updatedAt: String
 	items: [UploadItem!]
 }
 
@@ -183,6 +193,7 @@ type UploadItem {
 }
 
 type Weather {
+	updatedAt: String
 	hourly: [WeatherForecast!]
 	daily: [WeatherForecast!]
 	alerts: [WeatherAlert!]

@@ -14,12 +14,14 @@ export interface Status {
 
 export interface ModemStatus {
 	modem: {
+		updatedAt: string | null;
 		status: Status | null;
 	};
 }
 export const MODEM_STATUS = gql`
 	fragment ModemStatus on Query {
 		modem {
+			updatedAt
 			status {
 				isConnected
 				time

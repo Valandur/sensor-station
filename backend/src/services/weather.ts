@@ -1,8 +1,8 @@
 import superagent from 'superagent';
+
 import { Service } from './service';
 
-const KEY = process.env['WEATHER_API_KEY'];
-const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely&appid=${KEY}`;
+const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
 
 const ICON_MAP: { [key: number]: string } = {
 	200: 'thunderstorm',
@@ -84,6 +84,8 @@ interface Alert {
 }
 
 export class Weather extends Service {
+	private readonly apiKey = process.env['WEATHER_API_KEY'] || '';
+
 	public hourly: Forecast[] | null = null;
 	public daily: Forecast[] | null = null;
 	public alerts: Alert[] | null = null;
@@ -99,7 +101,7 @@ export class Weather extends Service {
 	protected override async doUpdate(): Promise<void> {
 		const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
 		const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
-		const url = `${URL}&lat=${lat}&lon=${lng}`;
+		const url = `${URL}&appid=${this.apiKey}&lat=${lat}&lon=${lng}`;
 
 		const alerts: Alert[] = [];
 		const daily: Forecast[] = [];

@@ -3,17 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sensor = void 0;
 const date_fns_1 = require("date-fns");
 const promises_1 = require("fs/promises");
+const path_1 = require("path");
 const service_1 = require("./service");
-const DEVICE_PATH = `/dev/gpiomem`;
+const RECORDINGS_PATH = 'data/sensor/recordings.csv';
 class Sensor extends service_1.Service {
+    devicePath = process.env['SENSOR_DEVICE_PATH'] || '/dev/gpiomem';
     dhtType = process.env['SENSOR_DHT_TYPE'] ? Number(process.env['SENSOR_DHT_TYPE']) : 11;
     dhtPin = process.env['SENSOR_DHT_PIN'] ? Number(process.env['SENSOR_DHT_PIN']) : 17;
+    recordingInterval = process.env['SENSOR_RECORDING_INTERVAL']
+        ? Number(process.env['SENSOR_RECORDING_INTERVAL'])
+        : null;
     dht = null;
     lastRecordedTs = null;
     recordTimer = null;
     newest = null;
     async doInit() {
-        await (0, promises_1.mkdir)('./data/sensor', { recursive: true });
+        await (0, promises_1.mkdir)((0, path_1.dirname)(RECORDINGS_PATH), { recursive: true });
         if (!(await this.checkDevice())) {
             return;
         }
@@ -27,8 +32,8 @@ class Sensor extends service_1.Service {
     }
     async doStart() {
         this.newest = null;
-        if (process.env['SENSOR_RECORDING_INTERVAL']) {
-            const interval = 1000 * Number(process.env['SENSOR_RECORDING_INTERVAL']);
+        if (this.recordingInterval) {
+            const interval = 1000 * this.recordingInterval;
             this.recordTimer = setInterval(this.record, interval);
             this.log('RECORDING SCHEDULED', interval);
         }
@@ -69,11 +74,11 @@ class Sensor extends service_1.Service {
     }
     async checkDevice() {
         try {
-            await (0, promises_1.stat)(DEVICE_PATH);
+            await (0, promises_1.stat)(this.devicePath);
             return true;
         }
         catch {
-            this.warn(`GPIO not available @ ${DEVICE_PATH}`);
+            this.warn(`GPIO not available @ ${this.devicePath}`);
             return false;
         }
     }
@@ -87,7 +92,7 @@ class Sensor extends service_1.Service {
                 this.error('Skipping recording because no new values are available');
                 return;
             }
-            await (0, promises_1.appendFile)('./data/sensor/recordings.csv', `${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`, 'utf-8');
+            await (0, promises_1.appendFile)(RECORDINGS_PATH, `${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`, 'utf-8');
             this.lastRecordedTs = this.newest.ts;
             this.log(`Recorded temp & rh`, this.newest.ts, this.newest.temp, this.newest.rh);
         }
@@ -96,7 +101,7 @@ class Sensor extends service_1.Service {
         }
     };
     getRecordings = async () => {
-        const lines = await (0, promises_1.readFile)('./data/sensor/recordings.csv', 'utf-8');
+        const lines = await (0, promises_1.readFile)(RECORDINGS_PATH, 'utf-8');
         return lines
             .split('\n')
             .map((line) => line.split(','))

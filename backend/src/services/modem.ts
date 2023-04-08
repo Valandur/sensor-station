@@ -1,13 +1,10 @@
 import { networkInterfaces } from 'os';
-import { stat, writeFile } from 'fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'fs/promises';
+import { dirname } from 'path';
 import { find } from 'geo-tz';
 import type SerialCommander from '@westh/serial-commander';
 
 import { Service } from './service';
-
-const MODEM_SERIAL = '/dev/ttyUSB2';
-const BASE_LAT = 47.17554525;
-const BASE_LNG = 8.33849761;
 
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
@@ -34,12 +31,18 @@ export interface Interface {
 }
 
 export class Modem extends Service {
+	private readonly devicePath = process.env['MODEM_SERIAL_PATH'] || '/dev/ttyUSB2';
+	private readonly baseLat = process.env['MODEM_BASE_LAT'] ? Number(process.env['MODEM_BASE_LAT']) : 47.3775366;
+	private readonly baseLng = process.env['MODEM_BASE_LNG'] ? Number(process.env['MODEM_BASE_LNG']) : 8.466696;
+
 	private commander: SerialCommander | null = null;
 
 	public status: StatusInfo | null = null;
 	public interfaces: Interface[] | null = null;
 
 	protected override async doInit(): Promise<void> {
+		await mkdir(dirname(STATE_PATH), { recursive: true });
+
 		if (!(await this.checkDevice())) {
 			return;
 		}
@@ -47,7 +50,7 @@ export class Modem extends Service {
 		try {
 			const SerialCommander = require('@westh/serial-commander');
 			this.commander = new SerialCommander({
-				port: MODEM_SERIAL,
+				port: this.devicePath,
 				defaultDelay: 10,
 				disableLog: true
 			});
@@ -57,30 +60,29 @@ export class Modem extends Service {
 	}
 
 	protected override async doStart(): Promise<void> {
-		this.status = null;
 		this.interfaces = null;
 
-		// TODO: Read cached data
-		/*const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
+		const status = await readFile(STATE_PATH, 'utf-8').catch(() => null);
 		if (status) {
 			this.status = { ...JSON.parse(status), cached: true };
-		}*/
+		} else {
+			this.status = null;
+		}
 	}
 
 	protected override async doUpdate(): Promise<void> {
-		// If we didn't initilialize it's not available, so exit early
 		if (!this.commander) {
 			if (this.isDebug) {
 				this.status = {
-					isConnected: false,
+					isConnected: Math.random() > 0.5,
 					time: new Date().toISOString(),
 					tzOffset: '+01:00',
 					operator: 'DR',
-					signal: 3,
-					lat: BASE_LAT,
-					lng: BASE_LNG,
-					tzName: find(BASE_LAT, BASE_LNG)[0] || 'Unknown',
-					cached: true
+					signal: Math.round(Math.random() * 4),
+					lat: this.baseLat,
+					lng: this.baseLng,
+					tzName: find(this.baseLat, this.baseLng)[0] || 'Unknown',
+					cached: Math.random() > 0.5
 				};
 			}
 			return;
@@ -106,10 +108,10 @@ export class Modem extends Service {
 
 	private async checkDevice() {
 		try {
-			await stat(MODEM_SERIAL);
+			await stat(this.devicePath);
 			return true;
 		} catch {
-			this.warn(`Modem not available @ ${MODEM_SERIAL}`);
+			this.warn(`Modem not available @ ${this.devicePath}`);
 			return false;
 		}
 	}

@@ -1,9 +1,10 @@
 import { isValid, parseISO } from 'date-fns';
 import { appendFile, mkdir, readFile, stat } from 'fs/promises';
+import { dirname } from 'path';
 
 import { Service } from './service';
 
-const DEVICE_PATH = `/dev/gpiomem`;
+const RECORDINGS_PATH = 'data/sensor/recordings.csv';
 
 export interface Recording {
 	ts: string;
@@ -16,8 +17,12 @@ interface DhtSensor {
 }
 
 export class Sensor extends Service {
+	private readonly devicePath = process.env['SENSOR_DEVICE_PATH'] || '/dev/gpiomem';
 	private readonly dhtType = process.env['SENSOR_DHT_TYPE'] ? Number(process.env['SENSOR_DHT_TYPE']) : 11;
 	private readonly dhtPin = process.env['SENSOR_DHT_PIN'] ? Number(process.env['SENSOR_DHT_PIN']) : 17;
+	private readonly recordingInterval = process.env['SENSOR_RECORDING_INTERVAL']
+		? Number(process.env['SENSOR_RECORDING_INTERVAL'])
+		: null;
 
 	private dht: DhtSensor | null = null;
 	private lastRecordedTs: string | null = null;
@@ -26,7 +31,7 @@ export class Sensor extends Service {
 	public newest: Recording | null = null;
 
 	protected override async doInit(): Promise<void> {
-		await mkdir('./data/sensor', { recursive: true });
+		await mkdir(dirname(RECORDINGS_PATH), { recursive: true });
 
 		if (!(await this.checkDevice())) {
 			return;
@@ -43,8 +48,8 @@ export class Sensor extends Service {
 	protected override async doStart(): Promise<void> {
 		this.newest = null;
 
-		if (process.env['SENSOR_RECORDING_INTERVAL']) {
-			const interval = 1000 * Number(process.env['SENSOR_RECORDING_INTERVAL']);
+		if (this.recordingInterval) {
+			const interval = 1000 * this.recordingInterval;
 			this.recordTimer = setInterval(this.record, interval);
 			this.log('RECORDING SCHEDULED', interval);
 		} else {
@@ -91,10 +96,10 @@ export class Sensor extends Service {
 
 	private async checkDevice() {
 		try {
-			await stat(DEVICE_PATH);
+			await stat(this.devicePath);
 			return true;
 		} catch {
-			this.warn(`GPIO not available @ ${DEVICE_PATH}`);
+			this.warn(`GPIO not available @ ${this.devicePath}`);
 			return false;
 		}
 	}
@@ -111,11 +116,7 @@ export class Sensor extends Service {
 				return;
 			}
 
-			await appendFile(
-				'./data/sensor/recordings.csv',
-				`${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`,
-				'utf-8'
-			);
+			await appendFile(RECORDINGS_PATH, `${this.newest.ts},${this.newest.temp},${this.newest.rh}\n`, 'utf-8');
 
 			this.lastRecordedTs = this.newest.ts;
 
@@ -126,7 +127,7 @@ export class Sensor extends Service {
 	};
 
 	public getRecordings = async (): Promise<Recording[]> => {
-		const lines = await readFile('./data/sensor/recordings.csv', 'utf-8');
+		const lines = await readFile(RECORDINGS_PATH, 'utf-8');
 		return lines
 			.split('\n')
 			.map((line) => line.split(','))

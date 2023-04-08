@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Battery = exports.BatteryChargingTemperature = exports.PowerIn = exports.BatteryStatus = void 0;
+exports.Battery = exports.ChargingTemperature = exports.PowerState = exports.BatteryStatus = void 0;
 const promises_1 = require("fs/promises");
 const service_1 = require("./service");
-const BUS_NUMBER = 0x01;
-const I2C_ADDRESS = 0x14;
+const path_1 = require("path");
+const RECORDINGS_PATH = 'data/battery/recordings.csv';
 const CMD_STATUS = 0x40;
 const CMD_FAULT_EVENT = 0x44;
 const CMD_CHARGE_LEVEL = 0x41;
@@ -17,7 +17,6 @@ const CMD_IO_CURRENT = 0x4f;
 // const CMD_LED_STATE = 0x66;
 // const CMD_LED_BLINK = 0x68;
 // const CMD_IO_PIN_ACCESS = 0x75;
-const DEVICE_PATH = `/dev/i2c-${BUS_NUMBER}`;
 var BatteryStatus;
 (function (BatteryStatus) {
     BatteryStatus[BatteryStatus["NORMAL"] = 0] = "NORMAL";
@@ -25,30 +24,38 @@ var BatteryStatus;
     BatteryStatus[BatteryStatus["CHARGING_FROM_5V_IO"] = 2] = "CHARGING_FROM_5V_IO";
     BatteryStatus[BatteryStatus["NONE"] = 3] = "NONE";
 })(BatteryStatus = exports.BatteryStatus || (exports.BatteryStatus = {}));
-var PowerIn;
-(function (PowerIn) {
-    PowerIn[PowerIn["NONE"] = 0] = "NONE";
-    PowerIn[PowerIn["BAD"] = 1] = "BAD";
-    PowerIn[PowerIn["WEAK"] = 2] = "WEAK";
-    PowerIn[PowerIn["PRESENT"] = 3] = "PRESENT";
-})(PowerIn = exports.PowerIn || (exports.PowerIn = {}));
-var BatteryChargingTemperature;
-(function (BatteryChargingTemperature) {
-    BatteryChargingTemperature[BatteryChargingTemperature["NORMAL"] = 0] = "NORMAL";
-    BatteryChargingTemperature[BatteryChargingTemperature["SUSPEND"] = 1] = "SUSPEND";
-    BatteryChargingTemperature[BatteryChargingTemperature["COOL"] = 2] = "COOL";
-    BatteryChargingTemperature[BatteryChargingTemperature["WARM"] = 3] = "WARM";
-})(BatteryChargingTemperature = exports.BatteryChargingTemperature || (exports.BatteryChargingTemperature = {}));
+var PowerState;
+(function (PowerState) {
+    PowerState[PowerState["NONE"] = 0] = "NONE";
+    PowerState[PowerState["BAD"] = 1] = "BAD";
+    PowerState[PowerState["WEAK"] = 2] = "WEAK";
+    PowerState[PowerState["PRESENT"] = 3] = "PRESENT";
+})(PowerState = exports.PowerState || (exports.PowerState = {}));
+var ChargingTemperature;
+(function (ChargingTemperature) {
+    ChargingTemperature[ChargingTemperature["NORMAL"] = 0] = "NORMAL";
+    ChargingTemperature[ChargingTemperature["SUSPEND"] = 1] = "SUSPEND";
+    ChargingTemperature[ChargingTemperature["COOL"] = 2] = "COOL";
+    ChargingTemperature[ChargingTemperature["WARM"] = 3] = "WARM";
+})(ChargingTemperature = exports.ChargingTemperature || (exports.ChargingTemperature = {}));
 class Battery extends service_1.Service {
+    busNumber = process.env['BATTERY_BUS_NUMBER'] ? Number(process.env['BATTERY_BUS_NUMBER']) : 0x01;
+    i2cAddress = process.env['BATTERY_I2C_ADDRESS'] ? Number(process.env['BATTERY_I2C_ADDRESS']) : 0x14;
+    recordingInterval = process.env['BATTERY_RECORDING_INTERVAL']
+        ? Number(process.env['BATTERY_RECORDING_INTERVAL'])
+        : null;
     bus = null;
+    lastRecordedTs = null;
+    recordTimer = null;
     status = null;
     async doInit() {
+        await (0, promises_1.mkdir)((0, path_1.dirname)(RECORDINGS_PATH), { recursive: true });
         if (!(await this.checkDevice())) {
             return;
         }
         try {
             const i2c = require('i2c-bus');
-            this.bus = await i2c.openPromisified(BUS_NUMBER);
+            this.bus = await i2c.openPromisified(this.busNumber);
         }
         catch (err) {
             this.error(err);
@@ -56,34 +63,42 @@ class Battery extends service_1.Service {
     }
     async doStart() {
         this.status = null;
+        if (this.recordingInterval) {
+            const interval = 1000 * this.recordingInterval;
+            this.recordTimer = setInterval(this.record, interval);
+            this.log('RECORDING SCHEDULED', interval);
+        }
+        else {
+            this.log('RECORDING DISABLED');
+        }
     }
     async doUpdate() {
-        // If we didn't initilialize it's not available, so exit early
         if (!this.bus) {
             if (this.isDebug) {
                 this.status = {
-                    isFault: false,
-                    isButton: false,
-                    status: 'CHARGING_FROM_IN',
-                    charge: 43,
-                    temperature: 56.2,
+                    ts: new Date().toISOString(),
+                    isFault: Math.random() > 0.5,
+                    isButton: Math.random() > 0.5,
+                    status: BatteryStatus[Math.round(Math.random() * 3)],
+                    charge: Math.round(Math.random() * 100),
+                    temperature: Math.round(Math.random() * 100) / 10,
                     powerIn: {
-                        state: 'PRESENT',
-                        current: -1.132,
-                        voltage: 3.942
+                        state: PowerState[Math.round(Math.random() * 3)],
+                        current: Math.round(Math.random() * 1000) / 100 - 5,
+                        voltage: Math.round(Math.random() * 1000) / 100 - 5
                     },
                     powerIn5vIo: {
-                        state: 'NONE',
-                        voltage: 5.23,
-                        current: 1.02
+                        state: PowerState[Math.round(Math.random() * 3)],
+                        voltage: Math.round(Math.round(Math.random() * 1000) / 100 - 5),
+                        current: Math.round(Math.round(Math.random() * 1000) / 100 - 5)
                     },
                     fault: {
-                        batteryProfileInvalid: false,
-                        buttonPowerOff: false,
-                        forcedPowerOff: false,
-                        forcedSysPowerOff: false,
-                        watchdogReset: false,
-                        chargingTemperatureFault: 'UNKNOWN'
+                        batteryProfileInvalid: Math.random() > 0.5,
+                        buttonPowerOff: Math.random() > 0.5,
+                        forcedPowerOff: Math.random() > 0.5,
+                        forcedSysPowerOff: Math.random() > 0.5,
+                        watchdogReset: Math.random() > 0.5,
+                        chargingTemperatureFault: ChargingTemperature[Math.round(Math.random() * 3)]
                     }
                 };
             }
@@ -92,6 +107,10 @@ class Battery extends service_1.Service {
         this.status = await this.getStatus();
     }
     async doStop() {
+        if (this.recordTimer) {
+            clearInterval(this.recordTimer);
+            this.recordTimer = null;
+        }
         this.status = null;
     }
     async doDispose() {
@@ -101,12 +120,13 @@ class Battery extends service_1.Service {
         }
     }
     async checkDevice() {
+        const path = `/dev/i2c-${this.busNumber}`;
         try {
-            await (0, promises_1.stat)(DEVICE_PATH);
+            await (0, promises_1.stat)(path);
             return true;
         }
         catch {
-            this.warn(`PiJuice not available @ ${DEVICE_PATH}`);
+            this.warn(`PiJuice not available @ ${path}`);
             return false;
         }
     }
@@ -116,8 +136,8 @@ class Battery extends service_1.Service {
         const isFault = (rawStatus & 0x01) !== 0;
         const isButton = (rawStatus & 0x02) !== 0;
         const status = BatteryStatus[(rawStatus >>> 2) & 0x03] || 'UNKNOWN';
-        const powerIn = PowerIn[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
-        const powerIn5vIo = PowerIn[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
+        const powerIn = PowerState[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
+        const powerIn5vIo = PowerState[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
         const charge = await this.getChargeLevel();
         const temperature = await this.getBatteryTemperature();
         const fault = await this.getFaultStatus();
@@ -126,6 +146,7 @@ class Battery extends service_1.Service {
         const ioVoltage = await this.getIOVoltage();
         const ioCurrent = await this.getIOCurrent();
         return {
+            ts: new Date().toISOString(),
             isFault,
             isButton,
             status,
@@ -188,7 +209,7 @@ class Battery extends service_1.Service {
         const forcedSysPowerOff = (status & 0x04) !== 0;
         const watchdogReset = (status & 0x08) !== 0;
         const batteryProfileInvalid = (status & 0x20) !== 0;
-        const chargingTemperatureFault = BatteryChargingTemperature[(status >>> 6) & 0x03] || 'UNKNOWN';
+        const chargingTemperatureFault = ChargingTemperature[(status >>> 6) & 0x03] || 'UNKNOWN';
         return {
             buttonPowerOff,
             forcedPowerOff,
@@ -202,7 +223,7 @@ class Battery extends service_1.Service {
         if (!this.bus) {
             throw new Error('Bus not initialized');
         }
-        const { buffer, bytesRead } = await this.bus.readI2cBlock(I2C_ADDRESS, cmd, len + 1, Buffer.alloc(len + 1));
+        const { buffer, bytesRead } = await this.bus.readI2cBlock(this.i2cAddress, cmd, len + 1, Buffer.alloc(len + 1));
         if (bytesRead !== len + 1) {
             throw new Error(`Read ${bytesRead} instead of ${len + 1} bytes`);
         }
@@ -231,6 +252,31 @@ class Battery extends service_1.Service {
         }
         return buffer.slice(0, buffer.length - 1);
     };
+    record = async () => {
+        try {
+            if (!this.status) {
+                this.error('Could not record status, no status present!');
+                return;
+            }
+            if (this.lastRecordedTs === this.status.ts) {
+                this.error('Skipping recording because no new status is available');
+                return;
+            }
+            await (0, promises_1.appendFile)(RECORDINGS_PATH, this.statusToCsv(this.status), 'utf-8');
+            this.lastRecordedTs = this.status.ts;
+            this.log(`Recorded status`, this.status.ts, this.status.status, this.status.charge);
+        }
+        catch (err) {
+            this.error(err);
+        }
+    };
+    statusToCsv(s) {
+        const p = s.powerIn;
+        const p5 = s.powerIn5vIo;
+        const f = s.fault;
+        return (`${s.ts},${s.isFault},${s.isButton},${s.status},${s.charge},${s.temperature},${p.state},${p.voltage},${p.current},` +
+            `${p5.state},${p5.voltage},${p5.current},${f.buttonPowerOff}.${f.forcedPowerOff},${f.forcedSysPowerOff},${f.watchdogReset},${f.batteryProfileInvalid},${f.chargingTemperatureFault}\n`);
+    }
 }
 exports.Battery = Battery;
 //# sourceMappingURL=battery.js.map

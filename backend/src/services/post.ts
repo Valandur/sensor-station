@@ -14,8 +14,6 @@ const URL_USER = 'https://service.post.ch/ekp-web/api/user';
 const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
 const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/events/';
 const URL_TEXTS = 'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
-const USERNAME = process.env['POST_USERNAME'];
-const PASSWORD = process.env['POST_PASSWORD'];
 
 export interface Shipment {
 	id: string;
@@ -31,6 +29,9 @@ export interface Shipment {
 type RecursiveMap = Map<string, [string, RecursiveMap]>;
 
 export class Post extends Service {
+	private readonly username = process.env['POST_USERNAME'] || '';
+	private readonly password = process.env['POST_PASSWORD'] || '';
+
 	private agent = superagent.agent().withCredentials();
 	private shipmentTexts: RecursiveMap = new Map();
 
@@ -76,7 +77,7 @@ export class Post extends Service {
 
 		url = `${URL_LOGIN}?${params}`;
 		let authId = resInit.body.tokens.authId;
-		const loginData: any = { username: USERNAME, password: PASSWORD };
+		const loginData: any = { username: this.username, password: this.password };
 
 		const resBasic = await this.request(
 			'basic',

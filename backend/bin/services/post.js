@@ -17,9 +17,9 @@ const URL_USER = 'https://service.post.ch/ekp-web/api/user';
 const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
 const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/events/';
 const URL_TEXTS = 'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
-const USERNAME = process.env['POST_USERNAME'];
-const PASSWORD = process.env['POST_PASSWORD'];
 class Post extends service_1.Service {
+    username = process.env['POST_USERNAME'] || '';
+    password = process.env['POST_PASSWORD'] || '';
     agent = superagent_1.default.agent().withCredentials();
     shipmentTexts = new Map();
     shipments = null;
@@ -52,7 +52,7 @@ class Post extends service_1.Service {
         const resInit = await this.request('init', this.agent.post(url).type('json').send({}));
         url = `${URL_LOGIN}?${params}`;
         let authId = resInit.body.tokens.authId;
-        const loginData = { username: USERNAME, password: PASSWORD };
+        const loginData = { username: this.username, password: this.password };
         const resBasic = await this.request('basic', this.agent.post(url).type('json').set('authId', authId).send(loginData));
         authId = resBasic.body.tokens.authId;
         url = `${URL_ANOMALY}?${params}`;

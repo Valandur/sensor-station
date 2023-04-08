@@ -6,8 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weather = void 0;
 const superagent_1 = __importDefault(require("superagent"));
 const service_1 = require("./service");
-const KEY = process.env['WEATHER_API_KEY'];
-const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely&appid=${KEY}`;
+const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
 const ICON_MAP = {
     200: 'thunderstorm',
     201: 'thunderstorm',
@@ -66,6 +65,7 @@ const ICON_MAP = {
     804: 'overcast'
 };
 class Weather extends service_1.Service {
+    apiKey = process.env['WEATHER_API_KEY'] || '';
     hourly = null;
     daily = null;
     alerts = null;
@@ -78,7 +78,7 @@ class Weather extends service_1.Service {
     async doUpdate() {
         const lat = this.app.modem?.status?.lat || process.env['WEATHER_LAT'] || '47.3863129';
         const lng = this.app.modem?.status?.lng || process.env['WEATHER_LNG'] || '8.6542843';
-        const url = `${URL}&lat=${lat}&lon=${lng}`;
+        const url = `${URL}&appid=${this.apiKey}&lat=${lat}&lon=${lng}`;
         const alerts = [];
         const daily = [];
         const hourly = [];

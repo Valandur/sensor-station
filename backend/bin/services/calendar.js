@@ -13,6 +13,7 @@ class Calendar extends service_1.Service {
     client = null;
     events = null;
     async doInit() {
+        await (0, promises_1.mkdir)((0, path_1.dirname)(CREDENTIALS_PATH), { recursive: true });
         this.client = await this.authorize();
     }
     async doStart() {

@@ -2,6 +2,7 @@
 	import { getContextClient, gql, queryStore } from '@urql/svelte';
 
 	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
+	import { formatDistanceToNow, parseISO } from 'date-fns';
 
 	const QUERY = gql`
 		query Battery {
@@ -13,20 +14,39 @@
 	$: client = getContextClient();
 	$: store = queryStore<BatteryStatus>({
 		query: QUERY,
-		requestPolicy: 'cache-and-network',
+		requestPolicy: 'network-only',
 		client
 	});
 
-	$: battery = $store.data?.battery.status;
+	const refresh = () => {
+		queryStore<BatteryStatus>({
+			query: QUERY,
+			requestPolicy: 'network-only',
+			client
+		});
+	};
+
+	$: battery = $store.data?.battery;
+	$: status = battery?.status;
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
 	<div class="row">
-		<div class="col">
+		<div class="col-auto">
 			<h1>Battery</h1>
 		</div>
+		<div class="col align-self-center text-secondary">
+			{#if battery?.updatedAt}
+				(@ {formatDistanceToNow(parseISO(battery.updatedAt), { addSuffix: true })})
+			{/if}
+		</div>
 		<div class="col-auto">
-			<a class="btn btn-sm btn-outline-theme" href="/"><i class="icofont-ui-close" /></a>
+			<button class="btn btn-sm btn-outline-theme" on:click={() => refresh()}>
+				<i class="icofont-refresh" />
+			</button>
+			<a class="btn btn-sm btn-outline-danger" href="/">
+				<i class="icofont-ui-close" />
+			</a>
 		</div>
 	</div>
 
@@ -36,7 +56,7 @@
 				<p class="alert alert-info m-2">
 					<i class="icofont-spinner" /> Loading...
 				</p>
-			{:else if battery}
+			{:else if status}
 				<table class="table table-sm">
 					<colgroup>
 						<col />
@@ -47,25 +67,25 @@
 					<tbody>
 						<tr>
 							<td>Status</td>
-							<td colspan="2">{battery.status}</td>
-							<td>{battery.charge}%</td>
+							<td colspan="2">{status.status}</td>
+							<td>{status.charge}%</td>
 						</tr>
 						<tr>
 							<td>Power IN</td>
-							<td>{battery.powerIn.state}</td>
-							<td>{battery.powerIn.voltage} V</td>
-							<td>{battery.powerIn.current} A</td>
+							<td>{status.powerIn.state}</td>
+							<td>{status.powerIn.voltage.toFixed(2)} V</td>
+							<td>{status.powerIn.current.toFixed(2)} A</td>
 						</tr>
 						<tr>
 							<td>Power 5V IO</td>
-							<td>{battery.powerIn5vIo.state}</td>
-							<td>{battery.powerIn5vIo.voltage} V</td>
-							<td>{battery.powerIn5vIo.current} A</td>
+							<td>{status.powerIn5vIo.state}</td>
+							<td>{status.powerIn5vIo.voltage.toFixed(2)} V</td>
+							<td>{status.powerIn5vIo.current.toFixed(2)} A</td>
 						</tr>
 						<tr>
 							<td>Button</td>
 							<td>
-								{#if battery.isButton}
+								{#if status.isButton}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -73,7 +93,7 @@
 							</td>
 							<td>Fault</td>
 							<td>
-								{#if battery.isFault}
+								{#if status.isFault}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -83,7 +103,7 @@
 						<tr>
 							<td>Profile Invalid</td>
 							<td>
-								{#if battery.fault.batteryProfileInvalid}
+								{#if status.fault.batteryProfileInvalid}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -91,7 +111,7 @@
 							</td>
 							<td>Button Off</td>
 							<td>
-								{#if battery.fault.buttonPowerOff}
+								{#if status.fault.buttonPowerOff}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -100,10 +120,10 @@
 						</tr>
 						<tr>
 							<td>Charging Temp.</td>
-							<td>{battery.fault.chargingTemperatureFault}</td>
+							<td>{status.fault.chargingTemperatureFault}</td>
 							<td>Forced Off</td>
 							<td>
-								{#if battery.fault.forcedPowerOff}
+								{#if status.fault.forcedPowerOff}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -113,7 +133,7 @@
 						<tr>
 							<td>Sys Off</td>
 							<td>
-								{#if battery.fault.forcedSysPowerOff}
+								{#if status.fault.forcedSysPowerOff}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />
@@ -121,7 +141,7 @@
 							</td>
 							<td>Watchdog</td>
 							<td>
-								{#if battery.fault.watchdogReset}
+								{#if status.fault.watchdogReset}
 									<i class="icofont-check" />
 								{:else}
 									<i class="icofont-close" />

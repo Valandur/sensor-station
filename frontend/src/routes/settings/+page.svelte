@@ -67,7 +67,9 @@
 			<h1>Settings</h1>
 		</div>
 		<div class="col-auto">
-			<a class="btn btn-sm btn-outline-theme" href="/"><i class="icofont-ui-close" /></a>
+			<a class="btn btn-sm btn-outline-danger" href="/">
+				<i class="icofont-ui-close" />
+			</a>
 		</div>
 	</div>
 
