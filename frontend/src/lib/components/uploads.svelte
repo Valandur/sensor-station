@@ -36,6 +36,7 @@
 	import { BASE_URL, getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import { screen } from '$lib/stores/screen';
+	import { swipe } from '$lib/swipe';
 	import { type UploadItems, UPLOAD_ITEMS, type UploadItem } from '$lib/models/upload';
 	import type { ComponentMeta } from '$lib/component';
 
@@ -43,34 +44,22 @@
 	params; // svelte hack to disable unused variable warning
 	export let data: UploadItem[];
 
-	$: index = getStore('uploads', data.length);
+	$: index = getStore('server-uploads', data.length);
 	$: item = data[$index];
 
 	onDestroy(async () => {
 		index.increment();
 	});
-
-	let startY = 0;
-	const touchStart = (e: TouchEvent) => {
-		startY = e.changedTouches[0].clientY;
-	};
-	const touchEnd = (e: TouchEvent) => {
-		const diff = e.changedTouches[0].clientY - startY;
-		if (diff < -100) {
-			index.increment();
-			screen.reset();
-		} else if (diff > 100) {
-			index.decrement();
-			screen.reset();
-		}
-	};
 </script>
 
 {#if item}
 	<div
 		class="container-fluid m-0 h-100 d-flex justify-content-between"
-		on:touchstart={touchStart}
-		on:touchend={touchEnd}
+		use:swipe={{ y: 100 }}
+		on:swipe={(e) => {
+			screen.reset();
+			e.detail.dir === 'up' ? index.increment() : index.decrement();
+		}}
 	>
 		<div class="m-0 p-0 image-container" class:full={item.ratio < 1} class:m-1={item.ratio < 1}>
 			{#if item.img.endsWith('.mp4')}

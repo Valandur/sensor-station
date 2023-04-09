@@ -38,13 +38,15 @@
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import { POST_SHIPMENTS, type PostShipments, type PostShipment } from '$lib/models/post';
+	import { screen } from '$lib/stores/screen';
+	import { swipe } from '$lib/swipe';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
 	export let data: PostShipment[];
 
-	$: index = getStore('shipments', data.length);
+	$: index = getStore('post-shipments', data.length);
 	$: shipment = data[$index];
 
 	const formatDims = ({ x, y, z }: { x: number; y: number; z: number }) => {
@@ -59,7 +61,14 @@
 	});
 </script>
 
-<div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
+<div
+	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	use:swipe={{ y: 100 }}
+	on:swipe={(e) => {
+		screen.reset();
+		e.detail.dir === 'up' ? index.increment() : index.decrement();
+	}}
+>
 	{#if shipment}
 		<div class="row">
 			<div class="col-2" />
@@ -83,20 +92,22 @@
 						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
 							{shipment.type}
 						</h6>
-						{#if shipment.dims}
-							<i class="icofont-drag3" />
-							{formatDims(shipment.dims)}
-							<br />
-						{/if}
-						{#if shipment.weight}
-							<i class="icofont-measure" />
-							{formatWeight(shipment.weight)}
-							<br />
-						{/if}
-						{#if shipment.status}
-							<i class="icofont-bullhorn" />
-							{shipment.status}
-						{/if}
+						<p class="card-text">
+							{#if shipment.dims}
+								<i class="icofont-drag3" />
+								{formatDims(shipment.dims)}
+								<br />
+							{/if}
+							{#if shipment.weight}
+								<i class="icofont-measure" />
+								{formatWeight(shipment.weight)}
+								<br />
+							{/if}
+							{#if shipment.status}
+								<i class="icofont-bullhorn" />
+								{shipment.status}
+							{/if}
+						</p>
 					</div>
 
 					<div class="card-arrow">

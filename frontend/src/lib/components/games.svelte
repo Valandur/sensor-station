@@ -35,6 +35,8 @@
 	import { GAMES_FREE, type Game, type GamesFree } from '$lib/models/games';
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
+	import { screen } from '$lib/stores/screen';
+	import { swipe } from '$lib/swipe';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
@@ -53,7 +55,14 @@
 	const fmt = (date: string) => format(parseISO(date), 'dd MMM');
 </script>
 
-<div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
+<div
+	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	use:swipe={{ y: 100 }}
+	on:swipe={(e) => {
+		screen.reset();
+		e.detail.dir === 'up' ? index.increment() : index.decrement();
+	}}
+>
 	<div class="row row-cols-2">
 		{#each games as game}
 			<div class="col">

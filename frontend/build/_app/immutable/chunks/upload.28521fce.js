@@ -1,4 +1,4 @@
-import{g as t}from"./urql-svelte.bf611f93.js";const e=t`
+import{g as t}from"./urql-svelte.6bc409f7.js";const e=t`
 	fragment UploadItems on Query {
 		uploads {
 			items {

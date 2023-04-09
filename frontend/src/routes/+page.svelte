@@ -6,14 +6,14 @@
 	import Holidays from 'date-holidays';
 	import { browser } from '$app/environment';
 
-	import { COMPONENT_MAP } from '$lib/component';
-	import { paused, screen, progress } from '$lib/stores/screen';
-	import { time } from '$lib/stores/time';
-
-	import { SCREENS, type Screen, type Screens } from '$lib/models/screen';
 	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
+	import { COMPONENT_MAP } from '$lib/component';
 	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
+	import { paused, screen, progress } from '$lib/stores/screen';
 	import { RESTART } from '$lib/models/actions';
+	import { SCREENS, type Screen, type Screens } from '$lib/models/screen';
+	import { swipe, type SwipeEvent } from '$lib/swipe';
+	import { time } from '$lib/stores/time';
 
 	const QUERY_SCREENS = gql`
 		query Screens {
@@ -113,23 +113,17 @@
 
 	let showToolbar = false;
 
-	let startX = 0;
-	let startY = 0;
-	const touchStart = (e: TouchEvent) => {
-		startX = e.changedTouches[0].clientX;
-		startY = e.changedTouches[0].clientY;
-	};
-	const touchEnd = (e: TouchEvent) => {
-		const diffX = e.changedTouches[0].clientX - startX;
-		const diffY = e.changedTouches[0].clientY - startY;
-		if (diffX < -200) {
+	const onSwipe = (e: SwipeEvent) => {
+		if (e.detail.dir === 'left' && !showToolbar) {
 			screen.next();
-		} else if (diffX > 200) {
+		} else if (e.detail.dir === 'right' && !showToolbar) {
 			screen.prev();
-		} else if (startY < 100 && diffY > 100) {
+		} else if (e.detail.dir === 'down' && e.detail.y.start < 100) {
 			showToolbar = true;
-		} else if (showToolbar && diffY < -100) {
+			screen.stop();
+		} else if (e.detail.dir === 'up' && showToolbar) {
 			showToolbar = false;
+			screen.start();
 		}
 	};
 
@@ -149,8 +143,8 @@
 
 <div
 	class="container-fluid m-0 p-1 vh-100 d-flex flex-column"
-	on:touchstart={touchStart}
-	on:touchend={touchEnd}
+	use:swipe={{ x: 200, y: 100 }}
+	on:swipe={onSwipe}
 >
 	<div class="row mb-3">
 		<div
@@ -262,6 +256,7 @@
 	</div>
 
 	{#if showToolbar}
+		<div class="overlay" transition:fade={{ duration: 500 }} />
 		<div class="toolbar row p-2 bg-dark" transition:slide={{ duration: 500 }}>
 			<div class="col-auto">
 				<a class="btn btn-theme" href="/settings">
@@ -318,6 +313,17 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: row;
+		z-index: 100;
+	}
+
+	.overlay {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-color: rgba(var(--bs-white-rgb), 0.2);
+		z-index: 10;
 	}
 
 	.progress {

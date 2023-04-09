@@ -15,20 +15,31 @@ export interface WeatherAlert {
 	tags: string[];
 }
 
-export interface WeatherForecasts {
+export interface WeatherDaily {
 	weather: {
 		daily: WeatherForecast[] | null;
-		hourly: WeatherForecast[] | null;
 	};
 }
-export const WEATHER_FORECASTS = gql`
-	fragment WeatherForecasts on Query {
+export const WEATHER_DAILY = gql`
+	fragment WeatherDaily on Query {
 		weather {
 			daily {
 				ts
 				img
 				feelsLike
 			}
+		}
+	}
+`;
+
+export interface WeatherHourly {
+	weather: {
+		hourly: WeatherForecast[] | null;
+	};
+}
+export const WEATHER_HOURLY = gql`
+	fragment WeatherHourly on Query {
+		weather {
 			hourly {
 				ts
 				img

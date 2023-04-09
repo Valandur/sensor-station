@@ -37,9 +37,11 @@
 	import { onDestroy } from 'svelte';
 
 	import { BASE_URL, getClient } from '$lib/client';
+	import { fade } from 'svelte/transition';
 	import { getStore } from '$lib/stores/counter';
 	import { NEWS_ITEMS, type NewsItems, type NewsItem } from '$lib/models/news';
 	import { screen } from '$lib/stores/screen';
+	import { swipe } from '$lib/swipe';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
@@ -50,7 +52,7 @@
 	$: feed = params || DEFAULT;
 	let selectedItem: NewsItem | null = null;
 
-	$: index = getStore('news_' + feed, data.length);
+	$: index = getStore('news-' + feed, data.length);
 	$: news = [
 		...data.slice($index, $index + MAX_ITEMS),
 		...data.slice(0, Math.max(MAX_ITEMS - (data.length - $index), 0))
@@ -59,21 +61,6 @@
 	onDestroy(async () => {
 		index.increment();
 	});
-
-	let startY = 0;
-	const touchStart = (e: TouchEvent) => {
-		startY = e.changedTouches[0].clientY;
-	};
-	const touchEnd = (e: TouchEvent) => {
-		const diff = e.changedTouches[0].clientY - startY;
-		if (diff < -100) {
-			index.increment();
-			screen.reset();
-		} else if (diff > 100) {
-			index.decrement();
-			screen.reset();
-		}
-	};
 
 	const select = (item: NewsItem | null) => {
 		selectedItem = item;
@@ -87,15 +74,18 @@
 
 <div
 	class="container-fluid h-100 m-0 d-flex flex-column"
-	on:touchstart={touchStart}
-	on:touchend={touchEnd}
+	use:swipe={{ y: 100 }}
+	on:swipe={(e) => {
+		screen.reset();
+		e.detail.dir === 'up' ? index.increment() : index.decrement();
+	}}
 >
 	{#if selectedItem}
-		<div class="details">
+		<div class="details" transition:fade={{ duration: 500 }}>
 			<iframe title="Story" src={BASE_URL + `/news/${params}/${selectedItem.id}`} />
-			<button class="btn btn-sm btn-theme" on:click={() => select(null)}
-				><i class="icofont-ui-close" /></button
-			>
+			<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
+				<i class="icofont-ui-close" />
+			</button>
 		</div>
 	{:else}
 		{#each news as item}
@@ -123,10 +113,12 @@
 
 	.details {
 		position: fixed;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		bottom: 8px;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 8px;
+		background-color: rgba(var(--bs-white-rgb), 0.2);
 	}
 
 	.image {
@@ -141,7 +133,7 @@
 
 	.btn {
 		position: absolute;
-		top: 8px;
-		left: 8px;
+		top: 16px;
+		left: 16px;
 	}
 </style>

@@ -18,13 +18,16 @@ function createStore() {
 
 const stores: Map<string, ReturnType<typeof createStore>> = new Map();
 
-export function getStore(name: string, max: number) {
+export function getStore(name: string, max?: number | null) {
 	let store = stores.get(name);
 	if (!store) {
 		store = createStore();
 		stores.set(name, store);
 	}
 
-	store.setMax(max);
+	if (typeof max === 'number') {
+		store.setMax(max);
+	}
+
 	return store;
 }

@@ -38,13 +38,15 @@
 	import { getClient } from '$lib/client';
 	import { getStore } from '$lib/stores/counter';
 	import { SBB_ALERTS, type SBBAlert, type SBBAlerts } from '$lib/models/sbb';
+	import { screen } from '$lib/stores/screen';
+	import { swipe } from '$lib/swipe';
 	import type { ComponentMeta } from '$lib/component';
 
 	export let params: string = '';
 	params; // svelte hack to disable unused variable warning
 	export let data: SBBAlert[];
 
-	$: index = getStore('alerts', data.length);
+	$: index = getStore('sbb-alerts', data.length);
 	$: alert = data[$index];
 
 	const formatTitle = (title: string) => title.replace('Einschränkung', '').trim();
@@ -61,7 +63,14 @@
 	});
 </script>
 
-<div class="container-fluid h-100 m-0 d-flex flex-column justify-content-end">
+<div
+	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	use:swipe={{ y: 100 }}
+	on:swipe={(e) => {
+		screen.reset();
+		e.detail.dir === 'up' ? index.increment() : index.decrement();
+	}}
+>
 	{#if alert}
 		<div class="row">
 			<div class="col-1" />

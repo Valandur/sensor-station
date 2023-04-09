@@ -45,6 +45,7 @@ export const screenParams: { [key: string]: { [key: string]: string } } = {
 	},
 	weather: {
 		daily: 'Täglich',
-		hourly: 'Stündlich'
+		hourly: 'Stündlich',
+		alerts: 'Warnungen'
 	}
 };
