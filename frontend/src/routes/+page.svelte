@@ -99,7 +99,7 @@
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');
 	$: date = formatInTimeZone($time, tz, 'd. MMMM', { locale: de });
-	$: dateSubFormat = holiday ? 'eee' : 'eeee';
+	$: dateSubFormat = $holiday ? 'eee' : 'eeee';
 	$: dateSub = formatInTimeZone($time, tz, dateSubFormat, { locale: de }).replace('.', '');
 
 	function togglePause() {
