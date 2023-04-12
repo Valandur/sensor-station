@@ -17,7 +17,7 @@
 	let newTitle = '';
 	let newDate = format(new Date(), 'yyyy-MM-dd');
 
-	const onChangeFile = (e: Event & { currentTarget: HTMLInputElement }) => {
+	function onChangeFile(e: Event & { currentTarget: HTMLInputElement }) {
 		const image = e.currentTarget.files![0];
 
 		const reader = new FileReader();
@@ -25,7 +25,7 @@
 		reader.onload = (evt) => {
 			newImg = evt.target?.result as string;
 		};
-	};
+	}
 
 	$: client = getContextClient();
 	$: store = queryStore<UploadItems>({
@@ -35,26 +35,26 @@
 	});
 	$: items = $store.data?.uploads.items?.reverse() || [];
 
-	$: del = (img: string) => {
+	function del(img: string) {
 		mutationStore({
 			query: DELETE_UPLOAD,
 			variables: { img },
 			context: { additionalTypenames: ['Screen'] },
 			client
 		});
-	};
-	$: save = (img: string, ts: string, title: string) => {
+	}
+	function save(img: string, ts: string, title: string) {
 		mutationStore({
 			query: SAVE_UPLOAD,
 			variables: { img, ts, title },
 			context: { additionalTypenames: ['Screen'] },
 			client
 		});
-	};
-	$: clear = () => {
+	}
+	function clear() {
 		newImg = null;
 		fileInput.value = '';
-	};
+	}
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">

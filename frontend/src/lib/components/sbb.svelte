@@ -49,14 +49,21 @@
 	$: index = getStore('sbb-alerts', data.length);
 	$: alert = data[$index];
 
-	const formatTitle = (title: string) => title.replace('Einschränkung', '').trim();
-	const formatDuration = (duration: string) =>
-		duration
-			.replace('Dauer:', '')
+	function formatTitle(title: string) {
+		return title?.replace('Einschränkung', '').trim();
+	}
+	function formatDuration(duration: string) {
+		return duration
+			?.replace('Dauer:', '')
 			.replaceAll(`${format(new Date(), 'dd.MM.yyyy')},`, '')
 			.trim();
-	const formatLines = (lines: string) => lines.replace('Linien', '').trim();
-	const formatReason = (reason: string) => reason.replace('Grund:', '').trim();
+	}
+	function formatDescription(lines: string) {
+		return lines?.replace('Linien', '').trim();
+	}
+	function formatReason(reason: string) {
+		return reason?.replace('Grund:', '').trim();
+	}
 
 	onDestroy(async () => {
 		index.increment();
@@ -78,7 +85,7 @@
 				<div class="card bg-warning border-warning bg-opacity-25">
 					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
 						<div>
-							{formatLines(alert.description)}
+							{formatDescription(alert.description)}
 						</div>
 						<div>
 							<i class="icofont-clock-time" />

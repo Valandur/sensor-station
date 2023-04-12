@@ -19,13 +19,13 @@
 		client
 	});
 
-	const refresh = () => {
+	function refresh() {
 		queryStore<BatteryStatus>({
 			query: QUERY,
 			requestPolicy: 'network-only',
 			client
 		});
-	};
+	}
 
 	$: battery = $store.data?.battery;
 	$: status = battery?.status;

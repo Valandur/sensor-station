@@ -20,13 +20,13 @@
 		client
 	});
 
-	const refresh = () => {
+	function refresh() {
 		queryStore<ModemStatus>({
 			query: QUERY,
 			requestPolicy: 'cache-and-network',
 			client
 		});
-	};
+	}
 
 	$: modem = $store.data?.modem;
 	$: status = modem?.status;

@@ -28,7 +28,7 @@
 	});
 	$: screens = $store.data?.screens || [];
 
-	$: save = (newScreens: Screen[]) =>
+	function save(newScreens: Screen[]) {
 		mutationStore({
 			query: SAVE_SCREENS,
 			variables: {
@@ -42,23 +42,30 @@
 			context: { additionalTypenames: ['Screen'] },
 			client
 		});
+	}
 
-	$: add = () => save([...screens, { name: newName, params: newParams }]);
-	$: del = (index: number) => save(screens.filter((screen, i) => i !== index));
-	$: moveUp = (index: number) =>
+	function add() {
+		save([...screens, { name: newName, params: newParams }]);
+	}
+	function del(index: number) {
+		save(screens.filter((screen, i) => i !== index));
+	}
+	function moveUp(index: number) {
 		save([
 			...screens.slice(0, index - 1),
 			screens[index],
 			screens[index - 1],
 			...screens.slice(index + 1)
 		]);
-	$: moveDown = (index: number) =>
+	}
+	function moveDown(index: number) {
 		save([
 			...screens.slice(0, index),
 			screens[index + 1],
 			screens[index],
 			...screens.slice(index + 2)
 		]);
+	}
 </script>
 
 <div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">

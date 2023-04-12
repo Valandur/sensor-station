@@ -49,12 +49,12 @@
 	$: index = getStore('post-shipments', data.length);
 	$: shipment = data[$index];
 
-	const formatDims = ({ x, y, z }: { x: number; y: number; z: number }) => {
+	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;
-	};
-	const formatWeight = (weight: number) => {
+	}
+	function formatWeight(weight: number) {
 		return weight > 1000 ? `${Math.round(weight / 100) / 10} kg` : `${weight} g`;
-	};
+	}
 
 	onDestroy(async () => {
 		index.increment();

@@ -3,7 +3,6 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { getContextClient, gql, mutationStore, queryStore } from '@urql/svelte';
 	import de from 'date-fns/locale/de/index';
-	import Holidays from 'date-holidays';
 	import { browser } from '$app/environment';
 
 	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
@@ -13,7 +12,7 @@
 	import { RESTART } from '$lib/models/actions';
 	import { SCREENS, type Screen, type Screens } from '$lib/models/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
-	import { time } from '$lib/stores/time';
+	import { time, holiday } from '$lib/stores/time';
 
 	const QUERY_SCREENS = gql`
 		query Screens {
@@ -31,7 +30,6 @@
 	`;
 
 	const tz = 'Europe/Zurich';
-	const holidays = new Holidays('CH', 'ZH');
 
 	let loading = false;
 	let currScreen: Screen | null = null;
@@ -50,13 +48,13 @@
 		requestPolicy: 'cache-and-network',
 		client
 	});
-	const refreshData = () => {
+	function refreshData() {
 		queryStore({
 			query: QUERY_STATUS,
 			requestPolicy: 'network-only',
 			client
 		});
-	};
+	}
 	$: $time, refreshData();
 
 	const cachedScreens: Screen[] = browser
@@ -68,52 +66,53 @@
 	$: modemStatus = $statusStore.data?.modem.status;
 	$: screen.setMax(screens.length);
 
-	$: if (!loading) {
-		loading = true;
+	$: {
+		if (!loading) {
+			loading = true;
 
-		const nextScreen = screens[$screen];
-		const [, nextMeta] = COMPONENT_MAP[nextScreen?.name] || [];
+			const nextScreen = screens[$screen];
+			const [, nextMeta] = COMPONENT_MAP[nextScreen?.name] || [];
 
-		if (nextScreen !== currScreen && nextMeta) {
-			nextMeta
-				.getData(nextScreen.params)
-				.then((data) => {
-					if (nextMeta.skip && nextMeta.skip(nextScreen.params, data)) {
-						screen.skip();
-					} else {
-						currError = null;
-						currData = data;
+			if (nextScreen !== currScreen && nextMeta) {
+				nextMeta
+					.getData(nextScreen.params)
+					.then((data) => {
+						if (nextMeta.skip && nextMeta.skip(nextScreen.params, data)) {
+							screen.skip();
+						} else {
+							currError = null;
+							currData = data;
+							currScreen = nextScreen;
+						}
+					})
+					.catch((err) => {
+						currError = err;
+						currData = null;
 						currScreen = nextScreen;
-					}
-				})
-				.catch((err) => {
-					currError = err;
-					currData = null;
-					currScreen = nextScreen;
-				})
-				.finally(() => (loading = false));
-		} else {
-			loading = false;
+					})
+					.finally(() => (loading = false));
+			} else {
+				loading = false;
+			}
 		}
 	}
 
 	$: timeStr = formatInTimeZone($time, tz, 'HH:mm');
-	$: holiday = holidays.isHoliday($time);
 	$: date = formatInTimeZone($time, tz, 'd. MMMM', { locale: de });
 	$: dateSubFormat = holiday ? 'eee' : 'eeee';
 	$: dateSub = formatInTimeZone($time, tz, dateSubFormat, { locale: de }).replace('.', '');
 
-	const togglePause = () => {
+	function togglePause() {
 		if ($paused) {
 			screen.start();
 		} else {
 			screen.stop();
 		}
-	};
+	}
 
 	let showToolbar = false;
 
-	const onSwipe = (e: SwipeEvent) => {
+	function onSwipe(e: SwipeEvent) {
 		if (e.detail.dir === 'left' && !showToolbar) {
 			screen.next();
 		} else if (e.detail.dir === 'right' && !showToolbar) {
@@ -125,10 +124,12 @@
 			showToolbar = false;
 			screen.start();
 		}
-	};
+	}
 
-	const reload = () => window.location.reload();
-	const restart = () => {
+	function reload() {
+		window.location.reload();
+	}
+	function restart() {
 		if (!window.confirm('Are you sure you want to restart the device?')) {
 			return;
 		}
@@ -138,7 +139,7 @@
 			context: { additionalTypenames: ['Screen'] },
 			client
 		});
-	};
+	}
 </script>
 
 <div
@@ -211,8 +212,8 @@
 			</div>
 
 			<div class="row justify-content-end">
-				{#if holiday}
-					<div class="col-auto">{holiday[0].name}</div>
+				{#if $holiday}
+					<div class="col-auto">{$holiday.name}</div>
 					<div class="col-auto">•</div>
 				{/if}
 				<h4 class="col-auto m-0">{dateSub}</h4>

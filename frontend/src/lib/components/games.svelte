@@ -48,11 +48,13 @@
 	$: index = getStore('games', data.length - 1);
 	$: games = [...data.slice($index, $index + MAX_ITEMS)];
 
+	function fmt(date: string) {
+		return format(parseISO(date), 'dd MMM');
+	}
+
 	onDestroy(async () => {
 		index.increment();
 	});
-
-	const fmt = (date: string) => format(parseISO(date), 'dd MMM');
 </script>
 
 <div

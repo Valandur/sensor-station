@@ -58,18 +58,18 @@
 		...data.slice(0, Math.max(MAX_ITEMS - (data.length - $index), 0))
 	];
 
-	onDestroy(async () => {
-		index.increment();
-	});
-
-	const select = (item: NewsItem | null) => {
+	function select(item: NewsItem | null) {
 		selectedItem = item;
 		if (item) {
 			screen.stop();
 		} else {
 			screen.start();
 		}
-	};
+	}
+
+	onDestroy(async () => {
+		index.increment();
+	});
 </script>
 
 <div

@@ -95,21 +95,23 @@
 	let labelFormat = '';
 	let alert: WeatherAlert | null = null;
 	let forecasts: WeatherForecast[] = [];
-	$: if (data.type === 'alerts') {
-		alert = data.weather.alerts?.[$index] || null;
-		forecasts = [];
-	} else if (data.type === 'hourly') {
-		alert = null;
-		forecasts =
-			data.weather.hourly
-				?.slice(1)
-				.filter((_, i) => i % 2 === 0)
-				.slice(0, numForecasts) || [];
-		labelFormat = "HH''";
-	} else {
-		alert = null;
-		forecasts = data.weather.daily?.slice(0, numForecasts) || [];
-		labelFormat = 'iiiiii';
+	$: {
+		if (data.type === 'alerts') {
+			alert = data.weather.alerts?.[$index] || null;
+			forecasts = [];
+		} else if (data.type === 'hourly') {
+			alert = null;
+			forecasts =
+				data.weather.hourly
+					?.slice(1)
+					.filter((_, i) => i % 2 === 0)
+					.slice(0, numForecasts) || [];
+			labelFormat = "HH''";
+		} else {
+			alert = null;
+			forecasts = data.weather.daily?.slice(0, numForecasts) || [];
+			labelFormat = 'iiiiii';
+		}
 	}
 
 	onDestroy(async () => {

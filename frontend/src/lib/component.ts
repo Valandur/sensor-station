@@ -6,7 +6,7 @@ import News, { newsMeta } from '$lib/components/news.svelte';
 import Uploads, { uploadsMeta } from '$lib/components/uploads.svelte';
 import Weather, { weatherMeta } from '$lib/components/weather.svelte';
 import Sbb, { sbbMeta } from '$lib/components/sbb.svelte';
-import Post, { postMeta } from './components/post.svelte';
+import Post, { postMeta } from '$lib/components/post.svelte';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ComponentMeta<T = any> {
