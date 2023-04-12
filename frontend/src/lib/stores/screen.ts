@@ -8,7 +8,7 @@ const pause = writable(true);
 
 export const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
-let timer: NodeJS.Timeout | null = null;
+let timer: number | null = null;
 let max = 1;
 let lastOp = 1;
 
