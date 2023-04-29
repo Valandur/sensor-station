@@ -9,10 +9,10 @@ let loaded = false;
 let screens: Screen[] = [];
 const counter = new Counter();
 
-export function getScreenUrl(index: number) {
-	const idx = counter.wrap(index);
+export function getScreenUrl(newIndex: number, dir: 'next' | 'prev' = 'next') {
+	const idx = counter.wrap(newIndex);
 	const screen = screens[idx];
-	return `/screens/${screen.name}/${screen.params ?? ''}?screen=${idx}`;
+	return `/screens/${screen.name}/${screen.params ?? ''}?screen=${idx}&dir=${dir}`;
 }
 
 export async function getScreens() {

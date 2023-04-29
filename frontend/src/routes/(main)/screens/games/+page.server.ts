@@ -35,8 +35,8 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 
 	return {
 		games,
-		nextPage: `?screen=${dataParent.index}&page=${counter.wrap(page + 1)}`,
-		prevPage: `?screen=${dataParent.index}&page=${counter.wrap(page - 1)}`
+		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
 	};
 };
 

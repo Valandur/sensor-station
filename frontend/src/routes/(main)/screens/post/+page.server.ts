@@ -48,10 +48,14 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	const shipment = shipments[page];
 	const dataParent = await parent();
 
+	if (!alert && dataParent.skipScreen) {
+		throw redirect(302, dataParent.skipScreen);
+	}
+
 	return {
 		shipment,
-		nextPage: `?screen=${dataParent.index}&page=${counter.wrap(page + 1)}`,
-		prevPage: `?screen=${dataParent.index}&page=${counter.wrap(page - 1)}`
+		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
 	};
 };
 

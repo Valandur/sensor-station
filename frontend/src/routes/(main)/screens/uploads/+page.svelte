@@ -17,7 +17,7 @@
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
 >
 	{#if upload}
-		<div class="row mh-100">
+		<div class="row h-100">
 			<div
 				class="col mh-100 image-container"
 				class:full={upload.ratio < 1}

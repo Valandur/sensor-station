@@ -37,8 +37,8 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 
 	return {
 		events,
-		nextPage: `?screen=${dataParent.index}&page=${counter.wrap(page + 1)}`,
-		prevPage: `?screen=${dataParent.index}&page=${page > 0 ? page - 1 : 0}`
+		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${page > 0 ? page - 1 : 0}`
 	};
 };
 

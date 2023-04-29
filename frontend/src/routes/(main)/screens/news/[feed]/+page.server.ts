@@ -28,8 +28,8 @@ export const load: PageServerLoad = async ({ url, params, parent }) => {
 	return {
 		feedId,
 		items,
-		nextPage: `?screen=${dataParent.index}&page=${feed.counter.wrap(page + 1)}`,
-		prevPage: `?screen=${dataParent.index}&page=${feed.counter.wrap(page - 1)}`
+		nextPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page - 1)}`
 	};
 };
 
