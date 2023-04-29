@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	const shipment = shipments[page];
 	const dataParent = await parent();
 
-	if (!alert && dataParent.skipScreen) {
+	if (!shipment && dataParent.skipScreen) {
 		throw redirect(302, dataParent.skipScreen);
 	}
 
