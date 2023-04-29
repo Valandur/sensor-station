@@ -25,6 +25,8 @@
 	$: date = formatInTimeZone($time, TIMEZONE, 'd. MMMM', { locale: de });
 	$: dateSubFormat = $holiday ? 'eee' : 'eeee';
 	$: dateSub = formatInTimeZone($time, TIMEZONE, dateSubFormat, { locale: de }).replace('.', '');
+	$: modemStatus = data.modem;
+	$: batteryStatus = data.battery;
 
 	$: if (browser) {
 		if (timer) {
@@ -86,7 +88,6 @@
 					</div>
 				{/if}
 
-				<!--
 				{#if modemStatus?.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
@@ -108,7 +109,7 @@
 					</div>
 				{/if}
 
-				{#if batteryStatus?.status.includes('CHARGING')}
+				{#if batteryStatus?.state.includes('CHARGING')}
 					<div class="col-auto">
 						<i class="icofont-plugin" />
 					</div>
@@ -128,7 +129,6 @@
 						{batteryStatus.charge}%
 					</div>
 				{/if}
-        -->
 			</div>
 
 			<div class="row justify-content-end">

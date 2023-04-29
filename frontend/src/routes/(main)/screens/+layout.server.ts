@@ -1,6 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 
 import { getScreenUrl, getScreens } from '$lib/stores/screen';
+import { getStatus as getModemStatus } from '$lib/stores/modem';
+import { getStatus as getBatteryStatus } from '$lib/stores/battery';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -9,7 +11,11 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 	const urlScreenName = url.pathname;
 
-	const screens = await getScreens();
+	const [screens, modem, battery] = await Promise.all([
+		getScreens(),
+		getModemStatus(),
+		getBatteryStatus()
+	]);
 
 	if (urlScreenName.length <= 8 && screens.length > 0) {
 		throw redirect(302, getScreenUrl(0, dir));
@@ -33,6 +39,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
 		currScreen,
 		nextScreen,
 		prevScreen,
-		skipScreen
+		skipScreen,
+		modem,
+		battery
 	};
 };
