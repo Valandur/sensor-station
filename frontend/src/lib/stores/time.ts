@@ -1,6 +1,6 @@
+import { derived, readable } from 'svelte/store';
 import { isSameDay } from 'date-fns';
 import Holidays, { type HolidaysTypes } from 'date-holidays';
-import { derived, readable } from 'svelte/store';
 
 const UPDATE_INTERVAL = 10000;
 

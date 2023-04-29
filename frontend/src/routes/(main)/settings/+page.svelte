@@ -1,0 +1,188 @@
+<script lang="ts">
+	import { getContextClient, gql, mutationStore, queryStore } from '@urql/svelte';
+
+	import {
+		SAVE_SCREENS,
+		screenNames,
+		screenParams,
+		SCREENS,
+		type Screen,
+		type Screens
+	} from '$lib/models/screen';
+
+	export const screenNames: { [key: string]: string } = {
+		uploads: 'Bilder',
+		calendar: 'Kalender',
+		news: 'News',
+		post: 'Post',
+		sbb: 'SBB',
+		games: 'Spiele',
+		weather: 'Wetter'
+	};
+
+	export const screenParams: { [key: string]: { [key: string]: string } } = {
+		news: {
+			'1646': 'Allgemein',
+			'718': 'Sport',
+			'454': 'Kultur',
+			'630': 'Wissen'
+		},
+		weather: {
+			daily: 'Täglich',
+			hourly: 'Stündlich',
+			alerts: 'Warnungen'
+		}
+	};
+
+	const QUERY = gql`
+		query Screens {
+			...Screens
+		}
+		${SCREENS}
+	`;
+
+	let newName = '';
+	let newParams = '';
+
+	$: client = getContextClient();
+	$: store = queryStore<Screens>({
+		query: QUERY,
+		context: { additionalTypenames: ['Screen'] },
+		client
+	});
+	$: screens = $store.data?.screens || [];
+
+	function save(newScreens: Screen[]) {
+		mutationStore({
+			query: SAVE_SCREENS,
+			variables: {
+				screens: newScreens.map((screen) => ({
+					name: screen.name,
+					params: Object.keys(screenParams[screen.name] || {}).includes(screen.params)
+						? screen.params
+						: ''
+				}))
+			},
+			context: { additionalTypenames: ['Screen'] },
+			client
+		});
+	}
+
+	function add() {
+		save([...screens, { name: newName, params: newParams }]);
+	}
+	function del(index: number) {
+		save(screens.filter((screen, i) => i !== index));
+	}
+	function moveUp(index: number) {
+		save([
+			...screens.slice(0, index - 1),
+			screens[index],
+			screens[index - 1],
+			...screens.slice(index + 1)
+		]);
+	}
+	function moveDown(index: number) {
+		save([
+			...screens.slice(0, index),
+			screens[index + 1],
+			screens[index],
+			...screens.slice(index + 2)
+		]);
+	}
+</script>
+
+<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
+	<div class="row">
+		<div class="col">
+			<h1>Settings</h1>
+		</div>
+		<div class="col-auto">
+			<a class="btn btn-sm btn-outline-danger" href="/">
+				<i class="icofont-ui-close" />
+			</a>
+		</div>
+	</div>
+
+	<div class="row overflow-auto">
+		<div class="col">
+			{#if $store.fetching}
+				<p class="alert alert-info m-2">
+					<i class="icofont-spinner" /> Loading...
+				</p>
+			{:else}
+				<table class="table table-sm">
+					<colgroup>
+						<col width="50%" />
+						<col width="50%" />
+						<col />
+						<col />
+						<col />
+					</colgroup>
+
+					<tbody>
+						<tr>
+							<td>
+								<select class="form-select form-select-sm" bind:value={newName}>
+									{#each Object.entries(screenNames) as [value, name]}
+										<option {value}>{name}</option>
+									{/each}
+								</select>
+							</td>
+							<td>
+								{#if newName in screenParams}
+									<select class="form-select form-select-sm" bind:value={newParams}>
+										{#each Object.entries(screenParams[newName]) as [value, name]}
+											<option {value}>{name}</option>
+										{/each}
+									</select>
+								{/if}
+							</td>
+							<td />
+							<td />
+							<td>
+								<button class="btn btn-sm btn-outline-success" on:click={add}>
+									<i class="icofont-ui-add" />
+								</button>
+							</td>
+						</tr>
+
+						{#each screens as screen, i}
+							<tr>
+								<td>{screenNames[screen.name] || screen.name}</td>
+								<td>{screenParams[screen.name]?.[screen.params] || screen.params}</td>
+								<td>
+									<button
+										class="btn btn-sm"
+										class:btn-outline-theme={i > 0}
+										class:btn-outline-secondary={i === 0}
+										disabled={i === 0}
+										on:click={() => moveUp(i)}
+									>
+										<i class="icofont-caret-up" />
+									</button>
+								</td>
+								<td>
+									<button
+										class="btn btn-sm"
+										class:btn-outline-theme={i < screens.length - 1}
+										class:btn-outline-secondary={i === screens.length - 1}
+										disabled={i === screens.length - 1}
+										on:click={() => moveDown(i)}
+									>
+										<i class="icofont-caret-down" />
+									</button>
+								</td>
+								<td>
+									<button class="btn btn-sm btn-outline-danger" on:click={() => del(i)}>
+										<i class="icofont-ui-delete" />
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</div>
+	</div>
+</div>
