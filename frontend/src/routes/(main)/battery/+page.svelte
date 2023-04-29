@@ -1,38 +1,20 @@
 <script lang="ts">
-	import { getContextClient, gql, queryStore } from '@urql/svelte';
+	import { formatDistanceToNow } from 'date-fns';
 
-	import { BATTERY_STATUS, type BatteryStatus } from '$lib/models/battery';
-	import { formatDistanceToNow, parseISO } from 'date-fns';
 	import { time } from '$lib/stores/time';
 
-	const QUERY = gql`
-		query Battery {
-			...BatteryStatus
-		}
-		${BATTERY_STATUS}
-	`;
+	import type { PageData } from './$types';
 
-	$: client = getContextClient();
-	$: store = queryStore<BatteryStatus>({
-		query: QUERY,
-		requestPolicy: 'network-only',
-		client
-	});
-
-	function refresh() {
-		queryStore<BatteryStatus>({
-			query: QUERY,
-			requestPolicy: 'network-only',
-			client
-		});
-	}
-
-	$: battery = $store.data?.battery;
-	$: status = battery?.status;
+	export let data: PageData;
+	$: status = data.status;
 
 	let timeStr = '';
-	$: if (battery?.updatedAt) {
-		$time, (timeStr = formatDistanceToNow(parseISO(battery.updatedAt), { addSuffix: true }));
+	$: if (status?.ts) {
+		$time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true }));
+	}
+
+	function refresh() {
+		// TODO
 	}
 </script>
 
@@ -56,11 +38,7 @@
 
 	<div class="row overflow-auto">
 		<div class="col">
-			{#if $store.fetching}
-				<p class="alert alert-info m-2">
-					<i class="icofont-spinner" /> Loading...
-				</p>
-			{:else if status}
+			{#if status}
 				<table class="table table-sm">
 					<colgroup>
 						<col />
@@ -71,7 +49,7 @@
 					<tbody>
 						<tr>
 							<td>Status</td>
-							<td colspan="2">{status.status}</td>
+							<td colspan="2">{status.state}</td>
 							<td>{status.charge}%</td>
 						</tr>
 						<tr>

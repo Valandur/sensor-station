@@ -1,39 +1,21 @@
 <script lang="ts">
-	import { getContextClient, gql, queryStore } from '@urql/svelte';
 	import { format, formatDistanceToNow, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
-	import { MODEM_STATUS, type ModemStatus } from '$lib/models/modem';
 	import { time } from '$lib/stores/time';
 
-	const QUERY = gql`
-		query Modem {
-			...ModemStatus
-		}
-		${MODEM_STATUS}
-	`;
+	import type { PageData } from './$types';
 
-	$: client = getContextClient();
-	$: store = queryStore<ModemStatus>({
-		query: QUERY,
-		requestPolicy: 'cache-and-network',
-		client
-	});
+	export let data: PageData;
+	$: status = data.status;
 
 	function refresh() {
-		queryStore<ModemStatus>({
-			query: QUERY,
-			requestPolicy: 'cache-and-network',
-			client
-		});
+		// TODO
 	}
 
-	$: modem = $store.data?.modem;
-	$: status = modem?.status;
-
 	let timeStr = '';
-	$: if (modem?.updatedAt) {
-		$time, (timeStr = formatDistanceToNow(parseISO(modem.updatedAt), { addSuffix: true }));
+	$: if (status?.ts) {
+		$time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true }));
 	}
 </script>
 
@@ -57,11 +39,7 @@
 
 	<div class="row overflow-auto">
 		<div class="col">
-			{#if $store.fetching}
-				<p class="alert alert-info m-2">
-					<i class="icofont-spinner" /> Loading...
-				</p>
-			{:else if status}
+			{#if status}
 				<table class="table table-sm">
 					<colgroup>
 						<col />
@@ -99,7 +77,9 @@
 						</tr>
 						<tr>
 							<td>Time</td>
-							<td colspan="2">{format(parseISO(status.time), 'Pp z', { locale: de })}</td>
+							<td colspan="2"
+								>{status.time ? format(status.time, 'Pp z', { locale: de }) : '---'}</td
+							>
 						</tr>
 						<tr>
 							<td>Location</td>
