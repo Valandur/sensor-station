@@ -1,71 +1,16 @@
 <script lang="ts">
-	import { getContextClient, gql, mutationStore, queryStore } from '@urql/svelte';
+	import { SCREEN_NAMES, SCREEN_PARAMS, type Screen } from '$lib/models/Screen';
 
-	import {
-		SAVE_SCREENS,
-		screenNames,
-		screenParams,
-		SCREENS,
-		type Screen,
-		type Screens
-	} from '$lib/models/screen';
+	import type { PageData } from './$types';
 
-	export const screenNames: { [key: string]: string } = {
-		uploads: 'Bilder',
-		calendar: 'Kalender',
-		news: 'News',
-		post: 'Post',
-		sbb: 'SBB',
-		games: 'Spiele',
-		weather: 'Wetter'
-	};
-
-	export const screenParams: { [key: string]: { [key: string]: string } } = {
-		news: {
-			'1646': 'Allgemein',
-			'718': 'Sport',
-			'454': 'Kultur',
-			'630': 'Wissen'
-		},
-		weather: {
-			daily: 'Täglich',
-			hourly: 'Stündlich',
-			alerts: 'Warnungen'
-		}
-	};
-
-	const QUERY = gql`
-		query Screens {
-			...Screens
-		}
-		${SCREENS}
-	`;
+	export let data: PageData;
+	$: screens = data.screens;
 
 	let newName = '';
 	let newParams = '';
 
-	$: client = getContextClient();
-	$: store = queryStore<Screens>({
-		query: QUERY,
-		context: { additionalTypenames: ['Screen'] },
-		client
-	});
-	$: screens = $store.data?.screens || [];
-
 	function save(newScreens: Screen[]) {
-		mutationStore({
-			query: SAVE_SCREENS,
-			variables: {
-				screens: newScreens.map((screen) => ({
-					name: screen.name,
-					params: Object.keys(screenParams[screen.name] || {}).includes(screen.params)
-						? screen.params
-						: ''
-				}))
-			},
-			context: { additionalTypenames: ['Screen'] },
-			client
-		});
+		// TODO
 	}
 
 	function add() {
@@ -106,83 +51,77 @@
 
 	<div class="row overflow-auto">
 		<div class="col">
-			{#if $store.fetching}
-				<p class="alert alert-info m-2">
-					<i class="icofont-spinner" /> Loading...
-				</p>
-			{:else}
-				<table class="table table-sm">
-					<colgroup>
-						<col width="50%" />
-						<col width="50%" />
-						<col />
-						<col />
-						<col />
-					</colgroup>
+			<table class="table table-sm">
+				<colgroup>
+					<col width="50%" />
+					<col width="50%" />
+					<col />
+					<col />
+					<col />
+				</colgroup>
 
-					<tbody>
-						<tr>
-							<td>
-								<select class="form-select form-select-sm" bind:value={newName}>
-									{#each Object.entries(screenNames) as [value, name]}
+				<tbody>
+					<tr>
+						<td>
+							<select class="form-select form-select-sm" bind:value={newName}>
+								{#each Object.entries(SCREEN_NAMES) as [value, name]}
+									<option {value}>{name}</option>
+								{/each}
+							</select>
+						</td>
+						<td>
+							{#if newName in SCREEN_PARAMS}
+								<select class="form-select form-select-sm" bind:value={newParams}>
+									{#each Object.entries(SCREEN_PARAMS[newName]) as [value, name]}
 										<option {value}>{name}</option>
 									{/each}
 								</select>
+							{/if}
+						</td>
+						<td />
+						<td />
+						<td>
+							<button class="btn btn-sm btn-outline-success" on:click={add}>
+								<i class="icofont-ui-add" />
+							</button>
+						</td>
+					</tr>
+
+					{#each screens as screen, i}
+						<tr>
+							<td>{SCREEN_NAMES[screen.name] || screen.name}</td>
+							<td>{SCREEN_PARAMS[screen.name]?.[screen.params] || screen.params}</td>
+							<td>
+								<button
+									class="btn btn-sm"
+									class:btn-outline-theme={i > 0}
+									class:btn-outline-secondary={i === 0}
+									disabled={i === 0}
+									on:click={() => moveUp(i)}
+								>
+									<i class="icofont-caret-up" />
+								</button>
 							</td>
 							<td>
-								{#if newName in screenParams}
-									<select class="form-select form-select-sm" bind:value={newParams}>
-										{#each Object.entries(screenParams[newName]) as [value, name]}
-											<option {value}>{name}</option>
-										{/each}
-									</select>
-								{/if}
+								<button
+									class="btn btn-sm"
+									class:btn-outline-theme={i < screens.length - 1}
+									class:btn-outline-secondary={i === screens.length - 1}
+									disabled={i === screens.length - 1}
+									on:click={() => moveDown(i)}
+								>
+									<i class="icofont-caret-down" />
+								</button>
 							</td>
-							<td />
-							<td />
 							<td>
-								<button class="btn btn-sm btn-outline-success" on:click={add}>
-									<i class="icofont-ui-add" />
+								<button class="btn btn-sm btn-outline-danger" on:click={() => del(i)}>
+									<i class="icofont-ui-delete" />
 								</button>
 							</td>
 						</tr>
-
-						{#each screens as screen, i}
-							<tr>
-								<td>{screenNames[screen.name] || screen.name}</td>
-								<td>{screenParams[screen.name]?.[screen.params] || screen.params}</td>
-								<td>
-									<button
-										class="btn btn-sm"
-										class:btn-outline-theme={i > 0}
-										class:btn-outline-secondary={i === 0}
-										disabled={i === 0}
-										on:click={() => moveUp(i)}
-									>
-										<i class="icofont-caret-up" />
-									</button>
-								</td>
-								<td>
-									<button
-										class="btn btn-sm"
-										class:btn-outline-theme={i < screens.length - 1}
-										class:btn-outline-secondary={i === screens.length - 1}
-										disabled={i === screens.length - 1}
-										on:click={() => moveDown(i)}
-									>
-										<i class="icofont-caret-down" />
-									</button>
-								</td>
-								<td>
-									<button class="btn btn-sm btn-outline-danger" on:click={() => del(i)}>
-										<i class="icofont-ui-delete" />
-									</button>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{/if}
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	</div>
 </div>
