@@ -3,6 +3,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { goto } from '$app/navigation';
+	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
 	import { tweened } from 'svelte/motion';
 	import de from 'date-fns/locale/de/index';
@@ -198,6 +199,12 @@
 
 <div class="progress bg-secondary" style:width={$progress + '%'} />
 
+{#if $navigating}
+	<div class="loading">
+		<i class="icofont-spinner" />
+	</div>
+{/if}
+
 <style lang="scss">
 	h1 {
 		font-size: 5rem;
@@ -239,5 +246,22 @@
 		left: 0;
 		bottom: 0;
 		height: 2px;
+	}
+
+	.loading {
+		position: fixed;
+		bottom: 10px;
+		right: 16px;
+		z-index: 1000;
+		animation: rotating 2s linear infinite;
+	}
+
+	@keyframes rotating {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
