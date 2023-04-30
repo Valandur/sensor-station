@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { format } from 'date-fns';
 	import { goto } from '$app/navigation';
+	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
 
@@ -21,7 +22,7 @@
 				<div class="card">
 					<div class="card-header fw-bold d-flex justify-content-between">
 						<div>
-							{format(game.startsAt, 'dd MMM')} - {format(game.endsAt, 'dd MMM')}
+							{format(game.startsAt, 'dd MMM')} - {format(game.endsAt, 'dd MMM', { locale: de })}
 						</div>
 						<div>Free</div>
 					</div>

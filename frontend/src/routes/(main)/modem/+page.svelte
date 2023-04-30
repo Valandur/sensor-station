@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format, formatDistanceToNow, parseISO } from 'date-fns';
+	import { format, formatDistanceToNow } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import { time } from '$lib/stores/time';
@@ -9,13 +9,13 @@
 	export let data: PageData;
 	$: status = data.status;
 
-	function refresh() {
-		// TODO
-	}
-
 	let timeStr = '';
 	$: if (status?.ts) {
-		$time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true }));
+		$time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true, locale: de }));
+	}
+
+	function reload() {
+		window.location.reload();
 	}
 </script>
 
@@ -25,10 +25,10 @@
 			<h1>Modem</h1>
 		</div>
 		<div class="col align-self-center text-secondary">
-			{timeStr ? `(@ ${timeStr})` : ''}
+			{timeStr ? `(${timeStr})` : ''}
 		</div>
 		<div class="col-auto">
-			<button class="btn btn-sm btn-outline-theme" on:click={() => refresh()}>
+			<button class="btn btn-sm btn-outline-theme" on:click={reload}>
 				<i class="icofont-refresh" />
 			</button>
 			<a class="btn btn-sm btn-outline-danger" href="/">

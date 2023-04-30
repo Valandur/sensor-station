@@ -19,11 +19,11 @@
 	{#each events as event}
 		<div class="row">
 			<div class="col-1">{format(event.tsStart, 'iii', { locale: de })}</div>
-			<div class="col-1">{format(event.tsStart, 'd.')}</div>
+			<div class="col-1">{format(event.tsStart, 'd.', { locale: de })}</div>
 			{#if event.isWholeDay}
 				<div class="col-2">-------</div>
 			{:else}
-				<div class="col-2">{format(event.tsStart, 'HH:mm')}</div>
+				<div class="col-2">{format(event.tsStart, 'HH:mm', { locale: de })}</div>
 			{/if}
 			<div class="col">{event.content}</div>
 		</div>

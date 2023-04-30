@@ -30,6 +30,10 @@ export async function getScreens() {
 	return screens;
 }
 
-export async function saveScreens() {
-	await writeFile(SCREENS_PATH, JSON.stringify(screens), 'utf-8');
+export async function saveScreens(newScreens: Screen[]) {
+	loaded = true;
+	screens = newScreens;
+	counter.max = newScreens.length;
+
+	await writeFile(SCREENS_PATH, JSON.stringify(newScreens), 'utf-8');
 }

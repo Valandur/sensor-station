@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { format } from 'date-fns';
 	import { goto } from '$app/navigation';
+	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
 
@@ -26,8 +27,8 @@
 						</div>
 						<div>
 							<i class="icofont-calendar" />
-							{format(alert.start, 'dd.MM.yy HH:mm')} -
-							{format(alert.end, 'dd.MM.yy HH:mm')}
+							{format(alert.start, 'dd.MM.yy HH:mm', { locale: de })} -
+							{format(alert.end, 'dd.MM.yy HH:mm', { locale: de })}
 						</div>
 					</div>
 					<div class="card-body overflow-scroll">

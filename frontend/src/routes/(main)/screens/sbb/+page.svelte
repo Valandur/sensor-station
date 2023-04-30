@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { format } from 'date-fns';
+	import { goto } from '$app/navigation';
+	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
 
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
 
 	export let data: PageData;
 	$: alert = data.alert;
@@ -16,7 +17,7 @@
 	function formatDuration(duration: string | undefined) {
 		return duration
 			?.replace('Dauer:', '')
-			.replaceAll(`${format(new Date(), 'dd.MM.yyyy')},`, '')
+			.replaceAll(`${format(new Date(), 'dd.MM.yyyy', { locale: de })},`, '')
 			.trim();
 	}
 

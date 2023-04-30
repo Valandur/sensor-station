@@ -3,6 +3,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { goto } from '$app/navigation';
+	import { onDestroy } from 'svelte';
 	import { tweened } from 'svelte/motion';
 	import de from 'date-fns/locale/de/index';
 
@@ -21,7 +22,7 @@
 	let paused = false;
 	const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
-	$: timeStr = formatInTimeZone($time, TIMEZONE, 'HH:mm');
+	$: timeStr = formatInTimeZone($time, TIMEZONE, 'HH:mm', { locale: de });
 	$: date = formatInTimeZone($time, TIMEZONE, 'd. MMMM', { locale: de });
 	$: dateSubFormat = $holiday ? 'eee' : 'eeee';
 	$: dateSub = formatInTimeZone($time, TIMEZONE, dateSubFormat, { locale: de }).replace('.', '');
@@ -40,6 +41,13 @@
 			timer = setTimeout(() => goto(next), UPDATE_INTERVAL);
 		}
 	}
+
+	onDestroy(() => {
+		if (timer) {
+			clearTimeout(timer);
+			timer = null;
+		}
+	});
 
 	function togglePause() {
 		paused = !paused;

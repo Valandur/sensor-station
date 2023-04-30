@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { format, parseISO } from 'date-fns';
+	import de from 'date-fns/locale/de/index';
 
 	import type { PageData } from './$types';
 
@@ -102,7 +103,7 @@
 								type="date"
 								class="form-control form-control-sm"
 								on:change={(e) => (upload.ts = parseISO(e.currentTarget.value))}
-								value={format(upload.ts, 'yyyy-MM-dd')}
+								value={format(upload.ts, 'yyyy-MM-dd', { locale: de })}
 							/>
 						</td>
 						<td class="m-0 p-1">

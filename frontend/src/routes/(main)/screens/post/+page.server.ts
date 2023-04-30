@@ -181,13 +181,18 @@ async function getShipments(): Promise<PostShipment[]> {
 }
 
 async function request(name: string, req: superagent.SuperAgentRequest) {
-	// console.log(name, req.method, req.url.substring(0, 150));
-	const resp = await req;
-	/*for (const url of resp.redirects) {
-		console.log(name, '-->', url.substring(0, 150));
-	}*/
-	// console.log(name, 'status:', resp.status);
-	return resp;
+	console.log(name, req.method, req.url.substring(0, 150));
+	try {
+		const resp = await req;
+		for (const url of resp.redirects) {
+			console.log(name, '-->', url.substring(0, 150));
+		}
+		console.log(name, 'status:', resp.status);
+		return resp;
+	} catch (err: unknown) {
+		console.error((err as superagent.ResponseError).response?.body);
+		throw err;
+	}
 }
 
 type RecursiveMap = Map<string, [string, RecursiveMap]>;

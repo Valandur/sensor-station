@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { format } from 'date-fns';
 	import { goto } from '$app/navigation';
+	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
 
@@ -35,7 +36,7 @@
 						{#if shipment.arrival}
 							<div>
 								<i class="icofont-calendar" />
-								{format(shipment.arrival, 'dd.MM.yy')}
+								{format(shipment.arrival, 'dd.MM.yy', { locale: de })}
 							</div>
 						{/if}
 					</div>
