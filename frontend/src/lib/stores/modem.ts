@@ -26,7 +26,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 		return status;
 	}
 
-	const commander = await openConnection();
+	const commander = ENABLED ? await openConnection() : null;
 	if (!commander) {
 		if (DEBUG) {
 			return getMockStatus();

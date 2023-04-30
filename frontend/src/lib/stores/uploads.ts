@@ -10,7 +10,7 @@ import { Counter } from '$lib/counter';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 export const ENABLED = env.UPLOADS_ENABLED === '1';
-const UPLOADS_DIR = 'static/data/uploads';
+const UPLOADS_DIR = 'data/uploads';
 const UPLOADS_FILE = 'data/uploads.json';
 
 export const counter = new Counter();

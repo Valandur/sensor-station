@@ -59,7 +59,7 @@ export async function getStatus(): Promise<BatteryInfo | null> {
 		return status;
 	}
 
-	const bus = await openBus();
+	const bus = ENABLED ? await openBus() : null;
 	if (!bus) {
 		if (DEBUG) {
 			return getMockStatus();
