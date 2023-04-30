@@ -37,10 +37,10 @@
 					<tr>
 						<td>
 							<select
-								bind:value={newName}
 								form="formNew"
 								name="newName"
 								class="form-select form-select-sm"
+								bind:value={newName}
 							>
 								{#each Object.entries(SCREEN_NAMES) as [value, name]}
 									<option {value}>{name}</option>
@@ -78,7 +78,7 @@
 								{SCREEN_PARAMS[screen.name]?.[screen.params] || screen.params}
 							</td>
 							<td>
-								<form id="formNew" method="POST" action="?/move" use:enhance>
+								<form method="POST" action="?/move" use:enhance>
 									<input type="hidden" name="index" value={i} />
 									<input type="hidden" name="dir" value="up" />
 									<button
@@ -92,7 +92,7 @@
 								</form>
 							</td>
 							<td>
-								<form id="formNew" method="POST" action="?/move" use:enhance>
+								<form method="POST" action="?/move" use:enhance>
 									<input type="hidden" name="index" value={i} />
 									<input type="hidden" name="dir" value="down" />
 									<button
@@ -106,7 +106,7 @@
 								</form>
 							</td>
 							<td>
-								<form id="formNew" method="POST" action="?/delete" use:enhance>
+								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="index" value={i} />
 									<button class="btn btn-sm btn-outline-danger">
 										<i class="icofont-ui-delete" />

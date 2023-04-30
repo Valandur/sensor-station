@@ -3,6 +3,7 @@
 	import de from 'date-fns/locale/de/index';
 
 	import type { PageData } from './$types';
+	import { enhance } from '$app/forms';
 
 	export let data: PageData;
 	$: uploads = data.uploads;
@@ -22,12 +23,6 @@
 		};
 	}
 
-	function del(img: string) {
-		// TODO
-	}
-	function save(img: string, ts: Date, title: string) {
-		// TODO
-	}
 	function clear() {
 		newImg = null;
 		fileInput.value = '';
@@ -64,32 +59,47 @@
 						{/if}
 						<input
 							type="file"
-							style:display="none"
+							name="newImage"
+							form="formNew"
 							accept=".jpg, .jpeg, .png .mp4"
+							style:display="none"
 							on:change={onChangeFile}
 							bind:this={fileInput}
 						/>
 					</td>
 					<td>
-						<input type="date" class="form-control form-control-sm" bind:value={newDate} />
+						<input
+							type="date"
+							form="formNew"
+							name="newDate"
+							class="form-control form-control-sm"
+							bind:value={newDate}
+						/>
 					</td>
 					<td>
-						<input type="text" class="form-control form-control-sm" bind:value={newTitle} />
+						<input
+							type="text"
+							form="formNew"
+							name="newTitle"
+							class="form-control form-control-sm"
+							bind:value={newTitle}
+						/>
 					</td>
 					<td>
-						<button
-							class="btn btn-sm"
-							class:btn-outline-success={newImg && newDate && newTitle}
-							class:btn-outline-secondary={!newImg || !newDate || !newTitle}
-							disabled={!newImg || !newDate || !newTitle}
-							on:click={() => newImg && save(newImg, newDate, newTitle)}
-						>
-							<i class="icofont-ui-add" />
-						</button>
+						<form id="formNew" method="POST" action="?/add" use:enhance>
+							<button
+								class="btn btn-sm"
+								class:btn-outline-success={newImg && newDate && newTitle}
+								class:btn-outline-secondary={!newImg || !newDate || !newTitle}
+								disabled={!newImg || !newDate || !newTitle}
+							>
+								<i class="icofont-ui-add" />
+							</button>
+						</form>
 					</td>
 				</tr>
 
-				{#each uploads as upload}
+				{#each uploads as upload, i}
 					<tr>
 						<td class="m-0 p-1">
 							{#if upload.img.endsWith('.mp4')}
@@ -101,6 +111,8 @@
 						<td class="m-0 p-1">
 							<input
 								type="date"
+								form={`formSave${i}`}
+								name="date"
 								class="form-control form-control-sm"
 								on:change={(e) => (upload.ts = parseISO(e.currentTarget.value))}
 								value={format(upload.ts, 'yyyy-MM-dd', { locale: de })}
@@ -109,6 +121,8 @@
 						<td class="m-0 p-1">
 							<input
 								type="text"
+								form={`formSave${i}`}
+								name="title"
 								class="form-control form-control-sm"
 								on:change={(e) => (upload.title = e.currentTarget.value)}
 								value={upload.title}
@@ -116,15 +130,42 @@
 						</td>
 						<td>
 							<div class="btn-group">
-								<button
-									class="btn btn-sm btn-outline-success"
-									on:click={() => save(upload.img, upload.ts, upload.title)}
-								>
-									<i class="icofont-save" />
-								</button>
-								<button class="btn btn-sm btn-outline-danger" on:click={() => del(upload.img)}>
-									<i class="icofont-ui-delete" />
-								</button>
+								<form id={`formSave${i}`} method="POST" action="?/save">
+									<input type="hidden" name="index" value={i} />
+									<button class="btn btn-sm btn-outline-success">
+										<i class="icofont-save" />
+									</button>
+								</form>
+								<form method="POST" action="?/move">
+									<input type="hidden" name="index" value={i} />
+									<input type="hidden" name="dir" value="up" />
+									<button
+										class="btn btn-sm"
+										class:btn-outline-theme={i > 0}
+										class:btn-outline-secondary={i === 0}
+										disabled={i === 0}
+									>
+										<i class="icofont-caret-up" />
+									</button>
+								</form>
+								<form method="POST" action="?/move">
+									<input type="hidden" name="index" value={i} />
+									<input type="hidden" name="dir" value="down" />
+									<button
+										class="btn btn-sm"
+										class:btn-outline-theme={i < uploads.length - 1}
+										class:btn-outline-secondary={i === uploads.length - 1}
+										disabled={i === uploads.length - 1}
+									>
+										<i class="icofont-caret-down" />
+									</button>
+								</form>
+								<form method="POST" action="?/delete" use:enhance>
+									<input type="hidden" name="index" value={i} />
+									<button class="btn btn-sm btn-outline-danger">
+										<i class="icofont-ui-delete" />
+									</button>
+								</form>
 							</div>
 						</td>
 					</tr>

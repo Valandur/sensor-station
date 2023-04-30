@@ -17,6 +17,7 @@
 		"@sveltejs/adapter-static": "2.0.2",
 		"@sveltejs/kit": "1.15.9",
 		"@types/i2c-bus": "5.1.0",
+		"@types/mime-types": "^2.1.1",
 		"@types/node": "18.16.3",
 		"@types/superagent": "4.1.17",
 		"@types/xml2js": "0.4.11",
@@ -46,6 +47,7 @@
 		"graphql": "16.6.0",
 		"html-entities": "2.3.3",
 		"image-size": "1.0.2",
+		"mime-types": "^2.1.35",
 		"rss-parser": "3.13.0",
 		"superagent": "8.0.9",
 		"xml2js": "0.5.0"

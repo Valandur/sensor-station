@@ -1,8 +1,10 @@
+import { createHash } from 'crypto';
 import { env } from '$env/dynamic/private';
 import { parseISO } from 'date-fns';
 import { readFile, readdir, writeFile } from 'fs/promises';
 import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
+import mime from 'mime-types';
 
 import { Counter } from '$lib/counter';
 import type { UploadItem } from '$lib/models/UploadItem';
@@ -50,11 +52,33 @@ export async function getUploads() {
 	return uploads;
 }
 
-export async function saveUploads(newUploads: UploadItem[]) {
+export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
 	uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
 	counter.max = newUploads.length;
 
-	await writeFile(UPLOADS_FILE, JSON.stringify(uploads), 'utf-8');
+	await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
+}
+
+export async function storeUpload(ts: Date, title: string, file: File): Promise<UploadItem[]> {
+	const data = Buffer.from(await file.arrayBuffer());
+	const hash = createHash('md5')
+		.update(ts.toISOString(), 'utf-8')
+		.update(title, 'utf-8')
+		.update(data)
+		.digest('hex');
+	const ext = mime.extension(file.type);
+
+	const img = `${hash}.${ext}`;
+	const fileName = `${UPLOADS_DIR}/${img}`;
+
+	await writeFile(fileName, data);
+	const ratio = await getRatio(fileName, data);
+
+	const uploads = await getUploads();
+	const newUploads = uploads.concat({ ts, title, img, ratio });
+	await saveUploads(newUploads);
+
+	return newUploads;
 }
 
 async function getRatio(fileName: string, data?: Buffer) {
