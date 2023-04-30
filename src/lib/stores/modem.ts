@@ -103,9 +103,8 @@ async function openConnection() {
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const SerialCommander = require('@westh/serial-commander');
-		return new SerialCommander({
+		const SerialCommander = await import('@westh/serial-commander');
+		return new SerialCommander.default({
 			port: DEVICE_PATH,
 			defaultDelay: 10,
 			disableLog: true

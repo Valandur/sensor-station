@@ -115,8 +115,7 @@ async function openBus(): Promise<PromisifiedBus | null> {
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const i2c = require('i2c-bus');
+		const i2c = await import('i2c-bus');
 		return i2c.openPromisified(BUS_NUMBER);
 	} catch (err) {
 		console.error(err);
