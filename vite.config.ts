@@ -6,7 +6,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	build: {
 		rollupOptions: {
-			plugins: [commonjs({ dynamicRequireTargets: ['node_modules/i2c-bus'] })]
+			plugins: [commonjs({ dynamicRequireTargets: ['node_modules/i2c-bus/*'] })]
 		}
 	}
 });
