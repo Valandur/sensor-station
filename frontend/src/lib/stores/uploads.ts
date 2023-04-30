@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { env } from '$env/dynamic/private';
 import { parseISO } from 'date-fns';
-import { readFile, readdir, writeFile } from 'fs/promises';
+import { readFile, readdir, rm, writeFile } from 'fs/promises';
 import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
 import mime from 'mime-types';
@@ -52,13 +52,6 @@ export async function getUploads() {
 	return uploads;
 }
 
-export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
-	uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
-	counter.max = newUploads.length;
-
-	await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
-}
-
 export async function storeUpload(ts: Date, title: string, file: File): Promise<UploadItem[]> {
 	const data = Buffer.from(await file.arrayBuffer());
 	const hash = createHash('md5')
@@ -79,6 +72,23 @@ export async function storeUpload(ts: Date, title: string, file: File): Promise<
 	await saveUploads(newUploads);
 
 	return newUploads;
+}
+
+export async function deleteUpload(index: number) {
+	const uploads = await getUploads();
+	const item = uploads[index];
+
+	await rm(`${UPLOADS_DIR}/${item.img}`);
+
+	const newUploads = uploads.filter((_, i) => i !== index);
+	await saveUploads(newUploads);
+}
+
+export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
+	uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
+	counter.max = newUploads.length;
+
+	await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
 }
 
 async function getRatio(fileName: string, data?: Buffer) {

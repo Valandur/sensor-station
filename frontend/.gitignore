@@ -4,6 +4,7 @@ node_modules
 /package
 /data
 /static/data
+/build/client/data
 .env
 .env.*
 !.env.example

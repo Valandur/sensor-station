@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 
-import { getUploads, saveUploads, storeUpload } from '$lib/stores/uploads';
+import { deleteUpload, getUploads, saveUploads, storeUpload } from '$lib/stores/uploads';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 import type { Actions, PageServerLoad } from './$types';
@@ -83,13 +83,7 @@ export const actions: Actions = {
 			return fail(400, { index, invalid: true });
 		}
 
-		const uploads = await getUploads();
-		if (idx < 0 || idx > uploads.length - 1) {
-			return fail(400, { index, outOfRange: true });
-		}
-
-		const newUploads = uploads.filter((_, i) => i !== idx);
-		saveUploads(newUploads);
+		await deleteUpload(idx);
 	},
 	move: async ({ request }) => {
 		const data = await request.formData();
