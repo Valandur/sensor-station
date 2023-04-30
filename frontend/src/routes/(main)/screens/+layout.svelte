@@ -68,10 +68,6 @@
 	function reload() {
 		window.location.reload();
 	}
-
-	function restart() {
-		// TODO
-	}
 </script>
 
 <div
@@ -190,9 +186,11 @@
 				</button>
 			</div>
 			<div class="col-auto">
-				<button class="btn btn-danger" on:click={restart}>
-					<i class="icofont-power icofont-2x" />
-				</button>
+				<form method="POST" action="/screens?/restart">
+					<button type="submit" class="btn btn-danger">
+						<i class="icofont-power icofont-2x" />
+					</button>
+				</form>
 			</div>
 		</div>
 	{/if}
