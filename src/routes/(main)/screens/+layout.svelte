@@ -76,7 +76,7 @@
 
 		<div class="col text-end d-flex flex-column justify-content-end">
 			<div class="row icons justify-content-end">
-				{#if paused}
+				{#if $paused}
 					<div class="col-auto">
 						<i class="icofont-ui-pause" />
 					</div>

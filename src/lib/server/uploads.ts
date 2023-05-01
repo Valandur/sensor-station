@@ -6,14 +6,11 @@ import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
 import mime from 'mime-types';
 
-import { Counter } from '$lib/counter';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 export const ENABLED = env.UPLOADS_ENABLED === '1';
 const UPLOADS_DIR = 'data/uploads';
 const UPLOADS_FILE = 'data/uploads.json';
-
-export const counter = new Counter();
 
 let loaded = false;
 let uploads: UploadItem[] = [];
@@ -43,7 +40,6 @@ export async function getUploads() {
 
 	loaded = true;
 	uploads = items;
-	counter.max = items.length;
 
 	if (added) {
 		await saveUploads(items);
@@ -86,8 +82,6 @@ export async function deleteUpload(index: number) {
 
 export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
 	uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
-	counter.max = newUploads.length;
-
 	await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
 }
 

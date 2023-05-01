@@ -1,24 +1,15 @@
-import superagent from 'superagent';
+import { redirect } from '@sveltejs/kit';
+
+import { ENABLED, getArticle } from '$lib/server/news';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
-	const link = Buffer.from(params.article, 'base64url').toString('utf-8');
+	if (!ENABLED) {
+		throw redirect(302, '/screens');
+	}
 
-	const { text } = await superagent.get(link);
-	const page = text;
-
-	const headStart = page.indexOf('<head>') + 6;
-	const headEnd = page.indexOf('</head>', headStart);
-	const head = page.substring(headStart, headEnd);
-
-	const mainStart = page.indexOf('<main');
-	const mainEnd = page.indexOf('</main>', mainStart) + 7;
-	const main = page.substring(mainStart, mainEnd);
-
-	const scriptStart = page.lastIndexOf('<span id="config__js"');
-	const scriptEnd = page.indexOf('</body>', scriptStart);
-	const scripts = page.substring(scriptStart, scriptEnd);
+	const { head, main, scripts } = await getArticle(params.article);
 
 	return {
 		head,

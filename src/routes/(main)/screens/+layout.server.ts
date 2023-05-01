@@ -4,6 +4,7 @@ import { getHoliday } from '$lib/server/holidays';
 import { getScreenUrl, getScreens } from '$lib/server/screen';
 import { getStatus as getBatteryStatus } from '$lib/server/battery';
 import { getStatus as getModemStatus } from '$lib/server/modem';
+import type { Screen } from '$lib/models/Screen';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -13,9 +14,9 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	const urlScreenName = url.pathname;
 
 	const [screens, modem, battery] = await Promise.all([
-		getScreens(),
-		getModemStatus(),
-		getBatteryStatus()
+		getScreens().catch(() => [] as Screen[]),
+		getModemStatus().catch(() => null),
+		getBatteryStatus().catch(() => null)
 	]);
 
 	if (urlScreenName.length <= 8 && screens.length > 0) {
