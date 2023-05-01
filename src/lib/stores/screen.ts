@@ -5,9 +5,11 @@ export const paused = writable(false);
 export const progress = tweened(0);
 let timer: NodeJS.Timeout | null = null;
 
-export function reset() {
+export function reset(resetProgress = true) {
 	if (timer) {
-		progress.set(0, { duration: 0 });
+		if (resetProgress) {
+			progress.set(0, { duration: 0 });
+		}
 		clearTimeout(timer);
 		timer = null;
 	}

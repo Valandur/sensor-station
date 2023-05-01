@@ -35,7 +35,7 @@
 		}
 	}
 
-	beforeNavigate(() => reset());
+	beforeNavigate(() => reset(false));
 	onDestroy(() => reset());
 
 	function togglePause() {
