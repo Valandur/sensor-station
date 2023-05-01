@@ -8,8 +8,10 @@ import type { NewsFeed } from '$lib/models/NewsFeed';
 import type { NewsFeedItem } from '$lib/models/NewsFeedItem';
 
 export const ENABLED = env.NEWS_ENABLED === '1';
+export const SIMPLE_DETAILS = env.NEWS_SIMPLE_DETAILS === '1';
 const CACHE_TIME = Number(env.NEWS_CACHE_TIME);
-const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
+const DESCRIPTION_MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
+const MEDIA_MATCHER = /<div class="js-media"\W*?data-app-video/;
 
 const feeds: Map<string, NewsFeed> = new Map();
 
@@ -31,7 +33,7 @@ export async function getFeed(feedId: string): Promise<NewsFeed> {
 			continue;
 		}
 
-		const match = MATCHER.exec(item.description);
+		const match = DESCRIPTION_MATCHER.exec(item.description);
 		if (!match) {
 			continue;
 		}
@@ -65,16 +67,32 @@ export async function getArticle(
 	const page = text;
 
 	const headStart = page.indexOf('<head>') + 6;
-	const headEnd = page.indexOf('</head>', headStart);
+	const headEnd = page.indexOf('<script>', headStart);
 	const head = page.substring(headStart, headEnd);
 
-	const mainStart = page.indexOf('<main');
-	const mainEnd = page.indexOf('</main>', mainStart) + 7;
-	const main = page.substring(mainStart, mainEnd);
+	const mainStart = SIMPLE_DETAILS
+		? page.indexOf('<section')
+		: page.indexOf('>', page.indexOf('<main')) + 1;
+	const mainEnd = page.indexOf('</section>', mainStart) + 7;
+	let main = page.substring(mainStart, mainEnd);
 
-	const scriptStart = page.lastIndexOf('<span id="config__js"');
-	const scriptEnd = page.indexOf('</body>', scriptStart);
-	const scripts = page.substring(scriptStart, scriptEnd);
+	if (SIMPLE_DETAILS) {
+		let mediaStart: number;
+		while ((mediaStart = MEDIA_MATCHER.exec(main)?.index || -1) >= 0) {
+			let mediaEnd = main.indexOf('<span class="h-offscreen">abspielen', mediaStart);
+			for (let i = 0; i < 4; i++) {
+				mediaEnd = main.indexOf('</div>', mediaEnd) + 6;
+			}
+			main = main.substring(0, mediaStart) + main.substring(mediaEnd);
+		}
+	}
+
+	let scripts = '';
+	if (!SIMPLE_DETAILS) {
+		const scriptStart = page.lastIndexOf('<span id="config__js"');
+		const scriptEnd = page.indexOf('</body>', scriptStart);
+		scripts = page.substring(scriptStart, scriptEnd);
+	}
 
 	return {
 		head,
