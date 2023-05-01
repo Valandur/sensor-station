@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-import { ENABLED, getStatus } from '$lib/stores/battery';
+import { ENABLED, getStatus } from '$lib/server/battery';
 
 import type { PageServerLoad } from './$types';
 

@@ -1,7 +1,7 @@
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 import { Parser } from 'xml2js';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import superagent from 'superagent';
 
 import { Counter } from '$lib/counter';
@@ -22,27 +22,32 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
+	try {
+		let page = Number(url.searchParams.get('page') || '-');
 
-	const alerts = await getAlerts();
-	counter.max = alerts.length;
+		const alerts = await getAlerts();
+		counter.max = alerts.length;
 
-	if (!isFinite(page)) {
-		page = counter.increment();
+		if (!isFinite(page)) {
+			page = counter.increment();
+		}
+
+		const alert = alerts[page];
+		const dataParent = await parent();
+
+		if (!alert && dataParent.skipScreen) {
+			throw redirect(302, dataParent.skipScreen);
+		}
+
+		return {
+			alert,
+			nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+			prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
 	}
-
-	const alert = alerts[page];
-	const dataParent = await parent();
-
-	if (!alert && dataParent.skipScreen) {
-		throw redirect(302, dataParent.skipScreen);
-	}
-
-	return {
-		alert,
-		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
-	};
 };
 
 let alerts: SBBAlert[] = [];

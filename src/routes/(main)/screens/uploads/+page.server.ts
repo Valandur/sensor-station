@@ -1,6 +1,6 @@
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
-import { ENABLED, counter, getUploads } from '$lib/stores/uploads';
+import { ENABLED, counter, getUploads } from '$lib/server/uploads';
 
 import type { PageServerLoad } from './$types';
 
@@ -9,20 +9,25 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
+	try {
+		let page = Number(url.searchParams.get('page') || '-');
 
-	const uploads = await getUploads();
+		const uploads = await getUploads();
 
-	if (!isFinite(page)) {
-		page = counter.increment();
+		if (!isFinite(page)) {
+			page = counter.increment();
+		}
+
+		const upload = uploads[page];
+		const dataParent = await parent();
+
+		return {
+			upload,
+			nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+			prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
 	}
-
-	const upload = uploads[page];
-	const dataParent = await parent();
-
-	return {
-		upload,
-		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
-	};
 };

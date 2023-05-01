@@ -5,11 +5,11 @@
 	import { goto } from '$app/navigation';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
-	import { tweened } from 'svelte/motion';
 	import de from 'date-fns/locale/de/index';
 
+	import { paused, progress, reset, start } from '$lib/stores/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
-	import { time, holiday } from '$lib/stores/time';
+	import { time } from '$lib/stores/time';
 
 	import type { LayoutData } from './$types';
 
@@ -18,40 +18,29 @@
 
 	export let data: LayoutData;
 
-	let timer: NodeJS.Timeout | null = null;
 	let showToolbar = false;
-	let paused = false;
-	const progress = tweened(0, { duration: UPDATE_INTERVAL });
 
 	$: timeStr = formatInTimeZone($time, TIMEZONE, 'HH:mm', { locale: de });
 	$: date = formatInTimeZone($time, TIMEZONE, 'd. MMMM', { locale: de });
-	$: dateSubFormat = $holiday ? 'eee' : 'eeee';
-	$: dateSub = formatInTimeZone($time, TIMEZONE, dateSubFormat, { locale: de }).replace('.', '');
+	$: dateSub = formatInTimeZone($time, TIMEZONE, 'eeee', { locale: de }).replace('.', '');
 	$: modemStatus = data.modem;
 	$: batteryStatus = data.battery;
+	$: holiday = data.holiday;
 
 	$: if (browser) {
-		if (timer) {
-			progress.set(0, { duration: 0 });
-			clearTimeout(timer);
-			timer = null;
-		}
-		if (!paused && data.nextScreen) {
+		reset();
+		if (!$paused && data.nextScreen) {
 			const next = data.nextScreen;
-			progress.set(100);
-			timer = setTimeout(() => goto(next), UPDATE_INTERVAL);
+			start(() => goto(next), UPDATE_INTERVAL);
 		}
 	}
 
 	onDestroy(() => {
-		if (timer) {
-			clearTimeout(timer);
-			timer = null;
-		}
+		reset();
 	});
 
 	function togglePause() {
-		paused = !paused;
+		paused.update((p) => !p);
 	}
 
 	function onSwipe(e: SwipeEvent) {
@@ -141,8 +130,8 @@
 			</div>
 
 			<div class="row justify-content-end">
-				{#if $holiday}
-					<div class="col-auto">{$holiday.name}</div>
+				{#if holiday}
+					<div class="col-auto">{holiday.name}</div>
 					<div class="col-auto">•</div>
 				{/if}
 				<h4 class="col-auto m-0">{dateSub}</h4>

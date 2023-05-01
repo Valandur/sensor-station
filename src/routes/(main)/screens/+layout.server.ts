@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 
-import { getScreenUrl, getScreens } from '$lib/stores/screen';
-import { getStatus as getModemStatus } from '$lib/stores/modem';
-import { getStatus as getBatteryStatus } from '$lib/stores/battery';
+import { getHoliday } from '$lib/server/holidays';
+import { getScreenUrl, getScreens } from '$lib/server/screen';
+import { getStatus as getBatteryStatus } from '$lib/server/battery';
+import { getStatus as getModemStatus } from '$lib/server/modem';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -32,6 +33,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	const prevScreen = idx !== null ? getScreenUrl(idx - 1, 'prev') : null;
 	const skipScreen = idx !== null ? (dir === 'next' ? nextScreen : prevScreen) : null;
 
+	const holiday = getHoliday();
+
 	return {
 		dir,
 		index,
@@ -41,6 +44,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
 		prevScreen,
 		skipScreen,
 		modem,
-		battery
+		battery,
+		holiday
 	};
 };

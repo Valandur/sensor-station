@@ -1,5 +1,6 @@
 import { differenceInSeconds, parse } from 'date-fns';
 import { env } from '$env/dynamic/private';
+import { error, redirect } from '@sveltejs/kit';
 import Parser from 'rss-parser';
 
 import { Counter } from '$lib/counter';
@@ -8,29 +9,39 @@ import type { NewsFeedItem } from '$lib/models/NewsFeedItem';
 
 import type { PageServerLoad } from './$types';
 
+const ENABLED = env.NEWS_ENABLED === '1';
 const CACHE_TIME = Number(env.NEWS_CACHE_TIME);
 const MAX_ITEMS = 3;
 const MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 
 export const load: PageServerLoad = async ({ url, params, parent }) => {
-	const feedId = params.feed;
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const feed = await getFeed(feedId);
-
-	if (!isFinite(page)) {
-		page = feed.counter.increment();
+	if (!ENABLED) {
+		throw redirect(302, '/screens');
 	}
 
-	const items = feed.counter.sliceAndWrap(feed.items, MAX_ITEMS, page);
-	const dataParent = await parent();
+	try {
+		const feedId = params.feed;
+		let page = Number(url.searchParams.get('page') || '-');
 
-	return {
-		feedId,
-		items,
-		nextPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page - 1)}`
-	};
+		const feed = await getFeed(feedId);
+
+		if (!isFinite(page)) {
+			page = feed.counter.increment();
+		}
+
+		const items = feed.counter.sliceAndWrap(feed.items, MAX_ITEMS, page);
+		const dataParent = await parent();
+
+		return {
+			feedId,
+			items,
+			nextPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page + 1)}`,
+			prevPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page - 1)}`
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
+	}
 };
 
 const feeds: Map<string, NewsFeed> = new Map();

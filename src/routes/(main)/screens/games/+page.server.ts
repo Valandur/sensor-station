@@ -1,6 +1,6 @@
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import superagent from 'superagent';
 
 import { Counter } from '$lib/counter';
@@ -21,23 +21,28 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
+	try {
+		let page = Number(url.searchParams.get('page') || '-');
 
-	const allGames = await getFreeEpicGames();
-	counter.max = allGames.length;
+		const allGames = await getFreeEpicGames();
+		counter.max = allGames.length;
 
-	if (!isFinite(page)) {
-		page = counter.increment();
+		if (!isFinite(page)) {
+			page = counter.increment();
+		}
+
+		const games = counter.sliceAndWrap(allGames, MAX_ITEMS, page);
+		const dataParent = await parent();
+
+		return {
+			games,
+			nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+			prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
 	}
-
-	const games = counter.sliceAndWrap(allGames, MAX_ITEMS, page);
-	const dataParent = await parent();
-
-	return {
-		games,
-		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
-	};
 };
 
 let games: Game[] = [];

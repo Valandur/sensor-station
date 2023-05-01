@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 
+	import { paused } from '$lib/stores/screen';
 	import { swipe } from '$lib/swipe';
 	import type { NewsFeedItem } from '$lib/models/NewsFeedItem';
 
@@ -10,10 +11,17 @@
 	export let data: PageData;
 	$: items = data.items;
 
+	let wasPaused = false;
 	let selectedItem: NewsFeedItem | null = null;
 
 	function select(item: NewsFeedItem | null) {
 		selectedItem = item;
+		if (item) {
+			wasPaused = $paused;
+			paused.set(true);
+		} else {
+			paused.set(wasPaused);
+		}
 	}
 </script>
 

@@ -1,6 +1,6 @@
 import { differenceInSeconds, isAfter } from 'date-fns';
 import { env } from '$env/dynamic/private';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import superagent from 'superagent';
 
 import { getIcon } from '$lib/models/WeatherIcon';
@@ -22,17 +22,22 @@ export const load: LayoutServerLoad = async () => {
 		throw redirect(302, '/screens');
 	}
 
-	const { alerts, hourly, daily } = await getWeather();
+	try {
+		const { alerts, hourly, daily } = await getWeather();
 
-	const now = new Date();
-	return {
-		alerts,
-		hourly: hourly
-			.filter((f) => isAfter(f.ts, now))
-			.filter((_, i) => i % 2 === 0)
-			.slice(0, NUM_FORECASTS),
-		daily: daily.slice(0, NUM_FORECASTS)
-	};
+		const now = new Date();
+		return {
+			alerts,
+			hourly: hourly
+				.filter((f) => isAfter(f.ts, now))
+				.filter((_, i) => i % 2 === 0)
+				.slice(0, NUM_FORECASTS),
+			daily: daily.slice(0, NUM_FORECASTS)
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
+	}
 };
 
 let alerts: WeatherAlert[] = [];

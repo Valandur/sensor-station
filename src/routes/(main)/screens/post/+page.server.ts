@@ -2,7 +2,7 @@
 import { decode } from 'html-entities';
 import { differenceInSeconds } from 'date-fns';
 import { env } from '$env/dynamic/private';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import superagent from 'superagent';
 
 import { Counter } from '$lib/counter';
@@ -34,29 +34,34 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
+	try {
+		let page = Number(url.searchParams.get('page') || '-');
 
-	await updateTexts();
+		await updateTexts();
 
-	const shipments = await getShipments();
-	counter.max = shipments.length;
+		const shipments = await getShipments();
+		counter.max = shipments.length;
 
-	if (!isFinite(page)) {
-		page = counter.increment();
+		if (!isFinite(page)) {
+			page = counter.increment();
+		}
+
+		const shipment = shipments[page];
+		const dataParent = await parent();
+
+		if (!shipment && dataParent.skipScreen) {
+			throw redirect(302, dataParent.skipScreen);
+		}
+
+		return {
+			shipment,
+			nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+			prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+		};
+	} catch (err: unknown) {
+		console.error(err);
+		throw error(500, (err as Error).message);
 	}
-
-	const shipment = shipments[page];
-	const dataParent = await parent();
-
-	if (!shipment && dataParent.skipScreen) {
-		throw redirect(302, dataParent.skipScreen);
-	}
-
-	return {
-		shipment,
-		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
-	};
 };
 
 let shipments: PostShipment[] = [];

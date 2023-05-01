@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-import { ENABLED, getStatus } from '$lib/stores/modem';
+import { ENABLED, getStatus } from '$lib/server/modem';
 
 import type { PageServerLoad } from './$types';
 

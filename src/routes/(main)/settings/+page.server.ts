@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 
-import { getScreens, saveScreens } from '$lib/stores/screen';
+import { getScreens, saveScreens } from '$lib/server/screen';
 import type { Screen } from '$lib/models/Screen';
 
 import type { Actions, PageServerLoad } from './$types';
