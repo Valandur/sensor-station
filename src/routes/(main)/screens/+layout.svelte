@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { fade, slide } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
 	import de from 'date-fns/locale/de/index';
@@ -35,9 +35,8 @@
 		}
 	}
 
-	onDestroy(() => {
-		reset();
-	});
+	beforeNavigate(() => reset());
+	onDestroy(() => reset());
 
 	function togglePause() {
 		paused.update((p) => !p);
