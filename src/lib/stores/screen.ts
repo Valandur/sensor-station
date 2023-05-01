@@ -6,10 +6,10 @@ export const progress = tweened(0);
 let timer: NodeJS.Timeout | null = null;
 
 export function reset(resetProgress = true) {
+	if (resetProgress) {
+		progress.set(0, { duration: 0 });
+	}
 	if (timer) {
-		if (resetProgress) {
-			progress.set(0, { duration: 0 });
-		}
 		clearTimeout(timer);
 		timer = null;
 	}
