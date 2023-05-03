@@ -12,7 +12,7 @@ import {
 } from '$lib/models/BatteryInfo';
 
 export const ENABLED = env.BATTERY_ENABLED === '1';
-const CACHE_TIME = Number(env.CALENDAR_CACHE_TIME);
+const CACHE_TIME = Number(env.BATTERY_CACHE_TIME);
 const BUS_NUMBER = Number(env.BATTERY_BUS_NUMBER);
 const I2C_ADDRESS = Number(env.BATTERY_I2C_ADDRESS);
 const RECORDING_INTERVAL = Number(env.BATTERY_RECORDING_INTERVAL);
