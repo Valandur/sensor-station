@@ -1,0 +1,38 @@
+import { error, redirect } from '@sveltejs/kit';
+
+import { Counter } from '$lib/counter';
+import { ENABLED, getFreeEpicGames } from '$lib/server/games';
+
+import type { PageServerLoad } from './$types';
+
+const MAX_ITEMS = 2;
+
+const counter = new Counter();
+
+export const load: PageServerLoad = async ({ url, parent }) => {
+	if (!ENABLED) {
+		throw redirect(302, '/screens');
+	}
+
+	let page = Number(url.searchParams.get('page') || '-');
+
+	const allGames = await getFreeEpicGames().catch((err) => error(500, (err as Error).message));
+	if (!('length' in allGames)) {
+		console.error(allGames);
+		throw allGames;
+	}
+
+	counter.max = allGames.length;
+	if (!isFinite(page)) {
+		page = counter.increment();
+	}
+
+	const games = counter.sliceAndWrap(allGames, MAX_ITEMS, page);
+	const dataParent = await parent();
+
+	return {
+		games,
+		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+	};
+};

@@ -1,0 +1,38 @@
+import { env } from '$env/dynamic/private';
+import { error, redirect } from '@sveltejs/kit';
+
+import { getFeed } from '$lib/server/news';
+
+import type { PageServerLoad } from './$types';
+
+const ENABLED = env.NEWS_ENABLED === '1';
+const MAX_ITEMS = 3;
+
+export const load: PageServerLoad = async ({ url, params, parent }) => {
+	if (!ENABLED) {
+		throw redirect(302, '/screens');
+	}
+
+	const feedId = params.feed;
+	let page = Number(url.searchParams.get('page') || '-');
+
+	const feed = await getFeed(feedId).catch((err) => error(500, (err as Error).message));
+	if (!('items' in feed)) {
+		console.error(feed);
+		throw feed;
+	}
+
+	if (!isFinite(page)) {
+		page = feed.counter.increment();
+	}
+
+	const items = feed.counter.sliceAndWrap(feed.items, MAX_ITEMS, page);
+	const dataParent = await parent();
+
+	return {
+		feedId,
+		items,
+		nextPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page - 1)}`
+	};
+};
