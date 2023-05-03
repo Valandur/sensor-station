@@ -3,11 +3,7 @@ import { dev } from '$app/environment';
 import { differenceInSeconds, isSameSecond, isValid, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 
-export interface Recording {
-	ts: Date;
-	temp: number;
-	rh: number;
-}
+import type { Recording } from '$lib/models/Recording';
 
 interface DhtSensor {
 	read(type: number, pin: number): Promise<{ temperature: number; humidity: number }>;
