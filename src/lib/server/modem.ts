@@ -2,9 +2,9 @@ import { dev } from '$app/environment';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 import { find } from 'geo-tz';
-import { stat } from 'fs/promises';
-import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
+import { SerialPort } from 'serialport';
+import { stat } from 'fs/promises';
 
 import type { ModemInfo } from '$lib/models/ModemInfo';
 
@@ -34,70 +34,74 @@ export async function getStatus(): Promise<ModemInfo | null> {
 		return dev ? getMockStatus() : null;
 	}
 
-	let operator: string | null = null;
-	const copsResp = await commander.send('AT+COPS?');
-	const copsMatch = COPS.exec(copsResp);
-	if (copsMatch) {
-		operator = copsMatch[3] || null;
+	try {
+		let operator: string | null = null;
+		const copsResp = await commander.send('AT+COPS?');
+		const copsMatch = COPS.exec(copsResp);
+		if (copsMatch) {
+			operator = copsMatch[3] || null;
+		}
+
+		let signal: number | null = null;
+		const csqResp = await commander.send('AT+CSQ');
+		const csqMatch = CSQ.exec(csqResp);
+		if (csqMatch) {
+			const rawSig = Number(csqMatch[1]);
+			signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
+		}
+
+		let time: Date | null = null;
+		let tzOffset: string | null = null;
+		const cclkResp = await commander.send('AT+CCLK?');
+		const cclkMatch = CCLK.exec(cclkResp);
+		if (cclkMatch) {
+			const year = `${2000 + Number(cclkMatch[1])}`;
+			const month = `${Number(cclkMatch[2])}`.padStart(2, '0');
+			const day = `${Number(cclkMatch[3])}`.padStart(2, '0');
+			const hour = `${Number(cclkMatch[4])}`.padStart(2, '0');
+			const minute = `${Number(cclkMatch[5])}`.padStart(2, '0');
+			const second = `${Number(cclkMatch[6])}`.padStart(2, '0');
+			const rawTz = Number(cclkMatch[7]) * 15;
+
+			const tzSign = rawTz > 0 ? '+' : '-';
+			const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
+			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
+			tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
+
+			time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`);
+		}
+
+		let lat: number | null = null;
+		let lng: number | null = null;
+		let tzName: string | null = null;
+		const gpsResp = await commander.send('AT+CGPSINFO');
+		const gpsMatch = GPS.exec(gpsResp);
+		if (gpsMatch) {
+			lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
+			lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
+			tzName = find(lat, lng)[0] || null;
+		}
+
+		const newStatus: ModemInfo = {
+			ts: new Date(),
+			isConnected: true,
+			operator,
+			signal,
+			time,
+			tzOffset,
+			lat,
+			lng,
+			tzName,
+			cached: false
+		};
+
+		status = newStatus;
+		cachedAt = new Date();
+
+		return newStatus;
+	} finally {
+		await commander.close();
 	}
-
-	let signal: number | null = null;
-	const csqResp = await commander.send('AT+CSQ');
-	const csqMatch = CSQ.exec(csqResp);
-	if (csqMatch) {
-		const rawSig = Number(csqMatch[1]);
-		signal = rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
-	}
-
-	let time: Date | null = null;
-	let tzOffset: string | null = null;
-	const cclkResp = await commander.send('AT+CCLK?');
-	const cclkMatch = CCLK.exec(cclkResp);
-	if (cclkMatch) {
-		const year = `${2000 + Number(cclkMatch[1])}`;
-		const month = `${Number(cclkMatch[2])}`.padStart(2, '0');
-		const day = `${Number(cclkMatch[3])}`.padStart(2, '0');
-		const hour = `${Number(cclkMatch[4])}`.padStart(2, '0');
-		const minute = `${Number(cclkMatch[5])}`.padStart(2, '0');
-		const second = `${Number(cclkMatch[6])}`.padStart(2, '0');
-		const rawTz = Number(cclkMatch[7]) * 15;
-
-		const tzSign = rawTz > 0 ? '+' : '-';
-		const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
-		const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
-		tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
-
-		time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`);
-	}
-
-	let lat: number | null = null;
-	let lng: number | null = null;
-	let tzName: string | null = null;
-	const gpsResp = await commander.send('AT+CGPSINFO');
-	const gpsMatch = GPS.exec(gpsResp);
-	if (gpsMatch) {
-		lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
-		lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
-		tzName = find(lat, lng)[0] || null;
-	}
-
-	const newStatus: ModemInfo = {
-		ts: new Date(),
-		isConnected: true,
-		operator,
-		signal,
-		time,
-		tzOffset,
-		lat,
-		lng,
-		tzName,
-		cached: false
-	};
-
-	status = newStatus;
-	cachedAt = new Date();
-
-	return newStatus;
 }
 
 async function openConnection(): Promise<Commander | null> {
@@ -171,8 +175,13 @@ class Commander {
 	}
 
 	public async close(): Promise<void> {
-		return new Promise<void>((resolve, reject) =>
-			this.port.close((err) => (err ? reject(err) : resolve()))
+		return new Promise<void>((resolve) =>
+			this.port.close((err) => {
+				if (err) {
+					console.error('Error while closing', err);
+				}
+				resolve();
+			})
 		);
 	}
 }
