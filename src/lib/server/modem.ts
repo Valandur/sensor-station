@@ -32,7 +32,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 
 	const commander = ENABLED ? await openConnection() : null;
 	if (!commander) {
-		return dev ? getMockStatus() : null;
+		return ENABLED && dev ? getMockStatus() : null;
 	}
 
 	try {

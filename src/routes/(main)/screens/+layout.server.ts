@@ -8,7 +8,7 @@ import type { Screen } from '$lib/models/Screen';
 
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ url }) => {
+export const load: LayoutServerLoad = async ({ url, depends }) => {
 	const index = Number(url.searchParams.get('screen') || '-');
 	const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 	const urlScreenName = url.pathname;
@@ -18,6 +18,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
 		getModemStatus().catch(() => null),
 		getBatteryStatus().catch(() => null)
 	]);
+
+	depends('screens:layout');
 
 	if (urlScreenName.length <= 8 && screens.length > 0) {
 		throw redirect(302, getScreenUrl(0, dir));
@@ -33,7 +35,6 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	const nextScreen = idx !== null ? getScreenUrl(idx + 1, 'next') : null;
 	const prevScreen = idx !== null ? getScreenUrl(idx - 1, 'prev') : null;
 	const skipScreen = idx !== null ? (dir === 'next' ? nextScreen : prevScreen) : null;
-
 	const holiday = getHoliday();
 
 	return {

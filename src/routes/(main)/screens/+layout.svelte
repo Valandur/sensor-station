@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { fade, slide } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { beforeNavigate, goto, invalidate } from '$app/navigation';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
 	import de from 'date-fns/locale/de/index';
@@ -13,30 +13,44 @@
 
 	import type { LayoutData } from './$types';
 
-	const UPDATE_INTERVAL = 20000;
-	const TIMEZONE = 'Europe/Zurich';
+	const SWITCH_INTERVAL = 20000;
+	const UPDATE_INTERVAL = 60000;
 
 	export let data: LayoutData;
 
 	let showToolbar = false;
+	let timer: ReturnType<typeof setInterval> | null = null;
 
-	$: timeStr = formatInTimeZone($time, TIMEZONE, 'HH:mm', { locale: de });
-	$: date = formatInTimeZone($time, TIMEZONE, 'd. MMMM', { locale: de });
-	$: dateSub = formatInTimeZone($time, TIMEZONE, 'eeee', { locale: de }).replace('.', '');
+	$: timezone = data.modem?.tzName || data.modem?.tzOffset || 'Europe/Zurich';
+	$: timeStr = formatInTimeZone($time, timezone, 'HH:mm', { locale: de });
+	$: date = formatInTimeZone($time, timezone, 'd. MMMM', { locale: de });
+	$: dateSub = formatInTimeZone($time, timezone, 'eeee', { locale: de }).replace('.', '');
 	$: modemStatus = data.modem;
 	$: batteryStatus = data.battery;
 	$: holiday = data.holiday;
 
 	$: if (browser) {
 		reset();
+		if (timer) {
+			clearInterval(timer);
+			timer = null;
+		}
 		if (!$paused && data.nextScreen) {
 			const next = data.nextScreen;
-			start(() => goto(next), UPDATE_INTERVAL);
+			start(() => goto(next), SWITCH_INTERVAL);
+		} else if ($paused) {
+			timer = setInterval(() => invalidate('screens:layout'), UPDATE_INTERVAL);
 		}
 	}
 
 	beforeNavigate(() => reset(false));
-	onDestroy(() => reset());
+	onDestroy(() => {
+		if (timer) {
+			clearInterval(timer);
+			timer = null;
+		}
+		reset();
+	});
 
 	function togglePause() {
 		paused.update((p) => !p);
@@ -151,7 +165,12 @@
 	</div>
 
 	{#if showToolbar}
-		<div class="overlay" transition:fade={{ duration: 500 }} />
+		<div
+			class="overlay"
+			transition:fade={{ duration: 500 }}
+			on:click={() => (showToolbar = false)}
+			on:keypress={() => (showToolbar = false)}
+		/>
 		<div class="toolbar row p-2 bg-dark" transition:slide={{ duration: 500 }}>
 			<div class="col-auto">
 				<a class="btn btn-theme" href="/settings">
