@@ -169,7 +169,7 @@ class Commander {
 				response += line;
 				if (RESPONSE_CODES.some((code) => line.includes(code))) {
 					this.parser.off('data', onData);
-					resolve(response);
+					resolve(response.trim());
 				}
 			};
 			this.parser.on('data', onData);
