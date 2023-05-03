@@ -115,7 +115,7 @@ async function openBus(): Promise<PromisifiedBus | null> {
 
 	try {
 		const str = 'i2c';
-		const i2c = await import(`${str}-bus`);
+		const i2c = await import(/* @vite-ignore */ `${str}-bus`);
 		return i2c.openPromisified(BUS_NUMBER);
 	} catch (err) {
 		console.error(err);

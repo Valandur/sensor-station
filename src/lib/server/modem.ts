@@ -3,13 +3,14 @@ import { differenceInSeconds, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 import { find } from 'geo-tz';
 import { stat } from 'fs/promises';
-import type SerialCommander from '@westh/serial-commander';
+import { SerialPort } from 'serialport';
+import { ReadlineParser } from '@serialport/parser-readline';
 
 import type { ModemInfo } from '$lib/models/ModemInfo';
 
 export const ENABLED = env.MODEM_ENABLED === '1';
 const CACHE_TIME = Number(env.MODEM_CACHE_TIME);
-const DEVICE_PATH = env.MODEM_DEVICE_PATH;
+const DEVICE_PATH = env.MODEM_DEVICE_PATH || '/dev/ttyUSB2';
 const BASE_LAT = Number(env.MODEM_BASE_LAT);
 const BASE_LNG = Number(env.MODEM_BASE_LNG);
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -34,14 +35,14 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	}
 
 	let operator: string | null = null;
-	const { response: copsResp } = await commander.send('AT+COPS?');
+	const copsResp = await commander.send('AT+COPS?');
 	const copsMatch = COPS.exec(copsResp);
 	if (copsMatch) {
 		operator = copsMatch[3] || null;
 	}
 
 	let signal: number | null = null;
-	const { response: csqResp } = await commander.send('AT+CSQ');
+	const csqResp = await commander.send('AT+CSQ');
 	const csqMatch = CSQ.exec(csqResp);
 	if (csqMatch) {
 		const rawSig = Number(csqMatch[1]);
@@ -50,7 +51,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 
 	let time: Date | null = null;
 	let tzOffset: string | null = null;
-	const { response: cclkResp } = await commander.send('AT+CCLK?');
+	const cclkResp = await commander.send('AT+CCLK?');
 	const cclkMatch = CCLK.exec(cclkResp);
 	if (cclkMatch) {
 		const year = `${2000 + Number(cclkMatch[1])}`;
@@ -72,7 +73,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	let lat: number | null = null;
 	let lng: number | null = null;
 	let tzName: string | null = null;
-	const { response: gpsResp } = await commander.send('AT+CGPSINFO');
+	const gpsResp = await commander.send('AT+CGPSINFO');
 	const gpsMatch = GPS.exec(gpsResp);
 	if (gpsMatch) {
 		lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
@@ -99,22 +100,17 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	return newStatus;
 }
 
-async function openConnection(): Promise<SerialCommander | null> {
+async function openConnection(): Promise<Commander | null> {
 	if (!(await checkDevice())) {
 		return null;
 	}
 
 	try {
-		const str = '@westh/';
-		const SerialCommander = await import(`${str}serial-commander`);
-		const commander: SerialCommander = new SerialCommander.default({
-			port: DEVICE_PATH,
-			defaultDelay: 10,
-			disableLog: true
-		});
-		const { response } = await commander.send('AT?');
-		if (response !== 'OK') {
-			throw new Error(`Modem is reporting status ${response}`);
+		const commander = new Commander(DEVICE_PATH, 115200);
+		await commander.open();
+		const res = await commander.send('AT');
+		if (res !== 'OK') {
+			throw new Error(`Modem is reporting status ${res}`);
 		}
 		return commander;
 	} catch (err) {
@@ -146,4 +142,37 @@ function getMockStatus(): ModemInfo {
 		tzName: find(BASE_LAT, BASE_LNG)[0] || 'Unknown',
 		cached: Math.random() > 0.5
 	};
+}
+
+class Commander {
+	private readonly port: SerialPort;
+	private readonly parser: ReadlineParser;
+
+	public constructor(devicePath: string, baudRate: number) {
+		this.port = new SerialPort({
+			path: devicePath,
+			baudRate: baudRate,
+			autoOpen: false
+		});
+		this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\n' }));
+	}
+
+	public async send(data: string): Promise<string> {
+		return new Promise<string>((resolve, reject) => {
+			this.parser.once('data', (line: string) => resolve(line));
+			this.port.write(`${data}\r\n`, (err) => err && reject(err));
+		});
+	}
+
+	public async open(): Promise<void> {
+		return new Promise<void>((resolve, reject) =>
+			this.port.open((err) => (err ? reject(err) : resolve()))
+		);
+	}
+
+	public async close(): Promise<void> {
+		return new Promise<void>((resolve, reject) =>
+			this.port.close((err) => (err ? reject(err) : resolve()))
+		);
+	}
 }

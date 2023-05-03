@@ -216,7 +216,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "f5cwkz"
+  version_hash: "kakkqf"
 };
 function get_hooks() {
   return import('./chunks/hooks.server-48e88299.js');
@@ -3818,8 +3818,7 @@ class Server {
         const module = await get_hooks();
         this.#options.hooks = {
           handle: module.handle || (({ event, resolve }) => resolve(event)),
-          // @ts-expect-error
-          handleError: module.handleError || (({ error: error2 }) => console.error(error2?.stack)),
+          handleError: module.handleError || (({ error: error2 }) => console.error(error2)),
           handleFetch: module.handleFetch || (({ request, fetch: fetch2 }) => fetch2(request))
         };
       } catch (error2) {
