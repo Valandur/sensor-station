@@ -34,14 +34,14 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	}
 
 	let operator: string | null = null;
-	const { response: copsResp } = await commander.send('AT+COPS?').catch(() => ({ response: '' }));
+	const { response: copsResp } = await commander.send('AT+COPS?');
 	const copsMatch = COPS.exec(copsResp);
 	if (copsMatch) {
 		operator = copsMatch[3] || null;
 	}
 
 	let signal: number | null = null;
-	const { response: csqResp } = await commander.send('AT+CSQ').catch(() => ({ response: '' }));
+	const { response: csqResp } = await commander.send('AT+CSQ');
 	const csqMatch = CSQ.exec(csqResp);
 	if (csqMatch) {
 		const rawSig = Number(csqMatch[1]);
@@ -50,7 +50,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 
 	let time: Date | null = null;
 	let tzOffset: string | null = null;
-	const { response: cclkResp } = await commander.send('AT+CCLK?').catch(() => ({ response: '' }));
+	const { response: cclkResp } = await commander.send('AT+CCLK?');
 	const cclkMatch = CCLK.exec(cclkResp);
 	if (cclkMatch) {
 		const year = `${2000 + Number(cclkMatch[1])}`;
@@ -72,7 +72,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	let lat: number | null = null;
 	let lng: number | null = null;
 	let tzName: string | null = null;
-	const { response: gpsResp } = await commander.send('AT+CGPSINFO').catch(() => ({ response: '' }));
+	const { response: gpsResp } = await commander.send('AT+CGPSINFO');
 	const gpsMatch = GPS.exec(gpsResp);
 	if (gpsMatch) {
 		lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
