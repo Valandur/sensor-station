@@ -17,7 +17,8 @@ const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
 
-const STATE_PATH = `data/modem.json`;
+// TODO: Cache modem status
+// const STATE_PATH = `data/modem.json`;
 
 let status: ModemInfo | null = null;
 let cachedAt = new Date(0);
@@ -33,14 +34,14 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	}
 
 	let operator: string | null = null;
-	const { response: copsResp } = await commander.send('AT+COPS?');
+	const { response: copsResp } = await commander.send('AT+COPS?').catch(() => ({ response: '' }));
 	const copsMatch = COPS.exec(copsResp);
 	if (copsMatch) {
 		operator = copsMatch[3] || null;
 	}
 
 	let signal: number | null = null;
-	const { response: csqResp } = await commander.send('AT+CSQ');
+	const { response: csqResp } = await commander.send('AT+CSQ').catch(() => ({ response: '' }));
 	const csqMatch = CSQ.exec(csqResp);
 	if (csqMatch) {
 		const rawSig = Number(csqMatch[1]);
@@ -49,7 +50,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 
 	let time: Date | null = null;
 	let tzOffset: string | null = null;
-	const { response: cclkResp } = await commander.send('AT+CCLK?');
+	const { response: cclkResp } = await commander.send('AT+CCLK?').catch(() => ({ response: '' }));
 	const cclkMatch = CCLK.exec(cclkResp);
 	if (cclkMatch) {
 		const year = `${2000 + Number(cclkMatch[1])}`;
@@ -71,7 +72,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	let lat: number | null = null;
 	let lng: number | null = null;
 	let tzName: string | null = null;
-	const { response: gpsResp } = await commander.send('AT+CGPSINFO');
+	const { response: gpsResp } = await commander.send('AT+CGPSINFO').catch(() => ({ response: '' }));
 	const gpsMatch = GPS.exec(gpsResp);
 	if (gpsMatch) {
 		lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
@@ -106,11 +107,16 @@ async function openConnection(): Promise<SerialCommander | null> {
 	try {
 		const str = '@westh/';
 		const SerialCommander = await import(`${str}serial-commander`);
-		return new SerialCommander.default({
+		const commander: SerialCommander = new SerialCommander.default({
 			port: DEVICE_PATH,
 			defaultDelay: 10,
 			disableLog: true
 		});
+		const { response } = await commander.send('AT?');
+		if (response !== 'OK') {
+			throw new Error(`Modem is reporting status ${response}`);
+		}
+		return commander;
 	} catch (err) {
 		console.error(err);
 		return null;
