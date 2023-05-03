@@ -17,6 +17,7 @@ const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
+const RESPONSE_CODES = ['OK', 'ERROR'];
 
 // TODO: Cache modem status
 // const STATE_PATH = `data/modem.json`;
@@ -163,8 +164,21 @@ class Commander {
 
 	public async send(data: string): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
-			this.parser.once('data', (line: string) => resolve(line));
-			this.port.write(`${data}\r\n`, (err) => err && reject(err));
+			let response = '';
+			const onData = (line: string) => {
+				response += line;
+				if (RESPONSE_CODES.some((code) => line.includes(code))) {
+					this.parser.off('data', onData);
+					resolve(response);
+				}
+			};
+			this.parser.on('data', onData);
+			this.port.write(`${data}\r\n`, (err) => {
+				if (err) {
+					this.parser.off('data', onData);
+					reject(err);
+				}
+			});
 		});
 	}
 
