@@ -3,6 +3,7 @@ import { differenceInSeconds, parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 import { find } from 'geo-tz';
 import { stat } from 'fs/promises';
+import type SerialCommander from '@westh/serial-commander';
 
 import type { ModemInfo } from '$lib/models/ModemInfo';
 
@@ -97,13 +98,14 @@ export async function getStatus(): Promise<ModemInfo | null> {
 	return newStatus;
 }
 
-async function openConnection() {
+async function openConnection(): Promise<SerialCommander | null> {
 	if (!(await checkDevice())) {
 		return null;
 	}
 
 	try {
-		const SerialCommander = await import('@westh/serial-commander');
+		const str = '@westh/';
+		const SerialCommander = await import(`${str}serial-commander`);
 		return new SerialCommander.default({
 			port: DEVICE_PATH,
 			defaultDelay: 10,

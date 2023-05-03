@@ -2,7 +2,6 @@ import { appendFile, stat } from 'fs/promises';
 import { dev } from '$app/environment';
 import { differenceInSeconds, isSameSecond } from 'date-fns';
 import { env } from '$env/dynamic/private';
-import { log } from 'console';
 import type { PromisifiedBus } from 'i2c-bus';
 
 import {
@@ -115,7 +114,8 @@ async function openBus(): Promise<PromisifiedBus | null> {
 	}
 
 	try {
-		const i2c = await import('i2c-bus');
+		const str = 'i2c';
+		const i2c = await import(`${str}-bus`);
 		return i2c.openPromisified(BUS_NUMBER);
 	} catch (err) {
 		console.error(err);
@@ -292,7 +292,7 @@ async function record() {
 
 		lastRecordedTs = recordStatus.ts;
 
-		log(`Recorded status`, recordStatus.ts, recordStatus.state, recordStatus.charge);
+		console.log(`Recorded status`, recordStatus.ts, recordStatus.state, recordStatus.charge);
 	} catch (err) {
 		console.error(err);
 	}
