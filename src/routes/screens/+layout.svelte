@@ -17,10 +17,7 @@
 	const UPDATE_INTERVAL = 60000;
 
 	export let data: LayoutData;
-
-	let showToolbar = false;
-	let timer: ReturnType<typeof setInterval> | null = null;
-
+	$: index = data.index;
 	$: timezone = data.modem?.tzName || data.modem?.tzOffset || 'Europe/Zurich';
 	$: timeStr = formatInTimeZone($time, timezone, 'HH:mm', { locale: de });
 	$: date = formatInTimeZone($time, timezone, 'd. MMMM', { locale: de });
@@ -28,6 +25,9 @@
 	$: modemStatus = data.modem;
 	$: batteryStatus = data.battery;
 	$: holiday = data.holiday;
+
+	let showToolbar = false;
+	let timer: ReturnType<typeof setInterval> | null = null;
 
 	$: if (browser) {
 		reset();
@@ -153,7 +153,7 @@
 	</div>
 
 	<div class="row flex-fill position-relative">
-		{#key data.index}
+		{#key index}
 			<div
 				class="container h-100 w-100 m-0 p-0 position-absolute"
 				style:overflow="hidden"
@@ -213,6 +213,12 @@
 {/if}
 
 <style lang="scss">
+	:global(html),
+	:global(body) {
+		overflow: hidden;
+		overscroll-behavior: none;
+	}
+
 	h1 {
 		font-size: 5rem;
 		line-height: 4rem;

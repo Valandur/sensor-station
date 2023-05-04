@@ -9,12 +9,13 @@ export const load: PageServerLoad = async ({ params }) => {
 		throw redirect(302, '/screens');
 	}
 
-	const { head, main, scripts } = await getArticle(params.article);
+	const feedId = params.feed;
+	const articleId = params.article;
+
+	const article = await getArticle(feedId, articleId);
 
 	return {
 		simple: SIMPLE_DETAILS,
-		head,
-		main,
-		scripts
+		article
 	};
 };

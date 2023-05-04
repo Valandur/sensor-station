@@ -9,7 +9,10 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	$: feedId = data.feedId;
 	$: items = data.items;
+	$: prevPage = data.prevPage;
+	$: nextPage = data.nextPage;
 
 	let wasPaused = false;
 	let selectedItem: NewsFeedItem | null = null;
@@ -28,11 +31,11 @@
 <div
 	class="container-fluid h-100 m-0 d-flex flex-column"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
+	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if selectedItem}
 		<div class="details" transition:fade={{ duration: 500 }}>
-			<iframe title="Story" src={`/screens/news/${data.feedId}/${selectedItem.link}`} />
+			<iframe title="Story" src={`/screens/news/${feedId}/${selectedItem.id}`} />
 			<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
 				<i class="icofont-ui-close" />
 			</button>
@@ -42,14 +45,14 @@
 	{#each items as item}
 		<div class="row mb-1 flex-1" on:click={() => select(item)} on:keypress={() => select(item)}>
 			<div class="col-3 me-1 image">
-				<img alt="Thumbnail" src={item.img} />
+				<img alt="Thumbnail" src={`/data/news/${item.image}`} />
 			</div>
 			<div class="col p-1 abstract">{item.title}</div>
 		</div>
 	{/each}
 </div>
 
-<style>
+<style lang="scss">
 	.abstract {
 		font-size: 1.4rem;
 		line-height: 1.4rem;
@@ -70,21 +73,21 @@
 		padding: 8px;
 		background-color: rgba(var(--bs-white-rgb), 0.2);
 		z-index: 1000;
+
+		.btn {
+			position: absolute;
+			top: 16px;
+			right: 16px;
+		}
 	}
 
 	.image {
 		position: relative;
 		overflow: hidden;
-	}
 
-	img {
-		position: absolute;
-		max-width: 100%;
-	}
-
-	.btn {
-		position: absolute;
-		top: 16px;
-		left: 16px;
+		img {
+			position: absolute;
+			max-width: 100%;
+		}
 	}
 </style>

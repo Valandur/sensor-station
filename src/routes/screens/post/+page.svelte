@@ -9,6 +9,8 @@
 
 	export let data: PageData;
 	$: shipment = data.shipment;
+	$: prevPage = data.prevPage;
+	$: nextPage = data.nextPage;
 
 	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;
@@ -22,7 +24,7 @@
 <div
 	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
+	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if shipment}
 		<div class="row">

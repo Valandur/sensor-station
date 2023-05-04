@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { getFeed } from '$lib/server/news';
 
@@ -16,11 +16,7 @@ export const load: PageServerLoad = async ({ url, params, parent }) => {
 	const feedId = params.feed;
 	let page = Number(url.searchParams.get('page') || '-');
 
-	const feed = await getFeed(feedId).catch((err) => error(500, (err as Error).message));
-	if (!('items' in feed)) {
-		console.error(feed);
-		throw feed;
-	}
+	const feed = await getFeed(feedId);
 
 	if (!isFinite(page)) {
 		page = feed.counter.increment();

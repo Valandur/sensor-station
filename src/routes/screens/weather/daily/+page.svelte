@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format, parseISO } from 'date-fns';
+	import { format } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import type { PageData } from './$types';

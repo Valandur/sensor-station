@@ -9,12 +9,14 @@
 
 	export let data: PageData;
 	$: games = data.games;
+	$: prevPage = data.prevPage;
+	$: nextPage = data.nextPage;
 </script>
 
 <div
 	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
+	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	<div class="row row-cols-2">
 		{#each games as game}
@@ -28,7 +30,7 @@
 					</div>
 
 					<div class="card-body p-1 overflow-hidden">
-						<img src={game.image} class="card-img" alt={game.title} />
+						<img src={`/data/games/${game.image}`} class="card-img" alt={game.title} />
 					</div>
 
 					<div class="card-arrow">

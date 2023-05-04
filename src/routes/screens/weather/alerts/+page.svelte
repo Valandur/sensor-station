@@ -9,12 +9,14 @@
 
 	export let data: PageData;
 	$: alert = data.alert;
+	$: prevPage = data.prevPage;
+	$: nextPage = data.nextPage;
 </script>
 
 <div
 	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
+	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if alert}
 		<div class="row mh-100">

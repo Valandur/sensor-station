@@ -9,12 +9,14 @@
 
 	export let data: PageData;
 	$: events = data.events;
+	$: prevPage = data.prevPage;
+	$: nextPage = data.nextPage;
 </script>
 
 <div
 	class="container-fluid m-0 h-100"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? data.nextPage : data.prevPage)}
+	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#each events as event}
 		<div class="row">
