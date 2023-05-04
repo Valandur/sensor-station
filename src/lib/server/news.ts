@@ -1,102 +1,183 @@
+import { basename } from 'node:path';
+import { createHash } from 'node:crypto';
+import { createWriteStream } from 'node:fs';
 import { differenceInSeconds, parse } from 'date-fns';
-import { env } from '$env/dynamic/private';
+import { error } from '@sveltejs/kit';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { parse as parseHtml } from 'node-html-parser';
 import Parser from 'rss-parser';
 import superagent from 'superagent';
 
+import { env } from '$env/dynamic/private';
+
 import { Counter } from '$lib/counter';
+import { Logger } from '$lib/logger';
 import type { NewsFeed } from '$lib/models/NewsFeed';
 import type { NewsFeedItem } from '$lib/models/NewsFeedItem';
 
 export const ENABLED = env.NEWS_ENABLED === '1';
 export const SIMPLE_DETAILS = env.NEWS_SIMPLE_DETAILS === '1';
 const CACHE_TIME = Number(env.NEWS_CACHE_TIME);
+const CACHE_PATH = 'data/news';
 const DESCRIPTION_MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
-const MEDIA_MATCHER = /<div class="js-media"\W*?data-app-video/;
 
+const logger = new Logger('NEWS');
 const feeds: Map<string, NewsFeed> = new Map();
 
 export async function getFeed(feedId: string): Promise<NewsFeed> {
+	if (!ENABLED) {
+		throw error(400, { message: 'News module is disabled', key: 'news.disabled' });
+	}
+
 	let feed = feeds.get(feedId);
 	if (feed && differenceInSeconds(new Date(), feed.cachedAt) <= CACHE_TIME) {
+		logger.debug('Using cached feed', feedId);
 		return feed;
 	}
 
-	const parser = new Parser({ customFields: { item: ['description'] } });
-	const xmlFeed = await parser.parseURL(`https://www.srf.ch/news/bnf/rss/${feedId}`);
+	logger.info('Fetching feed', feedId);
+	const startTime = process.hrtime.bigint();
 
-	const items: NewsFeedItem[] = [];
-	const rawItems = xmlFeed.items
-		.filter((item) => !item.description.includes('Hier finden Sie'))
-		.slice(0, 10);
-	for (const item of rawItems) {
-		if (!item.guid || !item.title || !item.link) {
-			continue;
+	try {
+		await mkdir(`${CACHE_PATH}/${feedId}`, { recursive: true });
+
+		const { text } = await superagent.get(`https://www.srf.ch/news/bnf/rss/${feedId}`);
+
+		const parser = new Parser({ customFields: { item: ['description'] } });
+		const xmlFeed = await parser.parseString(text);
+
+		const items: NewsFeedItem[] = [];
+		const rawItems = xmlFeed.items
+			.filter((item) => !item.description.includes('Hier finden Sie'))
+			.slice(0, 10);
+
+		for (const item of rawItems) {
+			if (!item.guid || !item.title || !item.link) {
+				continue;
+			}
+
+			const match = DESCRIPTION_MATCHER.exec(item.description);
+			if (!match) {
+				continue;
+			}
+
+			const id = createHash('shake256', { outputLength: 8 }).update(item.guid).digest('hex');
+			const [, imgUrl, content] = match;
+			const date = item.pubDate
+				? parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date())
+				: new Date();
+
+			await mkdir(`${CACHE_PATH}/${feedId}/${id}`, { recursive: true });
+			const imgFileName = `${feedId}/${id}/${basename(imgUrl)}`;
+			const imgFilePath = `${CACHE_PATH}/${imgFileName}`;
+
+			if (!(await stat(imgFilePath).catch(() => null))) {
+				const stream = createWriteStream(imgFilePath);
+				superagent.get(`https://www.srf.ch/static/cms/images/${imgUrl}`).pipe(stream);
+				await new Promise<void>((resolve) => stream.on('finish', () => resolve()));
+			}
+
+			items.push({
+				id,
+				ts: date,
+				title: item.title,
+				link: item.link,
+				content: content || '',
+				image: imgFileName
+			});
 		}
 
-		const match = DESCRIPTION_MATCHER.exec(item.description);
-		if (!match) {
-			continue;
+		const articles = await readdir(`${CACHE_PATH}/${feedId}`);
+		for (const fileName of articles) {
+			if (!items.some((item) => item.id === fileName)) {
+				await rm(`${CACHE_PATH}/${feedId}/${fileName}`, { recursive: true, force: true });
+			}
 		}
 
-		const [, img, content] = match;
-		const date = item.pubDate
-			? parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date())
-			: new Date();
+		feed = { cachedAt: new Date(), items, counter: feed?.counter || new Counter() };
+		feed.counter.max = items.length;
+		feeds.set(feedId, feed);
 
-		items.push({
-			ts: date,
-			title: item.title,
-			link: Buffer.from(item.link, 'utf-8').toString('base64url'),
-			content: content || '',
-			img: `https://www.srf.ch/static/cms/images/${img}`
-		});
+		return feed;
+	} catch (err) {
+		throw logger.toSvelteError(err);
+	} finally {
+		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		logger.info('Updated', diffTime, 'ms');
 	}
-
-	feed = { cachedAt: new Date(), items, counter: feed?.counter || new Counter() };
-	feed.counter.max = items.length;
-	feeds.set(feedId, feed);
-	return feed;
 }
 
 export async function getArticle(
-	rawLink: string
-): Promise<{ head: string; main: string; scripts: string }> {
-	const link = Buffer.from(rawLink, 'base64url').toString('utf-8');
+	feedId: string,
+	articleId: string
+): Promise<{ head: string; body: string }> {
+	if (!ENABLED) {
+		throw error(400, { message: 'News module is disabled', key: 'news.disabled' });
+	}
 
-	const { text } = await superagent.get(link);
-	const page = text;
+	const article = feeds.get(feedId)?.items.find((item) => item.id === articleId);
+	if (!article) {
+		throw error(404, {
+			message: `Article ${articleId} in feed ${feedId} could not be found`,
+			key: 'news.articleNotFound',
+			params: { feedId, articleId }
+		});
+	}
 
-	const headStart = page.indexOf('<head>') + 6;
-	const headEnd = page.indexOf('<script>', headStart);
-	const head = page.substring(headStart, headEnd);
+	logger.debug('Updating article', feedId, articleId);
+	const startTime = process.hrtime.bigint();
 
-	const mainStart = SIMPLE_DETAILS
-		? page.indexOf('<section')
-		: page.indexOf('>', page.indexOf('<main')) + 1;
-	const mainEnd = page.indexOf('</section>', mainStart) + 7;
-	let main = page.substring(mainStart, mainEnd);
+	try {
+		let page = '';
 
-	if (SIMPLE_DETAILS) {
-		let mediaStart: number;
-		while ((mediaStart = MEDIA_MATCHER.exec(main)?.index || -1) >= 0) {
-			let mediaEnd = main.indexOf('<span class="h-offscreen">abspielen', mediaStart);
-			for (let i = 0; i < 4; i++) {
-				mediaEnd = main.indexOf('</div>', mediaEnd) + 6;
-			}
-			main = main.substring(0, mediaStart) + main.substring(mediaEnd);
+		const filePath = `${CACHE_PATH}/${feedId}/${articleId}/article.html`;
+		if (await stat(filePath).catch(() => null)) {
+			logger.debug('Using cached article file', feedId, articleId);
+			page = await readFile(filePath, 'utf-8');
+		} else {
+			logger.debug('Downloading article file', feedId, articleId);
+			const { text } = await superagent.get(article.link);
+			await writeFile(filePath, text, 'utf-8');
+			page = text;
 		}
-	}
 
-	let scripts = '';
-	if (!SIMPLE_DETAILS) {
-		const scriptStart = page.lastIndexOf('<span id="config__js"');
-		const scriptEnd = page.indexOf('</body>', scriptStart);
-		scripts = page.substring(scriptStart, scriptEnd);
-	}
+		const html = parseHtml(page);
+		const head = html.getElementsByTagName('head')[0];
+		for (const script of head.getElementsByTagName('script')) {
+			script.remove();
+		}
 
-	return {
-		head,
-		main,
-		scripts
-	};
+		const body = html.getElementsByTagName('body')[0];
+		const main = body.getElementsByTagName('main')[0];
+		const title = main.getElementsByTagName('header')[0];
+		const section = main.getElementsByTagName('section')[0];
+
+		if (SIMPLE_DETAILS) {
+			// strip divs
+			for (const div of body.getElementsByTagName('div')) {
+				div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
+			}
+			// strip images
+			for (const figure of body.getElementsByTagName('figure')) {
+				figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
+			}
+			// strip link in title
+			title.getElementById('skiplink__contentlink')?.remove();
+
+			body.childNodes = [title, section];
+		} else {
+			const header = main.getElementsByTagName('div')[0];
+			const section = main.getElementsByTagName('section')[0];
+			const config = body.getElementById('config__js');
+			const scripts = body.getElementsByTagName('script');
+			body.childNodes = [header, title, section, config, ...scripts];
+		}
+
+		return { head: head.innerHTML, body: body.innerHTML.toString() };
+	} catch (err) {
+		throw logger.toSvelteError(err, { embedded: true });
+	} finally {
+		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		logger.info('Updated article', feedId, articleId, diffTime, 'ms');
+	}
 }

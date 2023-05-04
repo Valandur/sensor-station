@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { decode } from 'html-entities';
 import { differenceInSeconds } from 'date-fns';
-import { env } from '$env/dynamic/private';
+import { error } from '@sveltejs/kit';
 import superagent from 'superagent';
 
+import { env } from '$env/dynamic/private';
+
+import { Logger } from '$lib/logger';
 import type { PostShipment } from '$lib/models/PostShipment';
 
 export const ENABLED = env.POST_ENABLED === '1';
@@ -23,140 +25,181 @@ const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/e
 const URL_TEXTS =
 	'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
 
+const logger = new Logger('POST');
+
 let shipments: PostShipment[] = [];
 let cachedAt = new Date(0);
 
 export async function getShipments(): Promise<PostShipment[]> {
+	if (!ENABLED) {
+		throw error(400, { message: 'Post module is disabled', key: 'post.disabled' });
+	}
+
 	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+		logger.debug('Using cached shipments');
 		return shipments;
 	}
 
-	await updateTexts();
+	logger.debug('Updating...');
+	const startTime = process.hrtime.bigint();
 
-	const agent = superagent.agent().withCredentials();
+	try {
+		await updateTexts();
 
-	const resPre = await request('pre', agent.get(URL_START).accept('html'));
+		const agent = superagent.agent().withCredentials();
 
-	let url = decode(FORM_REGEX.exec(resPre.text)![1]!.trim());
+		const resPre = await request('pre', agent.get(URL_START).accept('html'));
 
-	const resStart = await request(
-		'start',
-		agent.post(url).type('form').send({ externalIDP: 'externalIDP' })
-	);
-
-	const params = new URL(resStart.redirects.pop()!).searchParams.toString();
-	url = `${URL_INIT}?${params}`;
-
-	const resInit = await request('init', agent.post(url).type('json').send({}));
-
-	url = `${URL_LOGIN}?${params}`;
-	let authId = resInit.body.tokens.authId;
-	const loginData = { username: USERNAME, password: PASSWORD };
-
-	const resBasic = await request(
-		'basic',
-		agent.post(url).type('json').set('authId', authId).send(loginData)
-	);
-
-	authId = resBasic.body.tokens.authId;
-	url = `${URL_ANOMALY}?${params}`;
-
-	const resAnomaly = await request(
-		'anomaly',
-		agent.post(url).type('json').set('authId', authId).send({})
-	);
-
-	url = decodeURI(resAnomaly.body.nextAction.successUrl.trim());
-
-	const resAuth = await request('auth', agent.get(url).accept('html'));
-
-	url = decode(FORM_REGEX.exec(resAuth.text)![1]!.trim());
-
-	const resDone = await request('done', agent.post(url).type('form'));
-
-	url = decode(FORM_REGEX.exec(resDone.text)![1]!.trim());
-	let matches = INPUT_REGEX.exec(resDone.text);
-	const data: Record<string, string> = {};
-	while (matches !== null) {
-		data[matches[1]!] = matches[2];
-		matches = INPUT_REGEX.exec(resDone.text);
-	}
-
-	await request('post', agent.post(url).type('form').send(data));
-
-	const resUser = await request('user', agent.get(URL_USER));
-
-	url = `${URL_SHIPMENTS}/user/${resUser.body.userIdentifier}`;
-
-	const resShipmentReq = await request('shipments-req', agent.get(url));
-
-	url = `${URL_SHIPMENTS}/result/${resShipmentReq.body}`;
-
-	let resShipments = await request('shipments', agent.get(url));
-	for (let i = 0; i < 5; i++) {
-		if (resShipments.body.status === 'DONE') {
-			break;
+		let rawUrl = FORM_REGEX.exec(resPre.text)?.[1]?.trim();
+		if (!rawUrl) {
+			throw error(500, { message: 'Could not find login form', key: 'post.loginFormNotFound' });
 		}
-		await new Promise<void>((res) => setTimeout(res, 1000));
-		resShipments = await request('shipments', agent.get(url));
-	}
-	if (resShipments.body.status !== 'DONE') {
-		throw new Error('Shipment status did not change to DONE');
-	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const rawShipments: any[] = resShipments.body.shipments;
-	const newShipments: PostShipment[] = rawShipments
-		.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
-		.map(({ shipment }) => {
-			const phys = shipment.physicalProperties;
+		let url = decode(rawUrl);
 
-			return {
-				id: shipment.identity,
-				number: shipment.formattedShipmentNumber,
-				type: shipment.internationalProduct
-					? getText(shipment.internationalProduct)
-					: getText(shipment.product),
-				arrival: shipment.calculatedDeliveryDate || null,
-				status: null,
-				sender: shipment.debitorDescription,
-				dims: phys.dimension1
-					? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
-					: null,
-				weight: phys.weight || null
-			};
-		});
-
-	for (const shipment of newShipments) {
-		const events = await request(
-			`events-${shipment.number}`,
-			agent.get(URL_EVENTS.replace('$id', shipment.id))
+		const resStart = await request(
+			'start',
+			agent.post(url).type('form').send({ externalIDP: 'externalIDP' })
 		);
-		const event = events.body[0];
-		if (!event) {
-			continue;
+
+		const redir = resStart.redirects.pop();
+		if (!redir) {
+			throw error(500, { message: 'Missing redirect URL', key: 'post.missingRedirectUrl' });
 		}
 
-		shipment.status = getText(event.eventCode);
+		const params = new URL(redir).searchParams.toString();
+		url = `${URL_INIT}?${params}`;
+
+		const resInit = await request('init', agent.post(url).type('json').send({}));
+
+		url = `${URL_LOGIN}?${params}`;
+		let authId = resInit.body.tokens.authId;
+		const loginData = { username: USERNAME, password: PASSWORD };
+
+		const resBasic = await request(
+			'basic',
+			agent.post(url).type('json').set('authId', authId).send(loginData)
+		);
+
+		authId = resBasic.body.tokens.authId;
+		url = `${URL_ANOMALY}?${params}`;
+
+		const resAnomaly = await request(
+			'anomaly',
+			agent.post(url).type('json').set('authId', authId).send({})
+		);
+
+		url = decodeURI(resAnomaly.body.nextAction.successUrl.trim());
+
+		const resAuth = await request('auth', agent.get(url).accept('html'));
+
+		rawUrl = FORM_REGEX.exec(resAuth.text)?.[1]?.trim();
+		if (!rawUrl) {
+			throw error(500, { message: 'Could not find auth form', key: 'post.authFormNotFound' });
+		}
+
+		url = decode(rawUrl);
+
+		const resDone = await request('done', agent.post(url).type('form'));
+
+		rawUrl = FORM_REGEX.exec(resDone.text)?.[1]?.trim();
+		if (!rawUrl) {
+			throw error(500, { message: 'Could not find submit form', key: 'post.submitFormNotFound' });
+		}
+
+		url = decode(rawUrl);
+		let matches = INPUT_REGEX.exec(resDone.text);
+		const data: Record<string, string> = {};
+		while (matches !== null) {
+			data[matches[1]] = matches[2];
+			matches = INPUT_REGEX.exec(resDone.text);
+		}
+
+		await request('post', agent.post(url).type('form').send(data));
+
+		const resUser = await request('user', agent.get(URL_USER));
+
+		url = `${URL_SHIPMENTS}/user/${resUser.body.userIdentifier}`;
+
+		const resShipmentReq = await request('shipments-req', agent.get(url));
+
+		url = `${URL_SHIPMENTS}/result/${resShipmentReq.body}`;
+
+		let resShipments = await request('shipments', agent.get(url));
+		for (let i = 0; i < 5; i++) {
+			if (resShipments.body.status === 'DONE') {
+				break;
+			}
+			await new Promise<void>((res) => setTimeout(res, 1000));
+			resShipments = await request('shipments', agent.get(url));
+		}
+		if (resShipments.body.status !== 'DONE') {
+			throw error(500, {
+				message: 'Shipment query status did not change to DONE',
+				key: 'post.shipmentQueryFailed',
+				params: { status: resShipments.body.status }
+			});
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const rawShipments: any[] = resShipments.body.shipments;
+		const newShipments: PostShipment[] = rawShipments
+			.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
+			.map(({ shipment }) => {
+				const phys = shipment.physicalProperties;
+
+				return {
+					id: shipment.identity,
+					number: shipment.formattedShipmentNumber,
+					type: shipment.internationalProduct
+						? getText(shipment.internationalProduct)
+						: getText(shipment.product),
+					arrival: shipment.calculatedDeliveryDate || null,
+					status: null,
+					sender: shipment.debitorDescription,
+					dims: phys.dimension1
+						? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
+						: null,
+					weight: phys.weight || null
+				};
+			});
+
+		for (const shipment of newShipments) {
+			const events = await request(
+				`events-${shipment.number}`,
+				agent.get(URL_EVENTS.replace('$id', shipment.id))
+			);
+			const event = events.body[0];
+			if (!event) {
+				continue;
+			}
+
+			shipment.status = getText(event.eventCode);
+		}
+
+		shipments = newShipments;
+		cachedAt = new Date();
+
+		return shipments;
+	} catch (err) {
+		throw logger.toSvelteError(err);
+	} finally {
+		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		logger.info('Updated', diffTime, 'ms');
 	}
-
-	shipments = newShipments;
-	cachedAt = new Date();
-
-	return shipments;
 }
 
 async function request(name: string, req: superagent.SuperAgentRequest) {
-	console.log(name, req.method, req.url.substring(0, 150));
+	logger.debug(name, req.method, req.url.substring(0, 150));
 	try {
 		const resp = await req;
 		for (const url of resp.redirects) {
-			console.log(name, '-->', url.substring(0, 150));
+			logger.debug(name, '-->', url.substring(0, 150));
 		}
-		console.log(name, 'status:', resp.status);
+		logger.debug(name, 'status:', resp.status);
 		return resp;
 	} catch (err: unknown) {
-		console.error((err as superagent.ResponseError).response?.body);
+		logger.warn(name, (err as superagent.ResponseError).response?.body);
 		throw err;
 	}
 }
@@ -176,8 +219,8 @@ async function updateTexts() {
 	for (const [key, value] of Object.entries(texts)) {
 		const splits = key.split('.');
 		let entry = ['', shipmentTexts] as [string, RecursiveMap];
-		while (splits.length > 0) {
-			const split = splits.shift()!;
+		let split: string | undefined;
+		while ((split = splits.shift())) {
 			let subEntry = entry[1].get(split);
 			if (typeof subEntry === 'undefined') {
 				subEntry = ['', new Map()];

@@ -1,8 +1,10 @@
-import { appendFile, stat } from 'fs/promises';
-import { dev } from '$app/environment';
+import { appendFile, stat } from 'node:fs/promises';
 import { differenceInSeconds, isSameSecond } from 'date-fns';
+import { error } from '@sveltejs/kit';
+import type * as I2C from 'i2c-bus';
+
+import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import type { PromisifiedBus } from 'i2c-bus';
 
 import {
 	type BatteryInfo,
@@ -10,6 +12,7 @@ import {
 	BatteryPowerState,
 	BatteryChargingTemperature
 } from '$lib/models/BatteryInfo';
+import { Logger } from '$lib/logger';
 
 export const ENABLED = env.BATTERY_ENABLED === '1';
 const CACHE_TIME = Number(env.BATTERY_CACHE_TIME);
@@ -17,7 +20,6 @@ const BUS_NUMBER = Number(env.BATTERY_BUS_NUMBER);
 const I2C_ADDRESS = Number(env.BATTERY_I2C_ADDRESS);
 const RECORDING_INTERVAL = Number(env.BATTERY_RECORDING_INTERVAL);
 const RECORDINGS_PATH = 'data/battery_recordings.csv';
-
 const CMD_STATUS = 0x40;
 const CMD_FAULT_EVENT = 0x44;
 const CMD_CHARGE_LEVEL = 0x41;
@@ -31,6 +33,8 @@ const CMD_IO_CURRENT = 0x4f;
 // const CMD_LED_BLINK = 0x68;
 // const CMD_IO_PIN_ACCESS = 0x75;
 
+const logger = new Logger('BATTERY');
+
 let status: BatteryInfo | null = null;
 let cachedAt = new Date(0);
 
@@ -42,105 +46,105 @@ export function startRecording() {
 		return;
 	}
 
-	console.log('RECORDING BATTERY');
+	logger.info('Recording started', RECORDING_INTERVAL);
 	recordTimer = setInterval(() => record(), RECORDING_INTERVAL * 1000);
 }
 
 export function stopRecording() {
 	if (recordTimer) {
+		logger.info('Recording stopped');
+
 		clearInterval(recordTimer);
 		recordTimer = null;
 	}
 }
 
 export async function getStatus(): Promise<BatteryInfo | null> {
+	if (!ENABLED) {
+		throw error(400, { message: 'Battery module is disabled', key: 'battery.disabled' });
+	}
+
 	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+		logger.debug('Using cached status');
 		return status;
 	}
 
-	const bus = ENABLED ? await openBus() : null;
-	if (!bus) {
-		return ENABLED && dev ? getMockStatus() : null;
-	}
-
-	const data = await read(bus, CMD_STATUS, 1);
-
-	const rawStatus = data.readUint8(0);
-	const isFault = (rawStatus & 0x01) !== 0;
-	const isButton = (rawStatus & 0x02) !== 0;
-	const state = BatteryState[(rawStatus >>> 2) & 0x03] || 'UNKNOWN';
-	const powerIn = BatteryPowerState[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
-	const powerIn5vIo = BatteryPowerState[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
-
-	const charge = await getChargeLevel(bus);
-	const temperature = await getBatteryTemperature(bus);
-	const fault = await getFaultStatus(bus);
-	const voltage = await getBatteryVoltage(bus);
-	const current = await getBatteryCurrent(bus);
-	const ioVoltage = await getIOVoltage(bus);
-	const ioCurrent = await getIOCurrent(bus);
-
-	await bus.close();
-
-	const newStatus: BatteryInfo = {
-		ts: new Date(),
-		isFault,
-		isButton,
-		state,
-		charge,
-		temperature,
-		powerIn: {
-			state: powerIn,
-			voltage: voltage,
-			current: current
-		},
-		powerIn5vIo: {
-			state: powerIn5vIo,
-			voltage: ioVoltage,
-			current: ioCurrent
-		},
-		fault
-	};
-
-	status = newStatus;
-	cachedAt = new Date();
-
-	return newStatus;
-}
-
-async function openBus(): Promise<PromisifiedBus | null> {
-	if (!(await checkDevice())) {
-		return null;
-	}
+	logger.debug('Updating...');
+	const startTime = process.hrtime.bigint();
+	let bus: I2C.PromisifiedBus | null = null;
 
 	try {
+		const path = `/dev/i2c-${BUS_NUMBER}`;
+		if (!(await stat(path).catch(() => null))) {
+			if (dev) {
+				status = getMockStatus();
+				cachedAt = new Date();
+				return status;
+			} else {
+				throw new Error('Battery device path not available');
+			}
+		}
+
 		const str = 'i2c';
-		const i2c = await import(/* @vite-ignore */ `${str}-bus`);
-		return i2c.openPromisified(BUS_NUMBER);
+		const i2c: typeof I2C = await import(/* @vite-ignore */ `${str}-bus`);
+		bus = await i2c.openPromisified(BUS_NUMBER);
+
+		const data = await read(bus, CMD_STATUS, 1);
+
+		const rawStatus = data.readUint8(0);
+		const isFault = (rawStatus & 0x01) !== 0;
+		const isButton = (rawStatus & 0x02) !== 0;
+		const state = BatteryState[(rawStatus >>> 2) & 0x03] || 'UNKNOWN';
+		const powerIn = BatteryPowerState[(rawStatus >>> 4) & 0x03] || 'UNKNOWN';
+		const powerIn5vIo = BatteryPowerState[(rawStatus >>> 6) & 0x03] || 'UNKNOWN';
+
+		const charge = await getChargeLevel(bus);
+		const temperature = await getBatteryTemperature(bus);
+		const fault = await getFaultStatus(bus);
+		const voltage = await getBatteryVoltage(bus);
+		const current = await getBatteryCurrent(bus);
+		const ioVoltage = await getIOVoltage(bus);
+		const ioCurrent = await getIOCurrent(bus);
+
+		const newStatus: BatteryInfo = {
+			ts: new Date(),
+			isFault,
+			isButton,
+			state,
+			charge,
+			temperature,
+			powerIn: {
+				state: powerIn,
+				voltage: voltage,
+				current: current
+			},
+			powerIn5vIo: {
+				state: powerIn5vIo,
+				voltage: ioVoltage,
+				current: ioCurrent
+			},
+			fault
+		};
+
+		status = newStatus;
+		cachedAt = new Date();
+
+		return newStatus;
 	} catch (err) {
-		console.error(err);
-		return null;
+		throw logger.toSvelteError(err);
+	} finally {
+		await bus?.close().catch((err) => logger.warn('Closing error', err));
+		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		logger.info('Updated', diffTime, 'ms');
 	}
 }
 
-async function checkDevice() {
-	const path = `/dev/i2c-${BUS_NUMBER}`;
-
-	try {
-		await stat(path);
-		return true;
-	} catch {
-		console.warn(`PiJuice not available @ ${path}`);
-		return false;
-	}
-}
-
-async function getChargeLevel(bus: PromisifiedBus) {
+async function getChargeLevel(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_CHARGE_LEVEL, 1);
 	return data.readUint8(0);
 }
 
-async function getBatteryTemperature(bus: PromisifiedBus) {
+async function getBatteryTemperature(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_BATTERY_TEMPERATURE, 2);
 	let temp = data.readUint8(0);
 	if (temp & (1 << 7)) {
@@ -149,12 +153,12 @@ async function getBatteryTemperature(bus: PromisifiedBus) {
 	return temp;
 }
 
-async function getBatteryVoltage(bus: PromisifiedBus) {
+async function getBatteryVoltage(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_BATTERY_VOLTAGE, 2);
 	return data.readUInt16LE(0) / 1000;
 }
 
-async function getBatteryCurrent(bus: PromisifiedBus) {
+async function getBatteryCurrent(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_BATTERY_CURRENT, 2);
 	let curr = data.readUInt16LE(0);
 	if (curr & (1 << 15)) {
@@ -163,12 +167,12 @@ async function getBatteryCurrent(bus: PromisifiedBus) {
 	return curr / 1000;
 }
 
-async function getIOVoltage(bus: PromisifiedBus) {
+async function getIOVoltage(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_IO_VOLTAGE, 2);
 	return data.readUInt16LE(0) / 1000;
 }
 
-async function getIOCurrent(bus: PromisifiedBus) {
+async function getIOCurrent(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_IO_CURRENT, 2);
 	let curr = data.readUInt16LE(0);
 	if (curr & (1 << 15)) {
@@ -177,7 +181,7 @@ async function getIOCurrent(bus: PromisifiedBus) {
 	return curr / 1000;
 }
 
-async function getFaultStatus(bus: PromisifiedBus) {
+async function getFaultStatus(bus: I2C.PromisifiedBus) {
 	const data = await read(bus, CMD_FAULT_EVENT, 1);
 
 	const status = data.readUint8(0);
@@ -199,7 +203,7 @@ async function getFaultStatus(bus: PromisifiedBus) {
 }
 
 async function read(
-	bus: PromisifiedBus,
+	bus: I2C.PromisifiedBus,
 	cmd: number,
 	len: number,
 	retry?: boolean
@@ -276,12 +280,12 @@ function getMockStatus(): BatteryInfo {
 async function record() {
 	try {
 		if (!status) {
-			console.error('Could not record status, no status present!');
+			logger.error('Could not record status, no status present!');
 			return;
 		}
 
 		if (isSameSecond(lastRecordedTs, status.ts)) {
-			console.error('Skipping recording because no new status is available');
+			logger.warn('Skipping recording because no new status is available');
 			return;
 		}
 
@@ -292,9 +296,9 @@ async function record() {
 
 		lastRecordedTs = recordStatus.ts;
 
-		console.log(`Recorded status`, recordStatus.ts, recordStatus.state, recordStatus.charge);
+		logger.debug(`Recorded status`, recordStatus.ts, recordStatus.state, recordStatus.charge);
 	} catch (err) {
-		console.error(err);
+		logger.error(err);
 	}
 }
 

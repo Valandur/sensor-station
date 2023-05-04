@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { isAfter } from 'date-fns';
 
 import { ENABLED, getHourly } from '$lib/server/weather';
@@ -12,11 +12,7 @@ export const load: PageServerLoad = async () => {
 		throw redirect(302, '/screens');
 	}
 
-	const forecasts = await getHourly().catch((err) => error(500, (err as Error).message));
-	if (!('length' in forecasts)) {
-		console.error(forecasts);
-		throw forecasts;
-	}
+	const forecasts = await getHourly();
 
 	const now = new Date();
 

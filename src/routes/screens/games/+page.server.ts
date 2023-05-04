@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
 import { ENABLED, getFreeEpicGames } from '$lib/server/games';
@@ -14,15 +14,10 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const allGames = await getFreeEpicGames().catch((err) => error(500, (err as Error).message));
-	if (!('length' in allGames)) {
-		console.error(allGames);
-		throw allGames;
-	}
-
+	const allGames = await getFreeEpicGames();
 	counter.max = allGames.length;
+
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}

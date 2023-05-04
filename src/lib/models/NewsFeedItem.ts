@@ -1,7 +1,8 @@
 export interface NewsFeedItem {
+	id: string;
 	ts: Date;
 	title: string;
-	link: string;
 	content: string;
-	img: string;
+	link: string;
+	image: string;
 }

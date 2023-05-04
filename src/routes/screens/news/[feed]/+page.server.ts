@@ -14,10 +14,9 @@ export const load: PageServerLoad = async ({ url, params, parent }) => {
 	}
 
 	const feedId = params.feed;
-	let page = Number(url.searchParams.get('page') || '-');
-
 	const feed = await getFeed(feedId);
 
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = feed.counter.increment();
 	}

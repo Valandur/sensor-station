@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
 import { ENABLED, getEvents } from '$lib/server/calendar';
@@ -14,16 +14,10 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const allEvents = await getEvents().catch((err) => error(500, (err as Error).message));
-	if (!('length' in allEvents)) {
-		console.error(allEvents);
-		throw allEvents;
-	}
-
+	const allEvents = await getEvents();
 	counter.max = allEvents.length;
 
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = 0;
 	}

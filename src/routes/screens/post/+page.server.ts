@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
 import { ENABLED, getShipments } from '$lib/server/post';
@@ -12,15 +12,10 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const shipments = await getShipments().catch((err) => error(500, (err as Error).message));
-	if (!('length' in shipments)) {
-		console.error(shipments);
-		throw shipments;
-	}
-
+	const shipments = await getShipments();
 	counter.max = shipments.length;
+
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}

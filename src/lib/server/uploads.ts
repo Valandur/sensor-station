@@ -1,16 +1,20 @@
-import { createHash } from 'crypto';
-import { env } from '$env/dynamic/private';
+import { createHash } from 'node:crypto';
 import { parseISO } from 'date-fns';
-import { readFile, readdir, rm, writeFile } from 'fs/promises';
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
 import mime from 'mime-types';
 
+import { env } from '$env/dynamic/private';
+
+import { Logger } from '$lib/logger';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 export const ENABLED = env.UPLOADS_ENABLED === '1';
-const UPLOADS_DIR = 'data/uploads';
 const UPLOADS_FILE = 'data/uploads.json';
+const UPLOADS_DIR = 'data/uploads';
+
+const logger = new Logger('UPLOADS');
 
 let loaded = false;
 let uploads: UploadItem[] = [];
@@ -20,29 +24,34 @@ export async function getUploads() {
 		return uploads;
 	}
 
-	const items: UploadItem[] = JSON.parse(
+	logger.debug('Loading...');
+	const startTime = process.hrtime.bigint();
+
+	const newUploads: UploadItem[] = JSON.parse(
 		await readFile(UPLOADS_FILE, 'utf-8').catch(() => '[]')
 	).map((item: Record<string, string>) => ({ ...item, ts: parseISO(item.ts) }));
-	console.log(`Loaded ${items.length} uploaded images`);
 
 	let added = false;
 	const files = await readdir(UPLOADS_DIR).catch(() => []);
 	for (const file of files) {
-		if (file === 'uploads.json' || items.some((item) => item.img === file)) {
+		if (newUploads.some((item) => item.img === file)) {
 			continue;
 		}
 
-		console.warn(`Found upload file without data entry: ${file}`);
+		logger.warn(`Found upload file without data entry: ${file}`);
 		const ratio = await getRatio(`${UPLOADS_DIR}/${file}`);
-		items.push({ ts: new Date(), title: '', img: file, ratio });
+		newUploads.push({ ts: new Date(), title: '', img: file, ratio });
 		added = true;
 	}
 
 	loaded = true;
-	uploads = items;
+	uploads = newUploads;
+
+	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+	logger.info('Loaded', newUploads.length, 'uploads', diffTime, 'ms');
 
 	if (added) {
-		await saveUploads(items);
+		await saveUploads(newUploads);
 	}
 
 	return uploads;
@@ -82,7 +91,14 @@ export async function deleteUpload(index: number) {
 
 export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
 	uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
+
+	logger.debug('Saving...');
+	const startTime = process.hrtime.bigint();
+
 	await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
+
+	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+	logger.info('Saved', newUploads.length, 'uploads', diffTime, 'ms');
 }
 
 async function getRatio(fileName: string, data?: Buffer) {
@@ -91,7 +107,7 @@ async function getRatio(fileName: string, data?: Buffer) {
 			const dims = await getDimensions(fileName);
 			return dims.width / dims.height;
 		} catch (err) {
-			console.error('Could not get video size', err);
+			logger.warn('Could not get video size', err);
 		}
 	} else {
 		try {
@@ -104,7 +120,7 @@ async function getRatio(fileName: string, data?: Buffer) {
 				? size.height / size.width
 				: size.width / size.height; // If the image is rotated 90° switch the ratio
 		} catch (err) {
-			console.error('Could not get image size', err);
+			logger.warn('Could not get image size', err);
 		}
 	}
 

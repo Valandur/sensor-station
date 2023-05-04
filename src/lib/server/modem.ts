@@ -1,11 +1,14 @@
-import { dev } from '$app/environment';
 import { differenceInSeconds, parseISO } from 'date-fns';
-import { env } from '$env/dynamic/private';
+import { error } from '@sveltejs/kit';
 import { find } from 'geo-tz';
 import { ReadlineParser } from '@serialport/parser-readline';
 import { SerialPort } from 'serialport';
-import { stat } from 'fs/promises';
+import { stat } from 'node:fs/promises';
 
+import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
+
+import { Logger } from '$lib/logger';
 import type { ModemInfo } from '$lib/models/ModemInfo';
 
 export const ENABLED = env.MODEM_ENABLED === '1';
@@ -22,20 +25,48 @@ const RESPONSE_CODES = ['OK', 'ERROR'];
 // TODO: Cache modem status
 // const STATE_PATH = `data/modem.json`;
 
+const logger = new Logger('MODEM');
+
 let status: ModemInfo | null = null;
 let cachedAt = new Date(0);
 
 export async function getStatus(): Promise<ModemInfo | null> {
+	if (!ENABLED) {
+		throw error(400, { message: 'Modem module is disabled', key: 'modem.disabled' });
+	}
+
 	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+		logger.debug('Using cached status');
 		return status;
 	}
 
-	const commander = ENABLED ? await openConnection() : null;
-	if (!commander) {
-		return ENABLED && dev ? getMockStatus() : null;
-	}
+	logger.debug('Updating...');
+	const startTime = process.hrtime.bigint();
+	let commander: Commander | null = null;
 
 	try {
+		if (!(await stat(DEVICE_PATH).catch(() => null))) {
+			if (dev) {
+				status = getMockStatus();
+				cachedAt = new Date();
+				return status;
+			} else {
+				throw new Error('Modem device path not available');
+			}
+		}
+
+		commander = new Commander(DEVICE_PATH, 115200);
+		await commander.open();
+
+		const res = await commander.send('AT');
+		if (res !== 'OK') {
+			throw error(500, {
+				message: `Modem is not ready`,
+				key: 'modem.notReady',
+				params: { status: res }
+			});
+		}
+
 		let operator: string | null = null;
 		const copsResp = await commander.send('AT+COPS?');
 		const copsMatch = COPS.exec(copsResp);
@@ -101,36 +132,9 @@ export async function getStatus(): Promise<ModemInfo | null> {
 
 		return newStatus;
 	} finally {
-		await commander.close();
-	}
-}
-
-async function openConnection(): Promise<Commander | null> {
-	if (!(await checkDevice())) {
-		return null;
-	}
-
-	try {
-		const commander = new Commander(DEVICE_PATH, 115200);
-		await commander.open();
-		const res = await commander.send('AT');
-		if (res !== 'OK') {
-			throw new Error(`Modem is reporting status ${res}`);
-		}
-		return commander;
-	} catch (err) {
-		console.error(err);
-		return null;
-	}
-}
-
-async function checkDevice() {
-	try {
-		await stat(DEVICE_PATH);
-		return true;
-	} catch {
-		console.warn(`Modem not available @ ${DEVICE_PATH}`);
-		return false;
+		await commander?.close().catch((err) => logger.warn('Closing error', err));
+		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		logger.info('Updated', diffTime, 'ms');
 	}
 }
 

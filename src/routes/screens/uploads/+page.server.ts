@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
 import { ENABLED, getUploads } from '$lib/server/uploads';
@@ -12,15 +12,10 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const uploads = await getUploads().catch((err) => error(500, (err as Error).message));
-	if (!('length' in uploads)) {
-		console.error(uploads);
-		throw uploads;
-	}
-
+	const uploads = await getUploads();
 	counter.max = uploads.length;
+
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}

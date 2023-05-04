@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { ENABLED, getDaily } from '$lib/server/weather';
 
@@ -11,11 +11,7 @@ export const load: PageServerLoad = async () => {
 		throw redirect(302, '/screens');
 	}
 
-	const forecasts = await getDaily().catch((err) => error(500, (err as Error).message));
-	if (!('length' in forecasts)) {
-		console.error(forecasts);
-		throw forecasts;
-	}
+	const forecasts = await getDaily();
 
 	return {
 		daily: forecasts.slice(0, NUM_FORECASTS)

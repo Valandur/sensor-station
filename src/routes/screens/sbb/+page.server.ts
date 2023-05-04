@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
 import { ENABLED, getAlerts } from '$lib/server/sbb';
@@ -12,15 +12,10 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	let page = Number(url.searchParams.get('page') || '-');
-
-	const alerts = await getAlerts().catch((err) => error(500, (err as Error).message));
-	if (!('length' in alerts)) {
-		console.error(alerts);
-		throw alerts;
-	}
-
+	const alerts = await getAlerts();
 	counter.max = alerts.length;
+
+	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}
