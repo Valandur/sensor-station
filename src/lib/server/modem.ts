@@ -177,9 +177,10 @@ class Commander {
 					return;
 				}
 
+				logger.warn('Timed out');
 				this.parser.off('data', onData);
 
-				reject(new Error('Sending timed out'));
+				reject(new Error('Timed out'));
 				resolved = true;
 			};
 			const timeout = setTimeout(onTimeout, 5000);
