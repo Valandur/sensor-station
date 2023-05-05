@@ -1,0 +1,1 @@
+import{R as t}from"./control.e7f5239e.js";function o(e,r){return new t(e,r)}new TextEncoder;const n=async()=>{throw o(302,"/screens")},a=Object.freeze(Object.defineProperty({__proto__:null,load:n},Symbol.toStringTag,{value:"Module"}));export{a as universal};

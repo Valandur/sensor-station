@@ -1,7 +1,7 @@
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { error } from '@sveltejs/kit';
 import { find } from 'geo-tz';
-import { ReadlineParser } from '@serialport/parser-readline';
+import { InterByteTimeoutParser } from '@serialport/parser-inter-byte-timeout';
 import { SerialPort } from 'serialport';
 import { stat } from 'node:fs/promises';
 
@@ -20,7 +20,6 @@ const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
-const RESPONSE_CODES = ['OK', 'ERROR'];
 
 // TODO: Cache modem status
 // const STATE_PATH = `data/modem.json`;
@@ -155,7 +154,7 @@ function getMockStatus(): ModemInfo {
 
 class Commander {
 	private readonly port: SerialPort;
-	private readonly parser: ReadlineParser;
+	private readonly parser: InterByteTimeoutParser;
 
 	public constructor(devicePath: string, baudRate: number) {
 		this.port = new SerialPort({
@@ -163,24 +162,53 @@ class Commander {
 			baudRate: baudRate,
 			autoOpen: false
 		});
-		this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\n' }));
+		this.parser = this.port.pipe(new InterByteTimeoutParser({ interval: 500 }));
 	}
 
 	public async send(data: string): Promise<string> {
+		await new Promise<void>((resolve) => setTimeout(resolve, 100));
 		return new Promise<string>((resolve, reject) => {
-			let response = '';
-			const onData = (line: string) => {
-				response += line;
-				if (RESPONSE_CODES.some((code) => line.includes(code))) {
-					this.parser.off('data', onData);
-					resolve(response.trim());
+			logger.debug('::', data);
+
+			let resolved = false;
+
+			const onTimeout = () => {
+				if (resolved) {
+					return;
 				}
+
+				this.parser.off('data', onData);
+
+				reject(new Error('Sending timed out'));
+				resolved = true;
 			};
-			this.parser.on('data', onData);
+			const timeout = setTimeout(onTimeout, 5000);
+
+			const onData = (buffer: Buffer) => {
+				const response = buffer.toString('utf-8');
+				logger.debug('<<', response);
+
+				if (resolved) {
+					logger.warn('Rceived out of band');
+					return;
+				}
+
+				clearTimeout(timeout);
+
+				resolve(response);
+				resolved = true;
+			};
+			this.parser.once('data', onData);
+
 			this.port.write(`${data}\r\n`, (err) => {
-				if (err) {
+				logger.debug('>>', data);
+
+				if (err && !resolved) {
 					this.parser.off('data', onData);
+					clearTimeout(timeout);
+
 					reject(err);
+					resolved = true;
 				}
 			});
 		});

@@ -190,7 +190,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "x9vn4v"
+  version_hash: "1dh05cj"
 };
 function get_hooks() {
   return import('./chunks/hooks.server-174e0779.js');
@@ -1684,6 +1684,7 @@ async function unwrap_promises(object) {
   }
   return object;
 }
+const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 async function load_server_data({ event, state, node, parent }) {
   if (!node?.server)
     return null;
@@ -2684,7 +2685,7 @@ function get_option(nodes, option) {
   return nodes.reduce(
     (value, node) => {
       return (
-        /** @type {any} TypeScript's too dumb to understand this */
+        /** @type {Value} TypeScript's too dumb to understand this */
         node?.universal?.[option] ?? node?.server?.[option] ?? value
       );
     },
@@ -2776,7 +2777,6 @@ function once(fn) {
     return result = fn();
   };
 }
-const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 const encoder = new TextEncoder();
 async function render_data(event, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
   if (!route.page) {
@@ -3382,7 +3382,6 @@ function add_cookies_to_headers(headers, cookies) {
 function create_fetch({ event, options: options2, manifest, state, get_cookie_header }) {
   return async (info, init2) => {
     const original_request = normalize_fetch_input(info, init2, event.url);
-    const request_body = init2?.body;
     let mode = (info instanceof Request ? info.mode : init2?.mode) ?? "cors";
     let credentials = (info instanceof Request ? info.credentials : init2?.credentials) ?? "same-origin";
     return await options2.hooks.handleFetch({
@@ -3436,9 +3435,6 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
             request.headers.set("authorization", authorization);
           }
         }
-        if (request_body && typeof request_body !== "string" && !ArrayBuffer.isView(request_body)) {
-          throw new Error("Request body must be a string or TypedArray");
-        }
         if (!request.headers.has("accept")) {
           request.headers.set("accept", "*/*");
         }
@@ -3476,6 +3472,17 @@ function normalize_fetch_input(info, init2, url) {
   }
   return new Request(typeof info === "string" ? new URL(info, url) : info, init2);
 }
+const valid_layout_exports = /* @__PURE__ */ new Set([
+  "load",
+  "prerender",
+  "csr",
+  "ssr",
+  "trailingSlash",
+  "config"
+]);
+/* @__PURE__ */ new Set([...valid_layout_exports, "entries"]);
+const valid_layout_server_exports = /* @__PURE__ */ new Set([...valid_layout_exports, "actions"]);
+/* @__PURE__ */ new Set([...valid_layout_server_exports, "entries"]);
 const default_transform = ({ html }) => html;
 const default_filter = () => false;
 const default_preload = ({ type }) => type === "js" || type === "css";
@@ -3510,7 +3517,7 @@ async function respond(request, options2, manifest, state) {
   if (is_data_request) {
     decoded = strip_data_suffix(decoded) || "/";
     url.pathname = strip_data_suffix(url.pathname) || "/";
-    invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split("_").map(Boolean);
+    invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split("").map((node) => node === "1");
     url.searchParams.delete(INVALIDATED_PARAM);
   }
   if (!state.prerendering?.fallback) {
