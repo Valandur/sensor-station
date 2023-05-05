@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Error - %sveltekit.status% - %sveltekit.error.message%</title>
+		<style>
+			html,
+			body {
+				padding: 0;
+				margin: 0;
+			}
+
+			body {
+				padding: 0 2rem;
+				font-size: 30px;
+			}
+
+			.error {
+				color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Error %sveltekit.status%</h1>
+
+		<a href="/">Home</a>
+
+		<p class="error">%sveltekit.error.message%</p>
+	</body>
+</html>
