@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 
-	$: pageName = $page.route.id;
+	import ErrorCard from '$lib/components/ErrorCard.svelte';
+
 	$: embedded = $page.error?.embedded;
-	$: errorMessage = $page.error?.message;
+	$: title = $page.route.id;
+	$: message = $page.error?.message;
 	$: params = $page.error?.params;
 </script>
 
-<div class="container-fluid m-0 {embedded ? 'p-0' : 'p-2'} d-flex flex-column">
+<div class="container-fluid vh-100 d-flex flex-column {embedded ? 'p-0' : 'p-2'}">
 	{#if !embedded}
 		<div class="row">
 			<div class="col">
@@ -21,13 +23,5 @@
 		</div>
 	{/if}
 
-	<div class="alert alert-danger">
-		{#if pageName}
-			<h4 class="alert-heading">{pageName}</h4>
-		{/if}
-		<p>{errorMessage}</p>
-		{#if params}
-			<pre class="bg-dark text-white mb-0"><code>{JSON.stringify(params, null, 2)}</code></pre>
-		{/if}
-	</div>
+	<ErrorCard {title} {message} {params} />
 </div>

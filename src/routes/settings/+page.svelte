@@ -3,6 +3,7 @@
 	import { SCREEN_NAMES, SCREEN_PARAMS } from '$lib/models/Screen';
 
 	import type { PageData } from './$types';
+	import PageLayout from '$lib/components/PageLayout.svelte';
 
 	export let data: PageData;
 	$: screens = data.screens;
@@ -10,18 +11,7 @@
 	let newName = '';
 </script>
 
-<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
-	<div class="row">
-		<div class="col">
-			<h1>Settings</h1>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-sm btn-outline-danger" href="/">
-				<i class="icofont-ui-close" />
-			</a>
-		</div>
-	</div>
-
+<PageLayout title="Settings">
 	<div class="row overflow-auto">
 		<div class="col">
 			<table class="table table-sm">
@@ -62,7 +52,7 @@
 						<td />
 						<td>
 							<form id="formNew" method="POST" action="?/add" use:enhance>
-								<button type="submit" class="btn btn-sm btn-outline-success" disabled={!newName}>
+								<button type="submit" class="btn btn-sm btn-success" disabled={!newName}>
 									<i class="icofont-ui-add" />
 								</button>
 							</form>
@@ -108,7 +98,7 @@
 							<td>
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="index" value={i} />
-									<button class="btn btn-sm btn-outline-danger">
+									<button class="btn btn-sm btn-danger">
 										<i class="icofont-ui-delete" />
 									</button>
 								</form>
@@ -119,4 +109,4 @@
 			</table>
 		</div>
 	</div>
-</div>
+</PageLayout>

@@ -1,5 +1,6 @@
 import { decode } from 'html-entities';
-import { differenceInSeconds } from 'date-fns';
+import { dev } from '$app/environment';
+import { differenceInSeconds, parseISO } from 'date-fns';
 import { error } from '@sveltejs/kit';
 import superagent from 'superagent';
 
@@ -177,6 +178,10 @@ export async function getShipments(): Promise<PostShipment[]> {
 			shipment.status = getText(event.eventCode);
 		}
 
+		if (dev && newShipments.length === 0) {
+			newShipments.push(...getMockShipments());
+		}
+
 		shipments = newShipments;
 		cachedAt = new Date();
 
@@ -276,4 +281,29 @@ function getRecursiveTexts(
 	}
 
 	return undefined;
+}
+
+function getMockShipments(): PostShipment[] {
+	return [
+		{
+			id: '__unknown__',
+			number: '99.xx.yyyyyy.zzzzzzzz',
+			type: 'PostPac Priority',
+			arrival: parseISO('2023-03-29T00:00:00+02:00'),
+			status: null,
+			sender: 'Digitec Galaxus AG',
+			dims: { x: 310, y: 240, z: 215 },
+			weight: 4320
+		},
+		{
+			id: '__unknown__',
+			number: '88.xx.yyyyyy.zzzzzzzz',
+			type: 'International PostPac Priority',
+			arrival: null,
+			status: 'Verzollungsprozess',
+			sender: 'Digitec Galaxus AG',
+			dims: { x: 310, y: 240, z: 215 },
+			weight: 4320
+		}
+	];
 }

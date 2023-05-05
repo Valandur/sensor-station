@@ -4,6 +4,7 @@
 	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
+	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import type { PageData } from './$types';
 
@@ -22,14 +23,13 @@
 </script>
 
 <div
-	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	class="h-100 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if shipment}
 		<div class="row">
-			<div class="col-2" />
-			<div class="col-8">
+			<div class="col">
 				<div class="card bg-theme border-theme bg-opacity-25">
 					<div class="card-header border-theme fw-bold small d-flex justify-content-between">
 						<div>
@@ -75,26 +75,8 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-2" />
 		</div>
 	{:else}
-		<div class="row mb-5">
-			<div class="col" />
-			<div class="col-6">
-				<div class="card bg-success border-success bg-opacity-25">
-					<div class="card-body">
-						<h5 class="card-title mb-0">Keine Sendungen der Post unterwegs</h5>
-					</div>
-
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
-			</div>
-			<div class="col" />
-		</div>
+		<EmptyCard>Keine Sendungen der Post unterwegs</EmptyCard>
 	{/if}
 </div>

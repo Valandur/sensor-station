@@ -14,7 +14,7 @@
 </script>
 
 <div
-	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	class="h-100 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >

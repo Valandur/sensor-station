@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { fade, slide } from 'svelte/transition';
-	import { formatInTimeZone } from 'date-fns-tz';
 	import { beforeNavigate, goto, invalidate } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { fade } from 'svelte/transition';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
 	import de from 'date-fns/locale/de/index';
@@ -27,7 +27,6 @@
 	$: batteryStatus = data.battery;
 	$: holiday = data.holiday;
 
-	let showToolbar = false;
 	let timer: ReturnType<typeof setInterval> | null = null;
 
 	$: if (browser) {
@@ -58,28 +57,16 @@
 	}
 
 	function onSwipe(e: SwipeEvent) {
-		if (e.detail.dir === 'left' && data.nextScreen && !showToolbar) {
+		if (e.detail.dir === 'left' && data.nextScreen) {
 			goto(data.nextScreen);
-		} else if (e.detail.dir === 'right' && data.prevScreen && !showToolbar) {
+		} else if (e.detail.dir === 'right' && data.prevScreen) {
 			goto(data.prevScreen);
-		} else if (e.detail.dir === 'down' && e.detail.y.start < 100) {
-			showToolbar = true;
-		} else if (e.detail.dir === 'up' && showToolbar) {
-			showToolbar = false;
 		}
-	}
-
-	function reload() {
-		window.location.reload();
 	}
 </script>
 
-<div
-	class="container-fluid m-0 p-0 vh-100 d-flex flex-column"
-	use:swipe={{ x: 200, y: 100 }}
-	on:swipe={onSwipe}
->
-	<div class="row m-1 mb-2 flex-nowrap">
+<div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
+	<div class="row flex-nowrap mb-2 p-1">
 		<div
 			class="col-auto d-flex flex-row align-items-end p-0"
 			on:click={togglePause}
@@ -156,50 +143,11 @@
 
 	<div class="row flex-fill position-relative">
 		{#key index}
-			<div class="container h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
+			<div class="h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
 				<slot />
 			</div>
 		{/key}
 	</div>
-
-	{#if showToolbar}
-		<div
-			class="overlay"
-			transition:fade={{ duration: 500 }}
-			on:click={() => (showToolbar = false)}
-			on:keypress={() => (showToolbar = false)}
-		/>
-		<div class="toolbar row p-2 bg-dark" transition:slide={{ duration: 500 }}>
-			<div class="col-auto">
-				<a class="btn btn-theme" href="/settings">
-					<i class="icofont-gears icofont-2x" />
-				</a>
-			</div>
-			<div class="col-auto">
-				<a class="btn btn-theme" href="/modem">
-					<i class="icofont-globe icofont-2x" />
-				</a>
-			</div>
-			<div class="col-auto">
-				<a class="btn btn-theme" href="/battery">
-					<i class="icofont-battery-half icofont-2x" />
-				</a>
-			</div>
-			<div class="col" />
-			<div class="col-auto">
-				<button class="btn btn-warning" on:click={reload}>
-					<i class="icofont-refresh icofont-2x" />
-				</button>
-			</div>
-			<div class="col-auto">
-				<form method="POST" action="/screens?/restart">
-					<button type="submit" class="btn btn-danger">
-						<i class="icofont-power icofont-2x" />
-					</button>
-				</form>
-			</div>
-		</div>
-	{/if}
 </div>
 
 <div class="progress bg-secondary" style:width={$progress + '%'} />
@@ -231,27 +179,6 @@
 
 	.icons {
 		font-size: 0.6rem;
-	}
-
-	.toolbar {
-		position: fixed;
-		top: 0;
-		left: calc(0.5 * var(--bs-gutter-x));
-		right: calc(0.5 * var(--bs-gutter-x));
-		overflow: hidden;
-		display: flex;
-		flex-direction: row;
-		z-index: 100;
-	}
-
-	.overlay {
-		position: fixed;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		background-color: rgba(var(--bs-white-rgb), 0.2);
-		z-index: 10;
 	}
 
 	.progress {

@@ -1,7 +1,6 @@
 export interface SBBAlert {
 	start: Date;
 	end: Date;
-	planned: boolean;
 	summary: string;
 	reason: string | undefined;
 	description: string | undefined;

@@ -59,12 +59,12 @@ export function stopRecording() {
 	}
 }
 
-export async function getStatus(): Promise<BatteryInfo | null> {
+export async function getStatus(): Promise<BatteryInfo> {
 	if (!ENABLED) {
 		throw error(400, { message: 'Battery module is disabled', key: 'battery.disabled' });
 	}
 
-	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+	if (status && differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
 		logger.debug('Using cached status');
 		return status;
 	}

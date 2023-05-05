@@ -1,7 +1,8 @@
+import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { writable } from 'svelte/store';
 
-export const paused = writable(false);
+export const paused = writable(dev);
 export const progress = tweened(0);
 let timer: NodeJS.Timeout | null = null;
 

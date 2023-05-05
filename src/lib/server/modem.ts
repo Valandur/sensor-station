@@ -29,12 +29,12 @@ const logger = new Logger('MODEM');
 let status: ModemInfo | null = null;
 let cachedAt = new Date(0);
 
-export async function getStatus(): Promise<ModemInfo | null> {
+export async function getStatus(): Promise<ModemInfo> {
 	if (!ENABLED) {
 		throw error(400, { message: 'Modem module is disabled', key: 'modem.disabled' });
 	}
 
-	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+	if (status && differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
 		logger.debug('Using cached status');
 		return status;
 	}

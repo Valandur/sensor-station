@@ -4,6 +4,7 @@
 	import de from 'date-fns/locale/de/index';
 
 	import { swipe } from '$lib/swipe';
+	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import type { PageData } from './$types';
 
@@ -14,12 +15,12 @@
 </script>
 
 <div
-	class="container-fluid h-100 m-0 d-flex flex-column justify-content-end"
+	class="h-100 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if upload}
-		<div class="row h-100">
+		<div class="row align-items-end" class:h-100={upload.ratio < 1}>
 			<div
 				class="col mh-100 image-container"
 				class:full={upload.ratio < 1}
@@ -33,7 +34,7 @@
 			</div>
 
 			<div
-				class="col d-flex flex-column justify-content-between description"
+				class="col mh-100 align-self-stretch d-flex flex-column justify-content-between description"
 				class:ps-2={upload.ratio >= 1}
 				class:text-end={upload.ratio >= 1}
 			>
@@ -52,24 +53,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="row mb-5">
-			<div class="col" />
-			<div class="col-6">
-				<div class="card bg-success border-success bg-opacity-25">
-					<div class="card-body">
-						<h5 class="card-title mb-0">Es wurden noch keine Bilder hochgeladen</h5>
-					</div>
-
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
-			</div>
-			<div class="col" />
-		</div>
+		<EmptyCard>Es wurden noch keine Bilder hochgeladen</EmptyCard>
 	{/if}
 </div>
 

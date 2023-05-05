@@ -8,26 +8,21 @@
 	$: forecasts = data.daily;
 </script>
 
-<div class="container-fluid h-100 m-0 d-flex flex-column justify-content-center">
+<div class="h-100 d-flex flex-column justify-content-end">
 	<div class="row">
-		<div class="col">
-			<div class="row">
-				{#each forecasts as forecast}
-					<div class="col">
-						<div class="text">{format(forecast.ts, 'iiiiii', { locale: de })}</div>
-						<img src={forecast.img} alt="Weather icon" />
-						<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
-					</div>
-				{/each}
+		{#each forecasts as forecast}
+			<div class="col d-flex flex-column justify-content-between align-items-center">
+				<div class="text">{format(forecast.ts, 'iiiiii', { locale: de })}</div>
+				<img src={forecast.img} alt="Weather icon" />
+				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
 			</div>
-		</div>
+		{/each}
 	</div>
 </div>
 
 <style>
 	.text {
-		font-size: 3rem;
-		text-align: center;
+		font-size: 2.8rem;
 	}
 
 	img {

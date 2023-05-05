@@ -5,7 +5,7 @@ import { ENABLED, getEvents } from '$lib/server/calendar';
 
 import type { PageServerLoad } from './$types';
 
-const MAX_ITEMS = 7;
+const MAX_ITEMS = 6;
 
 const counter = new Counter();
 

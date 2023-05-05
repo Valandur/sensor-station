@@ -40,12 +40,12 @@ export function stopRecording() {
 	}
 }
 
-export async function getNewest(): Promise<SensorMeasurement | null> {
+export async function getNewest(): Promise<SensorMeasurement> {
 	if (!ENABLED) {
 		throw error(400, { message: 'Sensor module is disabled', key: 'sensor.disabled' });
 	}
 
-	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
+	if (newest && differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
 		logger.debug('Using cached measurement');
 		return newest;
 	}

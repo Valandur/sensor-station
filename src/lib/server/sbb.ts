@@ -1,7 +1,8 @@
+import { dev } from '$app/environment';
 import { differenceInSeconds, parseISO } from 'date-fns';
+import { error } from '@sveltejs/kit';
 import { Parser } from 'xml2js';
 import superagent from 'superagent';
-import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 
@@ -42,7 +43,7 @@ export async function getAlerts(): Promise<SBBAlert[]> {
 
 		const newAlerts: SBBAlert[] = [];
 		for (const sit of sits) {
-			if (!alertIsRelevant(JSON.stringify(sit))) {
+			if (sit.Planned?.[0] === 'true' || !alertIsRelevant(JSON.stringify(sit))) {
 				continue;
 			}
 
@@ -56,7 +57,6 @@ export async function getAlerts(): Promise<SBBAlert[]> {
 			newAlerts.push({
 				start: parseISO(sit.ValidityPeriod[0].StartTime[0]),
 				end: parseISO(sit.ValidityPeriod[0].EndTime[0]),
-				planned: sit.Planned?.[0] === 'true',
 				summary: getTextDE(pub.SummaryContent[0].SummaryText),
 				reason: getTextDE(pub.ReasonContent?.[0].ReasonText),
 				description: getTextDE(pub.DescriptionContent?.[0].DescriptionText),
@@ -66,7 +66,11 @@ export async function getAlerts(): Promise<SBBAlert[]> {
 			});
 		}
 
-		alerts = newAlerts.filter((a) => !a.planned);
+		if (dev && newAlerts.length === 0) {
+			newAlerts.push(...getMockAlerts());
+		}
+
+		alerts = newAlerts;
 		cachedAt = new Date();
 
 		return alerts;
@@ -86,6 +90,21 @@ function getTextDE(texts: Text[]): string;
 function getTextDE(texts: Text[] | undefined): string | undefined;
 function getTextDE(texts: Text[] | undefined): string | undefined {
 	return texts?.find((s) => s['$']['xml:lang'] === 'DE')?.['_'];
+}
+
+function getMockAlerts(): SBBAlert[] {
+	return [
+		{
+			start: parseISO('2023-03-27T18:32:00+02:00'),
+			end: parseISO('2023-03-27T19:30:00+02:00'),
+			summary: 'Einschränkung Zürich HB SZU - Zürich Selnau',
+			reason: 'Grund: Streckenblockierung',
+			description: 'Linien S4, S10',
+			consequence: 'Es ist mit Verspätungen und Ausfällen zu rechnen',
+			duration: 'Dauer: unbestimmt',
+			recommendation: undefined
+		}
+	];
 }
 
 interface SituationElement {
