@@ -58,16 +58,6 @@
 							</td>
 						</tr>
 						<tr>
-							<td>Cached</td>
-							<td colspan="2">
-								{#if status.cached}
-									<i class="icofont-check" />
-								{:else}
-									<i class="icofont-close" />
-								{/if}
-							</td>
-						</tr>
-						<tr>
 							<td>Operator</td>
 							<td colspan="2">{status.operator}</td>
 						</tr>

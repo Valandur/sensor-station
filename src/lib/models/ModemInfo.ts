@@ -1,6 +1,5 @@
 export interface ModemInfo {
 	ts: Date;
-	cached: boolean;
 	isConnected: boolean;
 	operator: string | null;
 	signal: number | null;

@@ -20,7 +20,8 @@
 	$: index = data.index;
 	$: timezone = data.modem?.tzName || data.modem?.tzOffset || 'Europe/Zurich';
 	$: timeStr = formatInTimeZone($time, timezone, 'HH:mm', { locale: de });
-	$: date = formatInTimeZone($time, timezone, 'd. MMMM', { locale: de });
+	$: secondStr = formatInTimeZone($time, timezone, 'ss', { locale: de });
+	$: date = formatInTimeZone($time, timezone, 'd. MMMM yyyy', { locale: de });
 	$: dateSub = formatInTimeZone($time, timezone, 'eeee', { locale: de }).replace('.', '');
 	$: modemStatus = data.modem;
 	$: batteryStatus = data.battery;
@@ -74,31 +75,26 @@
 </script>
 
 <div
-	class="container-fluid m-0 p-1 vh-100 d-flex flex-column"
+	class="container-fluid m-0 p-0 vh-100 d-flex flex-column"
 	use:swipe={{ x: 200, y: 100 }}
 	on:swipe={onSwipe}
 >
-	<div class="row mb-3">
+	<div class="row m-1 mb-2 flex-nowrap">
 		<div
-			class="col-auto d-flex flex-column justify-content-end"
+			class="col-auto d-flex flex-row align-items-end p-0"
 			on:click={togglePause}
 			on:keypress={togglePause}
 		>
-			<h1 class="m-0 mt-2 p-0">{timeStr}</h1>
+			<div class="time-main">{timeStr}</div>
+			<div class="time-seconds ms-1">{secondStr}</div>
 		</div>
 
-		<div class="col text-end d-flex flex-column justify-content-end">
-			<div class="row icons justify-content-end">
-				{#if $paused}
-					<div class="col-auto">
-						<i class="icofont-ui-pause" />
-					</div>
-				{/if}
-
+		<div class="col d-flex flex-column justify-content-start align-items-end overflow-hidden p-0">
+			<div class="row icons flex-nowrap">
 				{#if modemStatus?.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
-						{modemStatus.operator}
+						{modemStatus.operator.split(' ', 2)[0]}
 					</div>
 				{/if}
 
@@ -136,29 +132,31 @@
 						{batteryStatus.charge}%
 					</div>
 				{/if}
-			</div>
 
-			<div class="row justify-content-end">
-				<h2 class="col m-0">{date}</h2>
-			</div>
-
-			<div class="row justify-content-end">
-				{#if holiday}
-					<div class="col-auto">{holiday.name}</div>
-					<div class="col-auto">•</div>
+				{#if $paused}
+					<div class="col-auto">
+						<i class="icofont-ui-pause" />
+					</div>
 				{/if}
-				<h4 class="col-auto m-0">{dateSub}</h4>
+			</div>
+
+			<div class="row flex-nowrap">
+				<div class="h2 col text-nowrap m-0">{date}</div>
+			</div>
+
+			<div class="row align-items-center flex-nowrap">
+				{#if holiday}
+					<div class="col-auto text-nowrap m-0">{holiday.name}</div>
+					<div class="col-auto m-0">•</div>
+				{/if}
+				<div class="col-auto fw-bold text-white text-nowrap m-0">{dateSub}</div>
 			</div>
 		</div>
 	</div>
 
 	<div class="row flex-fill position-relative">
 		{#key index}
-			<div
-				class="container h-100 w-100 m-0 p-0 position-absolute"
-				style:overflow="hidden"
-				transition:fade
-			>
+			<div class="container h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
 				<slot />
 			</div>
 		{/key}
@@ -219,14 +217,16 @@
 		overscroll-behavior: none;
 	}
 
-	h1 {
+	.time-main {
 		font-size: 5rem;
 		line-height: 4rem;
+		font-weight: 600;
+		color: var(--bs-white);
 	}
 
-	h2 {
-		font-size: 2rem;
-		line-height: 2rem;
+	.time-seconds {
+		font-size: 1.8rem;
+		line-height: 1.6rem;
 	}
 
 	.icons {

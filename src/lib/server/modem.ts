@@ -24,9 +24,6 @@ const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
 
-// TODO: Cache modem status
-// const STATE_PATH = `data/modem.json`;
-
 const logger = new Logger('MODEM');
 
 let status: ModemInfo | null = null;
@@ -125,8 +122,7 @@ export async function getStatus(): Promise<ModemInfo | null> {
 			tzOffset,
 			lat,
 			lng,
-			tzName,
-			cached: false
+			tzName
 		};
 
 		status = newStatus;
@@ -146,12 +142,11 @@ function getMockStatus(): ModemInfo {
 		isConnected: Math.random() > 0.5,
 		time: new Date(),
 		tzOffset: '+01:00',
-		operator: 'DR',
+		operator: 'Swisscom 1nce.net',
 		signal: Math.round(Math.random() * 4),
 		lat: BASE_LAT,
 		lng: BASE_LNG,
-		tzName: find(BASE_LAT, BASE_LNG)[0] || 'Unknown',
-		cached: Math.random() > 0.5
+		tzName: find(BASE_LAT, BASE_LNG)[0] || 'Unknown'
 	};
 }
 
