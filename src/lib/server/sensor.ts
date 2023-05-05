@@ -10,7 +10,7 @@ import type { SensorMeasurement } from '$lib/models/SensorMeasurement';
 
 export const ENABLED = env.SENSOR_ENABLED === '1';
 const CACHE_TIME = Number(env.SENSOR_CACHE_TIME);
-const DEVICE_PATH = env.SENSOR_DEVICE_PATH || '/dev/gpiomem';
+const DEVICE_PATH = env.SENSOR_DEVICE_PATH;
 const DHT_TYPE = Number(env.SENSOR_DHT_TYPE);
 const DHT_PIN = Number(env.SENSOR_DHT_PIN);
 const RECORDING_INTERVAL = Number(env.SENSOR_RECORDING_INTERVAL);

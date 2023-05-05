@@ -13,7 +13,10 @@ import type { ModemInfo } from '$lib/models/ModemInfo';
 
 export const ENABLED = env.MODEM_ENABLED === '1';
 const CACHE_TIME = Number(env.MODEM_CACHE_TIME);
-const DEVICE_PATH = env.MODEM_DEVICE_PATH || '/dev/ttyUSB2';
+const DEVICE_PATH = env.MODEM_DEVICE_PATH;
+const PAUSE_TIME = Number(env.MODEM_PAUSE_TIME);
+const WAIT_TIME = Number(env.MODEM_WAIT_TIME);
+const CMD_TIMEOUT = Number(env.MODEM_CMD_TIMEOUT);
 const BASE_LAT = Number(env.MODEM_BASE_LAT);
 const BASE_LNG = Number(env.MODEM_BASE_LNG);
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
@@ -162,11 +165,13 @@ class Commander {
 			baudRate: baudRate,
 			autoOpen: false
 		});
-		this.parser = this.port.pipe(new InterByteTimeoutParser({ interval: 500 }));
+		this.parser = this.port.pipe(new InterByteTimeoutParser({ interval: WAIT_TIME }));
 	}
 
 	public async send(data: string): Promise<string> {
-		await new Promise<void>((resolve) => setTimeout(resolve, 100));
+		if (PAUSE_TIME > 0) {
+			await new Promise<void>((resolve) => setTimeout(resolve, PAUSE_TIME));
+		}
 		return new Promise<string>((resolve, reject) => {
 			logger.debug('::', data);
 
@@ -183,7 +188,7 @@ class Commander {
 				reject(new Error('Timed out'));
 				resolved = true;
 			};
-			const timeout = setTimeout(onTimeout, 5000);
+			const timeout = setTimeout(onTimeout, CMD_TIMEOUT);
 
 			const onData = (buffer: Buffer) => {
 				const response = buffer.toString('utf-8').trim();
