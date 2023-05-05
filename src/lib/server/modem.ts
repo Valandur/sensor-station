@@ -185,7 +185,7 @@ class Commander {
 			const timeout = setTimeout(onTimeout, 5000);
 
 			const onData = (buffer: Buffer) => {
-				const response = buffer.toString('utf-8');
+				const response = buffer.toString('utf-8').trim();
 				logger.debug('<<', response);
 
 				if (resolved) {
