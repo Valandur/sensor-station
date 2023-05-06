@@ -68,7 +68,7 @@
 <div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div
-			class="col-auto d-flex flex-row align-items-end p-0"
+			class="col-auto d-flex flex-row align-items-end mt-1 p-0"
 			on:click={togglePause}
 			on:keypress={togglePause}
 		>
@@ -76,7 +76,7 @@
 			<div class="time-seconds ms-1">{secondStr}</div>
 		</div>
 
-		<div class="col d-flex flex-column justify-content-start align-items-end overflow-hidden p-0">
+		<div class="col d-flex flex-column justify-content-end align-items-end overflow-hidden p-0">
 			<div class="row icons flex-nowrap">
 				{#if modemStatus?.operator}
 					<div class="col-auto">

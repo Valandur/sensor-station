@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+
 	import { goto } from '$app/navigation';
 
 	import { paused } from '$lib/stores/screen';

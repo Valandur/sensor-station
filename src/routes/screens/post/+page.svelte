@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { format } from 'date-fns';
-	import { goto } from '$app/navigation';
 	import de from 'date-fns/locale/de/index';
+
+	import { goto } from '$app/navigation';
 
 	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
