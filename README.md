@@ -21,13 +21,38 @@ gpu_mem=64
 #### ~/.config/sway/config
 
 ```conf
+# Use windows key as modifier
+set $mod Mod4
+
+# Terminal emulator
+# set $term alacritty
+
 output HDMI-A-1 {
-        bg ~/wallpaper.jpg fill
+  bg ~/wallpaper.jpg fill
 }
 
 input 3823:5:WaveShare_WS170120 {
-        calibration_matrix -1 0 1 0 -1 1
+  calibration_matrix -1 0 1 0 -1 1
 }
+
+# Kill focused window
+bindsym $mod+q kill
+
+# Reload the configuration file
+bindsym $mod+c reload
+
+# Exit sway (logs you out of your Wayland session)
+bindsym $mod+e exec swaymsg exit
+
+# Make the current focus fullscreen
+bindsym $mod+f fullscreen
+
+bar {
+    position top
+    mode invisible
+}
+
+default_border none
 ```
 
 #### /usr/share/luakit/lib/window.lua
