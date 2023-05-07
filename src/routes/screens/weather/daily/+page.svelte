@@ -5,8 +5,7 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: lat = data.lat;
-	$: lng = data.lng;
+	$: loc = data.location;
 	$: forecasts = data.daily;
 </script>
 
@@ -14,8 +13,11 @@
 	<div class="row d-flex flex-row justify-content-end">
 		<div class="col-auto text-muted">
 			<i class="icofont-location-pin" />
-			{lat},
-			{lng}
+			{#if loc.place}
+				{loc.place.name}, {loc.place.state}, {loc.place.country}
+			{:else}
+				{loc.lat}, {loc.lng}
+			{/if}
 		</div>
 	</div>
 	<div class="row">

@@ -11,11 +11,10 @@ export const load: PageServerLoad = async () => {
 		throw redirect(302, '/screens');
 	}
 
-	const [lat, lng, forecasts] = await getDaily();
+	const [location, forecasts] = await getDaily();
 
 	return {
-		lat,
-		lng,
+		location,
 		daily: forecasts.slice(0, NUM_FORECASTS)
 	};
 };

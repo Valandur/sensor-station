@@ -1,6 +1,7 @@
 import { dev } from '$app/environment';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { error } from '@sveltejs/kit';
+import { readFile, writeFile } from 'node:fs/promises';
 import superagent from 'superagent';
 
 import { env } from '$env/dynamic/private';
@@ -16,31 +17,34 @@ export const ENABLED = env.WEATHER_ENABLED === '1';
 const CACHE_TIME = Number(env.WEATHER_CACHE_TIME);
 const BASE_LAT = Number(env.WEATHER_LAT);
 const BASE_LNG = Number(env.WEATHER_LNG);
+const MIN_DIFF = Number(env.WEATHER_MIN_DIFF);
 const API_KEY = env.WEATHER_API_KEY;
-const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
+const CACHE_FILE = 'data/weather.json';
+const FORECAST_URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
+const GEOCODE_URL = `https://api.openweathermap.org/geo/1.0/reverse?limit=3`;
 
 const logger = new Logger('WEATHER');
 
-let latitude = BASE_LAT;
-let longitude = BASE_LNG;
+let loaded = false;
+let location: Location = { lat: BASE_LAT, lng: BASE_LNG };
 let alerts: WeatherAlert[] = [];
 let hourly: WeatherForecast[] = [];
 let daily: WeatherForecast[] = [];
 let cachedAt = new Date(0);
 
-export async function getAlerts(): Promise<[number, number, WeatherAlert[]]> {
-	const { latitude, longitude, alerts } = await getWeather();
-	return [latitude, longitude, alerts];
+export async function getAlerts(): Promise<[Location, WeatherAlert[]]> {
+	const { location, alerts } = await getWeather();
+	return [location, alerts];
 }
 
-export async function getHourly(): Promise<[number, number, WeatherForecast[]]> {
-	const { latitude, longitude, hourly } = await getWeather();
-	return [latitude, longitude, hourly];
+export async function getHourly(): Promise<[Location, WeatherForecast[]]> {
+	const { location, hourly } = await getWeather();
+	return [location, hourly];
 }
 
-export async function getDaily(): Promise<[number, number, WeatherForecast[]]> {
-	const { latitude, longitude, daily } = await getWeather();
-	return [latitude, longitude, daily];
+export async function getDaily(): Promise<[Location, WeatherForecast[]]> {
+	const { location, daily } = await getWeather();
+	return [location, daily];
 }
 
 async function getWeather(): Promise<Weather> {
@@ -50,29 +54,27 @@ async function getWeather(): Promise<Weather> {
 
 	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
 		logger.debug('Using cached weather');
-		return { latitude, longitude, alerts, hourly, daily };
+		return { location, alerts, hourly, daily };
 	}
 
 	logger.debug('Updating...');
 	const startTime = process.hrtime.bigint();
 
 	try {
-		let lat = BASE_LAT;
-		let lng = BASE_LNG;
-
-		const loc = await getStatus().catch(() => null);
-		if (loc && loc.lat && loc.lng) {
-			lat = loc.lat;
-			lng = loc.lng;
-		}
-
-		const url = `${URL}&appid=${API_KEY}&lat=${lat}&lon=${lng}`;
+		const newLocation = await getNewLocation();
 
 		const newAlerts: WeatherAlert[] = [];
 		const newHourly: WeatherForecast[] = [];
 		const newDaily: WeatherForecast[] = [];
 
-		const { body } = await superagent.get(url);
+		const forecastUrl = `${FORECAST_URL}&appid=${API_KEY}&lat=${newLocation.lat}&lon=${newLocation.lng}`;
+		const { body } = await superagent.get(forecastUrl);
+
+		logger.debug(
+			'Weather location off by',
+			distance(newLocation.lat, newLocation.lng, body.lat, body.lon),
+			'meters'
+		);
 
 		if (body.alerts) {
 			for (const alert of body.alerts) {
@@ -107,14 +109,13 @@ async function getWeather(): Promise<Weather> {
 			newAlerts.push(...getMockAlerts());
 		}
 
-		latitude = lat;
-		longitude = lng;
+		location = newLocation;
 		alerts = newAlerts;
 		hourly = newHourly;
 		daily = newDaily;
 		cachedAt = new Date();
 
-		return { latitude, longitude, alerts, hourly, daily };
+		return { location, alerts, hourly, daily };
 	} catch (err) {
 		throw logger.toSvelteError(err);
 	} finally {
@@ -146,10 +147,80 @@ function getMockAlerts(): WeatherAlert[] {
 	];
 }
 
+async function getNewLocation(): Promise<Location> {
+	logger.debug('Getting location...');
+	const startTime = process.hrtime.bigint();
+
+	let newLoc: Location = { ...location };
+
+	if (!loaded) {
+		const data = JSON.parse(await readFile(CACHE_FILE, 'utf-8').catch(() => 'null'));
+		if (data) {
+			location = newLoc = data;
+			loaded = true;
+		}
+	}
+
+	const modemInfo = await getStatus().catch(() => null);
+	if (modemInfo && modemInfo.lat && modemInfo.lng) {
+		logger.debug('Using modem location', newLoc.lat, newLoc.lng);
+		newLoc = { ...newLoc, lat: modemInfo.lat, lng: modemInfo.lng };
+	}
+
+	const dist = distance(newLoc.lat, newLoc.lng, location.lat, location.lng);
+	if (dist > MIN_DIFF) {
+		logger.debug('Moved', dist, 'meters, recalculating location');
+		const geocodeUrl = `${GEOCODE_URL}&appid=${API_KEY}&lat=${newLoc.lat}&lon=${newLoc.lng}`;
+		const { body } = await superagent.get(geocodeUrl);
+		const result = body[0];
+		newLoc.place = { name: result.name, state: result.state, country: result.country };
+		await writeFile(CACHE_FILE, JSON.stringify(newLoc), 'utf-8');
+	}
+
+	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+	logger.info(
+		'Got location',
+		newLoc.lat,
+		newLoc.lng,
+		newLoc.place?.name,
+		newLoc.place?.state,
+		newLoc.place?.country,
+		'in',
+		diffTime,
+		'ms'
+	);
+
+	return newLoc;
+}
+
+function distance(lat1: number, lng1: number, lat2: number, lng2: number) {
+	const R = 6378.137; // Radius of earth in KM
+	const dLat = (lat2 * Math.PI) / 180 - (lat1 * Math.PI) / 180;
+	const dLon = (lng2 * Math.PI) / 180 - (lng1 * Math.PI) / 180;
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos((lat1 * Math.PI) / 180) *
+			Math.cos((lat2 * Math.PI) / 180) *
+			Math.sin(dLon / 2) *
+			Math.sin(dLon / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	const d = R * c;
+	return d * 1000; // meters
+}
+
 interface Weather {
-	latitude: number;
-	longitude: number;
+	location: Location;
 	alerts: WeatherAlert[];
 	hourly: WeatherForecast[];
 	daily: WeatherForecast[];
+}
+
+interface Location {
+	lat: number;
+	lng: number;
+	place?: {
+		name: string;
+		state: string;
+		country: string;
+	};
 }

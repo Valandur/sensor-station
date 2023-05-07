@@ -12,13 +12,12 @@ export const load: PageServerLoad = async () => {
 		throw redirect(302, '/screens');
 	}
 
-	const [lat, lng, forecasts] = await getHourly();
+	const [location, forecasts] = await getHourly();
 
 	const now = new Date();
 
 	return {
-		lat,
-		lng,
+		location,
 		hourly: forecasts
 			.filter((f) => isAfter(f.ts, now))
 			.filter((_, i) => i % 2 === 0)
