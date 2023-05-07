@@ -168,7 +168,7 @@ async function getNewLocation(): Promise<Location> {
 	}
 
 	const dist = distance(newLoc.lat, newLoc.lng, location.lat, location.lng);
-	if (dist > MIN_DIFF) {
+	if (!newLoc.place || dist > MIN_DIFF) {
 		logger.debug('Moved', dist, 'meters, recalculating location');
 		const geocodeUrl = `${GEOCODE_URL}&appid=${API_KEY}&lat=${newLoc.lat}&lon=${newLoc.lng}`;
 		const { body } = await superagent.get(geocodeUrl);
