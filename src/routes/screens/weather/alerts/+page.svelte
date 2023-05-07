@@ -10,16 +10,26 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	$: lat = data.lat;
+	$: lng = data.lng;
 	$: alert = data.alert;
 	$: prevPage = data.prevPage;
 	$: nextPage = data.nextPage;
 </script>
 
 <div
-	class="h-100 d-flex flex-column justify-content-end"
+	class="h-100 d-flex flex-column justify-content-between"
 	use:swipe={{ y: 100 }}
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
+	<div class="row d-flex flex-row justify-content-end">
+		<div class="col-auto text-muted">
+			<i class="icofont-location-pin" />
+			{lat},
+			{lng}
+		</div>
+	</div>
+
 	{#if alert}
 		<div class="row mh-100">
 			<div class="col mh-100">

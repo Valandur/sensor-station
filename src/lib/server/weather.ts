@@ -10,51 +10,62 @@ import { Logger } from '$lib/logger';
 import type { WeatherAlert } from '$lib/models/WeatherAlert';
 import type { WeatherForecast } from '$lib/models/WeatherForecast';
 
+import { getStatus } from './modem';
+
 export const ENABLED = env.WEATHER_ENABLED === '1';
 const CACHE_TIME = Number(env.WEATHER_CACHE_TIME);
-const BASE_LAT = env.WEATHER_LAT;
-const BASE_LNG = env.WEATHER_LNG;
+const BASE_LAT = Number(env.WEATHER_LAT);
+const BASE_LNG = Number(env.WEATHER_LNG);
 const API_KEY = env.WEATHER_API_KEY;
 const URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
 
 const logger = new Logger('WEATHER');
 
+let latitude = BASE_LAT;
+let longitude = BASE_LNG;
 let alerts: WeatherAlert[] = [];
 let hourly: WeatherForecast[] = [];
 let daily: WeatherForecast[] = [];
 let cachedAt = new Date(0);
 
-export async function getAlerts(latitude?: string, longitude?: string): Promise<WeatherAlert[]> {
-	const { alerts } = await getWeather(latitude, longitude);
-	return alerts;
+export async function getAlerts(): Promise<[number, number, WeatherAlert[]]> {
+	const { latitude, longitude, alerts } = await getWeather();
+	return [latitude, longitude, alerts];
 }
 
-export async function getHourly(latitude?: string, longitude?: string): Promise<WeatherForecast[]> {
-	const { hourly } = await getWeather(latitude, longitude);
-	return hourly;
+export async function getHourly(): Promise<[number, number, WeatherForecast[]]> {
+	const { latitude, longitude, hourly } = await getWeather();
+	return [latitude, longitude, hourly];
 }
 
-export async function getDaily(latitude?: string, longitude?: string): Promise<WeatherForecast[]> {
-	const { daily } = await getWeather(latitude, longitude);
-	return daily;
+export async function getDaily(): Promise<[number, number, WeatherForecast[]]> {
+	const { latitude, longitude, daily } = await getWeather();
+	return [latitude, longitude, daily];
 }
 
-async function getWeather(latitude?: string, longitude?: string): Promise<Weather> {
+async function getWeather(): Promise<Weather> {
 	if (!ENABLED) {
 		throw error(400, { message: 'Weather module is disabled', key: 'weather.disabled' });
 	}
 
 	if (differenceInSeconds(new Date(), cachedAt) <= CACHE_TIME) {
 		logger.debug('Using cached weather');
-		return { alerts, hourly, daily };
+		return { latitude, longitude, alerts, hourly, daily };
 	}
 
 	logger.debug('Updating...');
 	const startTime = process.hrtime.bigint();
 
 	try {
-		const lat = latitude || BASE_LAT;
-		const lng = longitude || BASE_LNG;
+		let lat = BASE_LAT;
+		let lng = BASE_LNG;
+
+		const loc = await getStatus().catch(() => null);
+		if (loc && loc.lat && loc.lng) {
+			lat = loc.lat;
+			lng = loc.lng;
+		}
+
 		const url = `${URL}&appid=${API_KEY}&lat=${lat}&lon=${lng}`;
 
 		const newAlerts: WeatherAlert[] = [];
@@ -96,12 +107,14 @@ async function getWeather(latitude?: string, longitude?: string): Promise<Weathe
 			newAlerts.push(...getMockAlerts());
 		}
 
+		latitude = lat;
+		longitude = lng;
 		alerts = newAlerts;
 		hourly = newHourly;
 		daily = newDaily;
 		cachedAt = new Date();
 
-		return { alerts, hourly, daily };
+		return { latitude, longitude, alerts, hourly, daily };
 	} catch (err) {
 		throw logger.toSvelteError(err);
 	} finally {
@@ -134,6 +147,8 @@ function getMockAlerts(): WeatherAlert[] {
 }
 
 interface Weather {
+	latitude: number;
+	longitude: number;
 	alerts: WeatherAlert[];
 	hourly: WeatherForecast[];
 	daily: WeatherForecast[];

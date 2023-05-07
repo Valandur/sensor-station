@@ -5,10 +5,19 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	$: lat = data.lat;
+	$: lng = data.lng;
 	$: forecasts = data.daily;
 </script>
 
 <div class="h-100 d-flex flex-column justify-content-end">
+	<div class="row d-flex flex-row justify-content-end">
+		<div class="col-auto text-muted">
+			<i class="icofont-location-pin" />
+			{lat},
+			{lng}
+		</div>
+	</div>
 	<div class="row">
 		{#each forecasts as forecast}
 			<div class="col d-flex flex-column justify-content-between align-items-center">

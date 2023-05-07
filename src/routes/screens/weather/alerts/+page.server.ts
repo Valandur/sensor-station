@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		throw redirect(302, '/screens');
 	}
 
-	const alerts = await getAlerts();
+	const [lat, lng, alerts] = await getAlerts();
 	counter.max = alerts.length;
 
 	let page = Number(url.searchParams.get('page') || '-');
@@ -28,6 +28,8 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	}
 
 	return {
+		lat,
+		lng,
 		alert,
 		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
 		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
