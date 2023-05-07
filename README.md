@@ -100,6 +100,12 @@ sudo minicom -D /dev/ttyUSB2
 ```
 
 ```shell
+# set echo
+$ ATE1
+
+# set response format
+$ ATV1
+
 # deregister from network
 $ AT+COPS=2
 
@@ -112,8 +118,17 @@ $ AT+COPS=0
 # auto start GPS on modem boot
 $ AT+CGPSAUTO=1
 
-# start gps in standalone mode
-$ AT+CGPS=1,1
+# set supported gps types / satellites
+$ AT+CGNSSMODE=15,1
+
+# set NMEA reporting sentence structure
+$ AT+CGPSNMEA=262143
+
+# set NMEA to report every 10 seconds, and also set the reporting sentence structure
+$ AT+CGPSINFOCFG=10,262143
+
+# start gps in ue based mode (auto fallback to standalone)
+$ AT+CGPS=1,2
 ```
 
 ## create-svelte
