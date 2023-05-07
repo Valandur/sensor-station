@@ -226,13 +226,8 @@ class Commander {
 			return;
 		}
 
-		return new Promise<void>((resolve) =>
-			this.port.close((err) => {
-				if (err) {
-					console.error('Error while closing', err);
-				}
-				resolve();
-			})
+		return new Promise<void>((resolve, reject) =>
+			this.port.close((err) => (err ? reject(err) : resolve()))
 		);
 	}
 }
