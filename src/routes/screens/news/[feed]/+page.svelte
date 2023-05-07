@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { formatDistanceToNow } from 'date-fns';
+	import de from 'date-fns/locale/de/index';
 
 	import { goto } from '$app/navigation';
 
@@ -48,7 +50,12 @@
 			<div class="col-3 me-1 image">
 				<img alt="Thumbnail" src={`/data/news/${item.image}`} />
 			</div>
-			<div class="col p-1 abstract">{item.title}</div>
+			<div class="col abstract d-flex flex-column justify-content-around">
+				<div class="fs-3">{item.title}</div>
+				<div class="fs-5 text-muted">
+					{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
+				</div>
+			</div>
 		</div>
 	{/each}
 </div>
