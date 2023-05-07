@@ -61,18 +61,56 @@ async function getWeather(): Promise<Weather> {
 	const startTime = process.hrtime.bigint();
 
 	try {
-		const newLocation = await getNewLocation();
+		let lat = location.lat;
+		let lng = location.lng;
+
+		if (!loaded) {
+			const data = JSON.parse(await readFile(CACHE_FILE, 'utf-8').catch(() => 'null'));
+			if (data) {
+				location = data;
+				lat = location.lat;
+				lng = location.lng;
+				loaded = true;
+			}
+		}
+
+		const modemInfo = await getStatus().catch(() => null);
+		if (modemInfo && modemInfo.lat && modemInfo.lng) {
+			logger.debug('Using modem location', modemInfo.lat, modemInfo.lng);
+			lat = modemInfo.lat;
+			lng = modemInfo.lng;
+		}
 
 		const newAlerts: WeatherAlert[] = [];
 		const newHourly: WeatherForecast[] = [];
 		const newDaily: WeatherForecast[] = [];
 
-		const forecastUrl = `${FORECAST_URL}&appid=${API_KEY}&lat=${newLocation.lat}&lon=${newLocation.lng}`;
+		const forecastUrl = `${FORECAST_URL}&appid=${API_KEY}&lat=${lat}&lon=${lng}`;
 		const { body } = await superagent.get(forecastUrl);
 
+		const newLat: number = body.lat;
+		const newLng: number = body.lon;
+		let newPlace: Place | undefined = location.place;
+
+		const dist = distance(newLat, newLng, location.lat, location.lng);
+		if (!location.place || dist > MIN_DIFF) {
+			logger.debug('Moved', dist, 'meters, recalculating location');
+			const geocodeUrl = `${GEOCODE_URL}&appid=${API_KEY}&lat=${newLat}&lon=${newLng}`;
+			const { body } = await superagent.get(geocodeUrl).catch(() => ({ body: [] }));
+			const result = body[0];
+			newPlace = result
+				? { name: result.name, state: result.state, country: result.country }
+				: undefined;
+			await writeFile(
+				CACHE_FILE,
+				JSON.stringify({ lat: newLat, lng: newLng, place: newPlace }),
+				'utf-8'
+			);
+		}
+
 		logger.debug(
-			'Weather location off by',
-			distance(newLocation.lat, newLocation.lng, body.lat, body.lon),
+			'Weather location moved by',
+			distance(newLat, newLng, location.lat, location.lng),
 			'meters'
 		);
 
@@ -109,7 +147,7 @@ async function getWeather(): Promise<Weather> {
 			newAlerts.push(...getMockAlerts());
 		}
 
-		location = newLocation;
+		location = { lat: newLat, lng: newLng, place: newPlace };
 		alerts = newAlerts;
 		hourly = newHourly;
 		daily = newDaily;
@@ -147,52 +185,6 @@ function getMockAlerts(): WeatherAlert[] {
 	];
 }
 
-async function getNewLocation(): Promise<Location> {
-	logger.debug('Getting location...');
-	const startTime = process.hrtime.bigint();
-
-	let newLoc: Location = { ...location };
-
-	if (!loaded) {
-		const data = JSON.parse(await readFile(CACHE_FILE, 'utf-8').catch(() => 'null'));
-		if (data) {
-			location = newLoc = data;
-			loaded = true;
-		}
-	}
-
-	const modemInfo = await getStatus().catch(() => null);
-	if (modemInfo && modemInfo.lat && modemInfo.lng) {
-		logger.debug('Using modem location', newLoc.lat, newLoc.lng);
-		newLoc = { ...newLoc, lat: modemInfo.lat, lng: modemInfo.lng };
-	}
-
-	const dist = distance(newLoc.lat, newLoc.lng, location.lat, location.lng);
-	if (!newLoc.place || dist > MIN_DIFF) {
-		logger.debug('Moved', dist, 'meters, recalculating location');
-		const geocodeUrl = `${GEOCODE_URL}&appid=${API_KEY}&lat=${newLoc.lat}&lon=${newLoc.lng}`;
-		const { body } = await superagent.get(geocodeUrl);
-		const result = body[0];
-		newLoc.place = { name: result.name, state: result.state, country: result.country };
-		await writeFile(CACHE_FILE, JSON.stringify(newLoc), 'utf-8');
-	}
-
-	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-	logger.info(
-		'Got location',
-		newLoc.lat,
-		newLoc.lng,
-		newLoc.place?.name,
-		newLoc.place?.state,
-		newLoc.place?.country,
-		'in',
-		diffTime,
-		'ms'
-	);
-
-	return newLoc;
-}
-
 function distance(lat1: number, lng1: number, lat2: number, lng2: number) {
 	const R = 6378.137; // Radius of earth in KM
 	const dLat = (lat2 * Math.PI) / 180 - (lat1 * Math.PI) / 180;
@@ -218,9 +210,11 @@ interface Weather {
 interface Location {
 	lat: number;
 	lng: number;
-	place?: {
-		name: string;
-		state: string;
-		country: string;
-	};
+	place?: Place;
+}
+
+interface Place {
+	name: string;
+	state: string;
+	country: string;
 }

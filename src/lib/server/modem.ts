@@ -17,8 +17,6 @@ const DEVICE_PATH = env.MODEM_DEVICE_PATH;
 const PAUSE_TIME = Number(env.MODEM_PAUSE_TIME);
 const WAIT_TIME = Number(env.MODEM_WAIT_TIME);
 const CMD_TIMEOUT = Number(env.MODEM_CMD_TIMEOUT);
-const BASE_LAT = Number(env.MODEM_BASE_LAT);
-const BASE_LNG = Number(env.MODEM_BASE_LNG);
 const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ = /\+CSQ: (\d+),(\d+)/i;
 const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
@@ -137,6 +135,8 @@ export async function getStatus(): Promise<ModemInfo> {
 }
 
 function getMockStatus(): ModemInfo {
+	const lat = Math.random() * 180 - 90;
+	const lng = Math.random() * 360 - 180;
 	return {
 		ts: new Date(),
 		isConnected: Math.random() > 0.5,
@@ -144,9 +144,9 @@ function getMockStatus(): ModemInfo {
 		tzOffset: '+01:00',
 		operator: 'Swisscom 1nce.net',
 		signal: Math.round(Math.random() * 4),
-		lat: BASE_LAT,
-		lng: BASE_LNG,
-		tzName: find(BASE_LAT, BASE_LNG)[0] || 'Unknown'
+		lat: lat,
+		lng: lng,
+		tzName: find(lat, lng)[0] || 'Unknown'
 	};
 }
 

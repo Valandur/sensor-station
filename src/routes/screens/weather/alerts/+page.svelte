@@ -33,7 +33,7 @@
 	</div>
 
 	{#if alert}
-		<div class="row mh-100">
+		<div class="row mh-100 overflow-hidden">
 			<div class="col mh-100">
 				<div class="card bg-warning border-warning bg-opacity-25 h-100">
 					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
