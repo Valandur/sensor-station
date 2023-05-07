@@ -222,6 +222,10 @@ class Commander {
 	}
 
 	public async close(): Promise<void> {
+		if (!this.port.isOpen) {
+			return;
+		}
+
 		return new Promise<void>((resolve) =>
 			this.port.close((err) => {
 				if (err) {
