@@ -106,13 +106,13 @@ async function getWeather(): Promise<Weather> {
 				JSON.stringify({ lat: newLat, lng: newLng, place: newPlace }),
 				'utf-8'
 			);
+		} else {
+			logger.debug(
+				'Weather location moved by',
+				distance(newLat, newLng, location.lat, location.lng),
+				'meters'
+			);
 		}
-
-		logger.debug(
-			'Weather location moved by',
-			distance(newLat, newLng, location.lat, location.lng),
-			'meters'
-		);
 
 		if (body.alerts) {
 			for (const alert of body.alerts) {

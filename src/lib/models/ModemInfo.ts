@@ -4,8 +4,8 @@ export interface ModemInfo {
 	operator: string | null;
 	signal: number | null;
 	time: Date | null;
-	tzOffset: string | null;
+	timeTz: string | null;
 	lat: number | null;
 	lng: number | null;
-	tzName: string | null;
+	gpsTz: string | null;
 }

@@ -80,7 +80,7 @@ export async function getStatus(): Promise<ModemInfo> {
 		}
 
 		let time: Date | null = null;
-		let tzOffset: string | null = null;
+		let timeTz: string | null = null;
 		const cclkResp = await commander.send('AT+CCLK?');
 		const cclkMatch = CCLK.exec(cclkResp);
 		if (cclkMatch) {
@@ -95,20 +95,20 @@ export async function getStatus(): Promise<ModemInfo> {
 			const tzSign = rawTz > 0 ? '+' : '-';
 			const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
 			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
-			tzOffset = `${tzSign}${tzHours}:${tzMinutes}`;
 
-			time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${tzOffset}`);
+			timeTz = `${tzSign}${tzHours}:${tzMinutes}`;
+			time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
 		}
 
 		let lat: number | null = null;
 		let lng: number | null = null;
-		let tzName: string | null = null;
+		let gpsTz: string | null = null;
 		const gpsResp = await commander.send('AT+CGPSINFO');
 		const gpsMatch = GPS.exec(gpsResp);
 		if (gpsMatch) {
 			lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
 			lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
-			tzName = find(lat, lng)[0] || null;
+			gpsTz = find(lat, lng)[0] || null;
 		}
 
 		const newStatus: ModemInfo = {
@@ -117,10 +117,10 @@ export async function getStatus(): Promise<ModemInfo> {
 			operator,
 			signal,
 			time,
-			tzOffset,
+			timeTz,
 			lat,
 			lng,
-			tzName
+			gpsTz
 		};
 
 		status = newStatus;
@@ -141,12 +141,12 @@ function getMockStatus(): ModemInfo {
 		ts: new Date(),
 		isConnected: Math.random() > 0.5,
 		time: new Date(),
-		tzOffset: '+01:00',
+		timeTz: '+01:00',
 		operator: 'Swisscom 1nce.net',
 		signal: Math.round(Math.random() * 4),
 		lat: lat,
 		lng: lng,
-		tzName: find(lat, lng)[0] || 'Unknown'
+		gpsTz: find(lat, lng)[0] || null
 	};
 }
 

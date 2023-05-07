@@ -38,7 +38,7 @@
 				<div class="card bg-warning border-warning bg-opacity-25 h-100">
 					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
 						<div>
-							{alert.sender} - {alert.tags}
+							{alert.tags}
 						</div>
 						<div>
 							<i class="icofont-calendar" />
@@ -50,6 +50,9 @@
 						<h5 class="card-title">
 							{alert.event}
 						</h5>
+						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
+							{alert.sender}
+						</h6>
 						<ul class="m-0 p-0 ms-3">
 							{#each alert.content.split('\n') as line}
 								<li>{line.substring(2)}</li>

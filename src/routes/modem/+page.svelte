@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { format, formatDistanceToNow } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import de from 'date-fns/locale/de/index';
 
 	import { time } from '$lib/stores/time';
@@ -9,6 +10,9 @@
 
 	export let data: PageData;
 	$: status = data.status;
+	$: timezone = status?.gpsTz || status?.timeTz || 'Europe/Zurich';
+	$: console.log(timezone);
+	$: tzStr = formatInTimeZone($time, timezone, 'O', { locale: de });
 
 	let timeStr = '';
 	$: $time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true, locale: de }));
@@ -35,26 +39,27 @@
 						</td>
 					</tr>
 					<tr>
-						<td>Operator</td>
-						<td colspan="2">{status.operator}</td>
-					</tr>
-					<tr>
 						<td>Signal</td>
 						<td colspan="2">{status.signal}/4</td>
 					</tr>
 					<tr>
-						<td>Time</td>
-						<td colspan="2">{status.time ? format(status.time, 'Pp z', { locale: de }) : '---'}</td>
+						<td>Operator</td>
+						<td colspan="2">{status.operator}</td>
 					</tr>
 					<tr>
-						<td>Location</td>
+						<td>Operator Time</td>
+						<td>{status.time ? format(status.time, 'P - p', { locale: de }) : '---'}</td>
+						<td>{status.timeTz}</td>
+					</tr>
+					<tr>
+						<td>GPS Location</td>
 						<td>{status.lat}</td>
 						<td>{status.lng}</td>
 					</tr>
 					<tr>
-						<td>Timezone</td>
-						<td>{status.tzName}</td>
-						<td>{status.tzOffset}</td>
+						<td>GPS Timezone</td>
+						<td>{status.gpsTz}</td>
+						<td>{tzStr}</td>
 					</tr>
 				</tbody>
 			</table>

@@ -18,8 +18,9 @@
 
 	export let data: LayoutData;
 	$: index = data.index;
-	$: timezone = data.modem?.tzName || data.modem?.tzOffset || 'Europe/Zurich';
+	$: timezone = data.modem?.gpsTz || data.modem?.timeTz || 'Europe/Zurich';
 	$: timeStr = formatInTimeZone($time, timezone, 'HH:mm', { locale: de });
+	$: tzStr = formatInTimeZone($time, timezone, 'O', { locale: de });
 	$: secondStr = formatInTimeZone($time, timezone, 'ss', { locale: de });
 	$: date = formatInTimeZone($time, timezone, 'd. MMMM yyyy', { locale: de });
 	$: dateSub = formatInTimeZone($time, timezone, 'eeee', { locale: de }).replace('.', '');
@@ -73,10 +74,13 @@
 			on:keypress={togglePause}
 		>
 			<div class="time-main">{timeStr}</div>
-			<div class="time-seconds ms-1">{secondStr}</div>
+			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-1">
+				<div>{secondStr}</div>
+				<div class="text-muted">{tzStr}</div>
+			</div>
 		</div>
 
-		<div class="col d-flex flex-column justify-content-end align-items-end overflow-hidden p-0">
+		<div class="col d-flex flex-column justify-content-end align-items-end overflow-visible p-0">
 			<div class="row icons flex-nowrap">
 				{#if modemStatus?.operator}
 					<div class="col-auto">
@@ -95,7 +99,6 @@
 				{#if modemStatus?.lat && modemStatus?.lng}
 					<div class="col-auto">
 						<i class="icofont-satellite" />
-						{modemStatus.lat.toFixed(2)} | {modemStatus.lng.toFixed(2)}
 					</div>
 				{/if}
 
@@ -173,8 +176,15 @@
 	}
 
 	.time-seconds {
-		font-size: 1.8rem;
-		line-height: 1.6rem;
+		> :first-child {
+			font-size: 2.2rem;
+			line-height: 1.8rem;
+		}
+
+		> :last-child {
+			font-size: 1.4rem;
+			line-height: 1.3rem;
+		}
 	}
 
 	.icons {
