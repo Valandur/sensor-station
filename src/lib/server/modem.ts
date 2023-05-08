@@ -97,7 +97,7 @@ export async function getStatus(): Promise<ModemInfo> {
 			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
 
 			timeTz = `${tzSign}${tzHours}:${tzMinutes}`;
-			time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+			time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${timeTz}`);
 		}
 
 		let lat: number | null = null;
