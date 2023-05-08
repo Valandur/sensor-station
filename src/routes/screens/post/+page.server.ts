@@ -1,26 +1,22 @@
 import { redirect } from '@sveltejs/kit';
 
 import { Counter } from '$lib/counter';
-import { ENABLED, getShipments } from '$lib/server/post';
+import { getData } from '$lib/server/post/data';
 
 import type { PageServerLoad } from './$types';
 
 const counter = new Counter();
 
 export const load: PageServerLoad = async ({ url, parent }) => {
-	if (!ENABLED) {
-		throw redirect(302, '/screens');
-	}
-
-	const shipments = await getShipments();
-	counter.max = shipments.length;
+	const data = await getData();
+	counter.max = data.shipments.length;
 
 	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}
 
-	const shipment = shipments[page];
+	const shipment = data.shipments[page];
 	const dataParent = await parent();
 
 	if (!shipment && dataParent.skipScreen) {

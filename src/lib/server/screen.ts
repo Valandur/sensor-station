@@ -1,49 +1,28 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-import { Counter } from '$lib/counter';
-import { Logger } from '$lib/logger';
+import { BaseLogger } from '$lib/models/BaseLogger';
 import type { Screen } from '$lib/models/Screen';
 
 const SCREENS_PATH = 'data/screens.json';
 
-const logger = new Logger('SCREENS');
+const logger = new BaseLogger('SCREENS');
 
-let loaded = false;
 let screens: Screen[] = [];
-const counter = new Counter();
+
+await loadScreens();
 
 export function getScreenUrl(index: number, dir: 'next' | 'prev' = 'next') {
-	const idx = counter.wrap(index);
-	const screen = screens[idx];
-	return `/screens/${screen.name}/${screen.params ?? ''}?screen=${idx}&dir=${dir}`;
+	const screen = screens[index];
+	return `/screens/${screen.name}/${screen.params ?? ''}?screen=${index}&dir=${dir}`;
 }
 
 export async function getScreens() {
-	if (loaded) {
-		return screens;
-	}
-
-	logger.debug('Loading...');
-	const startTime = process.hrtime.bigint();
-
-	await mkdir(dirname(SCREENS_PATH), { recursive: true });
-	const newScreens = JSON.parse(await readFile(SCREENS_PATH, 'utf-8').catch(() => '[]'));
-
-	loaded = true;
-	screens = newScreens;
-	counter.max = newScreens.length;
-
-	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-	logger.info('Loaded', newScreens.length, 'screens', diffTime, 'ms');
-
 	return screens;
 }
 
 export async function saveScreens(newScreens: Screen[]) {
-	loaded = true;
 	screens = newScreens;
-	counter.max = newScreens.length;
 
 	logger.debug('Saving...');
 	const startTime = process.hrtime.bigint();
@@ -52,4 +31,17 @@ export async function saveScreens(newScreens: Screen[]) {
 
 	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
 	logger.info('Saved', newScreens.length, 'screens', diffTime, 'ms');
+}
+
+async function loadScreens() {
+	logger.debug('Loading...');
+	const startTime = process.hrtime.bigint();
+
+	await mkdir(dirname(SCREENS_PATH), { recursive: true });
+	const newScreens = JSON.parse(await readFile(SCREENS_PATH, 'utf-8').catch(() => '[]'));
+
+	screens = newScreens;
+
+	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+	logger.info('Loaded', newScreens.length, 'screens', diffTime, 'ms');
 }

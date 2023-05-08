@@ -7,53 +7,20 @@ import mime from 'mime-types';
 
 import { env } from '$env/dynamic/private';
 
-import { Logger } from '$lib/logger';
+import { BaseLogger } from '$lib/models/BaseLogger';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 export const ENABLED = env.UPLOADS_ENABLED === '1';
 const UPLOADS_FILE = 'data/uploads.json';
 const UPLOADS_DIR = 'data/uploads';
 
-const logger = new Logger('UPLOADS');
+const logger = new BaseLogger('UPLOADS');
 
-let loaded = false;
 let uploads: UploadItem[] = [];
 
+await loadUploads();
+
 export async function getUploads() {
-	if (loaded) {
-		return uploads;
-	}
-
-	logger.debug('Loading...');
-	const startTime = process.hrtime.bigint();
-
-	const newUploads: UploadItem[] = JSON.parse(
-		await readFile(UPLOADS_FILE, 'utf-8').catch(() => '[]')
-	).map((item: Record<string, string>) => ({ ...item, ts: parseISO(item.ts) }));
-
-	let added = false;
-	const files = await readdir(UPLOADS_DIR).catch(() => []);
-	for (const file of files) {
-		if (newUploads.some((item) => item.img === file)) {
-			continue;
-		}
-
-		logger.warn(`Found upload file without data entry: ${file}`);
-		const ratio = await getRatio(`${UPLOADS_DIR}/${file}`);
-		newUploads.push({ ts: new Date(), title: '', img: file, ratio });
-		added = true;
-	}
-
-	loaded = true;
-	uploads = newUploads;
-
-	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-	logger.info('Loaded', newUploads.length, 'uploads', diffTime, 'ms');
-
-	if (added) {
-		await saveUploads(newUploads);
-	}
-
 	return uploads;
 }
 
@@ -99,6 +66,37 @@ export async function saveUploads(newUploads: UploadItem[]): Promise<void> {
 
 	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
 	logger.info('Saved', newUploads.length, 'uploads', diffTime, 'ms');
+}
+
+async function loadUploads() {
+	logger.debug('Loading...');
+	const startTime = process.hrtime.bigint();
+
+	const newUploads: UploadItem[] = JSON.parse(
+		await readFile(UPLOADS_FILE, 'utf-8').catch(() => '[]')
+	).map((item: Record<string, string>) => ({ ...item, ts: parseISO(item.ts) }));
+
+	let added = false;
+	const files = await readdir(UPLOADS_DIR).catch(() => []);
+	for (const file of files) {
+		if (newUploads.some((item) => item.img === file)) {
+			continue;
+		}
+
+		logger.warn(`Found upload file without data entry: ${file}`);
+		const ratio = await getRatio(`${UPLOADS_DIR}/${file}`);
+		newUploads.push({ ts: new Date(), title: '', img: file, ratio });
+		added = true;
+	}
+
+	uploads = newUploads;
+
+	const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+	logger.info('Loaded', newUploads.length, 'uploads', diffTime, 'ms');
+
+	if (added) {
+		await saveUploads(newUploads);
+	}
 }
 
 async function getRatio(fileName: string, data?: Buffer) {

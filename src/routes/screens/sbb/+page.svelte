@@ -14,24 +14,14 @@
 	$: prevPage = data.prevPage;
 	$: nextPage = data.nextPage;
 
-	function formatTitle(title: string | undefined) {
-		return title?.replace('Einschränkung', '').trim();
-	}
-
-	function formatDuration(duration: string | undefined) {
-		return duration
+	$: summary = alert.summary?.replace('Einschränkung', '').trim() || '';
+	$: description = alert.description?.replace('Linien', '').trim() || '';
+	$: reason = alert.reason?.replace('Grund:', '').trim() || '';
+	$: duration =
+		alert.duration
 			?.replace('Dauer:', '')
 			.replaceAll(`${format(new Date(), 'dd.MM.yyyy', { locale: de })},`, '')
-			.trim();
-	}
-
-	function formatDescription(lines: string | undefined) {
-		return lines?.replace('Linien', '').trim();
-	}
-
-	function formatReason(reason: string | undefined) {
-		return reason?.replace('Grund:', '').trim();
-	}
+			.trim() || '';
 </script>
 
 <div
@@ -43,23 +33,31 @@
 		<div class="row">
 			<div class="col">
 				<div class="card bg-warning border-warning bg-opacity-25">
-					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
-						<div>
-							{formatDescription(alert.description)}
+					{#if reason || duration}
+						<div class="card-header border-warning fw-bold small d-flex justify-content-between">
+							<div>
+								{reason}
+							</div>
+							<div>
+								<i class="icofont-clock-time" />
+								{duration}
+							</div>
 						</div>
-						<div>
-							<i class="icofont-clock-time" />
-							{formatDuration(alert.duration)}
-						</div>
-					</div>
+					{/if}
 					<div class="card-body">
-						<h5 class="card-title">
-							{formatTitle(alert.summary)}
-						</h5>
-						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-							{formatReason(alert.reason)}
-						</h6>
-						<p class="card-text">{alert.consequence}</p>
+						{#if summary}
+							<h5 class="card-title">
+								{summary}
+							</h5>
+						{/if}
+						{#if description}
+							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
+								{description}
+							</h6>
+						{/if}
+						{#if alert.consequence}
+							<p class="card-text">{alert.consequence}</p>
+						{/if}
 					</div>
 
 					<div class="card-arrow">

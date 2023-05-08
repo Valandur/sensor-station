@@ -1,11 +1,11 @@
-import { getStatus } from '$lib/server/modem';
+import { getData } from '$lib/server/modem/data';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const status = await getStatus();
+	const data = await getData(true);
 
 	return {
-		status
+		...data
 	};
 };

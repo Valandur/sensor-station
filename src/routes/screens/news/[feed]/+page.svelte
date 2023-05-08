@@ -7,7 +7,7 @@
 
 	import { paused } from '$lib/stores/screen';
 	import { swipe } from '$lib/swipe';
-	import type { NewsFeedItem } from '$lib/models/NewsFeedItem';
+	import type { NewsItem } from '$lib/models/NewsItem';
 
 	import type { PageData } from './$types';
 
@@ -18,9 +18,9 @@
 	$: nextPage = data.nextPage;
 
 	let wasPaused = false;
-	let selectedItem: NewsFeedItem | null = null;
+	let selectedItem: NewsItem | null = null;
 
-	function select(item: NewsFeedItem | null) {
+	function select(item: NewsItem | null) {
 		selectedItem = item;
 		if (item) {
 			wasPaused = $paused;
@@ -51,7 +51,7 @@
 				<img alt="Thumbnail" src={`/data/news/${item.image}`} />
 			</div>
 			<div class="col abstract d-flex flex-column justify-content-around">
-				<div class="fs-3">{item.title}</div>
+				<div class="fs-4">{item.title}</div>
 				<div class="fs-6 text-muted">
 					{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
 				</div>

@@ -1,26 +1,22 @@
 import { Counter } from '$lib/counter';
 import { redirect } from '@sveltejs/kit';
 
-import { ENABLED, getAlerts } from '$lib/server/weather';
+import { getData } from '$lib/server/weather/data';
 
 import type { PageServerLoad } from './$types';
 
 const counter = new Counter();
 
 export const load: PageServerLoad = async ({ url, parent }) => {
-	if (!ENABLED) {
-		throw redirect(302, '/screens');
-	}
-
-	const [location, alerts] = await getAlerts();
-	counter.max = alerts.length;
+	const data = await getData();
+	counter.max = data.alerts.length;
 
 	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = counter.increment();
 	}
 
-	const alert = alerts[page];
+	const alert = data.alerts[page];
 	const dataParent = await parent();
 
 	if (!alert && dataParent.skipScreen) {
@@ -28,8 +24,8 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	}
 
 	return {
-		location,
 		alert,
+		location: data.location,
 		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
 		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
 	};

@@ -24,8 +24,8 @@
 	$: secondStr = formatInTimeZone($time, timezone, 'ss', { locale: de });
 	$: date = formatInTimeZone($time, timezone, 'd. MMMM yyyy', { locale: de });
 	$: dateSub = formatInTimeZone($time, timezone, 'eeee', { locale: de }).replace('.', '');
-	$: modemStatus = data.modem;
-	$: batteryStatus = data.battery;
+	$: modem = data.modem;
+	$: battery = data.battery;
 	$: holiday = data.holiday;
 
 	let timer: ReturnType<typeof setInterval> | null = null;
@@ -82,43 +82,43 @@
 
 		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
 			<div class="row icons flex-nowrap justify-content-end">
-				{#if modemStatus?.operator}
+				{#if modem?.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
-						{modemStatus.operator.split(' ', 2)[0]}
+						{modem.operator.split(' ', 2)[0]}
 					</div>
 				{/if}
 
-				{#if modemStatus?.signal}
+				{#if modem?.signal}
 					<div class="col-auto">
 						<i class="icofont-signal" />
-						{(modemStatus.signal / 4) * 100}%
+						{(modem.signal / 4) * 100}%
 					</div>
 				{/if}
 
-				{#if modemStatus?.lat && modemStatus?.lng}
+				{#if modem?.lat && modem?.lng}
 					<div class="col-auto">
 						<i class="icofont-satellite" />
-						{modemStatus.lat.toFixed(2)} | {modemStatus.lng.toFixed(2)}
+						{modem.lat.toFixed(0)} | {modem.lng.toFixed(0)}
 					</div>
 				{/if}
 
-				{#if batteryStatus}
+				{#if battery}
 					<div class="col-auto">
-						{#if batteryStatus.charge > 70}
+						{#if battery.charge > 70}
 							<i class="icofont-battery-full" />
-						{:else if batteryStatus.charge > 40}
+						{:else if battery.charge > 40}
 							<i class="icofont-battery-half" />
-						{:else if batteryStatus.charge > 10}
+						{:else if battery.charge > 10}
 							<i class="icofont-battery-low" />
 						{:else}
 							<i class="icofont-battery-empty" />
 						{/if}
-						{batteryStatus.charge}%
+						{battery.charge}%
 					</div>
 				{/if}
 
-				{#if batteryStatus?.state.includes('CHARGING')}
+				{#if battery?.state.includes('CHARGING')}
 					<div class="col-auto">
 						<i class="icofont-plugin" />
 					</div>

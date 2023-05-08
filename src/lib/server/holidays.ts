@@ -1,11 +1,11 @@
 import { isSameDay } from 'date-fns';
 import Holidays, { type HolidaysTypes } from 'date-holidays';
 
-import { Logger } from '$lib/logger';
+import { BaseLogger } from '$lib/models/BaseLogger';
 
 const holidays = new Holidays('CH', 'ZH');
 
-const logger = new Logger('HOLIDAYS');
+const logger = new BaseLogger('HOLIDAYS');
 
 let lastHoliday: HolidaysTypes.Holiday | null = null;
 let lastCheck = new Date(0);

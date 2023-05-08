@@ -1,33 +1,36 @@
-import { env } from '$env/dynamic/private';
-import { redirect } from '@sveltejs/kit';
-
-import { getFeed } from '$lib/server/news';
+import { Counter } from '$lib/counter';
+import { getData } from '$lib/server/news/data';
 
 import type { PageServerLoad } from './$types';
 
-const ENABLED = env.NEWS_ENABLED === '1';
 const MAX_ITEMS = 3;
 
+const counters: Map<string, Counter> = new Map();
+
 export const load: PageServerLoad = async ({ url, params, parent }) => {
-	if (!ENABLED) {
-		throw redirect(302, '/screens');
+	const feedId = params.feed;
+
+	let counter = counters.get(feedId);
+	if (!counter) {
+		counter = new Counter();
+		counters.set(feedId, counter);
 	}
 
-	const feedId = params.feed;
-	const feed = await getFeed(feedId);
+	const data = await getData(feedId);
+	counter.max = data.items.length;
 
 	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
-		page = feed.counter.increment();
+		page = counter.increment();
 	}
 
-	const items = feed.counter.sliceAndWrap(feed.items, MAX_ITEMS, page);
+	const items = counter.sliceAndWrap(data.items, MAX_ITEMS, page);
 	const dataParent = await parent();
 
 	return {
 		feedId,
 		items,
-		nextPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page + 1)}`,
-		prevPage: `${dataParent.currScreen}&page=${feed.counter.wrap(page - 1)}`
+		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
 	};
 };

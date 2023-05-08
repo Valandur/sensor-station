@@ -1,0 +1,10 @@
+export interface SbbAlert {
+	start: Date;
+	end: Date;
+	summary: string;
+	reason: string | undefined;
+	description: string | undefined;
+	consequence: string | undefined;
+	duration: string | undefined;
+	recommendation: string | undefined;
+}

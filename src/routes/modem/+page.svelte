@@ -9,13 +9,11 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: status = data.status;
-	$: timezone = status?.gpsTz || status?.timeTz || 'Europe/Zurich';
-	$: console.log(timezone);
+	$: timezone = data?.gpsTz || data?.timeTz || 'Europe/Zurich';
 	$: tzStr = formatInTimeZone($time, timezone, 'O', { locale: de });
 
 	let timeStr = '';
-	$: $time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true, locale: de }));
+	$: $time, (timeStr = formatDistanceToNow(data.ts, { addSuffix: true, locale: de }));
 </script>
 
 <PageLayout title="Modem" subTitle={timeStr}>
@@ -31,7 +29,7 @@
 					<tr>
 						<td>Connected</td>
 						<td colspan="2">
-							{#if status.isConnected}
+							{#if data.isConnected}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -40,25 +38,25 @@
 					</tr>
 					<tr>
 						<td>Signal</td>
-						<td colspan="2">{status.signal}/4</td>
+						<td colspan="2">{data.signal}/4</td>
 					</tr>
 					<tr>
 						<td>Operator</td>
-						<td colspan="2">{status.operator}</td>
+						<td colspan="2">{data.operator}</td>
 					</tr>
 					<tr>
 						<td>Operator Time</td>
-						<td>{status.time ? format(status.time, 'P - p', { locale: de }) : '---'}</td>
-						<td>{status.timeTz}</td>
+						<td>{data.time ? format(data.time, 'P - p', { locale: de }) : '---'}</td>
+						<td>{data.timeTz}</td>
 					</tr>
 					<tr>
 						<td>GPS Location</td>
-						<td>{status.lat}</td>
-						<td>{status.lng}</td>
+						<td>{data.lat}</td>
+						<td>{data.lng}</td>
 					</tr>
 					<tr>
 						<td>GPS Timezone</td>
-						<td>{status.gpsTz}</td>
+						<td>{data.gpsTz}</td>
 						<td>{tzStr}</td>
 					</tr>
 				</tbody>

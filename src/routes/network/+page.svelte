@@ -8,10 +8,10 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: status = data.status;
+	$: interfaces = data.interfaces;
 
 	let timeStr = '';
-	$: $time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true, locale: de }));
+	$: $time, (timeStr = formatDistanceToNow(data.ts, { addSuffix: true, locale: de }));
 </script>
 
 <PageLayout title="Network" subTitle={timeStr}>
@@ -27,7 +27,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each status.interfaces as iface}
+					{#each interfaces as iface}
 						{#each iface.addresses as address, i}
 							<tr>
 								<td class="fw-bold">{i === 0 ? iface.name : ''}</td>

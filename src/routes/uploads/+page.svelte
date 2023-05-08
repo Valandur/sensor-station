@@ -29,7 +29,7 @@
 	}
 </script>
 
-<div class="container-fluid m-0 p-1 vh-100 d-flex flex-column">
+<div class="container-fluid m-0 p-1 h-100 d-flex flex-column">
 	<div class="row">
 		<div class="col">
 			<h1>Uploads</h1>

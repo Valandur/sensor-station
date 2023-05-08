@@ -8,10 +8,12 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: status = data.status;
+	$: fault = data.fault;
+	$: powerIn = data.powerIn;
+	$: powerIn5vIo = data.powerIn5vIo;
 
 	let timeStr = '';
-	$: $time, (timeStr = formatDistanceToNow(status.ts, { addSuffix: true, locale: de }));
+	$: $time, (timeStr = formatDistanceToNow(data.ts, { addSuffix: true, locale: de }));
 </script>
 
 <PageLayout title="Battery" subTitle={timeStr}>
@@ -27,25 +29,25 @@
 				<tbody>
 					<tr>
 						<td>Status</td>
-						<td colspan="2">{status.state}</td>
-						<td>{status.charge}%</td>
+						<td colspan="2">{data.state}</td>
+						<td>{data.charge}%</td>
 					</tr>
 					<tr>
 						<td>Power IN</td>
-						<td>{status.powerIn.state}</td>
-						<td>{status.powerIn.voltage.toFixed(2)} V</td>
-						<td>{status.powerIn.current.toFixed(2)} A</td>
+						<td>{powerIn.state}</td>
+						<td>{powerIn.voltage.toFixed(2)} V</td>
+						<td>{powerIn.current.toFixed(2)} A</td>
 					</tr>
 					<tr>
 						<td>Power 5V IO</td>
-						<td>{status.powerIn5vIo.state}</td>
-						<td>{status.powerIn5vIo.voltage.toFixed(2)} V</td>
-						<td>{status.powerIn5vIo.current.toFixed(2)} A</td>
+						<td>{powerIn5vIo.state}</td>
+						<td>{powerIn5vIo.voltage.toFixed(2)} V</td>
+						<td>{powerIn5vIo.current.toFixed(2)} A</td>
 					</tr>
 					<tr>
 						<td>Button</td>
 						<td>
-							{#if status.isButton}
+							{#if data.isButton}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -53,7 +55,7 @@
 						</td>
 						<td>Fault</td>
 						<td>
-							{#if status.isFault}
+							{#if data.isFault}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -63,7 +65,7 @@
 					<tr>
 						<td>Profile Invalid</td>
 						<td>
-							{#if status.fault.batteryProfileInvalid}
+							{#if fault.batteryProfileInvalid}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -71,7 +73,7 @@
 						</td>
 						<td>Button Off</td>
 						<td>
-							{#if status.fault.buttonPowerOff}
+							{#if fault.buttonPowerOff}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -80,10 +82,10 @@
 					</tr>
 					<tr>
 						<td>Charging Temp.</td>
-						<td>{status.fault.chargingTemperatureFault}</td>
+						<td>{fault.chargingTemperatureFault}</td>
 						<td>Forced Off</td>
 						<td>
-							{#if status.fault.forcedPowerOff}
+							{#if fault.forcedPowerOff}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -93,7 +95,7 @@
 					<tr>
 						<td>Sys Off</td>
 						<td>
-							{#if status.fault.forcedSysPowerOff}
+							{#if fault.forcedSysPowerOff}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -101,7 +103,7 @@
 						</td>
 						<td>Watchdog</td>
 						<td>
-							{#if status.fault.watchdogReset}
+							{#if fault.watchdogReset}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />

@@ -2,9 +2,9 @@ import { normalize, resolve as resolvePath } from 'path';
 import { readFile } from 'fs/promises';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 
-import { Logger } from '$lib/logger';
+import { BaseLogger } from '$lib/models/BaseLogger';
 
-const logger = new Logger('MAIN');
+const logger = new BaseLogger('MAIN');
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
