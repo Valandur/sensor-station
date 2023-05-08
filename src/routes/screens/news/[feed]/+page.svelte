@@ -52,7 +52,7 @@
 			</div>
 			<div class="col abstract d-flex flex-column justify-content-around">
 				<div class="fs-3">{item.title}</div>
-				<div class="fs-5 text-muted">
+				<div class="fs-6 text-muted">
 					{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
 				</div>
 			</div>

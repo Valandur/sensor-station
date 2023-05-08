@@ -76,12 +76,12 @@
 			<div class="time-main">{timeStr}</div>
 			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-1">
 				<div>{secondStr}</div>
-				<div class="text-muted">{tzStr}</div>
+				<div class="text-muted text-nowrap">{tzStr}</div>
 			</div>
 		</div>
 
-		<div class="col d-flex flex-column justify-content-end align-items-end overflow-visible p-0">
-			<div class="row icons flex-nowrap">
+		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
+			<div class="row icons flex-nowrap justify-content-end">
 				{#if modemStatus?.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
@@ -99,12 +99,7 @@
 				{#if modemStatus?.lat && modemStatus?.lng}
 					<div class="col-auto">
 						<i class="icofont-satellite" />
-					</div>
-				{/if}
-
-				{#if batteryStatus?.state.includes('CHARGING')}
-					<div class="col-auto">
-						<i class="icofont-plugin" />
+						{modemStatus.lat.toFixed(2)} | {modemStatus.lng.toFixed(2)}
 					</div>
 				{/if}
 
@@ -123,12 +118,20 @@
 					</div>
 				{/if}
 
+				{#if batteryStatus?.state.includes('CHARGING')}
+					<div class="col-auto">
+						<i class="icofont-plugin" />
+					</div>
+				{/if}
+
 				{#if $paused}
 					<div class="col-auto">
 						<i class="icofont-ui-pause" />
 					</div>
 				{/if}
 			</div>
+
+			<div class="row flex-fill" />
 
 			<div class="row flex-nowrap">
 				<div class="h2 col text-nowrap m-0">{date}</div>
