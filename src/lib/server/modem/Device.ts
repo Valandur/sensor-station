@@ -39,7 +39,7 @@ export class Device {
 	}
 
 	public async open(): Promise<void> {
-		return new Promise<void>((resolve, reject) =>
+		await new Promise<void>((resolve, reject) =>
 			this.port.open((err) => (err ? reject(err) : resolve()))
 		);
 	}
@@ -54,11 +54,11 @@ export class Device {
 		);
 	}
 
-	public async checkReady(): Promise<boolean> {
-		if (!(await stat(this.config.devicePath).catch(() => null))) {
-			return false;
-		}
+	public async checkAvailable(): Promise<boolean> {
+		return !!(await stat(this.config.devicePath).catch(() => null));
+	}
 
+	public async checkReady(): Promise<boolean> {
 		const res = await this.send('AT');
 		return res === 'OK';
 	}
@@ -149,7 +149,7 @@ export class Device {
 
 				this.parser.off('data', onData);
 
-				reject(new Error('Timed out'));
+				reject(new Error('modem.device.timeout'));
 				resolved = true;
 			};
 			const timeout = setTimeout(onTimeout, this.config.timeoutMs);
@@ -159,7 +159,7 @@ export class Device {
 				this.logger.debug('<<', response);
 
 				if (resolved) {
-					this.logger.warn('Rceived out of band');
+					this.logger.warn('Out-of-band data', response);
 					return;
 				}
 

@@ -42,19 +42,26 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 				timeoutMs: CMD_TIMEOUT
 			});
 
-			if (!(await device.checkReady())) {
+			if (!(await device.checkAvailable())) {
 				if (dev) {
 					logger.warn('Using dev mock data');
 					return getMockData();
 				}
 
 				throw error(500, {
-					message: `Modem not ready`,
-					key: 'modem.notReady'
+					message: `Modem not available`,
+					key: 'modem.notAvailable'
 				});
 			}
 
 			await device.open();
+
+			if (!(await device.checkReady())) {
+				throw error(500, {
+					message: `Modem not ready`,
+					key: 'modem.notReady'
+				});
+			}
 
 			const data = await device.readAll();
 			const gpsTz = (data.lat && data.lng ? find(data.lat, data.lng) : [])[0] || null;
