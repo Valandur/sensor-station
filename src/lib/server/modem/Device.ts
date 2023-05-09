@@ -142,6 +142,7 @@ export class Device {
 
 			let resolved = false;
 
+			const timeoutError = new Error('modem.device.timeout');
 			const onTimeout = () => {
 				if (resolved) {
 					return;
@@ -149,7 +150,7 @@ export class Device {
 
 				this.parser.off('data', onData);
 
-				reject(new Error('modem.device.timeout'));
+				reject(timeoutError);
 				resolved = true;
 			};
 			const timeout = setTimeout(onTimeout, this.config.timeoutMs);

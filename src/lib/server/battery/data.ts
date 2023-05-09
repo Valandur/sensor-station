@@ -27,6 +27,8 @@ const cache = new BaseCache<BatteryData>(logger, CACHE_TIME);
 let recordTimer: ReturnType<typeof setInterval> | null = null;
 let lastRecordedTs: Date = new Date(0);
 
+startRecording();
+
 export async function getData(forceUpdate = false): Promise<BatteryData> {
 	let device: Device | null = null;
 
