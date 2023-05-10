@@ -2,9 +2,13 @@ import { normalize, resolve as resolvePath } from 'path';
 import { readFile } from 'fs/promises';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 
+import { building } from '$app/environment';
+
 import { BaseLogger } from '$lib/models/BaseLogger';
-import { setupRecording as setupBatteryRecording } from '$lib/server/battery/data';
-import { setupRecording as setupSensorRecording } from '$lib/server/sensor/data';
+import { setup as setupBattery } from '$lib/server/battery/data';
+import { setup as setupScreens } from '$lib/server/screen/data';
+import { setup as setupSensor } from '$lib/server/sensor/data';
+import { setup as setupUploads } from '$lib/server/uploads/data';
 
 const logger = new BaseLogger('MAIN');
 
@@ -31,6 +35,14 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 };
 
 async function init() {
-	setupBatteryRecording();
-	setupSensorRecording();
+	if (building) {
+		return;
+	}
+
+	logger.info('Starting...');
+
+	setupBattery();
+	setupScreens();
+	setupSensor();
+	setupUploads();
 }

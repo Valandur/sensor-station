@@ -10,8 +10,6 @@ const logger = new BaseLogger('SCREENS');
 
 let screens: Screen[] = [];
 
-await loadScreens();
-
 export function getScreenUrl(index: number, dir: 'next' | 'prev' = 'next') {
 	const screen = screens[index];
 	return `/screens/${screen.name}/${screen.params ?? ''}?screen=${index}&dir=${dir}`;
@@ -33,7 +31,7 @@ export async function saveScreens(newScreens: Screen[]) {
 	logger.info('Saved', newScreens.length, 'screens', diffTime, 'ms');
 }
 
-async function loadScreens() {
+export async function setup() {
 	logger.debug('Loading...');
 	const startTime = process.hrtime.bigint();
 

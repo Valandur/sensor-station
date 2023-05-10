@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 
-import { deleteUpload, getUploads, saveUploads, storeUpload } from '$lib/server/uploads';
+import { deleteUpload, getUploads, saveUploads, storeUpload } from '$lib/server/uploads/data';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 import type { Actions, PageServerLoad } from './$types';

@@ -132,10 +132,10 @@ const options = {
     app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="icon" href="' + assets2 + '/favicon.png" />\n		<link rel="stylesheet" type="text/css" href="' + assets2 + '/icofont.min.css" />\n		<meta name="viewport" content="width=device-width" />\n		' + head + '\n	</head>\n	<body data-sveltekit-preload-data="hover">\n		<div style="display: contents">' + body + "</div>\n	</body>\n</html>\n",
     error: ({ status, message }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>Error - ' + status + " - " + message + "</title>\n		<style>\n			html,\n			body {\n				padding: 0;\n				margin: 0;\n			}\n\n			body {\n				padding: 0 2rem;\n				font-size: 30px;\n			}\n\n			.error {\n				color: red;\n			}\n		</style>\n	</head>\n	<body>\n		<h1>Error " + status + '</h1>\n\n		<a href="/">Home</a>\n\n		<p class="error">' + message + "</p>\n	</body>\n</html>\n"
   },
-  version_hash: "u7cj0z"
+  version_hash: "lr2yoi"
 };
 function get_hooks() {
-  return import('./chunks/hooks.server-4be2c12a.js');
+  return import('./chunks/hooks.server-463bf61f.js');
 }
 
 const chars$1 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
@@ -1378,15 +1378,24 @@ function decode_params(params) {
   }
   return params;
 }
-const tracked_url_properties = ["href", "pathname", "search", "searchParams", "toString", "toJSON"];
+const tracked_url_properties = (
+  /** @type {const} */
+  [
+    "href",
+    "pathname",
+    "search",
+    "searchParams",
+    "toString",
+    "toJSON"
+  ]
+);
 function make_trackable(url, callback) {
   const tracked = new URL(url);
   for (const property of tracked_url_properties) {
-    let value = tracked[property];
     Object.defineProperty(tracked, property, {
       get() {
         callback();
-        return value;
+        return url[property];
       },
       enumerable: true,
       configurable: true

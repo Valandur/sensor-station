@@ -70,7 +70,7 @@ export async function getRecordings(): Promise<SensorData[]> {
 		.filter((rec) => isValid(rec.ts) && isFinite(rec.temp) && isFinite(rec.rh));
 }
 
-export function setupRecording() {
+export function setup() {
 	if (recordTimer) {
 		logger.info('Recording stopped');
 

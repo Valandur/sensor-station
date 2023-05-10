@@ -71,7 +71,7 @@ export async function getData(forceUpdate = false): Promise<BatteryData> {
 	);
 }
 
-export function setupRecording() {
+export function setup() {
 	if (recordTimer) {
 		logger.info('Recording stopped');
 

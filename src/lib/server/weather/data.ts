@@ -33,7 +33,7 @@ const logger = new BaseLogger('WEATHER');
 const cache = new BaseCache<WeatherData>(logger, CACHE_TIME);
 
 let location: WeatherLocation = JSON.parse(
-	await readFile(CACHE_FILE, 'utf-8').catch(() => '{ lat: 0, lng: 0 }')
+	await readFile(CACHE_FILE, 'utf-8').catch(() => '{ "lat": 0, "lng": 0 }')
 );
 
 export async function getData(forceUpdate = false) {

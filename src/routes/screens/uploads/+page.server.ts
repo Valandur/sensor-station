@@ -1,5 +1,5 @@
 import { Counter } from '$lib/counter';
-import { getUploads } from '$lib/server/uploads';
+import { getUploads } from '$lib/server/uploads/data';
 
 import type { PageServerLoad } from './$types';
 
