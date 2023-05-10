@@ -1,5 +1,5 @@
-import { appendFile, readFile, stat } from 'node:fs/promises';
-import { isSameMinute, isValid, parseISO } from 'date-fns';
+import { appendFile, mkdir, readFile, stat } from 'node:fs/promises';
+import { format, isSameMinute, isValid, parseISO } from 'date-fns';
 import { error } from '@sveltejs/kit';
 
 import { dev } from '$app/environment';
@@ -10,6 +10,7 @@ import { BaseLogger } from '$lib/models/BaseLogger';
 import type { SensorData } from '$lib/models/SensorData';
 
 import type { DhtSensor } from './types';
+import { dirname } from 'node:path';
 
 const ENABLED = env.SENSOR_ENABLED === '1';
 const CACHE_TIME = Number(env.SENSOR_CACHE_TIME);
@@ -17,7 +18,8 @@ const DEVICE_PATH = env.SENSOR_DEVICE_PATH;
 const DHT_TYPE = Number(env.SENSOR_DHT_TYPE);
 const DHT_PIN = Number(env.SENSOR_DHT_PIN);
 const RECORDING_INTERVAL = Number(env.SENSOR_RECORDING_INTERVAL);
-const RECORDINGS_PATH = 'data/sensor_recordings.csv';
+const RECORDING_FORMAT = env.SENSOR_RECORDING_FORMAT;
+const RECORDINGS_PATH = 'data/sensor/recording';
 
 const logger = new BaseLogger('SENSOR');
 const cache = new BaseCache<SensorData>(logger, CACHE_TIME);
@@ -101,6 +103,15 @@ async function record() {
 			return;
 		}
 
+		const fileName = `${RECORDINGS_PATH}_${format(new Date(), RECORDING_FORMAT)}.csv`;
+
+		await mkdir(dirname(fileName), { recursive: true });
+
+		// Add csv header if the file is new
+		if (!(await stat(fileName).catch(() => null))) {
+			await appendFile(fileName, csvHeader(), 'utf-8');
+		}
+
 		// Deep clone our data so it doesn't get changed by an update while saving it
 		const recordedData = JSON.parse(JSON.stringify(data));
 
@@ -111,6 +122,10 @@ async function record() {
 	} catch (err) {
 		logger.error(err);
 	}
+}
+
+function csvHeader(): string {
+	return `Timestamp,Temperature,RH`;
 }
 
 function dataToCsv(d: SensorData): string {

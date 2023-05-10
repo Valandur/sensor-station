@@ -1,6 +1,7 @@
-import { appendFile } from 'node:fs/promises';
+import { appendFile, mkdir, stat } from 'node:fs/promises';
 import { error } from '@sveltejs/kit';
-import { isSameMinute } from 'date-fns';
+import { format, isSameMinute } from 'date-fns';
+import { dirname } from 'node:path';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
@@ -19,7 +20,8 @@ const CACHE_TIME = Number(env.BATTERY_CACHE_TIME);
 const BUS_NUMBER = Number(env.BATTERY_BUS_NUMBER);
 const I2C_ADDRESS = Number(env.BATTERY_I2C_ADDRESS);
 const RECORDING_INTERVAL = Number(env.BATTERY_RECORDING_INTERVAL);
-const RECORDINGS_PATH = 'data/battery_recordings.csv';
+const RECORDING_FORMAT = env.BATTERY_RECORDING_FORMAT;
+const RECORDINGS_PATH = 'data/battery/recording';
 
 const logger = new BaseLogger('BATTERY');
 const cache = new BaseCache<BatteryData>(logger, CACHE_TIME);
@@ -102,16 +104,34 @@ async function record() {
 			return;
 		}
 
+		const fileName = `${RECORDINGS_PATH}_${format(new Date(), RECORDING_FORMAT)}.csv`;
+
+		await mkdir(dirname(fileName), { recursive: true });
+
+		// Add csv header if the file is new
+		if (!(await stat(fileName).catch(() => null))) {
+			await appendFile(fileName, csvHeader(), 'utf-8');
+		}
+
 		// Deep clone our data so it doesn't get changed by an update while saving it
+		const recordedTs = new Date(data.ts);
 		const recordedData = JSON.parse(JSON.stringify(data));
 
-		await appendFile(RECORDINGS_PATH, dataToCsv(recordedData), 'utf-8');
-		lastRecordedTs = recordedData.ts;
+		await appendFile(fileName, dataToCsv(recordedData), 'utf-8');
+		lastRecordedTs = recordedTs;
 
-		logger.debug(`Recorded`, recordedData.ts, recordedData.state, recordedData.charge);
+		logger.debug(`Recorded`, recordedTs, recordedData.state, recordedData.charge);
 	} catch (err) {
 		logger.error(err);
 	}
+}
+
+function csvHeader(): string {
+	return (
+		`Timestamp,IsFault,IsButton,State,Charge,Temperature,PowerIn_State,PowerIn_Voltage,PowerIn_Current,` +
+		`PowerIn5vIO_State,PowerIn5vIO_Voltage,PowerIn5vIO_Current,ButtonPowerOff,ForcedPowerOff,ForcedSysPowerOff,` +
+		`WatchdogReset,BatteryProfileInvalid,ChargingTemperatureFault\n`
+	);
 }
 
 function dataToCsv(s: BatteryData): string {
@@ -120,7 +140,7 @@ function dataToCsv(s: BatteryData): string {
 	const f = s.fault;
 	return (
 		`${s.ts},${s.isFault},${s.isButton},${s.state},${s.charge},${s.temperature},${p.state},${p.voltage},${p.current},` +
-		`${p5.state},${p5.voltage},${p5.current},${f.buttonPowerOff}.${f.forcedPowerOff},${f.forcedSysPowerOff},` +
+		`${p5.state},${p5.voltage},${p5.current},${f.buttonPowerOff},${f.forcedPowerOff},${f.forcedSysPowerOff},` +
 		`${f.watchdogReset},${f.batteryProfileInvalid},${f.chargingTemperatureFault}\n`
 	);
 }
