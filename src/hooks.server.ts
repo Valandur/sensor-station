@@ -3,8 +3,12 @@ import { readFile } from 'fs/promises';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
+import { setupRecording as setupBatteryRecording } from '$lib/server/battery/data';
+import { setupRecording as setupSensorRecording } from '$lib/server/sensor/data';
 
 const logger = new BaseLogger('MAIN');
+
+await init();
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
@@ -25,3 +29,8 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 		params: { route: event.route, error: JSON.parse(JSON.stringify(error)) }
 	};
 };
+
+async function init() {
+	setupBatteryRecording();
+	setupSensorRecording();
+}

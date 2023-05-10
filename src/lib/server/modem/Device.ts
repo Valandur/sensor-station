@@ -4,10 +4,10 @@ import { stat } from 'node:fs/promises';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
 
-const COPS = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
-const CSQ = /\+CSQ: (\d+),(\d+)/i;
-const CCLK = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
-const GPS = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
+const COPS_REGEX = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
+const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
+const CCLK_REGEX = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
+const GPS_REGEX = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
 
 export interface Config {
 	devicePath: string;
@@ -83,13 +83,13 @@ export class Device {
 
 	private async getCellularOperator(): Promise<string | null> {
 		const copsResp = await this.send('AT+COPS?');
-		const copsMatch = COPS.exec(copsResp);
+		const copsMatch = COPS_REGEX.exec(copsResp);
 		return copsMatch?.[3] || null;
 	}
 
 	private async getCellularSignal(): Promise<number | null> {
 		const csqResp = await this.send('AT+CSQ');
-		const csqMatch = CSQ.exec(csqResp);
+		const csqMatch = CSQ_REGEX.exec(csqResp);
 		if (csqMatch) {
 			const rawSig = Number(csqMatch[1]);
 			return rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
@@ -100,7 +100,7 @@ export class Device {
 
 	private async getCellularTimeAndTz(): Promise<[Date, string] | [null, null]> {
 		const cclkResp = await this.send('AT+CCLK?');
-		const cclkMatch = CCLK.exec(cclkResp);
+		const cclkMatch = CCLK_REGEX.exec(cclkResp);
 		if (cclkMatch) {
 			const year = `${2000 + Number(cclkMatch[1])}`;
 			const month = `${Number(cclkMatch[2])}`.padStart(2, '0');
@@ -124,7 +124,7 @@ export class Device {
 
 	private async getGPS(): Promise<[number, number] | [null, null]> {
 		const gpsResp = await this.send('AT+CGPSINFO');
-		const gpsMatch = GPS.exec(gpsResp);
+		const gpsMatch = GPS_REGEX.exec(gpsResp);
 		if (gpsMatch) {
 			const lat = Number(gpsMatch[1]) / (gpsMatch[2] === 'S' ? -100 : 100);
 			const lng = Number(gpsMatch[3]) / (gpsMatch[4] === 'W' ? -100 : 100);
@@ -158,11 +158,15 @@ export class Device {
 			const timeout = setTimeout(onTimeout, this.config.timeoutMs);
 
 			const onData = (buffer: Buffer) => {
-				const response = buffer.toString('utf-8').trim();
-				this.logger.debug('<<', response);
+				const response = buffer.toString('utf-8').trim().replace(/\n\n/g, '\n');
+
+				const lines = response.split('\n');
+				for (const line of lines) {
+					this.logger.debug('<<', line);
+				}
 
 				if (resolved) {
-					this.logger.warn('Out-of-band data', response);
+					this.logger.warn('<<', 'Out-of-band data');
 					return;
 				}
 

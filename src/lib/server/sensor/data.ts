@@ -1,6 +1,7 @@
 import { appendFile, mkdir, readFile, stat } from 'node:fs/promises';
-import { format, isSameMinute, isValid, parseISO } from 'date-fns';
+import { dirname } from 'node:path';
 import { error } from '@sveltejs/kit';
+import { format, isSameMinute, isValid, parseISO } from 'date-fns';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
@@ -10,7 +11,6 @@ import { BaseLogger } from '$lib/models/BaseLogger';
 import type { SensorData } from '$lib/models/SensorData';
 
 import type { DhtSensor } from './types';
-import { dirname } from 'node:path';
 
 const ENABLED = env.SENSOR_ENABLED === '1';
 const CACHE_TIME = Number(env.SENSOR_CACHE_TIME);
@@ -26,8 +26,6 @@ const cache = new BaseCache<SensorData>(logger, CACHE_TIME);
 
 let recordTimer: ReturnType<typeof setInterval> | null = null;
 let lastRecordedTs: Date = new Date(0);
-
-startRecording();
 
 export async function getData(forceUpdate = false) {
 	return cache.withDefault(forceUpdate, async () => {
@@ -50,7 +48,7 @@ export async function getData(forceUpdate = false) {
 		}
 
 		const str = 'node-dht';
-		const dht = await import(`${str}-sensor`);
+		const dht = await import(/* @vite-ignore */ `${str}-sensor`);
 		const sensor: DhtSensor = dht.promises;
 
 		const { temperature, humidity } = await sensor.read(DHT_TYPE, DHT_PIN);
@@ -72,22 +70,20 @@ export async function getRecordings(): Promise<SensorData[]> {
 		.filter((rec) => isValid(rec.ts) && isFinite(rec.temp) && isFinite(rec.rh));
 }
 
-export function startRecording() {
-	if (!RECORDING_INTERVAL) {
-		return;
-	}
-
-	logger.info('Recording started', RECORDING_INTERVAL);
-	recordTimer = setInterval(() => record(), RECORDING_INTERVAL * 1000);
-}
-
-export function stopRecording() {
+export function setupRecording() {
 	if (recordTimer) {
 		logger.info('Recording stopped');
 
 		clearInterval(recordTimer);
 		recordTimer = null;
 	}
+
+	if (!RECORDING_INTERVAL) {
+		return;
+	}
+
+	logger.info('Recording started', RECORDING_INTERVAL);
+	recordTimer = setInterval(() => record(), RECORDING_INTERVAL * 1000);
 }
 
 async function record() {

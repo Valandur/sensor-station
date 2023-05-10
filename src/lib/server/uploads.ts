@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { error } from '@sveltejs/kit';
 import { parseISO } from 'date-fns';
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import getDimensions from 'get-video-dimensions';
@@ -10,7 +11,7 @@ import { env } from '$env/dynamic/private';
 import { BaseLogger } from '$lib/models/BaseLogger';
 import type { UploadItem } from '$lib/models/UploadItem';
 
-export const ENABLED = env.UPLOADS_ENABLED === '1';
+const ENABLED = env.UPLOADS_ENABLED === '1';
 const UPLOADS_FILE = 'data/uploads.json';
 const UPLOADS_DIR = 'data/uploads';
 
@@ -21,6 +22,13 @@ let uploads: UploadItem[] = [];
 await loadUploads();
 
 export async function getUploads() {
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Uploads is disabled`,
+			key: 'uploads.disabled'
+		});
+	}
+
 	return uploads;
 }
 

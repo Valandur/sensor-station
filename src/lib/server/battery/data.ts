@@ -1,7 +1,7 @@
 import { appendFile, mkdir, stat } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { error } from '@sveltejs/kit';
 import { format, isSameMinute } from 'date-fns';
-import { dirname } from 'node:path';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
@@ -28,8 +28,6 @@ const cache = new BaseCache<BatteryData>(logger, CACHE_TIME);
 
 let recordTimer: ReturnType<typeof setInterval> | null = null;
 let lastRecordedTs: Date = new Date(0);
-
-startRecording();
 
 export async function getData(forceUpdate = false): Promise<BatteryData> {
 	let device: Device | null = null;
@@ -73,22 +71,20 @@ export async function getData(forceUpdate = false): Promise<BatteryData> {
 	);
 }
 
-export function startRecording() {
-	if (!RECORDING_INTERVAL) {
-		return;
-	}
-
-	logger.info('Recording started', RECORDING_INTERVAL);
-	recordTimer = setInterval(() => record(), RECORDING_INTERVAL * 1000);
-}
-
-export function stopRecording() {
+export function setupRecording() {
 	if (recordTimer) {
 		logger.info('Recording stopped');
 
 		clearInterval(recordTimer);
 		recordTimer = null;
 	}
+
+	if (!RECORDING_INTERVAL) {
+		return;
+	}
+
+	logger.info('Recording started', RECORDING_INTERVAL);
+	recordTimer = setInterval(() => record(), RECORDING_INTERVAL * 1000);
 }
 
 async function record() {

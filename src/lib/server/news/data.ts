@@ -21,7 +21,7 @@ const SIMPLE_DETAILS = env.NEWS_SIMPLE_DETAILS === '1';
 const CACHE_TIME = Number(env.NEWS_CACHE_TIME);
 const CACHE_PATH = 'data/news';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
-const DESCRIPTION_MATCHER = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
+const DESCR_REGEX = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
 
 export { SIMPLE_DETAILS };
 
@@ -55,7 +55,7 @@ export function getData(feedId: string, forceUpdate = false) {
 				continue;
 			}
 
-			const match = DESCRIPTION_MATCHER.exec(item.description);
+			const match = DESCR_REGEX.exec(item.description);
 			if (!match) {
 				continue;
 			}

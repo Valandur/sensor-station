@@ -9,7 +9,7 @@ import type { NetworkAddress } from '$lib/models/NetworkAddress';
 import type { NetworkData } from '$lib/models/NetworkData';
 import type { NetworkInterface } from '$lib/models/NetworkInterface';
 
-export const ENABLED = env.NETWORK_ENABLED === '1';
+const ENABLED = env.NETWORK_ENABLED === '1';
 const CACHE_TIME = Number(env.NETWORK_CACHE_TIME);
 
 const logger = new BaseLogger('NETWORK');

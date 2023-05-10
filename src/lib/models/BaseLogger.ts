@@ -16,28 +16,28 @@ export class BaseLogger {
 	public debug(message: unknown, ...params: unknown[]) {
 		const msg = chalk.gray(typeof message === 'string' ? message : inspect(message));
 		console.log(
-			`${this.getDate()} [${chalk.gray('DEBUG')}] [${chalk.magenta(this.moduleName)}] ${msg}`,
+			`${this.getDate()} [${chalk.gray('DEBUG')}] [${chalk.green(this.moduleName)}] ${msg}`,
 			...params
 		);
 	}
 	public info(message: unknown, ...params: unknown[]) {
 		const msg = typeof message === 'string' ? message : inspect(message);
 		console.log(
-			`${this.getDate()} [${chalk.cyan('INFO')}] [${chalk.magenta(this.moduleName)}] ${msg}`,
+			`${this.getDate()} [${chalk.cyan('INFO')}] [${chalk.green(this.moduleName)}] ${msg}`,
 			...params
 		);
 	}
 	public warn(message: unknown, ...params: unknown[]) {
 		const msg = chalk.yellow(typeof message === 'string' ? message : inspect(message));
 		console.log(
-			`${this.getDate()} [${chalk.yellow('WARN')}] [${chalk.magenta(this.moduleName)}] ${msg}`,
+			`${this.getDate()} [${chalk.yellow('WARN')}] [${chalk.green(this.moduleName)}] ${msg}`,
 			...params
 		);
 	}
 	public error(message: unknown, ...params: unknown[]) {
 		const msg = chalk.red(typeof message === 'string' ? message : inspect(message));
 		console.error(
-			`${this.getDate()} [${chalk.red('ERROR')}] [${chalk.magenta(this.moduleName)}] ${msg}`,
+			`${this.getDate()} [${chalk.red('ERROR')}] [${chalk.green(this.moduleName)}] ${msg}`,
 			...params
 		);
 	}

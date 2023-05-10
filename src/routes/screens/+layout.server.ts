@@ -4,7 +4,7 @@ import { Counter } from '$lib/counter';
 import { getData as getBatteryData } from '$lib/server/battery/data';
 import { getData as getModemData } from '$lib/server/modem/data';
 import { getHoliday } from '$lib/server/holidays';
-import { getScreenUrl, getScreens } from '$lib/server/screen';
+import { getScreenUrl, getScreens } from '$lib/server/screen/data';
 import type { Screen } from '$lib/models/Screen';
 
 import type { LayoutServerLoad } from './$types';
