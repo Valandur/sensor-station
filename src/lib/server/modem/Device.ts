@@ -42,6 +42,7 @@ export class Device {
 		await new Promise<void>((resolve, reject) =>
 			this.port.open((err) => (err ? reject(err) : resolve()))
 		);
+		this.port.pipe(this.parser);
 	}
 
 	public async close(): Promise<void> {
@@ -49,7 +50,8 @@ export class Device {
 			return;
 		}
 
-		return new Promise<void>((resolve, reject) =>
+		this.port.unpipe(this.parser);
+		await new Promise<void>((resolve, reject) =>
 			this.port.close((err) => (err ? reject(err) : resolve()))
 		);
 	}
