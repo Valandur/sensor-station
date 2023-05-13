@@ -27,11 +27,21 @@
 						<div>
 							{format(game.startsAt, 'dd MMM')} - {format(game.endsAt, 'dd MMM', { locale: de })}
 						</div>
-						<div>Free</div>
+						<div>
+							{#if game.pct === 0}
+								Free
+							{:else}
+								{game.pct}%
+							{/if}
+						</div>
 					</div>
 
 					<div class="card-body p-1 overflow-hidden">
 						<img src={`/data/games/${game.image}`} class="card-img" alt={game.title} />
+
+						<div class="card-img-overlay d-flex flex-column justify-content-end p-1 z-2">
+							<div class="bg-black bg-opacity-75 fw-bold text-white px-1">{game.title}</div>
+						</div>
 					</div>
 
 					<div class="card-arrow">

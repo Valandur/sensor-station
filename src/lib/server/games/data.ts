@@ -49,12 +49,12 @@ export async function getData(force = false) {
 			const offers = pos
 				.flatMap((po) => po.promotionalOffers)
 				.concat(game.promotions.upcomingPromotionalOffers.flatMap((po) => po.promotionalOffers))
-				.filter(
-					(po) =>
-						po.discountSetting.discountType === 'PERCENTAGE' &&
-						po.discountSetting.discountPercentage === 0
-				)
-				.map((po) => ({ start: parseISO(po.startDate), end: parseISO(po.endDate) }));
+				.filter((po) => po.discountSetting.discountType === 'PERCENTAGE')
+				.map((po) => ({
+					start: parseISO(po.startDate),
+					end: parseISO(po.endDate),
+					pct: po.discountSetting.discountPercentage
+				}));
 
 			const offer = offers[0];
 			if (!offer) {
@@ -63,7 +63,9 @@ export async function getData(force = false) {
 
 			const imgUrl =
 				game.keyImages.find((i) => i.type === 'OfferImageWide' || i.type === 'DieselStoreFrontWide')
-					?.url || null;
+					?.url ||
+				game.keyImages[0]?.url ||
+				null;
 			const fileName = imgUrl ? basename(imgUrl) : null;
 
 			if (imgUrl && fileName) {
@@ -77,6 +79,7 @@ export async function getData(force = false) {
 
 			games.push({
 				title: game.title,
+				pct: offer.pct,
 				startsAt: offer.start,
 				endsAt: offer.end,
 				image: fileName
