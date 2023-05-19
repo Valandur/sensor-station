@@ -1,7 +1,6 @@
 import { D as DEV } from './chunks/prod-ssr-17392843.js';
 import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/index3-53157c6f.js';
 import { e as error, j as json, t as text, R as Redirect, H as HttpError, A as ActionFailure } from './chunks/index-39e97e00.js';
-import { i as is_primitive, g as get_type, s as stringify_string, D as DevalueError, a as is_plain_object, e as escaped } from './chunks/utils-ae3035df.js';
 import { w as writable, r as readable } from './chunks/index2-047f7c26.js';
 import { s as set_private_env, p as public_env, a as set_public_env } from './chunks/shared-server-b7e48788.js';
 
@@ -121,6 +120,7 @@ const options = {
   app_template_contains_nonce: false,
   csp: { "mode": "auto", "directives": { "upgrade-insecure-requests": false, "block-all-mixed-content": false }, "reportOnly": { "upgrade-insecure-requests": false, "block-all-mixed-content": false } },
   csrf_check_origin: true,
+  track_server_fetches: false,
   embedded: false,
   env_public_prefix: "PUBLIC_",
   hooks: null,
@@ -132,14 +132,114 @@ const options = {
     app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="icon" href="' + assets2 + '/favicon.png" />\n		<link rel="stylesheet" type="text/css" href="' + assets2 + '/icofont.min.css" />\n		<meta name="viewport" content="width=device-width" />\n		' + head + '\n	</head>\n	<body data-sveltekit-preload-data="hover">\n		<div style="display: contents">' + body + "</div>\n	</body>\n</html>\n",
     error: ({ status, message }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>Error - ' + status + " - " + message + "</title>\n		<style>\n			html,\n			body {\n				padding: 0;\n				margin: 0;\n			}\n\n			body {\n				padding: 0 2rem;\n				font-size: 30px;\n			}\n\n			.error {\n				color: red;\n			}\n		</style>\n	</head>\n	<body>\n		<h1>Error " + status + '</h1>\n\n		<a href="/">Home</a>\n\n		<p class="error">' + message + "</p>\n	</body>\n</html>\n"
   },
-  version_hash: "lr2yoi"
+  version_hash: "1pl7ku1"
 };
 function get_hooks() {
   return import('./chunks/hooks.server-463bf61f.js');
 }
 
+/** @type {Record<string, string>} */
+const escaped = {
+	'<': '\\u003C',
+	'\\': '\\\\',
+	'\b': '\\b',
+	'\f': '\\f',
+	'\n': '\\n',
+	'\r': '\\r',
+	'\t': '\\t',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+class DevalueError extends Error {
+	/**
+	 * @param {string} message
+	 * @param {string[]} keys
+	 */
+	constructor(message, keys) {
+		super(message);
+		this.name = 'DevalueError';
+		this.path = keys.join('');
+	}
+}
+
+/** @param {any} thing */
+function is_primitive(thing) {
+	return Object(thing) !== thing;
+}
+
+const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(
+	Object.prototype
+)
+	.sort()
+	.join('\0');
+
+/** @param {any} thing */
+function is_plain_object(thing) {
+	const proto = Object.getPrototypeOf(thing);
+
+	return (
+		proto === Object.prototype ||
+		proto === null ||
+		Object.getOwnPropertyNames(proto).sort().join('\0') === object_proto_names
+	);
+}
+
+/** @param {any} thing */
+function get_type(thing) {
+	return Object.prototype.toString.call(thing).slice(8, -1);
+}
+
+/** @param {string} char */
+function get_escaped_char(char) {
+	switch (char) {
+		case '"':
+			return '\\"';
+		case '<':
+			return '\\u003C';
+		case '\\':
+			return '\\\\';
+		case '\n':
+			return '\\n';
+		case '\r':
+			return '\\r';
+		case '\t':
+			return '\\t';
+		case '\b':
+			return '\\b';
+		case '\f':
+			return '\\f';
+		case '\u2028':
+			return '\\u2028';
+		case '\u2029':
+			return '\\u2029';
+		default:
+			return char < ' '
+				? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`
+				: '';
+	}
+}
+
+/** @param {string} str */
+function stringify_string(str) {
+	let result = '';
+	let last_pos = 0;
+	const len = str.length;
+
+	for (let i = 0; i < len; i += 1) {
+		const char = str[i];
+		const replacement = get_escaped_char(char);
+		if (replacement) {
+			result += str.slice(last_pos, i) + replacement;
+			last_pos = i + 1;
+		}
+	}
+
+	return `"${last_pos === 0 ? str : result + str.slice(last_pos)}"`;
+}
+
 const chars$1 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
-const unsafe_chars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
+const unsafe_chars = /[<\b\f\n\r\t\0\u2028\u2029]/g;
 const reserved =
 	/^(?:do|if|in|for|int|let|new|try|var|byte|case|char|else|enum|goto|long|this|void|with|await|break|catch|class|const|final|float|short|super|throw|while|yield|delete|double|export|import|native|return|switch|throws|typeof|boolean|default|extends|finally|package|private|abstract|continue|debugger|function|volatile|interface|protected|transient|implements|instanceof|synchronized)$/;
 
@@ -1636,7 +1736,14 @@ async function unwrap_promises(object) {
   return object;
 }
 const INVALIDATED_PARAM = "x-sveltekit-invalidated";
-async function load_server_data({ event, state, node, parent }) {
+async function load_server_data({
+  event,
+  state,
+  node,
+  parent,
+  // TODO 2.0: Remove this
+  track_server_fetches
+}) {
   if (!node?.server)
     return null;
   const uses = {
@@ -1656,7 +1763,9 @@ async function load_server_data({ event, state, node, parent }) {
     ...event,
     fetch: (info, init2) => {
       const url2 = new URL(info instanceof Request ? info.url : info, event.url);
-      uses.dependencies.add(url2.href);
+      if (track_server_fetches) {
+        uses.dependencies.add(url2.href);
+      }
       return event.fetch(info, init2);
     },
     /** @param {string[]} deps */
@@ -2665,7 +2774,8 @@ async function respond_with_error({
         event,
         state,
         node: default_layout,
-        parent: async () => ({})
+        parent: async () => ({}),
+        track_server_fetches: options2.track_server_fetches
       });
       const server_data = await server_data_promise;
       const data = await load_data({
@@ -2770,7 +2880,8 @@ async function render_data(event, route, options2, manifest, state, invalidated_
                 }
               }
               return data2;
-            }
+            },
+            track_server_fetches: options2.track_server_fetches
           });
         } catch (e) {
           aborted = true;
@@ -3020,7 +3131,8 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
                   Object.assign(data, await parent.data);
               }
               return data;
-            }
+            },
+            track_server_fetches: options2.track_server_fetches
           });
         } catch (e) {
           load_error = /** @type {Error} */
@@ -3251,16 +3363,7 @@ function get_cookies(request, url, trailing_slash) {
      * @param {import('cookie').CookieSerializeOptions} opts
      */
     set(name, value, opts = {}) {
-      let path = opts.path ?? default_path;
-      new_cookies[name] = {
-        name,
-        value,
-        options: {
-          ...defaults,
-          ...opts,
-          path
-        }
-      };
+      set_internal(name, value, { ...defaults, ...opts });
     },
     /**
      * @param {string} name
@@ -3306,7 +3409,18 @@ function get_cookies(request, url, trailing_slash) {
     }
     return Object.entries(combined_cookies).map(([name, value]) => `${name}=${value}`).join("; ");
   }
-  return { cookies, new_cookies, get_cookie_header };
+  function set_internal(name, value, opts) {
+    let path = opts.path ?? default_path;
+    new_cookies[name] = {
+      name,
+      value,
+      options: {
+        ...opts,
+        path
+      }
+    };
+  }
+  return { cookies, new_cookies, get_cookie_header, set_internal };
 }
 function domain_matches(hostname, constraint) {
   if (!constraint)
@@ -3330,7 +3444,7 @@ function add_cookies_to_headers(headers, cookies) {
     headers.append("set-cookie", cookieExports.serialize(name, value, options2));
   }
 }
-function create_fetch({ event, options: options2, manifest, state, get_cookie_header }) {
+function create_fetch({ event, options: options2, manifest, state, get_cookie_header, set_internal }) {
   return async (info, init2) => {
     const original_request = normalize_fetch_input(info, init2, event.url);
     let mode = (info instanceof Request ? info.mode : init2?.mode) ?? "cors";
@@ -3404,7 +3518,7 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
         if (set_cookie) {
           for (const str of setCookieExports.splitCookiesString(set_cookie)) {
             const { name, value, ...options3 } = setCookieExports.parseString(str);
-            event.cookies.set(
+            set_internal(
               name,
               value,
               /** @type {import('cookie').CookieSerializeOptions} */
@@ -3565,14 +3679,21 @@ async function respond(request, options2, manifest, state) {
         }
       }
     }
-    const { cookies, new_cookies, get_cookie_header } = get_cookies(
+    const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
       request,
       url,
       trailing_slash ?? "never"
     );
     cookies_to_add = new_cookies;
     event.cookies = cookies;
-    event.fetch = create_fetch({ event, options: options2, manifest, state, get_cookie_header });
+    event.fetch = create_fetch({
+      event,
+      options: options2,
+      manifest,
+      state,
+      get_cookie_header,
+      set_internal
+    });
     if (state.prerendering && !state.prerendering.fallback)
       disable_search(url);
     const response = await options2.hooks.handle({

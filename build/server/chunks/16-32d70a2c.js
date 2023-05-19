@@ -1,0 +1,50 @@
+import { C as Counter } from './counter-b37d52dc.js';
+import { r as redirect } from './index-39e97e00.js';
+import { g as getData } from './data6-d4d36e60.js';
+import 'node:fs/promises';
+import 'superagent';
+import './shared-server-b7e48788.js';
+import './BaseCache-8b1d2e36.js';
+import 'date-fns';
+import './BaseLogger-a6925041.js';
+import 'node:util';
+import 'chalk';
+import './data2-be838c90.js';
+import 'geo-tz';
+import 'serialport';
+
+const counter = new Counter();
+const load = async ({ url, parent }) => {
+  const data = await getData();
+  counter.max = data.alerts.length;
+  let page = Number(url.searchParams.get("page") || "-");
+  if (!isFinite(page)) {
+    page = counter.increment();
+  }
+  const alert = data.alerts[page];
+  const dataParent = await parent();
+  if (!alert && dataParent.skipScreen) {
+    throw redirect(302, dataParent.skipScreen);
+  }
+  return {
+    alert,
+    location: data.location,
+    nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+    prevPage: `${dataParent.currScreen}&page=${counter.wrap(page - 1)}`
+  };
+};
+
+var _page_server_ts = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  load: load
+});
+
+const index = 16;
+const component = async () => (await import('./_page.svelte-f5dfb6bd.js')).default;
+const server_id = "src/routes/screens/weather/alerts/+page.server.ts";
+const imports = ["_app/immutable/nodes/16.31b264d8.js","_app/immutable/chunks/index.7ca231fc.js","_app/immutable/chunks/index.931f9fab.js","_app/immutable/chunks/navigation.c09a8d04.js","_app/immutable/chunks/singletons.d281ce7f.js","_app/immutable/chunks/index.d3159694.js","_app/immutable/chunks/swipe.f8763146.js","_app/immutable/chunks/EmptyCard.15590df3.js","_app/immutable/chunks/index.4a6b61a9.js","_app/immutable/chunks/index.14f81d0e.js"];
+const stylesheets = [];
+const fonts = [];
+
+export { component, fonts, imports, index, _page_server_ts as server, server_id, stylesheets };
+//# sourceMappingURL=16-32d70a2c.js.map
