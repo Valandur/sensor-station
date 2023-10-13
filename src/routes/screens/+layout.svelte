@@ -69,9 +69,9 @@
 <div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div
+		role="presentation"
 			class="col-auto d-flex flex-row align-items-end mt-1 p-0"
 			on:click={togglePause}
-			on:keypress={togglePause}
 		>
 			<div class="time-main">{timeStr}</div>
 			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-1">

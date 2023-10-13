@@ -36,9 +36,9 @@
 {#if showToolbar}
 	<div
 		class="overlay"
+		role="presentation"
 		transition:fade={{ duration: 500 }}
 		on:click={() => (showToolbar = false)}
-		on:keypress={() => (showToolbar = false)}
 	/>
 	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
 		<div class="col-auto">

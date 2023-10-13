@@ -25,7 +25,7 @@ export interface SwipeAttributes {
 
 export type SwipeAction = Action<HTMLElement, SwipeParameters, SwipeAttributes>;
 
-const swipe: SwipeAction = (node: HTMLElement, params) => {
+const swipe: SwipeAction = (node: HTMLElement, params: SwipeParameters) => {
 	let touching = false;
 	let startX = 0;
 	let startY = 0;

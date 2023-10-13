@@ -46,7 +46,7 @@
 	{/if}
 
 	{#each items as item}
-		<div class="row mt-1 flex-1" on:click={() => select(item)} on:keypress={() => select(item)}>
+		<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
 			<div class="col-3 me-1 image">
 				<img alt="Thumbnail" src={`/data/news/${item.image}`} />
 			</div>

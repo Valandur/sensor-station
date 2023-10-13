@@ -136,7 +136,7 @@
 	outline: none !important;
 }
 
-@for $i from 2 through 6 {
+@for $i from 2 through 5 {
 	.bg-cover-#{$i}:after {
 		background-image: url('images/cover-#{$i}.jpg');
 	}

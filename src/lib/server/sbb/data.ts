@@ -15,7 +15,7 @@ import type { SituationElement, Text } from './types';
 
 const ENABLED = env.SBB_ENABLED === '1';
 const CACHE_TIME = Number(env.SBB_CACHE_TIME);
-const WORDS = env.SBB_KEYWORDS.split(',');
+const WORDS = env.SBB_KEYWORDS?.split(',') ?? [];
 const API_KEY = env.SBB_API_KEY;
 const URL = 'https://api.opentransportdata.swiss/siri-sx';
 

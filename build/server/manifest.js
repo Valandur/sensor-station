@@ -1,32 +1,38 @@
-const manifest = {
+const manifest = (() => {
+function __memo(fn) {
+	let value;
+	return () => value ??= (value = fn());
+}
+
+return {
 	appDir: "_app",
 	appPath: "_app",
 	assets: new Set(["favicon.png","fonts/chakra-petch-v9-latin_latin-ext-300.woff","fonts/chakra-petch-v9-latin_latin-ext-300.woff2","fonts/chakra-petch-v9-latin_latin-ext-500.woff","fonts/chakra-petch-v9-latin_latin-ext-500.woff2","fonts/chakra-petch-v9-latin_latin-ext-regular.woff","fonts/chakra-petch-v9-latin_latin-ext-regular.woff2","fonts/icofont.eot","fonts/icofont.svg","fonts/icofont.ttf","fonts/icofont.woff","fonts/icofont.woff2","icofont.min.css","icons/clear.png","icons/clouds.png","icons/drizzle.png","icons/foggy.png","icons/heavyrain.png","icons/heavysnow.png","icons/overcast.png","icons/rain.png","icons/sand.png","icons/sandstorm.png","icons/snow.png","icons/thunderstorm.png","icons/tornado.png","icons/wind.png"]),
 	mimeTypes: {".png":"image/png",".woff":"font/woff",".woff2":"font/woff2",".eot":"application/vnd.ms-fontobject",".svg":"image/svg+xml",".ttf":"font/ttf",".css":"text/css"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.02647e4e.js","app":"_app/immutable/entry/app.899081ed.js","imports":["_app/immutable/entry/start.02647e4e.js","_app/immutable/chunks/index.7ca231fc.js","_app/immutable/chunks/singletons.d281ce7f.js","_app/immutable/chunks/index.d3159694.js","_app/immutable/chunks/parse.bee59afc.js","_app/immutable/entry/app.899081ed.js","_app/immutable/chunks/index.7ca231fc.js"],"stylesheets":[],"fonts":[]},
+		client: {"start":"_app/immutable/entry/start.53c5762f.js","app":"_app/immutable/entry/app.7d7bb220.js","imports":["_app/immutable/entry/start.53c5762f.js","_app/immutable/chunks/scheduler.f29c4489.js","_app/immutable/chunks/singletons.52ca97a7.js","_app/immutable/chunks/index.7b21c3ea.js","_app/immutable/chunks/parse.bee59afc.js","_app/immutable/entry/app.7d7bb220.js","_app/immutable/chunks/scheduler.f29c4489.js","_app/immutable/chunks/index.ae6ce75b.js"],"stylesheets":[],"fonts":[]},
 		nodes: [
-			() => import('./chunks/0-505aede7.js'),
-			() => import('./chunks/1-1d668c4a.js'),
-			() => import('./chunks/2-42cb4ff1.js'),
-			() => import('./chunks/3-6993e7be.js'),
-			() => import('./chunks/4-f783e616.js'),
-			() => import('./chunks/5-82412c41.js'),
-			() => import('./chunks/6-00a6c3bc.js'),
-			() => import('./chunks/7-bbdafe94.js'),
-			() => import('./chunks/8-bbe3ecac.js'),
-			() => import('./chunks/9-903db830.js'),
-			() => import('./chunks/10-d7fbf1c4.js'),
-			() => import('./chunks/11-676877c6.js'),
-			() => import('./chunks/12-78fd4b27.js'),
-			() => import('./chunks/13-969f568c.js'),
-			() => import('./chunks/14-114855e2.js'),
-			() => import('./chunks/15-5c4ad1d8.js'),
-			() => import('./chunks/16-32d70a2c.js'),
-			() => import('./chunks/17-20e1219e.js'),
-			() => import('./chunks/18-a281da78.js'),
-			() => import('./chunks/19-6c7bd51f.js'),
-			() => import('./chunks/20-83f3d0d0.js')
+			__memo(() => import('./chunks/0-7b42829b.js')),
+			__memo(() => import('./chunks/1-b34b7aeb.js')),
+			__memo(() => import('./chunks/2-65326b64.js')),
+			__memo(() => import('./chunks/3-fa22d24d.js')),
+			__memo(() => import('./chunks/4-412a2c73.js')),
+			__memo(() => import('./chunks/5-752e906e.js')),
+			__memo(() => import('./chunks/6-21528a7f.js')),
+			__memo(() => import('./chunks/7-51fec826.js')),
+			__memo(() => import('./chunks/8-3ae36eb9.js')),
+			__memo(() => import('./chunks/9-b06ee792.js')),
+			__memo(() => import('./chunks/10-da06eccd.js')),
+			__memo(() => import('./chunks/11-4f05b233.js')),
+			__memo(() => import('./chunks/12-ab695be2.js')),
+			__memo(() => import('./chunks/13-f70deec3.js')),
+			__memo(() => import('./chunks/14-ec72a149.js')),
+			__memo(() => import('./chunks/15-a870d071.js')),
+			__memo(() => import('./chunks/16-298f3ad8.js')),
+			__memo(() => import('./chunks/17-e42ab1cf.js')),
+			__memo(() => import('./chunks/18-57901cb2.js')),
+			__memo(() => import('./chunks/19-7fac1e9f.js')),
+			__memo(() => import('./chunks/20-dc1e9a79.js'))
 		],
 		routes: [
 			{
@@ -154,7 +160,8 @@ const manifest = {
 			return {  };
 		}
 	}
-};
+}
+})();
 
 const prerendered = new Set([]);
 
