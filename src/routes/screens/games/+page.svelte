@@ -25,7 +25,7 @@
 				<div class="card">
 					<div class="card-header fw-bold d-flex justify-content-between">
 						<div>
-							{format(game.startsAt, 'dd MMM')} - {format(game.endsAt, 'dd MMM', { locale: de })}
+							{format(game.startsAt, 'dd MMM')} - {game.endsAt ? format(game.endsAt, 'dd MMM', { locale: de }) : ''}
 						</div>
 						<div>
 							{#if game.pct === 0}

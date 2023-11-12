@@ -52,7 +52,7 @@ export async function getData(force = false) {
 				.filter((po) => po.discountSetting.discountType === 'PERCENTAGE')
 				.map((po) => ({
 					start: parseISO(po.startDate),
-					end: parseISO(po.endDate),
+					end: po.endDate ? parseISO(po.endDate) : null,
 					pct: po.discountSetting.discountPercentage
 				}));
 
