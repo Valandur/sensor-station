@@ -79,6 +79,8 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 
 		const resInit = await request('init', agent.post(url).type('json').send({}));
 
+		logger.debug('next_action', resInit.body.nextAction?.type);
+
 		url = `${URL_LOGIN}?${params}`;
 		let authId = resInit.body.tokens.authId;
 		const loginData = { username: USERNAME, password: PASSWORD };
@@ -130,21 +132,24 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 
 		await request('post', agent.post(url).type('form').send(data));
 
-		const resUser = await request('user', agent.get(URL_USER));
+		const resUser = await request('user', agent.get(URL_USER).set('Accept', 'application/json'));
 
 		url = `${URL_SHIPMENTS}/user/${resUser.body.userIdentifier}`;
 
-		const resShipmentReq = await request('shipments-req', agent.get(url));
+		const resShipmentReq = await request(
+			'shipments-req',
+			agent.get(url).set('Accept', 'application/json')
+		);
 
 		url = `${URL_SHIPMENTS}/result/${resShipmentReq.body}`;
 
-		let resShipments = await request('shipments', agent.get(url));
+		let resShipments = await request('shipments', agent.get(url).set('Accept', 'application/json'));
 		for (let i = 0; i < 5; i++) {
 			if (resShipments.body.status === 'DONE') {
 				break;
 			}
 			await new Promise<void>((res) => setTimeout(res, 1000));
-			resShipments = await request('shipments', agent.get(url));
+			resShipments = await request('shipments', agent.get(url).set('Accept', 'application/json'));
 		}
 		if (resShipments.body.status !== 'DONE') {
 			throw error(500, {
@@ -203,11 +208,11 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 }
 
 async function request(name: string, req: superagent.SuperAgentRequest) {
-	logger.debug(name, req.method, req.url.substring(0, 150));
+	logger.debug(name, req.method, req.url);
 	try {
 		const resp = await req;
 		for (const url of resp.redirects) {
-			logger.debug(name, '-->', url.substring(0, 150));
+			logger.debug(name, '-->', url);
 		}
 		logger.debug(name, 'status:', resp.status);
 		return resp;
