@@ -25,7 +25,7 @@
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
 	{#if events.length > 0}
-		{#each events as event, i}
+		{#each events as event}
 			<div class="row fs-2" class:same={event.isSameDay} class:odd={event.isOdd}>
 				{#if !event.isSameDay}
 					<div class="col-1">{format(event.tsStart, 'iii', { locale: de })}</div>

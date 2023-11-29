@@ -24,5 +24,9 @@ export const SCREEN_PARAMS: { [key: string]: { [key: string]: string } } = {
 		daily: 'Täglich',
 		hourly: 'Stündlich',
 		alerts: 'Warnungen'
+	},
+	sbb: {
+		alerts: 'Einschränkungen',
+		departures: 'Abfahrten'
 	}
 };
