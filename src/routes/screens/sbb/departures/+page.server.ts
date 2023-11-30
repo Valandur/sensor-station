@@ -5,7 +5,7 @@ import { getData } from '$lib/server/sbb/data';
 
 import type { PageServerLoad } from './$types';
 
-const MAX_ITEMS = 10;
+const MAX_ITEMS = 6;
 
 const counter = new Counter();
 
