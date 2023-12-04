@@ -49,24 +49,10 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 
 		const agent = superagent.agent().withCredentials();
 
-		const resPre = await request('pre', agent.get(URL_START).accept('html'));
+		let url = URL_START;
+		const resPre = await request('pre', agent.get(url).accept('html'));
 
-		let rawUrl = FORM_REGEX.exec(resPre.text)?.[1]?.trim();
-		if (!rawUrl) {
-			throw error(500, {
-				message: 'Could not find login form',
-				key: 'post.loginFormNotFound'
-			});
-		}
-
-		let url = decode(rawUrl);
-
-		const resStart = await request(
-			'start',
-			agent.post(url).type('form').send({ externalIDP: 'externalIDP' })
-		);
-
-		const redir = resStart.redirects.pop();
+		const redir = resPre.redirects.pop();
 		if (!redir) {
 			throw error(500, {
 				message: 'Missing redirect URL',
@@ -102,7 +88,7 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 
 		const resAuth = await request('auth', agent.get(url).accept('html'));
 
-		rawUrl = FORM_REGEX.exec(resAuth.text)?.[1]?.trim();
+		let rawUrl = FORM_REGEX.exec(resAuth.text)?.[1]?.trim();
 		if (!rawUrl) {
 			throw error(500, {
 				message: 'Could not find auth form',
