@@ -21,7 +21,7 @@ const SIMPLE_DETAILS = env.NEWS_SIMPLE_DETAILS === '1';
 const CACHE_TIME = Number(env.NEWS_CACHE_TIME);
 const CACHE_PATH = 'data/news';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
-const DESCR_REGEX = /<img src="https:\/\/www.srf.ch\/static\/cms\/images\/(.*?)".*?>(.*)/;
+const DESCR_REGEX = /<img src="(.*?)".*?>(.*)/;
 
 export { SIMPLE_DETAILS };
 
@@ -72,7 +72,7 @@ export function getData(feedId: string, forceUpdate = false) {
 
 			if (!(await stat(imgFilePath).catch(() => null))) {
 				const stream = createWriteStream(imgFilePath);
-				superagent.get(`https://www.srf.ch/static/cms/images/${imgUrl}`).pipe(stream);
+				superagent.get(imgUrl).pipe(stream);
 				await new Promise<void>((resolve) => stream.on('finish', () => resolve()));
 			}
 

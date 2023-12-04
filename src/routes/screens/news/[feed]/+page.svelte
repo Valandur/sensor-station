@@ -2,11 +2,11 @@
 	import { fade } from 'svelte/transition';
 	import { formatDistanceToNow } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
-
 	import { goto } from '$app/navigation';
 
 	import { paused } from '$lib/stores/screen';
 	import { swipe } from '$lib/swipe';
+	import EmptyCard from '$lib/components/EmptyCard.svelte';
 	import type { NewsItem } from '$lib/models/NewsItem';
 
 	import type { PageData } from './$types';
@@ -45,19 +45,23 @@
 		</div>
 	{/if}
 
-	{#each items as item}
-		<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
-			<div class="col-3 me-1 image">
-				<img alt="Thumbnail" src={`/data/news/${item.image}`} />
-			</div>
-			<div class="col abstract d-flex flex-column justify-content-around">
-				<div class="fs-4">{item.title}</div>
-				<div class="fs-6 text-muted">
-					{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
+	{#if items.length > 0}
+		{#each items as item}
+			<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
+				<div class="col-3 me-1 image">
+					<img alt="Thumbnail" src={`/data/news/${item.image}`} />
+				</div>
+				<div class="col abstract d-flex flex-column justify-content-around">
+					<div class="fs-4">{item.title}</div>
+					<div class="fs-6 text-muted">
+						{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
+					</div>
 				</div>
 			</div>
-		</div>
-	{/each}
+		{/each}
+	{:else}
+		<EmptyCard>Es wurden keine Newseinträge gefunden</EmptyCard>
+	{/if}
 </div>
 
 <style lang="scss">
