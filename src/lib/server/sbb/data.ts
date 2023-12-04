@@ -43,13 +43,12 @@ export async function getData(forceUpdate = false) {
 			.set('Authorization', API_KEY)
 			.send(body);
 
-		const resDepartures = await parser.parseStringPromise(textDepartures);
+		const resTrias = await parser.parseStringPromise(textDepartures);
 
-		const deliveryPayload =
-			resDepartures['trias:Trias']['trias:ServiceDelivery'][0]['trias:DeliveryPayload'][0];
-		const departures: SbbDeparture[] = deliveryPayload['trias:StopEventResponse'][0][
-			'trias:StopEventResult'
-		]
+		const serviceDelivery = resTrias['trias:Trias']['trias:ServiceDelivery'][0];
+		const deliveryPayload = serviceDelivery['trias:DeliveryPayload'][0];
+		const stopEventResult = deliveryPayload['trias:StopEventResponse'][0]['trias:StopEventResult'];
+		const departures: SbbDeparture[] = stopEventResult
 			.map((d: any) => d['trias:StopEvent'][0])
 			.map((d: any) => ({
 				stop: d['trias:ThisCall'][0]['trias:CallAtStop'][0],
