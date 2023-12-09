@@ -137,6 +137,7 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 			await new Promise<void>((res) => setTimeout(res, 1000));
 			resShipments = await request('shipments', agent.get(url).set('Accept', 'application/json'));
 		}
+
 		if (resShipments.body.status !== 'DONE') {
 			throw error(500, {
 				message: 'Shipment query status did not change to DONE',
@@ -151,13 +152,18 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 			.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
 			.map(({ shipment }) => {
 				const phys = shipment.physicalProperties;
+				let type = getText(shipment.product) || shipment.product;
+				if (shipment.internationalProduct) {
+					const newType = getText(shipment.internationalProduct);
+					if (newType) {
+						type = newType;
+					}
+				}
 
 				return {
 					id: shipment.identity,
 					number: shipment.formattedShipmentNumber,
-					type: shipment.internationalProduct
-						? getText(shipment.internationalProduct)
-						: getText(shipment.product),
+					type: type,
 					arrival: shipment.calculatedDeliveryDate || null,
 					status: null,
 					sender: shipment.debitorDescription,
@@ -171,14 +177,14 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 		for (const shipment of shipments) {
 			const events = await request(
 				`events-${shipment.number}`,
-				agent.get(URL_EVENTS.replace('$id', shipment.id))
+				agent.get(URL_EVENTS.replace('$id', shipment.id)).set('Accept', 'application/json')
 			);
 			const event = events.body[0];
 			if (!event) {
 				continue;
 			}
 
-			shipment.status = getText(event.eventCode);
+			shipment.status = getText(event.eventCode) || event.eventCode;
 		}
 
 		if (dev && shipments.length === 0) {
@@ -237,7 +243,7 @@ function getText(code: string) {
 	const splits = code.split('.');
 	const entry = ['', shipmentTexts] as [string, RecursiveMap];
 	const text = getRecursiveTexts(entry, splits, 0);
-	return text || code;
+	return text;
 }
 
 function getRecursiveTexts(
@@ -250,7 +256,7 @@ function getRecursiveTexts(
 		// Find the text -> Either the current entry if there is text, or the first sub entry with key '*' and text (recursivly)
 		let subEntry = entry;
 		while (!subEntry[0]) {
-			const nextSubEntry = entry[1].get('*');
+			const nextSubEntry = subEntry[1].get('*');
 			if (!nextSubEntry) {
 				break;
 			}
