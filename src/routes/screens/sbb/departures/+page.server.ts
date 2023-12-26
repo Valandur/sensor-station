@@ -4,6 +4,7 @@ import { Counter } from '$lib/counter';
 import { getData } from '$lib/server/sbb/data';
 
 import type { PageServerLoad } from './$types';
+import { isAfter } from 'date-fns';
 
 const MAX_ITEMS = 6;
 
@@ -11,14 +12,17 @@ const counter = new Counter();
 
 export const load: PageServerLoad = async ({ url, parent }) => {
 	const data = await getData();
-	counter.max = data.departures.length;
+	const now = new Date();
+	const allDepartures = data.departures.filter((d) => isAfter(d.estimated, now));
+
+	counter.max = allDepartures.length;
 
 	let page = Number(url.searchParams.get('page') || '-');
 	if (!isFinite(page)) {
 		page = 0;
 	}
 
-	const departures = data.departures.slice(page, page + MAX_ITEMS);
+	const departures = allDepartures.slice(page, page + MAX_ITEMS);
 	const dataParent = await parent();
 
 	if (!departures && dataParent.skipScreen) {
