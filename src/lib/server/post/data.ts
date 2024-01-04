@@ -162,15 +162,15 @@ export async function getData(forceUpdate = false): Promise<PostData> {
 
 				return {
 					id: shipment.identity,
-					number: shipment.formattedShipmentNumber,
+					number: shipment.formattedShipmentNumber ?? '-- unbekannt --',
 					type: type,
-					arrival: shipment.calculatedDeliveryDate || null,
+					arrival: shipment.calculatedDeliveryDate ?? null,
 					status: null,
-					sender: shipment.debitorDescription,
+					sender: shipment.debitorDescription ?? null,
 					dims: phys.dimension1
 						? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
 						: null,
-					weight: phys.weight || null
+					weight: phys.weight ?? null
 				};
 			});
 
@@ -289,7 +289,7 @@ function getMockShipments(): PostShipment[] {
 			id: '__unknown__',
 			number: '99.xx.yyyyyy.zzzzzzzz',
 			type: 'PostPac Priority',
-			arrival: parseISO('2023-03-29T00:00:00+02:00'),
+			arrival: '2023-03-29T00:00:00+02:00',
 			status: null,
 			sender: 'Digitec Galaxus AG',
 			dims: { x: 310, y: 240, z: 215 },

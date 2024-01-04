@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format } from 'date-fns';
+	import { format, parseISO } from 'date-fns';
 	import de from 'date-fns/locale/de/index';
 
 	import { goto } from '$app/navigation';
@@ -39,16 +39,16 @@
 						{#if shipment.arrival}
 							<div>
 								<i class="icofont-calendar" />
-								{format(shipment.arrival, 'dd.MM.yy', { locale: de })}
+								{format(parseISO(shipment.arrival), 'dd.MM.yy', { locale: de })}
 							</div>
 						{/if}
 					</div>
 					<div class="card-body">
 						<h5 class="card-title">
-							{shipment.sender}
+							{shipment.sender ?? shipment.type}
 						</h5>
 						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-							{shipment.type}
+							{shipment.sender ? shipment.type : ''}
 						</h6>
 						<p class="card-text">
 							{#if shipment.dims}
