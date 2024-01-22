@@ -32,7 +32,7 @@
 					</div>
 					<div class="card-body">
 						<p class="display-6">
-							Fertig in ca. {getETA()}
+							Fertig in {getETA()}
 						</p>
 
 						<div class="progress mb-4" style:height="100px">
