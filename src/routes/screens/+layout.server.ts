@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-import { Counter } from '$lib/counter';
+import { Counter, CounterType } from '$lib/counter';
 import { getData as getBatteryData } from '$lib/server/battery/data';
 import { getData as getModemData } from '$lib/server/modem/data';
 import { getHoliday } from '$lib/server/holidays';
@@ -9,7 +9,9 @@ import type { Screen } from '$lib/models/Screen';
 
 import type { LayoutServerLoad } from './$types';
 
-const counter = new Counter();
+const counter = new Counter({
+	type: CounterType.Wrap
+});
 
 export const load: LayoutServerLoad = async ({ url, depends }) => {
 	const index = Number(url.searchParams.get('screen') || '---');
