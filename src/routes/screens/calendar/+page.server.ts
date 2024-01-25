@@ -5,20 +5,20 @@ import { getData } from '$lib/server/calendar/data';
 
 import type { PageServerLoad } from './$types';
 
-const MAX_ITEMS = 6;
-
-const counter = new Counter();
+const counter = new Counter({
+	maxSliceSize: 6
+});
 
 export const load: PageServerLoad = async ({ url, parent }) => {
 	const data = await getData();
 	counter.max = data.events.length;
 
-	let page = Number(url.searchParams.get('page') || '-');
+	let page = Number(url.searchParams.get('page') || '---');
 	if (!isFinite(page)) {
 		page = 0;
 	}
 
-	const events = data.events.slice(page, page + MAX_ITEMS);
+	const events = counter.slice(data.events, page);
 	const dataParent = await parent();
 
 	if (!events && dataParent.skipScreen) {
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 
 	return {
 		events,
-		nextPage: `${dataParent.currScreen}&page=${counter.wrap(page + 1)}`,
+		nextPage: `${dataParent.currScreen}&page=${counter.fit(page + 1)}`,
 		prevPage: `${dataParent.currScreen}&page=${page > 0 ? page - 1 : 0}`
 	};
 };

@@ -12,7 +12,7 @@ import type { LayoutServerLoad } from './$types';
 const counter = new Counter();
 
 export const load: LayoutServerLoad = async ({ url, depends }) => {
-	const index = Number(url.searchParams.get('screen') || '-');
+	const index = Number(url.searchParams.get('screen') || '---');
 	const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 	const urlScreenName = url.pathname;
 
@@ -30,14 +30,14 @@ export const load: LayoutServerLoad = async ({ url, depends }) => {
 		throw redirect(302, getScreenUrl(0, dir));
 	}
 
-	const idx = isFinite(index) ? counter.wrap(index) : null;
+	const idx = isFinite(index) ? counter.fit(index) : null;
 	const currScreen = idx !== null ? getScreenUrl(idx, dir) : null;
 	if (currScreen && !currScreen.startsWith(urlScreenName)) {
 		throw redirect(302, currScreen);
 	}
 
-	const nextScreen = idx !== null ? getScreenUrl(counter.wrap(idx + 1), 'next') : null;
-	const prevScreen = idx !== null ? getScreenUrl(counter.wrap(idx - 1), 'prev') : null;
+	const nextScreen = idx !== null ? getScreenUrl(counter.fit(idx + 1), 'next') : null;
+	const prevScreen = idx !== null ? getScreenUrl(counter.fit(idx - 1), 'prev') : null;
 	const skipScreen = idx !== null ? (dir === 'next' ? nextScreen : prevScreen) : null;
 	const holiday = getHoliday();
 

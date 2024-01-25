@@ -1,31 +1,53 @@
-export class Counter {
-	private _max = 0;
-	private _value = 0;
+export enum CounterType {
+	Clamp = 'clamp',
+	Wrap = 'wrap'
+}
 
+export interface CounterOptions {
+	type?: CounterType;
+	maxSliceSize?: number;
+}
+
+export class Counter {
+	private _type: CounterType = CounterType.Clamp;
+	public get type() {
+		return this._type;
+	}
+
+	private _max = 1;
 	public get max() {
 		return this._max;
 	}
 	public set max(max: number) {
 		this._max = Math.max(max, 1);
-		this._value = this.value % this._max;
+		this._value = this.fit(this._value);
 	}
 
+	private _value = 0;
 	public get value() {
 		return this._value;
 	}
 
-	public constructor(max?: number, value?: number) {
-		if (value) {
-			this._value = value;
+	private _maxSliceSize = 1;
+	public get maxSliceSize() {
+		return this._maxSliceSize;
+	}
+
+	public get sliceSize() {
+		return Math.min(this._maxSliceSize, this._max);
+	}
+
+	public constructor(options?: CounterOptions) {
+		if (options?.type) {
+			this._type = options.type;
 		}
-		if (max) {
-			// Use public accessor to also clamp value
-			this.max = max;
+		if (options?.maxSliceSize) {
+			this._maxSliceSize = Math.max(options.maxSliceSize, 1);
 		}
 	}
 
 	public next(): number {
-		return (this._value + 1) % this._max;
+		return this.fit(this._value + 1);
 	}
 
 	public increment(): number {
@@ -35,7 +57,7 @@ export class Counter {
 	}
 
 	public previous(): number {
-		return (this._value <= 0 ? this._max : this._value) - 1;
+		return this.fit(this._value - 1);
 	}
 
 	public decrement(): number {
@@ -44,20 +66,33 @@ export class Counter {
 		return val;
 	}
 
-	public wrap(index: number) {
-		const idx = index % this._max;
-		if (idx >= 0) {
-			return idx;
-		} else {
-			return this._max + idx;
+	public fit(value: number) {
+		switch (this._type) {
+			case CounterType.Clamp:
+				return Math.max(Math.min(value, this._max - this.sliceSize), 0);
+
+			case CounterType.Wrap:
+				const idx = value % this._max;
+				if (idx >= 0) {
+					return idx;
+				} else {
+					return this._max + idx;
+				}
 		}
 	}
 
-	public sliceAndWrap<T>(array: T[], itemCount: number, index?: number): T[] {
-		const idx = typeof index === 'number' ? this.wrap(index) : this._value;
-		return [
-			...array.slice(idx, idx + itemCount),
-			...array.slice(0, Math.max(itemCount - (this._max - idx), 0))
-		];
+	public slice<T>(array: T[], index?: number): T[] {
+		const idx = typeof index === 'number' ? this.fit(index) : this._value;
+
+		switch (this._type) {
+			case CounterType.Clamp:
+				return array.slice(idx, idx + this.sliceSize);
+
+			case CounterType.Wrap:
+				return [
+					...array.slice(idx, idx + this.sliceSize),
+					...array.slice(0, Math.max(this.sliceSize - (this._max - idx), 0))
+				];
+		}
 	}
 }

@@ -1,6 +1,6 @@
 export interface PrinterInfo {
 	job: {
-		id: number;
+		id?: number;
 		progress: number;
 		time_remaining: number;
 		time_printing: number;

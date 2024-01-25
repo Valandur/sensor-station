@@ -7,7 +7,7 @@ export const SCREEN_NAMES: { [key: string]: string } = {
 	uploads: 'Bilder',
 	calendar: 'Kalender',
 	news: 'News',
-	printer: 'Printer',
+	printer: 'Drucker',
 	post: 'Post',
 	sbb: 'SBB',
 	games: 'Spiele',
