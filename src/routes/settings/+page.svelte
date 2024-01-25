@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { SCREEN_NAMES, SCREEN_PARAMS } from '$lib/models/Screen';
+	import PageLayout from '$lib/components/PageLayout.svelte';
 
 	import type { PageData } from './$types';
-	import PageLayout from '$lib/components/PageLayout.svelte';
+
+	const allScreens = Object.entries(SCREEN_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
 
 	export let data: PageData;
 	$: screens = data.screens;
@@ -32,15 +34,18 @@
 								class="form-select form-select-sm"
 								bind:value={newName}
 							>
-								{#each Object.entries(SCREEN_NAMES) as [value, name]}
+								{#each allScreens as [value, name]}
 									<option {value}>{name}</option>
 								{/each}
 							</select>
 						</td>
 						<td>
 							{#if newName in SCREEN_PARAMS}
+								{@const params = Object.entries(SCREEN_PARAMS[newName]).sort((a, b) =>
+									a[1].localeCompare(b[1])
+								)}
 								<select form="formNew" name="newParams" class="form-select form-select-sm">
-									{#each Object.entries(SCREEN_PARAMS[newName]) as [value, name]}
+									{#each params as [value, name]}
 										<option {value}>{name}</option>
 									{/each}
 								</select>
@@ -51,7 +56,13 @@
 						<td />
 						<td />
 						<td>
-							<form id="formNew" method="POST" action="?/add" use:enhance>
+							<form
+								id="formNew"
+								method="POST"
+								action="?/add"
+								use:enhance
+								on:submit={() => (newName = '')}
+							>
 								<button type="submit" class="btn btn-sm btn-success" disabled={!newName}>
 									<i class="icofont-ui-add" />
 								</button>
