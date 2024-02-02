@@ -66,8 +66,8 @@
 
 <style lang="scss">
 	.abstract {
-		font-size: 1.4rem;
-		line-height: 1.4rem;
+		font-size: 1.4em;
+		line-height: 1em;
 	}
 
 	iframe {

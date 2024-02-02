@@ -33,7 +33,7 @@
 
 <style>
 	.text {
-		font-size: 2.8rem;
+		font-size: 2.8em;
 	}
 
 	img {

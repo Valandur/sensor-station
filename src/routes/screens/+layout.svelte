@@ -75,7 +75,7 @@
 			on:click={togglePause}
 		>
 			<div class="time-main">{timeStr}</div>
-			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-1">
+			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-2">
 				<div>{secondStr}</div>
 				<div class="text-muted text-nowrap">{tzStr}</div>
 			</div>
@@ -132,8 +132,6 @@
 				{/if}
 			</div>
 
-			<div class="row flex-fill" />
-
 			<div class="row flex-nowrap">
 				<div class="h2 col text-nowrap m-0">{date}</div>
 			</div>
@@ -173,26 +171,27 @@
 	}
 
 	.time-main {
-		font-size: 5rem;
-		line-height: 4rem;
+		font-size: 5em;
+		line-height: 0.8em;
 		font-weight: 600;
 		color: var(--bs-white);
 	}
 
 	.time-seconds {
 		> :first-child {
-			font-size: 2.2rem;
-			line-height: 1.8rem;
+			font-size: 2.2em;
+			line-height: 0.9em;
 		}
 
 		> :last-child {
-			font-size: 1.4rem;
-			line-height: 1.3rem;
+			font-size: 1.4em;
+			line-height: 1.1em;
 		}
 	}
 
 	.icons {
-		font-size: 0.6rem;
+		font-size: 0.6em;
+		height: 1.5em;
 	}
 
 	.progress {
