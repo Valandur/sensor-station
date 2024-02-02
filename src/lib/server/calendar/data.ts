@@ -19,14 +19,14 @@ const logger = new BaseLogger('CALENDAR');
 const cache = new BaseCache<CalendarData>(logger, CACHE_TIME);
 
 export async function getData(forceUpdate = false) {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Calendar is disabled`,
-				key: 'calendar.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Calendar is disabled`,
+			key: 'calendar.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		const jwtClient = new google.auth.JWT(SERVICE_EMAIL, undefined, PRIVATE_KEY, SCOPES);
 		const calendar = google.calendar({ version: 'v3', auth: jwtClient });
 

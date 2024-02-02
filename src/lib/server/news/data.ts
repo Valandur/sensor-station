@@ -30,14 +30,14 @@ const feedCache = new BaseCache<NewsData>(logger, CACHE_TIME);
 const articleCache = new BaseCache<NewsArticleData>(logger, CACHE_TIME);
 
 export function getData(feedId: string, forceUpdate = false) {
-	return feedCache.with(feedId, forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `News is disabled`,
-				key: 'news.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `News is disabled`,
+			key: 'news.disabled'
+		});
+	}
 
+	return feedCache.with(feedId, forceUpdate, async () => {
 		await mkdir(`${CACHE_PATH}/${feedId}`, { recursive: true });
 
 		const { text } = await superagent.get(`${BASE_URL}${feedId}`);

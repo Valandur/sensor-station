@@ -36,14 +36,14 @@ let hasTexts = false;
 const shipmentTexts: RecursiveMap = new Map();
 
 export async function getData(forceUpdate = false): Promise<PostData> {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Post is disabled`,
-				key: 'post.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Post is disabled`,
+			key: 'post.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		await updateTexts();
 
 		const agent = superagent.agent().withCredentials();

@@ -26,14 +26,14 @@ const logger = new BaseLogger('SBB');
 const cache = new BaseCache<SbbData>(logger, CACHE_TIME);
 
 export async function getData(forceUpdate = false) {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `SBB is disabled`,
-				key: 'sbb.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `SBB is disabled`,
+			key: 'sbb.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		const parser = new Parser({ async: true });
 
 		const body = getRequestBody();

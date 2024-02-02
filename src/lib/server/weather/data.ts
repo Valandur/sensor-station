@@ -37,14 +37,14 @@ let location: WeatherLocation = JSON.parse(
 );
 
 export async function getData(forceUpdate = false) {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Weather is disabled`,
-				key: 'weather.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Weather is disabled`,
+			key: 'weather.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		let latitude = BASE_LAT;
 		let longitude = BASE_LNG;
 

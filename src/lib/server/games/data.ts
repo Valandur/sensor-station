@@ -24,14 +24,14 @@ const logger = new BaseLogger('GAMES');
 const cache = new BaseCache<GamesData>(logger, CACHE_TIME);
 
 export async function getData(force = false) {
-	return cache.withDefault(force, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Games is disabled`,
-				key: 'games.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Games is disabled`,
+			key: 'games.disabled'
+		});
+	}
 
+	return cache.withDefault(force, async () => {
 		const { body } = await superagent.get(URL);
 
 		const rawGames: RawGame[] = body.data.Catalog.searchStore.elements;

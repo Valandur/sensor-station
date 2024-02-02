@@ -24,16 +24,16 @@ const cache = new BaseCache<ModemData>(logger, CACHE_TIME);
 export async function getData(forceUpdate = false): Promise<ModemData> {
 	let device: Device | null = null;
 
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Modem is disabled`,
+			key: 'modem.disabled'
+		});
+	}
+
 	return cache.withDefault(
 		forceUpdate,
 		async () => {
-			if (!ENABLED) {
-				throw error(400, {
-					message: `Modem is disabled`,
-					key: 'modem.disabled'
-				});
-			}
-
 			device = new Device({
 				devicePath: DEVICE_PATH,
 				baudRate: BAUD_RATE,

@@ -32,16 +32,16 @@ let lastRecordedTs: Date = new Date(0);
 export async function getData(forceUpdate = false): Promise<BatteryData> {
 	let device: Device | null = null;
 
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Battery is disabled`,
+			key: 'battery.disabled'
+		});
+	}
+
 	return cache.withDefault(
 		forceUpdate,
 		async () => {
-			if (!ENABLED) {
-				throw error(400, {
-					message: `Battery is disabled`,
-					key: 'battery.disabled'
-				});
-			}
-
 			device = new Device(BUS_NUMBER, I2C_ADDRESS);
 
 			if (!(await device.checkReady())) {

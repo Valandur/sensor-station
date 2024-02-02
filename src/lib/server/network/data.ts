@@ -16,14 +16,14 @@ const logger = new BaseLogger('NETWORK');
 const cache = new BaseCache<NetworkData>(logger, CACHE_TIME);
 
 export async function getData(forceUpdate = false): Promise<NetworkData> {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Network is disabled`,
-				key: 'network.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Network is disabled`,
+			key: 'network.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		const interfaces: NetworkInterface[] = [];
 
 		const networkInterfacesMap = networkInterfaces();

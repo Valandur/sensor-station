@@ -28,14 +28,14 @@ let recordTimer: ReturnType<typeof setInterval> | null = null;
 let lastRecordedTs: Date = new Date(0);
 
 export async function getData(forceUpdate = false) {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `SBB is disabled`,
-				key: 'sbb.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `SBB is disabled`,
+			key: 'sbb.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		if (!(await stat(DEVICE_PATH).catch(() => null))) {
 			if (dev) {
 				return getMockData();

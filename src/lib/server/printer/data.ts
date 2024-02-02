@@ -15,14 +15,14 @@ const logger = new BaseLogger('PRINTER');
 const cache = new BaseCache<PrinterInfo>(logger, CACHE_TIME);
 
 export async function getData(forceUpdate = false) {
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Printer is disabled`,
-				key: 'printer.disabled'
-			});
-		}
+	if (!ENABLED) {
+		throw error(400, {
+			message: `Printer is disabled`,
+			key: 'printer.disabled'
+		});
+	}
 
+	return cache.withDefault(forceUpdate, async () => {
 		const statusUrl = `${API_URL}/api/v1/status`;
 		const { body } = await superagent.get(statusUrl).set('X-API-Key', API_KEY);
 
