@@ -9,12 +9,14 @@ const DEFAULT_KEY = '__default__';
 export class BaseCache<T> {
 	private readonly logger: BaseLogger;
 	private readonly cacheTime: number;
+	private readonly errorCacheTime: number;
 
 	protected readonly cache: Map<string, BaseCacheEntry<T>> = new Map();
 
-	public constructor(logger: BaseLogger, cacheTime: number) {
+	public constructor(logger: BaseLogger, cacheTime: number, errorCacheTime = 60) {
 		this.logger = logger;
 		this.cacheTime = cacheTime;
+		this.errorCacheTime = errorCacheTime;
 	}
 
 	public getDefaultData(): T | null {
@@ -46,17 +48,14 @@ export class BaseCache<T> {
 		let cachedData: T | null = cacheEntry?.data || null;
 		let cachedError = cacheEntry?.error || null;
 
-		if (!force && differenceInSeconds(new Date(), updatedAt) <= this.cacheTime) {
-			this.logger.debug('Using cached data');
-			if (cachedError) {
-				throw cachedError;
-			} else if (cachedData) {
+		if (!force) {
+			const timeDiff = differenceInSeconds(new Date(), updatedAt);
+			if (cachedData && timeDiff <= this.cacheTime) {
+				this.logger.debug('Using cached data');
 				return cachedData;
-			} else {
-				throw error(500, {
-					message: 'Trying to use empty cached data',
-					key: 'service.emptyCache'
-				});
+			} else if (cachedError && timeDiff <= this.errorCacheTime) {
+				this.logger.debug('Using cached error');
+				throw cachedError;
 			}
 		}
 

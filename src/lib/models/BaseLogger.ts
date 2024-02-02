@@ -1,4 +1,4 @@
-import { error, type HttpError } from '@sveltejs/kit';
+import { error, type HttpError, isHttpError } from '@sveltejs/kit';
 import { format } from 'date-fns';
 import { inspect } from 'node:util';
 import chalk from 'chalk';
@@ -45,21 +45,22 @@ export class BaseLogger {
 	public toSvelteError(err: unknown, extra?: Partial<App.Error>): HttpError {
 		this.error(err);
 
-		if (this.isSvelteError(err)) {
+		if (isHttpError(err)) {
 			// If we already have a svelte error just extend the extras
 			err.body = { ...extra, ...err.body, params: { ...extra?.params, ...err.body.params } };
 			return err;
 		}
 
-		return error(500, {
-			...extra,
-			message: err instanceof Error ? err.message : JSON.stringify(err),
-			key: `${this.moduleLowerName}.unhandled`,
-			params: { ...extra?.params, error: JSON.parse(JSON.stringify(err)) }
-		});
-	}
-
-	private isSvelteError(err: unknown): err is HttpError {
-		return typeof err === 'object' && !!err && 'status' in err && 'body' in err;
+		// This is a bit weird, but the error(...) function THROWS the error, and we can't construct it any better way
+		try {
+			return error(500, {
+				...extra,
+				message: err instanceof Error ? err.message : JSON.stringify(err),
+				key: `${this.moduleLowerName}.unhandled`,
+				params: { ...extra?.params, error: JSON.parse(JSON.stringify(err)) }
+			});
+		} catch (err: any) {
+			return err;
+		}
 	}
 }

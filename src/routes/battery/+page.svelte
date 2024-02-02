@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDistanceToNow } from 'date-fns';
-	import de from 'date-fns/locale/de/index';
+	import { de } from 'date-fns/locale';
 
 	import { time } from '$lib/stores/time';
 	import PageLayout from '$lib/components/PageLayout.svelte';

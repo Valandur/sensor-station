@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { format, formatDistanceToNow } from 'date-fns';
-	import { formatInTimeZone } from 'date-fns-tz';
-	import de from 'date-fns/locale/de/index';
+	import { format, formatDate, formatDistanceToNow } from 'date-fns';
+	// import { formatInTimeZone } from 'date-fns-tz';
+	import { de } from 'date-fns/locale';
 
 	import { time } from '$lib/stores/time';
 	import PageLayout from '$lib/components/PageLayout.svelte';
@@ -10,7 +10,7 @@
 
 	export let data: PageData;
 	$: timezone = data?.gpsTz || data?.timeTz || 'Europe/Zurich';
-	$: tzStr = formatInTimeZone($time, timezone, 'O', { locale: de });
+	$: tzStr = formatDate($time, 'O', { locale: de });
 
 	let timeStr = '';
 	$: $time, (timeStr = formatDistanceToNow(data.ts, { addSuffix: true, locale: de }));

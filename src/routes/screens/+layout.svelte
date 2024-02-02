@@ -2,10 +2,11 @@
 	import { beforeNavigate, goto, invalidate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { fade } from 'svelte/transition';
-	import { formatInTimeZone } from 'date-fns-tz';
+	// import { formatInTimeZone } from 'date-fns-tz';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
-	import de from 'date-fns/locale/de/index';
+	import { formatDate } from 'date-fns';
+	import { de } from 'date-fns/locale';
 
 	import { paused, progress, reset, start } from '$lib/stores/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
@@ -19,11 +20,11 @@
 	export let data: LayoutData;
 	$: index = data.index;
 	$: timezone = data.modem?.gpsTz || data.modem?.timeTz || 'Europe/Zurich';
-	$: timeStr = formatInTimeZone($time, timezone, 'HH:mm', { locale: de });
-	$: tzStr = formatInTimeZone($time, timezone, 'O', { locale: de });
-	$: secondStr = formatInTimeZone($time, timezone, 'ss', { locale: de });
-	$: date = formatInTimeZone($time, timezone, 'd. MMMM yyyy', { locale: de });
-	$: dateSub = formatInTimeZone($time, timezone, 'eeee', { locale: de }).replace('.', '');
+	$: timeStr = formatDate($time, 'HH:mm', { locale: de });
+	$: tzStr = formatDate($time, 'O', { locale: de });
+	$: secondStr = formatDate($time, 'ss', { locale: de });
+	$: date = formatDate($time, 'd. MMMM yyyy', { locale: de });
+	$: dateSub = formatDate($time, 'eeee', { locale: de }).replace('.', '');
 	$: modem = data.modem;
 	$: battery = data.battery;
 	$: holiday = data.holiday;
@@ -69,7 +70,7 @@
 <div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div
-		role="presentation"
+			role="presentation"
 			class="col-auto d-flex flex-row align-items-end mt-1 p-0"
 			on:click={togglePause}
 		>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { format, parseISO } from 'date-fns';
-	import de from 'date-fns/locale/de/index';
+	import { de } from 'date-fns/locale';
 
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
