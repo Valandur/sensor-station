@@ -1,9 +1,9 @@
-import { D as DEV } from './chunks/prod-ssr-neY5j8Pr.js';
-import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-z3nJZMSi.js';
-import { H as HttpError, j as json, t as text, R as Redirect, S as SvelteKitError, A as ActionFailure } from './chunks/index-H42hWO6o.js';
-import { d as decode_pathname, h as has_data_suffix, s as strip_data_suffix, a as decode_params, n as normalize_path, b as disable_search, c as add_data_suffix, m as make_trackable, r as resolve } from './chunks/exports-mq_1S73-.js';
-import { w as writable, r as readable } from './chunks/index2-_yOFBHcp.js';
-import { p as public_env, s as safe_public_env, a as set_private_env, b as set_public_env, c as set_safe_public_env } from './chunks/shared-server-49TKSBDM.js';
+import { D as DEV } from './chunks/prod-ssr-B2gHlHjM.js';
+import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-CAc1Agzk.js';
+import { H as HttpError, j as json, t as text, R as Redirect, S as SvelteKitError, A as ActionFailure } from './chunks/index-C-arhqvZ.js';
+import { d as decode_pathname, h as has_data_suffix, s as strip_data_suffix, a as decode_params, n as normalize_path, b as disable_search, c as add_data_suffix, m as make_trackable, r as resolve } from './chunks/exports-DuWZopOC.js';
+import { w as writable, r as readable } from './chunks/index2-BCSlr_Kj.js';
+import { p as public_env, s as safe_public_env, a as set_private_env, b as set_public_env, c as set_safe_public_env } from './chunks/shared-server-BfUoNEXY.js';
 
 let base = "";
 let assets = base;
@@ -135,11 +135,11 @@ const options = {
     app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en">\n\n<head>\n	<meta charset="utf-8" />\n	<link rel="icon" href="' + assets2 + '/favicon.png" />\n	<link rel="stylesheet" type="text/css" href="' + assets2 + '/icofont.min.css" />\n	<meta name="viewport"\n		content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />\n	' + head + '\n</head>\n\n<body data-sveltekit-preload-data="hover">\n	<div style="display: contents">' + body + "</div>\n</body>\n\n</html>\n",
     error: ({ status, message }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>Error - ' + status + " - " + message + "</title>\n		<style>\n			html,\n			body {\n				padding: 0;\n				margin: 0;\n			}\n\n			body {\n				padding: 0 2rem;\n				font-size: 30px;\n			}\n\n			.error {\n				color: red;\n			}\n		</style>\n	</head>\n	<body>\n		<h1>Error " + status + '</h1>\n\n		<a href="/">Home</a>\n\n		<p class="error">' + message + "</p>\n	</body>\n</html>\n"
   },
-  version_hash: "1htln23"
+  version_hash: "1yow8gp"
 };
 async function get_hooks() {
   return {
-    ...await import('./chunks/hooks.server-CzoCVdho.js')
+    ...await import('./chunks/hooks.server-BIaDZyuj.js')
   };
 }
 
@@ -243,6 +243,13 @@ function stringify_string(str) {
 	return `"${last_pos === 0 ? str : result + str.slice(last_pos)}"`;
 }
 
+/** @param {Record<string | symbol, any>} object */
+function enumerable_symbols(object) {
+	return Object.getOwnPropertySymbols(object).filter(
+		(symbol) => Object.getOwnPropertyDescriptor(object, symbol).enumerable
+	);
+}
+
 const chars$1 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
 const unsafe_chars = /[<\b\f\n\r\t\0\u2028\u2029]/g;
 const reserved =
@@ -325,7 +332,7 @@ function uneval(value, replacer) {
 						);
 					}
 
-					if (Object.getOwnPropertySymbols(thing).length > 0) {
+					if (enumerable_symbols(thing).length > 0) {
 						throw new DevalueError(
 							`Cannot stringify POJOs with symbolic keys`,
 							keys
@@ -621,7 +628,8 @@ function stringify(value, reducers) {
 					break;
 
 				case 'Date':
-					str = `["Date","${thing.toISOString()}"]`;
+					const valid = !isNaN(thing.getDate());
+					str = `["Date","${valid ? thing.toISOString() : ''}"]`;
 					break;
 
 				case 'RegExp':
@@ -668,6 +676,7 @@ function stringify(value, reducers) {
 							`.get(${is_primitive(key) ? stringify_primitive(key) : '...'})`
 						);
 						str += `,${flatten(key)},${flatten(value)}`;
+						keys.pop();
 					}
 
 					str += ']';
@@ -681,7 +690,7 @@ function stringify(value, reducers) {
 						);
 					}
 
-					if (Object.getOwnPropertySymbols(thing).length > 0) {
+					if (enumerable_symbols(thing).length > 0) {
 						throw new DevalueError(
 							`Cannot stringify POJOs with symbolic keys`,
 							keys
@@ -3607,10 +3616,13 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
         const set_cookie = response.headers.get("set-cookie");
         if (set_cookie) {
           for (const str of setCookieExports.splitCookiesString(set_cookie)) {
-            const { name, value, ...options3 } = setCookieExports.parseString(str);
+            const { name, value, ...options3 } = setCookieExports.parseString(str, {
+              decodeValues: false
+            });
             const path = options3.path ?? (url.pathname.split("/").slice(0, -1).join("/") || "/");
             set_internal(name, value, {
               path,
+              encode: (value2) => value2,
               .../** @type {import('cookie').CookieSerializeOptions} */
               options3
             });

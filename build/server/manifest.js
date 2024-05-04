@@ -7,34 +7,35 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set([".DS_Store","favicon.png","fonts/chakra-petch-v9-latin_latin-ext-300.woff","fonts/chakra-petch-v9-latin_latin-ext-300.woff2","fonts/chakra-petch-v9-latin_latin-ext-500.woff","fonts/chakra-petch-v9-latin_latin-ext-500.woff2","fonts/chakra-petch-v9-latin_latin-ext-regular.woff","fonts/chakra-petch-v9-latin_latin-ext-regular.woff2","fonts/icofont.eot","fonts/icofont.svg","fonts/icofont.ttf","fonts/icofont.woff","fonts/icofont.woff2","icofont.min.css","icons/clear.png","icons/clouds.png","icons/drizzle.png","icons/foggy.png","icons/heavyrain.png","icons/heavysnow.png","icons/overcast.png","icons/rain.png","icons/sand.png","icons/sandstorm.png","icons/snow.png","icons/thunderstorm.png","icons/tornado.png","icons/wind.png"]),
+	assets: new Set(["favicon.png","fonts/chakra-petch-v9-latin_latin-ext-300.woff","fonts/chakra-petch-v9-latin_latin-ext-300.woff2","fonts/chakra-petch-v9-latin_latin-ext-500.woff","fonts/chakra-petch-v9-latin_latin-ext-500.woff2","fonts/chakra-petch-v9-latin_latin-ext-regular.woff","fonts/chakra-petch-v9-latin_latin-ext-regular.woff2","fonts/icofont.eot","fonts/icofont.svg","fonts/icofont.ttf","fonts/icofont.woff","fonts/icofont.woff2","icofont.min.css","icons/clear.png","icons/clouds.png","icons/drizzle.png","icons/foggy.png","icons/heavyrain.png","icons/heavysnow.png","icons/overcast.png","icons/rain.png","icons/sand.png","icons/sandstorm.png","icons/snow.png","icons/thunderstorm.png","icons/tornado.png","icons/wind.png"]),
 	mimeTypes: {".png":"image/png",".woff":"font/woff",".woff2":"font/woff2",".svg":"image/svg+xml",".ttf":"font/ttf",".css":"text/css"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.kBRmNxgG.js","app":"_app/immutable/entry/app.ozg5gylO.js","imports":["_app/immutable/entry/start.kBRmNxgG.js","_app/immutable/chunks/entry.UtEM1AVS.js","_app/immutable/chunks/4.3xRaw29T.js","_app/immutable/chunks/index.-WvGjXqt.js","_app/immutable/entry/app.ozg5gylO.js","_app/immutable/chunks/4.3xRaw29T.js","_app/immutable/chunks/index.wgffNSnY.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {"start":"_app/immutable/entry/start.DyPe-5kc.js","app":"_app/immutable/entry/app.DIrJeqVB.js","imports":["_app/immutable/entry/start.DyPe-5kc.js","_app/immutable/chunks/entry.Bhxnc1fF.js","_app/immutable/chunks/4.DHRwv-0e.js","_app/immutable/chunks/index.Cg5-QVD7.js","_app/immutable/entry/app.DIrJeqVB.js","_app/immutable/chunks/4.DHRwv-0e.js","_app/immutable/chunks/index.B2WFuJON.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
 		nodes: [
-			__memo(() => import('./chunks/0-fZnlKf5M.js')),
-			__memo(() => import('./chunks/1-_ypSKRqH.js')),
-			__memo(() => import('./chunks/2-uUzIC8_L.js')),
-			__memo(() => import('./chunks/3-aJQSi9Id.js')),
-			__memo(() => import('./chunks/4-NOP08hLM.js')),
-			__memo(() => import('./chunks/5-mXaeqjdh.js')),
-			__memo(() => import('./chunks/6-GEPPDVhq.js')),
-			__memo(() => import('./chunks/7-8gy_U0ep.js')),
-			__memo(() => import('./chunks/8-7jI-0IwV.js')),
-			__memo(() => import('./chunks/9-EVzcJ-PE.js')),
-			__memo(() => import('./chunks/10-Z3CWQsej.js')),
-			__memo(() => import('./chunks/11-nkHSSHx3.js')),
-			__memo(() => import('./chunks/12-e1WUimKr.js')),
-			__memo(() => import('./chunks/13-YfQNtE1p.js')),
-			__memo(() => import('./chunks/14-I-uDREHJ.js')),
-			__memo(() => import('./chunks/15-CsBmdH-G.js')),
-			__memo(() => import('./chunks/16-Hd6mCQHD.js')),
-			__memo(() => import('./chunks/17-e7In2GRW.js')),
-			__memo(() => import('./chunks/18-7k5bsVvu.js')),
-			__memo(() => import('./chunks/19-FyYRIznY.js')),
-			__memo(() => import('./chunks/20-TB6Xj7SD.js')),
-			__memo(() => import('./chunks/21-IsuKQvC9.js')),
-			__memo(() => import('./chunks/22-AXNN2973.js'))
+			__memo(() => import('./chunks/0-BRA0muG-.js')),
+			__memo(() => import('./chunks/1-BFrWRMas.js')),
+			__memo(() => import('./chunks/2-BtIr_ulT.js')),
+			__memo(() => import('./chunks/3-C1k14urM.js')),
+			__memo(() => import('./chunks/4-eI4XhkhY.js')),
+			__memo(() => import('./chunks/5-DZ71Kl3U.js')),
+			__memo(() => import('./chunks/6-B4Zu3nQW.js')),
+			__memo(() => import('./chunks/7-DrZc2DQe.js')),
+			__memo(() => import('./chunks/8-DoRKz-iN.js')),
+			__memo(() => import('./chunks/9-DuOZLGts.js')),
+			__memo(() => import('./chunks/10-eNcWEBK3.js')),
+			__memo(() => import('./chunks/11-BBVLedUx.js')),
+			__memo(() => import('./chunks/12-ryY-61y_.js')),
+			__memo(() => import('./chunks/13-DWiM2Qfv.js')),
+			__memo(() => import('./chunks/14-CKVCBbQB.js')),
+			__memo(() => import('./chunks/15-BoXYSzBs.js')),
+			__memo(() => import('./chunks/16-CRjXL9_n.js')),
+			__memo(() => import('./chunks/17-CV_FKmx7.js')),
+			__memo(() => import('./chunks/18-DukYUEGb.js')),
+			__memo(() => import('./chunks/19-iVu_K5d1.js')),
+			__memo(() => import('./chunks/20-Ct48122O.js')),
+			__memo(() => import('./chunks/21-C2wDTswX.js')),
+			__memo(() => import('./chunks/22-B9v7jnRq.js')),
+			__memo(() => import('./chunks/23-DT7Pefhx.js'))
 		],
 		routes: [
 			{
@@ -129,45 +130,52 @@ return {
 				endpoint: null
 			},
 			{
+				id: "/screens/tuya",
+				pattern: /^\/screens\/tuya\/?$/,
+				params: [],
+				page: { layouts: [0,2,], errors: [1,3,], leaf: 17 },
+				endpoint: null
+			},
+			{
 				id: "/screens/uploads",
 				pattern: /^\/screens\/uploads\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,3,], leaf: 17 },
+				page: { layouts: [0,2,], errors: [1,3,], leaf: 18 },
 				endpoint: null
 			},
 			{
 				id: "/screens/weather/alerts",
 				pattern: /^\/screens\/weather\/alerts\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,3,], leaf: 18 },
+				page: { layouts: [0,2,], errors: [1,3,], leaf: 19 },
 				endpoint: null
 			},
 			{
 				id: "/screens/weather/daily",
 				pattern: /^\/screens\/weather\/daily\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,3,], leaf: 19 },
+				page: { layouts: [0,2,], errors: [1,3,], leaf: 20 },
 				endpoint: null
 			},
 			{
 				id: "/screens/weather/hourly",
 				pattern: /^\/screens\/weather\/hourly\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,3,], leaf: 20 },
+				page: { layouts: [0,2,], errors: [1,3,], leaf: 21 },
 				endpoint: null
 			},
 			{
 				id: "/settings",
 				pattern: /^\/settings\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 21 },
+				page: { layouts: [0,], errors: [1,], leaf: 22 },
 				endpoint: null
 			},
 			{
 				id: "/uploads",
 				pattern: /^\/uploads\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 22 },
+				page: { layouts: [0,], errors: [1,], leaf: 23 },
 				endpoint: null
 			}
 		],

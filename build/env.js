@@ -10,8 +10,12 @@ const expected = new Set([
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
 	'PORT_HEADER',
-	'BODY_SIZE_LIMIT'
+	'BODY_SIZE_LIMIT',
+	'SHUTDOWN_TIMEOUT',
+	'IDLE_TIMEOUT'
 ]);
+
+const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 
 if ("") {
 	for (const name in process.env) {
@@ -31,7 +35,8 @@ if ("") {
  * @param {any} fallback
  */
 function env(name, fallback) {
-	const prefixed = "" + name;
+	const prefix = expected_unprefixed.has(name) ? '' : "";
+	const prefixed = prefix + name;
 	return prefixed in process.env ? process.env[prefixed] : fallback;
 }
 
