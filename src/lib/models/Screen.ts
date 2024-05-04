@@ -11,7 +11,8 @@ export const SCREEN_NAMES: { [key: string]: string } = {
 	post: 'Post',
 	sbb: 'SBB',
 	games: 'Spiele',
-	weather: 'Wetter'
+	weather: 'Wetter',
+	tuya: 'Tuya'
 };
 
 export const SCREEN_PARAMS: { [key: string]: { [key: string]: string } } = {

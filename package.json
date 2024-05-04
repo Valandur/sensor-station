@@ -54,6 +54,7 @@
 		"rss-parser": "3.13.0",
 		"serialport": "12.0.0",
 		"superagent": "8.1.2",
+		"tuyapi": "github:codetheweb/tuyapi",
 		"xml2js": "0.6.2"
 	},
 	"optionalDependencies": {
