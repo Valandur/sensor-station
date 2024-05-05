@@ -5,6 +5,7 @@
 
 	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	import type { PageData } from './$types';
 
@@ -23,12 +24,11 @@
 		<div class="row row-cols-2">
 			{#each games as game}
 				<div class="col">
-					<div class="card">
-						<div class="card-header fw-bold d-flex justify-content-between">
+					<Card>
+						<svelte:fragment slot="header">
 							<div>
-								{format(game.startsAt, 'dd MMM')} - {game.endsAt
-									? format(game.endsAt, 'dd MMM', { locale: de })
-									: ''}
+								{format(game.startsAt, 'dd MMM', { locale: de })} -
+								{game.endsAt ? format(game.endsAt, 'dd MMM', { locale: de }) : ''}
 							</div>
 							<div>
 								{#if game.pct === 0}
@@ -37,23 +37,16 @@
 									{game.pct}%
 								{/if}
 							</div>
-						</div>
+						</svelte:fragment>
 
-						<div class="card-body p-1 overflow-hidden">
+						<div slot="body" class="p-1">
 							<img src={`/data/games/${game.image}`} class="card-img" alt={game.title} />
 
 							<div class="card-img-overlay d-flex flex-column justify-content-end p-1 z-2">
 								<div class="bg-black bg-opacity-75 fw-bold text-white px-1">{game.title}</div>
 							</div>
 						</div>
-
-						<div class="card-arrow">
-							<div class="card-arrow-top-left" />
-							<div class="card-arrow-top-right" />
-							<div class="card-arrow-bottom-left" />
-							<div class="card-arrow-bottom-right" />
-						</div>
-					</div>
+					</Card>
 				</div>
 			{/each}
 		</div>

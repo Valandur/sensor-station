@@ -10,9 +10,9 @@ export interface TuyaInfo extends BaseData {
 	pumpReset: boolean;
 	uv: boolean;
 	uvRuntime: number;
-	waterLevel: string;
+	waterLevel: number;
 	waterLack: boolean;
-	waterType: number;
+	ecoMode: number;
 	waterState: boolean;
 	waterEmpty: boolean;
 }

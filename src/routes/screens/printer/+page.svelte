@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { add, format, formatDistanceToNow } from 'date-fns';
+	import { add, formatDistanceToNow } from 'date-fns';
 	import { de } from 'date-fns/locale';
 
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import type { PageData } from './$types';
+	import Card from '$lib/components/Card.svelte';
 
 	export let data: PageData;
 	$: job = data.info.job;
@@ -20,8 +21,8 @@
 	{#if job.id}
 		<div class="row">
 			<div class="col">
-				<div class="card bg-theme border-theme bg-opacity-25">
-					<div class="card-header border-theme fw-bold small d-flex justify-content-between">
+				<Card>
+					<svelte:fragment slot="header">
 						<div>
 							{printer.state} - #{job.id}
 						</div>
@@ -29,56 +30,48 @@
 							<i class="icofont-speed-meter"></i>
 							{printer.speed}%
 						</div>
-					</div>
-					<div class="card-body">
-						<p class="display-6">
-							Fertig in {getETA()}
-						</p>
+					</svelte:fragment>
 
-						<div class="progress mb-4" style:height="100px">
-							<div
-								class="progress-bar display-6"
-								role="progressbar"
-								aria-valuenow={job.progress}
-								aria-valuemin="0"
-								aria-valuemax="100"
-								style:width="{job.progress}%"
-							>
-								{job.progress}%
-							</div>
+					<p class="display-6">
+						Fertig in {getETA()}
+					</p>
+
+					<div class="progress mb-4" style:height="4em">
+						<div
+							class="progress-bar display-6"
+							role="progressbar"
+							aria-valuenow={job.progress}
+							aria-valuemin="0"
+							aria-valuemax="100"
+							style:width="{job.progress}%"
+						>
+							{job.progress}%
 						</div>
-
-						<table class="table table-sm">
-							<colgroup>
-								<col style:width="25%" />
-								<col style:width="25%" />
-								<col style:width="25%" />
-								<col style:width="25%" />
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>Nozzle</td>
-									<td class="fw-bold">{printer.temp_nozzle}°C</td>
-									<td>{'->'}</td>
-									<td>{printer.target_nozzle}°C</td>
-								</tr>
-								<tr>
-									<td>Bed</td>
-									<td class="fw-bold">{printer.temp_bed}°C</td>
-									<td>{'->'}</td>
-									<td>{printer.target_bed}°C</td>
-								</tr>
-							</tbody>
-						</table>
 					</div>
 
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
+					<table class="table table-sm">
+						<colgroup>
+							<col style:width="25%" />
+							<col style:width="25%" />
+							<col style:width="25%" />
+							<col style:width="25%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<td>Nozzle</td>
+								<td class="fw-bold">{printer.temp_nozzle}°C</td>
+								<td>{'->'}</td>
+								<td>{printer.target_nozzle}°C</td>
+							</tr>
+							<tr>
+								<td>Bed</td>
+								<td class="fw-bold">{printer.temp_bed}°C</td>
+								<td>{'->'}</td>
+								<td>{printer.target_bed}°C</td>
+							</tr>
+						</tbody>
+					</table>
+				</Card>
 			</div>
 		</div>
 	{:else}

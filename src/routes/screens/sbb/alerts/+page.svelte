@@ -5,6 +5,7 @@
 
 	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	import type { PageData } from './$types';
 
@@ -31,41 +32,27 @@
 	{#if alert}
 		<div class="row">
 			<div class="col">
-				<div class="card bg-warning border-warning bg-opacity-25">
-					{#if reason || duration}
-						<div class="card-header border-warning fw-bold small d-flex justify-content-between">
-							<div>
-								{reason}
-							</div>
-							<div>
-								<i class="icofont-clock-time" />
-								{duration}
-							</div>
+				<Card type="warning">
+					<svelte:fragment slot="header">
+						<div>
+							{reason}
 						</div>
-					{/if}
-					<div class="card-body">
-						{#if summary}
-							<h5 class="card-title">
-								{summary}
-							</h5>
-						{/if}
-						{#if description}
-							<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-								{description}
-							</h6>
-						{/if}
-						{#if alert.consequence}
-							<p class="card-text">{alert.consequence}</p>
-						{/if}
-					</div>
+						<div>
+							<i class="icofont-clock-time" />
+							{duration}
+						</div>
+					</svelte:fragment>
 
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
+					<svelte:fragment slot="title">
+						{summary}
+					</svelte:fragment>
+
+					<svelte:fragment slot="subTitle">
+						{description}
+					</svelte:fragment>
+
+					{alert.consequence}
+				</Card>
 			</div>
 		</div>
 	{:else}

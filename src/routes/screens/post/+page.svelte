@@ -6,6 +6,7 @@
 
 	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	import type { PageData } from './$types';
 
@@ -31,8 +32,8 @@
 	{#if shipment}
 		<div class="row">
 			<div class="col">
-				<div class="card bg-theme border-theme bg-opacity-25">
-					<div class="card-header border-theme fw-bold small d-flex justify-content-between">
+				<Card>
+					<svelte:fragment slot="header">
 						<div>
 							{shipment.number}
 						</div>
@@ -42,39 +43,33 @@
 								{format(parseISO(shipment.arrival), 'dd.MM.yy', { locale: de })}
 							</div>
 						{/if}
-					</div>
-					<div class="card-body">
-						<h5 class="card-title">
-							{shipment.sender ?? shipment.type}
-						</h5>
-						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-							{shipment.sender ? shipment.type : ''}
-						</h6>
-						<p class="card-text">
-							{#if shipment.dims}
-								<i class="icofont-drag3" />
-								{formatDims(shipment.dims)}
-								<br />
-							{/if}
-							{#if shipment.weight}
-								<i class="icofont-measure" />
-								{formatWeight(shipment.weight)}
-								<br />
-							{/if}
-							{#if shipment.status}
-								<i class="icofont-bullhorn" />
-								{shipment.status}
-							{/if}
-						</p>
-					</div>
+					</svelte:fragment>
 
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
+					<svelte:fragment slot="title">
+						{shipment.sender ?? shipment.type}
+					</svelte:fragment>
+
+					<svelte:fragment slot="subTitle">
+						{shipment.sender ? shipment.type : ''}
+					</svelte:fragment>
+
+					{#if shipment.dims}
+						<i class="icofont-drag3" />
+						{formatDims(shipment.dims)}
+						<br />
+					{/if}
+
+					{#if shipment.weight}
+						<i class="icofont-measure" />
+						{formatWeight(shipment.weight)}
+						<br />
+					{/if}
+
+					{#if shipment.status}
+						<i class="icofont-bullhorn" />
+						{shipment.status}
+					{/if}
+				</Card>
 			</div>
 		</div>
 	{:else}

@@ -23,11 +23,10 @@ export async function getData(forceUpdate = false) {
 	const device = new TuyAPI({
 		id: CLIENT_ID,
 		key: CLIENT_SECRET,
-		ip: PROTOCOL_VERSION,
-		version: DEVICE_IP,
+		ip: DEVICE_IP,
+		version: PROTOCOL_VERSION,
 		issueGetOnConnect: false
 	});
-	device.on('error', (err) => console.error(err));
 
 	return cache.withDefault(forceUpdate, async () => {
 		if (!ENABLED) {
@@ -38,10 +37,10 @@ export async function getData(forceUpdate = false) {
 		}
 
 		await device.find();
-		console.log('Device found');
+		logger.debug('Device found');
 
 		await device.connect();
-		console.log('Device connected');
+		logger.debug('Device connected');
 
 		const status = await device.get({ schema: true });
 		if (typeof status !== 'object') {
@@ -52,10 +51,11 @@ export async function getData(forceUpdate = false) {
 		}
 
 		device.disconnect();
+		logger.debug('Device disconnected');
 
 		const info: any = {};
-		for (const [prop, key] of PROP_MAP) {
-			info[key] = status.dps[prop];
+		for (const [id, { key, map }] of PROP_MAP) {
+			info[key] = map(status.dps[id]);
 		}
 
 		return {

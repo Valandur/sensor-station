@@ -6,6 +6,7 @@
 
 	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
+	import Card from '$lib/components/Card.svelte';
 
 	import type { PageData } from './$types';
 
@@ -17,11 +18,11 @@
 </script>
 
 <div
-	class="h-100 d-flex flex-column justify-content-between"
+	class="h-100 d-flex flex-column justify-content-end"
 	use:swipe={{ y: 100 }}
 	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
-	<div class="row d-flex flex-row justify-content-end">
+	<div class="row d-flex flex-row justify-content-end mb-2">
 		<div class="col-auto text-muted">
 			<i class="icofont-location-pin" />
 			{#if loc.place}
@@ -35,8 +36,8 @@
 	{#if alert}
 		<div class="row mh-100 overflow-hidden">
 			<div class="col mh-100">
-				<div class="card bg-warning border-warning bg-opacity-25 h-100">
-					<div class="card-header border-warning fw-bold small d-flex justify-content-between">
+				<Card type="warning">
+					<svelte:fragment slot="header">
 						<div>
 							{alert.tags}
 						</div>
@@ -45,28 +46,24 @@
 							{format(alert.start, 'dd.MM.yy HH:mm', { locale: de })} -
 							{format(alert.end, 'dd.MM.yy HH:mm', { locale: de })}
 						</div>
-					</div>
-					<div class="card-body overflow-scroll">
-						<h5 class="card-title">
-							{alert.event}
-						</h5>
-						<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-							{alert.sender}
-						</h6>
+					</svelte:fragment>
+
+					<svelte:fragment slot="title">
+						{alert.event}
+					</svelte:fragment>
+
+					<svelte:fragment slot="subTitle">
+						{alert.sender}
+					</svelte:fragment>
+
+					<div class="overflow-scroll">
 						<ul class="m-0 p-0 ms-3">
 							{#each alert.content.split('\n') as line}
 								<li>{line.substring(2)}</li>
 							{/each}
 						</ul>
 					</div>
-
-					<div class="card-arrow">
-						<div class="card-arrow-top-left" />
-						<div class="card-arrow-top-right" />
-						<div class="card-arrow-bottom-left" />
-						<div class="card-arrow-bottom-right" />
-					</div>
-				</div>
+				</Card>
 			</div>
 		</div>
 	{:else}
