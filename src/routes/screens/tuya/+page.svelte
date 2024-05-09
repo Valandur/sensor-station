@@ -33,7 +33,7 @@
 								aria-valuemax="100"
 								style:width="{info.filterLife}%"
 							>
-								{info.filterLife}%
+								{info.filterLife.toFixed(0)}%
 							</div>
 						</div>
 					</div>
@@ -58,7 +58,7 @@
 								aria-valuemax="100"
 								style:width="{info.uvRuntime}%"
 							>
-								{info.uvRuntime}%
+								{info.uvRuntime.toFixed(0)}%
 							</div>
 						</div>
 					</div>
