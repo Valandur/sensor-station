@@ -1,4 +1,4 @@
-import TuyAPI from 'tuyapi';
+import TuyAPI, { type DPSObject } from 'tuyapi';
 import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
@@ -28,39 +28,48 @@ export async function getData(forceUpdate = false) {
 		issueGetOnConnect: false
 	});
 
-	return cache.withDefault(forceUpdate, async () => {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `TUYA is disabled`,
-				key: 'tuya.disabled'
+	return cache.withDefault(
+		forceUpdate,
+		async () => {
+			if (!ENABLED) {
+				throw error(400, {
+					message: `TUYA is disabled`,
+					key: 'tuya.disabled'
+				});
+			}
+
+			await device.find();
+			logger.debug('Device found');
+
+			await device.connect();
+			logger.debug('Device connected');
+
+			const status = await new Promise<string | number | boolean | DPSObject>((resolve, reject) => {
+				device.get({ schema: true }).then(resolve);
+				device.on('error', (err) => reject(err));
 			});
+			logger.debug(`Status ${JSON.stringify(status)}`);
+
+			if (typeof status !== 'object') {
+				throw error(500, {
+					message: 'Could not parse TUYA data',
+					key: 'tuya.status.invalid'
+				});
+			}
+
+			const info: any = {};
+			for (const [id, { key, map }] of PROP_MAP) {
+				info[key] = map(status.dps[id]);
+			}
+
+			return {
+				ts: new Date(),
+				...info
+			};
+		},
+		async () => {
+			device.disconnect();
+			logger.debug('Device disconnected');
 		}
-
-		await device.find();
-		logger.debug('Device found');
-
-		await device.connect();
-		logger.debug('Device connected');
-
-		const status = await device.get({ schema: true });
-		if (typeof status !== 'object') {
-			throw error(500, {
-				message: 'Could not parse TUYA data',
-				key: 'tuya.status.invalid'
-			});
-		}
-
-		device.disconnect();
-		logger.debug('Device disconnected');
-
-		const info: any = {};
-		for (const [id, { key, map }] of PROP_MAP) {
-			info[key] = map(status.dps[id]);
-		}
-
-		return {
-			ts: new Date(),
-			...info
-		};
-	});
+	);
 }
