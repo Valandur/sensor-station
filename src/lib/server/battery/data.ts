@@ -51,8 +51,8 @@ export async function getData(forceUpdate = false): Promise<BatteryData> {
 				}
 
 				throw error(500, {
-					message: `Modem not ready`,
-					key: 'modem.notReady'
+					message: `Battery not ready`,
+					key: 'battery.notReady'
 				});
 			}
 
