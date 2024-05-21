@@ -92,7 +92,17 @@ export class Device {
 		const csqMatch = CSQ_REGEX.exec(csqResp);
 		if (csqMatch) {
 			const rawSig = Number(csqMatch[1]);
-			return rawSig < 10 ? 1 : rawSig < 15 ? 2 : rawSig < 20 ? 3 : 4;
+			if (rawSig === 99) {
+				return 0;
+			} else if (rawSig < 10) {
+				return 1;
+			} else if (rawSig < 15) {
+				return 2;
+			} else if (rawSig < 20) {
+				return 3;
+			} else {
+				return 4;
+			}
 		}
 
 		return null;

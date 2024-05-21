@@ -29,7 +29,7 @@
 					<tr>
 						<td>Connected</td>
 						<td colspan="2">
-							{#if data.isConnected}
+							{#if data.operator !== null}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
