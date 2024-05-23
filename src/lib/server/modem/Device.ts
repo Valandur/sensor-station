@@ -45,7 +45,6 @@ export class Device {
 			this.port.open((err) => (err ? reject(err) : resolve()))
 		);
 		this.port.pipe(this.parser);
-		await this.send('ATE0'); // turn off command echo
 	}
 
 	public async close(): Promise<void> {
@@ -64,6 +63,7 @@ export class Device {
 	}
 
 	public async checkReady(): Promise<boolean> {
+		await this.send('ATE0'); // turn off command echo
 		const res = await this.send('AT');
 		return res === 'OK';
 	}
