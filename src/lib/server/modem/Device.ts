@@ -108,8 +108,11 @@ export class Device {
 		const csqResp = await this.send('AT+CSQ');
 		const csqMatch = CSQ_REGEX.exec(csqResp);
 		if (csqMatch) {
-			const sig = Number(csqMatch[1]);
-			return sig === 99 ? 0 : sig;
+			const rssi = Number(csqMatch[1]);
+			if (rssi === 99) {
+				return 0;
+			}
+			return (rssi * 827 + 127) >> 8;
 		}
 
 		return null;

@@ -38,7 +38,7 @@
 					</tr>
 					<tr>
 						<td>Signal</td>
-						<td colspan="3">{cell.signal}/99</td>
+						<td colspan="3">{cell.signal ? cell.signal.toFixed(0) + '%' : '---'}</td>
 					</tr>
 					<tr>
 						<td>Operator</td>
