@@ -41,8 +41,12 @@
 					</tr>
 					<tr>
 						<td>Operator</td>
-						<td>{cell.operator}</td>
-						<td>{cell.time ? format(cell.time, 'P - p', { locale: de }) : '---'}</td>
+						<td colspan="2">{cell.operator}</td>
+						<td>{cell.netType}</td>
+					</tr>
+					<tr>
+						<td>Time</td>
+						<td colspan="2">{cell.time ? format(cell.time, 'P - p', { locale: de }) : '---'}</td>
 						<td>{cell.tz}</td>
 					</tr>
 					<tr>
