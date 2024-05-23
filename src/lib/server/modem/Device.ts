@@ -44,8 +44,8 @@ export class Device {
 		await new Promise<void>((resolve, reject) =>
 			this.port.open((err) => (err ? reject(err) : resolve()))
 		);
-		await this.send('ATE0'); // turn off command echo
 		this.port.pipe(this.parser);
+		await this.send('ATE0'); // turn off command echo
 	}
 
 	public async close(): Promise<void> {
