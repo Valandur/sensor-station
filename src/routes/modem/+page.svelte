@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { format, formatDistanceToNow } from 'date-fns';
+	import { formatDistanceToNow } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
 	import { time } from '$lib/stores/time';
@@ -37,7 +38,7 @@
 					</tr>
 					<tr>
 						<td>Signal</td>
-						<td colspan="3">{cell.signal}</td>
+						<td colspan="3">{cell.signal}/99</td>
 					</tr>
 					<tr>
 						<td>Operator</td>
@@ -46,8 +47,17 @@
 					</tr>
 					<tr>
 						<td>Time</td>
-						<td colspan="2">{cell.time ? format(cell.time, 'P - p', { locale: de }) : '---'}</td>
-						<td>{cell.tz}</td>
+						<td>
+							{cell.time && cell.tz
+								? formatInTimeZone(cell.time, cell.tz, 'P', { locale: de })
+								: '---'}
+						</td>
+						<td>
+							{cell.time && cell.tz
+								? formatInTimeZone(cell.time, cell.tz, 'p', { locale: de })
+								: '---'}
+						</td>
+						<td>{cell.tz ?? '---'}</td>
 					</tr>
 					<tr>
 						<td>GPS</td>
