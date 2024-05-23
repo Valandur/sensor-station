@@ -13,9 +13,9 @@ import type { WeatherAlert } from '$lib/models/WeatherAlert';
 import type { WeatherData } from '$lib/models/WeatherData';
 import type { WeatherForecast } from '$lib/models/WeatherForecast';
 import type { WeatherLocation } from '$lib/models/WeatherLocation';
-import type { WeatherPlace } from '$lib/models/WeatherPlace';
 
 import { IconMap } from './IconMap';
+import { Client } from '@googlemaps/google-maps-services-js';
 
 const ENABLED = env.WEATHER_ENABLED === '1';
 const CACHE_TIME = Number(env.WEATHER_CACHE_TIME);
@@ -23,6 +23,7 @@ const BASE_LAT = Number(env.WEATHER_LAT);
 const BASE_LNG = Number(env.WEATHER_LNG);
 const MIN_DIFF = Number(env.WEATHER_MIN_DIFF);
 const API_KEY = env.WEATHER_API_KEY;
+const GOOGLE_KEY = env.GOOGLE_KEY;
 const CACHE_FILE = 'data/weather.json';
 const FORECAST_URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
 const GEOCODE_URL = `https://api.openweathermap.org/geo/1.0/reverse?limit=3`;
@@ -31,6 +32,7 @@ const ICON_SUFFIX = '.png';
 
 const logger = new BaseLogger('WEATHER');
 const cache = new BaseCache<WeatherData>(logger, CACHE_TIME);
+const client = new Client({});
 
 let location: WeatherLocation = JSON.parse(
 	await readFile(CACHE_FILE, 'utf-8').catch(() => '{ "lat": 0, "lng": 0 }')
@@ -49,10 +51,16 @@ export async function getData(forceUpdate = false) {
 		let longitude = BASE_LNG;
 
 		const modemData = await getModemData().catch(() => null);
-		if (modemData && modemData.lat && modemData.lng) {
-			logger.debug('Using modem location', modemData.lat, modemData.lng);
-			latitude = modemData.lat;
-			longitude = modemData.lng;
+		if (modemData) {
+			if (modemData.gps) {
+				logger.debug('Using gps modem location', modemData.gps);
+				latitude = modemData.gps.lat;
+				longitude = modemData.gps.lng;
+			} else if (modemData.geo) {
+				logger.debug('Using geo modem location', modemData.geo);
+				latitude = modemData.geo.lat;
+				longitude = modemData.geo.lng;
+			}
 		}
 
 		const forecastUrl = `${FORECAST_URL}&appid=${API_KEY}&lat=${latitude}&lon=${longitude}`;
@@ -60,19 +68,38 @@ export async function getData(forceUpdate = false) {
 
 		const lat: number = body.lat;
 		const lng: number = body.lon;
-		let place: WeatherPlace | undefined = location?.place;
+		let place: string | undefined = location?.place;
 
 		const dist = distance(lat, lng, location.lat, location.lng);
 		if (!location.place || dist > MIN_DIFF) {
+			// reset in case we moved, so we don't show the old location in case we can't find the new one
+			place = undefined;
+
 			logger.info('Moved', dist, 'meters, recalculating location');
 
 			const geocodeUrl = `${GEOCODE_URL}&appid=${API_KEY}&lat=${lat}&lon=${lng}`;
 			const { body } = await superagent.get(geocodeUrl).catch(() => ({ body: [] }));
 			const result = body[0];
-			place = result
-				? { name: result.name, state: result.state, country: result.country }
-				: undefined;
 
+			if (result) {
+				place = `${result.name}, ${result.state}, ${result.country}`;
+			} else {
+				logger.debug('Could not find place, trying google geocode...');
+				const { data: geoData } = await client.reverseGeocode({
+					params: {
+						key: GOOGLE_KEY,
+						latlng: { lat, lng }
+					}
+				});
+				const addr = geoData.results?.find((r) => r.types.some((t) => t !== 'plus_code'));
+				if (addr) {
+					place = addr?.formatted_address;
+				} else {
+					logger.debug('Unknown place');
+				}
+			}
+
+			location = { lat, lng, place };
 			await writeFile(CACHE_FILE, JSON.stringify({ lat: lat, lng: lng, place: place }), 'utf-8');
 		} else {
 			logger.debug(
@@ -119,7 +146,6 @@ export async function getData(forceUpdate = false) {
 			alerts.push(...getMockAlerts());
 		}
 
-		location = { lat, lng, place };
 		return {
 			ts: new Date(),
 			location,

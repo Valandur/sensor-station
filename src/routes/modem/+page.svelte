@@ -9,11 +9,10 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: timezone = data?.gpsTz || data?.timeTz || 'Europe/Zurich';
-	$: tzStr = formatDate($time, 'O', { locale: de });
 
 	let timeStr = '';
 	$: $time, (timeStr = formatDistanceToNow(data.ts, { addSuffix: true, locale: de }));
+	$: cell = data.cellular;
 </script>
 
 <PageLayout title="Modem" subTitle={timeStr}>
@@ -24,12 +23,13 @@
 					<col />
 					<col width="33%" />
 					<col width="33%" />
+					<col width="33%" />
 				</colgroup>
 				<tbody>
 					<tr>
 						<td>Connected</td>
 						<td colspan="2">
-							{#if data.operator !== null}
+							{#if cell.operator !== null}
 								<i class="icofont-check" />
 							{:else}
 								<i class="icofont-close" />
@@ -38,26 +38,25 @@
 					</tr>
 					<tr>
 						<td>Signal</td>
-						<td colspan="2">{data.signal}/4</td>
+						<td colspan="3">{cell.signal}/4</td>
 					</tr>
 					<tr>
 						<td>Operator</td>
-						<td colspan="2">{data.operator}</td>
+						<td>{cell.operator}</td>
+						<td>{cell.time ? format(cell.time, 'P - p', { locale: de }) : '---'}</td>
+						<td>{cell.tz}</td>
 					</tr>
 					<tr>
-						<td>Operator Time</td>
-						<td>{data.time ? format(data.time, 'P - p', { locale: de }) : '---'}</td>
-						<td>{data.timeTz}</td>
+						<td>GPS</td>
+						<td>{data.gps?.lat.toFixed(8) ?? '---'}</td>
+						<td>{data.gps?.lng.toFixed(8) ?? '---'}</td>
+						<td>{data.gps?.tz ?? '---'}</td>
 					</tr>
 					<tr>
-						<td>GPS Location</td>
-						<td>{data.lat}</td>
-						<td>{data.lng}</td>
-					</tr>
-					<tr>
-						<td>GPS Timezone</td>
-						<td>{data.gpsTz}</td>
-						<td>{tzStr}</td>
+						<td>GEO</td>
+						<td>{data.geo?.lat.toFixed(8) ?? '---'}</td>
+						<td>{data.geo?.lng.toFixed(8) ?? '---'}</td>
+						<td>{data.geo?.tz ?? '---'}</td>
 					</tr>
 				</tbody>
 			</table>

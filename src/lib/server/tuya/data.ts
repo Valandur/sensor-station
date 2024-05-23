@@ -41,12 +41,16 @@ export async function getData(forceUpdate = false) {
 			await device.find();
 			logger.debug('Device found');
 
-			await device.connect();
-			logger.debug('Device connected');
-
 			const status = await new Promise<string | number | boolean | DPSObject>((resolve, reject) => {
-				device.get({ schema: true }).then(resolve);
-				device.on('error', (err) => reject(err));
+				const onError = (err: Error) => reject(err);
+				device.on('error', onError);
+				device
+					.connect()
+					.then(() => {
+						logger.debug('Device connected');
+						device.get({ schema: true }).then(resolve);
+					})
+					.catch(() => {});
 			});
 			logger.debug(`Status ${JSON.stringify(status)}`);
 

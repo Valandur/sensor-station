@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 	import { goto } from '$app/navigation';
 
@@ -23,7 +23,7 @@
 		{#each departures as departure}
 			<div class="row fs-2">
 				<div class="col-3">
-					{format(departure.scheduled, 'HH:mm', { locale: de })}
+					{formatInTimeZone(departure.scheduled, data.tz, 'HH:mm', { locale: de })}
 					{#if departure.delay > 0}
 						<span class="text-red">+{departure.delay}</span>
 					{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { format, parseISO } from 'date-fns';
+	import { parseISO } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz/fp';
 	import { de } from 'date-fns/locale';
 
 	import { goto } from '$app/navigation';
@@ -40,7 +41,7 @@
 						{#if shipment.arrival}
 							<div>
 								<i class="icofont-calendar" />
-								{format(parseISO(shipment.arrival), 'dd.MM.yy', { locale: de })}
+								{formatInTimeZone(parseISO(shipment.arrival), data.tz, 'dd.MM.yy', { locale: de })}
 							</div>
 						{/if}
 					</svelte:fragment>

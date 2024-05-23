@@ -17,6 +17,7 @@ export const load: LayoutServerLoad = async ({ url, depends }) => {
 	const index = Number(url.searchParams.get('screen') || '---');
 	const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 	const urlScreenName = url.pathname;
+	const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	const [screens, battery, modem] = await Promise.all([
 		getScreens().catch(() => [] as Screen[]),
@@ -53,6 +54,7 @@ export const load: LayoutServerLoad = async ({ url, depends }) => {
 		skipScreen,
 		modem,
 		battery,
-		holiday
+		holiday,
+		tz: modem?.gps?.tz || modem?.geo?.tz || modem?.cellular.tz || localTz
 	};
 };

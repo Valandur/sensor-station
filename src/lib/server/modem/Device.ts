@@ -4,6 +4,8 @@ import { stat } from 'node:fs/promises';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
 
+import { minutesToTz } from './utils';
+
 const COPS_REGEX = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
 const CCLK_REGEX = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
@@ -118,13 +120,8 @@ export class Device {
 			const hour = `${Number(cclkMatch[4])}`.padStart(2, '0');
 			const minute = `${Number(cclkMatch[5])}`.padStart(2, '0');
 			const second = `${Number(cclkMatch[6])}`.padStart(2, '0');
-			const rawTz = Number(cclkMatch[7]) * 15;
-
-			const tzSign = rawTz > 0 ? '+' : '-';
-			const tzHours = `${Math.floor(Math.abs(rawTz) / 60)}`.padStart(2, '0');
-			const tzMinutes = `${Math.abs(rawTz) % 60}`.padStart(2, '0');
-
-			const tz = `${tzSign}${tzHours}:${tzMinutes}`;
+			const totalMinutes = Number(cclkMatch[7]) * 15;
+			const tz = minutesToTz(totalMinutes);
 			const time = parseISO(`${year}-${month}-${day}T${hour}:${minute}:${second}${tz}`);
 			return [time, tz];
 		}

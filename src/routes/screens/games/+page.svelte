@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 	import { goto } from '$app/navigation';
 
@@ -27,8 +27,10 @@
 					<Card>
 						<svelte:fragment slot="header">
 							<div>
-								{format(game.startsAt, 'dd MMM', { locale: de })} -
-								{game.endsAt ? format(game.endsAt, 'dd MMM', { locale: de }) : ''}
+								{formatInTimeZone(game.startsAt, data.tz, 'dd MMM', { locale: de })} -
+								{game.endsAt
+									? formatInTimeZone(game.endsAt, data.tz, 'dd MMM', { locale: de })
+									: ''}
 							</div>
 							<div>
 								{#if game.pct === 0}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
 	import { goto } from '$app/navigation';
@@ -49,7 +49,9 @@
 				</div>
 
 				<div class="row">
-					<div class="rol">{format(upload.ts, 'dd. MMM yyyy', { locale: de })}</div>
+					<div class="rol">
+						{formatInTimeZone(upload.ts, data.tz, 'dd. MMM yyyy', { locale: de })}
+					</div>
 				</div>
 			</div>
 		</div>

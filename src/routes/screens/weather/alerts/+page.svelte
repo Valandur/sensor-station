@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { format } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
 	import { goto } from '$app/navigation';
@@ -26,7 +26,7 @@
 		<div class="col-auto text-muted">
 			<i class="icofont-location-pin" />
 			{#if loc.place}
-				{loc.place.name}, {loc.place.state}, {loc.place.country}
+				{loc.place}
 			{:else}
 				{loc.lat}, {loc.lng}
 			{/if}
@@ -43,8 +43,8 @@
 						</div>
 						<div>
 							<i class="icofont-calendar" />
-							{format(alert.start, 'dd.MM.yy HH:mm', { locale: de })} -
-							{format(alert.end, 'dd.MM.yy HH:mm', { locale: de })}
+							{formatInTimeZone(alert.start, data.tz, 'dd.MM.yy HH:mm', { locale: de })} -
+							{formatInTimeZone(alert.end, data.tz, 'dd.MM.yy HH:mm', { locale: de })}
 						</div>
 					</svelte:fragment>
 

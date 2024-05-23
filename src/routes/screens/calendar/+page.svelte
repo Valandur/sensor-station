@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { format, isSameDay } from 'date-fns';
+	import { isSameDay } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
 	import { goto } from '$app/navigation';
@@ -28,15 +29,17 @@
 		{#each events as event}
 			<div class="row fs-2" class:same={event.isSameDay} class:odd={event.isOdd}>
 				{#if !event.isSameDay}
-					<div class="col-1">{format(event.tsStart, 'iii', { locale: de })}</div>
-					<div class="col-1">{format(event.tsStart, 'd.', { locale: de })}</div>
+					<div class="col-1">{formatInTimeZone(event.tsStart, data.tz, 'iii', { locale: de })}</div>
+					<div class="col-1">{formatInTimeZone(event.tsStart, data.tz, 'd.', { locale: de })}</div>
 				{:else}
 					<div class="col-2" />
 				{/if}
 				{#if event.isWholeDay}
 					<div class="col-2">------</div>
 				{:else}
-					<div class="col-2">{format(event.tsStart, 'HH:mm', { locale: de })}</div>
+					<div class="col-2">
+						{formatInTimeZone(event.tsStart, data.tz, 'HH:mm', { locale: de })}
+					</div>
 				{/if}
 				<div class="col">{event.content}</div>
 			</div>

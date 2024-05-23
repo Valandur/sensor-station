@@ -2,10 +2,9 @@
 	import { beforeNavigate, goto, invalidate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { fade } from 'svelte/transition';
-	// import { formatInTimeZone } from 'date-fns-tz';
+	import { formatInTimeZone } from 'date-fns-tz';
 	import { navigating } from '$app/stores';
 	import { onDestroy } from 'svelte';
-	import { formatDate } from 'date-fns';
 	import { de } from 'date-fns/locale';
 
 	import { paused, progress, reset, start } from '$lib/stores/screen';
@@ -19,12 +18,11 @@
 
 	export let data: LayoutData;
 	$: index = data.index;
-	$: timezone = data.modem?.gpsTz || data.modem?.timeTz || 'Europe/Zurich';
-	$: timeStr = formatDate($time, 'HH:mm', { locale: de });
-	$: tzStr = formatDate($time, 'O', { locale: de });
-	$: secondStr = formatDate($time, 'ss', { locale: de });
-	$: date = formatDate($time, 'd. MMMM yyyy', { locale: de });
-	$: dateSub = formatDate($time, 'eeee', { locale: de }).replace('.', '');
+	$: timeStr = formatInTimeZone($time, data.tz, 'HH:mm', { locale: de });
+	$: tzStr = formatInTimeZone($time, data.tz, 'O', { locale: de });
+	$: secondStr = formatInTimeZone($time, data.tz, 'ss', { locale: de });
+	$: date = formatInTimeZone($time, data.tz, 'd. MMMM yyyy', { locale: de });
+	$: dateSub = formatInTimeZone($time, data.tz, 'eeee', { locale: de }).replace('.', '');
 	$: modem = data.modem;
 	$: battery = data.battery;
 	$: holiday = data.holiday;
@@ -83,24 +81,29 @@
 
 		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
 			<div class="row icons flex-nowrap justify-content-end">
-				{#if modem?.operator}
+				{#if modem?.cellular.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
-						{modem.operator.split(' ', 2)[0]}
+						{modem.cellular.operator.split(' ', 2)[0]}
 					</div>
 				{/if}
 
-				{#if modem?.signal}
+				{#if modem?.cellular.signal}
 					<div class="col-auto">
 						<i class="icofont-signal" />
-						{(modem.signal / 4) * 100}%
+						{(modem.cellular.signal / 4) * 100}%
 					</div>
 				{/if}
 
-				{#if modem?.lat && modem?.lng}
+				{#if modem?.gps}
 					<div class="col-auto">
-						<i class="icofont-satellite" />
-						{modem.lat.toFixed(0)} | {modem.lng.toFixed(0)}
+						<i class="icofont-satellite"></i>
+						{modem.gps.lat.toFixed(2)} | {modem.gps.lng.toFixed(2)}
+					</div>
+				{:else if modem?.geo}
+					<div class="col-auto">
+						<i class="icofont-world"></i>
+						{modem.geo.lat.toFixed(2)} | {modem.geo.lng.toFixed(2)}
 					</div>
 				{/if}
 

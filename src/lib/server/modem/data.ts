@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { find } from 'geo-tz';
+import { find } from 'geo-tz/now';
+import { Client } from '@googlemaps/google-maps-services-js';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
@@ -9,6 +10,7 @@ import { BaseLogger } from '$lib/models/BaseLogger';
 import type { ModemData } from '$lib/models/ModemData';
 
 import { Device } from './Device';
+import { minutesToTz } from './utils';
 
 const ENABLED = env.MODEM_ENABLED === '1';
 const CACHE_TIME = Number(env.MODEM_CACHE_TIME);
@@ -17,9 +19,11 @@ const BAUD_RATE = Number(env.MODEM_BAUD_RATE);
 const PAUSE_TIME = Number(env.MODEM_PAUSE_TIME);
 const WAIT_TIME = Number(env.MODEM_WAIT_TIME);
 const CMD_TIMEOUT = Number(env.MODEM_CMD_TIMEOUT);
+const GOOGLE_KEY = env.GOOGLE_KEY;
 
 const logger = new BaseLogger('MODEM');
 const cache = new BaseCache<ModemData>(logger, CACHE_TIME);
+const client = new Client({});
 
 export async function getData(forceUpdate = false): Promise<ModemData> {
 	let device: Device | null = null;
@@ -64,12 +68,45 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 			}
 
 			const data = await device.readAll();
-			const gpsTz = (data.lat && data.lng ? find(data.lat, data.lng) : [])[0] || null;
+
+			let gps = null;
+			if (data.lat && data.lng) {
+				gps = {
+					lat: data.lat,
+					lng: data.lng,
+					tz: getTimezone(data.lat, data.lng)
+				};
+			}
+
+			const { data: geoData } = await client.geolocate({
+				data: {
+					considerIp: true
+				},
+				params: {
+					key: GOOGLE_KEY
+				}
+			});
+			logger.debug('Geo response:', JSON.stringify(geoData));
+
+			let geo = null;
+			if ('location' in geoData) {
+				geo = {
+					lat: geoData.location.lat,
+					lng: geoData.location.lng,
+					tz: getTimezone(geoData.location.lat, geoData.location.lng)
+				};
+			}
 
 			return {
 				ts: new Date(),
-				...data,
-				gpsTz
+				cellular: {
+					operator: data.operator,
+					signal: data.signal,
+					time: data.time,
+					tz: data.timeTz
+				},
+				gps,
+				geo
 			};
 		},
 		async () => {
@@ -84,12 +121,26 @@ function getMockData(): ModemData {
 
 	return {
 		ts: new Date(),
-		time: new Date(),
-		timeTz: '+01:00',
-		operator: 'Swisscom 1nce.net',
-		signal: Math.round(Math.random() * 4),
-		lat: lat,
-		lng: lng,
-		gpsTz: find(lat, lng)[0] || null
+		cellular: {
+			operator: 'Swisscom 1nce.net',
+			signal: Math.round(Math.random() * 4),
+			time: new Date(),
+			tz: '+01:00'
+		},
+		gps: Math.random() > 0.5 ? { lat, lng, tz: getTimezone(lat, lng) } : null,
+		geo: Math.random() > 0.5 ? { lat, lng, tz: getTimezone(lat, lng) } : null
 	};
+}
+
+function getTimezone(lat: number, lng: number) {
+	const timeZone = find(lat, lng)[0];
+	if (!timeZone) {
+		return null;
+	}
+
+	const date = new Date();
+	const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+	const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+	const diff = (tzDate.getTime() - utcDate.getTime()) / 6e4;
+	return minutesToTz(diff);
 }

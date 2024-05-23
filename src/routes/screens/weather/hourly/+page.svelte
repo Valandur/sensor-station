@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { format } from 'date-fns';
 	import { de } from 'date-fns/locale';
+	import { formatInTimeZone } from 'date-fns-tz';
 
 	import type { PageData } from './$types';
 
@@ -14,16 +14,16 @@
 		<div class="col-auto text-muted">
 			<i class="icofont-location-pin" />
 			{#if loc.place}
-				{loc.place.name}, {loc.place.state}, {loc.place.country}
+				{loc.place}
 			{:else}
 				{loc.lat}, {loc.lng}
 			{/if}
 		</div>
 	</div>
-	<div class="row">
+	<div class="row flex-nowrap">
 		{#each forecasts as forecast}
 			<div class="col d-flex flex-column justify-content-between align-items-center">
-				<div class="text">{format(forecast.ts, "HH''", { locale: de })}</div>
+				<div class="text">{formatInTimeZone(forecast.ts, data.tz, "HH''", { locale: de })}</div>
 				<img src={forecast.img} alt="Weather icon" />
 				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
 			</div>
