@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { format, formatDate, formatDistanceToNow } from 'date-fns';
-	// import { formatInTimeZone } from 'date-fns-tz';
+	import { format, formatDistanceToNow } from 'date-fns';
 	import { de } from 'date-fns/locale';
 
 	import { time } from '$lib/stores/time';
