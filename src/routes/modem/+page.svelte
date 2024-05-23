@@ -37,7 +37,7 @@
 					</tr>
 					<tr>
 						<td>Signal</td>
-						<td colspan="3">{cell.signal}/4</td>
+						<td colspan="3">{cell.signal}</td>
 					</tr>
 					<tr>
 						<td>Operator</td>

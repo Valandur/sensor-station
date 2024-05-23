@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { find } from 'geo-tz/now';
-import { Client } from '@googlemaps/google-maps-services-js';
+import { Client, type CellTower } from '@googlemaps/google-maps-services-js';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
@@ -78,9 +78,22 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 				};
 			}
 
+			const towers: CellTower[] = [];
+			if (data.mcc && data.mnc && data.cid && data.lac && data.signal) {
+				towers.push({
+					mobileCountryCode: data.mcc,
+					mobileNetworkCode: data.mnc,
+					signalStrength: data.signal,
+					cellId: data.cid,
+					locationAreaCode: data.lac
+				});
+			}
 			const { data: geoData } = await client.geolocate({
 				data: {
-					considerIp: true
+					considerIp: true,
+					carrier: data.operator ?? undefined,
+					radioType: (data.netType as any) ?? undefined,
+					cellTowers: towers
 				},
 				params: {
 					key: GOOGLE_KEY
@@ -102,6 +115,9 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 				cellular: {
 					operator: data.operator,
 					signal: data.signal,
+					netType: data.netType,
+					lac: data.lac,
+					cid: data.cid,
 					time: data.time,
 					tz: data.timeTz
 				},
@@ -124,6 +140,9 @@ function getMockData(): ModemData {
 		cellular: {
 			operator: 'Swisscom 1nce.net',
 			signal: Math.round(Math.random() * 4),
+			netType: 'LTE',
+			lac: 65534,
+			cid: 19444485,
 			time: new Date(),
 			tz: '+01:00'
 		},

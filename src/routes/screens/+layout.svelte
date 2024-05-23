@@ -91,7 +91,7 @@
 				{#if modem?.cellular.signal}
 					<div class="col-auto">
 						<i class="icofont-signal" />
-						{(modem.cellular.signal / 4) * 100}%
+						{(modem.cellular.signal / 99) * 100}%
 					</div>
 				{/if}
 

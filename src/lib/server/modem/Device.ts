@@ -5,11 +5,15 @@ import { stat } from 'node:fs/promises';
 import { BaseLogger } from '$lib/models/BaseLogger';
 
 import { minutesToTz } from './utils';
+import { ModemNetworkType } from '$lib/models/ModemNetworkType';
 
 const COPS_REGEX = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
 const CCLK_REGEX = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS_REGEX = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
+const CREG_REGEX = /\+CREG: (\d+),(\d+),([\dA-F]+),([\dA-F]+)/i;
+const CNSMOD_REGEX = /\+CNSMOD: (\d+),(\d+)/i;
+const CPSI_REGEX = /\+CPSI: (.*),(.*),(.*)-(.*),/i;
 
 export interface Config {
 	devicePath: string;
@@ -45,6 +49,9 @@ export class Device {
 			this.port.open((err) => (err ? reject(err) : resolve()))
 		);
 		this.port.pipe(this.parser);
+		await this.send('ATE0'); // turn off command echo
+		await this.send('AT+CMEE=2'); // extended error reporting
+		await this.send('AT+CREG=2'); // network registration response mode
 	}
 
 	public async close(): Promise<void> {
@@ -63,7 +70,6 @@ export class Device {
 	}
 
 	public async checkReady(): Promise<boolean> {
-		await this.send('ATE0'); // turn off command echo
 		const res = await this.send('AT');
 		return res === 'OK';
 	}
@@ -71,12 +77,20 @@ export class Device {
 	public async readAll() {
 		const operator = await this.getCellularOperator();
 		const signal = await this.getCellularSignal();
+		const netType = await this.getNetworkType();
+		const [mcc, mnc] = await this.getMccMnc();
+		const [lac, cid] = await this.getLacAndCid();
 		const [time, timeTz] = await this.getCellularTimeAndTz();
 		const [lat, lng] = await this.getGPS();
 
 		return {
 			operator,
 			signal,
+			netType,
+			mcc,
+			mnc,
+			lac,
+			cid,
 			time,
 			timeTz,
 			lat,
@@ -94,21 +108,46 @@ export class Device {
 		const csqResp = await this.send('AT+CSQ');
 		const csqMatch = CSQ_REGEX.exec(csqResp);
 		if (csqMatch) {
-			const rawSig = Number(csqMatch[1]);
-			if (rawSig === 99) {
-				return 0;
-			} else if (rawSig < 10) {
-				return 1;
-			} else if (rawSig < 15) {
-				return 2;
-			} else if (rawSig < 20) {
-				return 3;
-			} else {
-				return 4;
-			}
+			const sig = Number(csqMatch[1]);
+			return sig === 99 ? 0 : sig;
 		}
 
 		return null;
+	}
+
+	private async getNetworkType(): Promise<keyof typeof ModemNetworkType | null> {
+		const resp = await this.send('AT+CNSMOD?');
+		const match = CNSMOD_REGEX.exec(resp);
+		if (match) {
+			const stat = Number(match[2]);
+			return ModemNetworkType[stat] as keyof typeof ModemNetworkType;
+		}
+
+		return null;
+	}
+
+	private async getLacAndCid(): Promise<[number, number] | [null, null]> {
+		const resp = await this.send('AT+CREG?');
+		const match = CREG_REGEX.exec(resp);
+		if (match) {
+			const lac = Number(`0x${match[3]}`);
+			const cid = Number(`0x${match[4]}`);
+			return [lac, cid];
+		}
+
+		return [null, null];
+	}
+
+	private async getMccMnc(): Promise<[number, number] | [null, null]> {
+		const resp = await this.send('AT+CPSI?');
+		const match = CPSI_REGEX.exec(resp);
+		if (match) {
+			const mcc = Number(match[3]);
+			const mnc = Number(match[4]);
+			return [mcc, mnc];
+		}
+
+		return [null, null];
 	}
 
 	private async getCellularTimeAndTz(): Promise<[Date, string] | [null, null]> {
