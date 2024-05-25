@@ -53,7 +53,9 @@ bar {
 }
 
 default_border none
-seat * hide_cursor 8000
+
+# This hides the cursor, but doesn't seem to hide the pointer
+seat * hide_cursor 2000
 ```
 
 #### /usr/share/luakit/lib/window.lua
