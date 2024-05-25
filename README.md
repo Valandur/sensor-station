@@ -53,6 +53,7 @@ bar {
 }
 
 default_border none
+seat * hide_cursor 8000
 ```
 
 #### /usr/share/luakit/lib/window.lua
@@ -76,9 +77,6 @@ fi
 
 ```shell
 #!/bin/bash
-cd ~/sensor-station/backend
-node bin/main.js > ~/.sensor.log 2>&1 &
-
 cd ~
 sway > ~/.sway.log 2>&1 &
 
@@ -86,10 +84,16 @@ sleep 20
 luakit -U http://localhost > ~/.luakit.log 2>&1 &
 ```
 
+#### PM2
+
+```shell
+pm2 start --name sensor --node-args="-r dotenv/config" build/index.js
+```
+
 ## Node.JS
 
 ```shell
-sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/18.15.0/bin/node
+sudo setcap cap_net_bind_service=+ep /home/pi/.asdf/installs/nodejs/22.2.0/bin/node
 ```
 
 ## Modem
