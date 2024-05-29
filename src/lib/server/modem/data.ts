@@ -65,14 +65,6 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 			}
 
 			await device.open();
-
-			if (!(await device.checkReady())) {
-				throw error(500, {
-					message: `Modem not ready`,
-					key: 'modem.notReady'
-				});
-			}
-
 			const data = await device.readAll();
 
 			let gps = null;

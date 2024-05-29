@@ -68,11 +68,6 @@ export class Device {
 		return !!(await stat(this.config.devicePath).catch(() => null));
 	}
 
-	public async checkReady(): Promise<boolean> {
-		const res = await this.send('AT');
-		return res === 'OK';
-	}
-
 	public async readAll() {
 		const operator = await this.getCellularOperator();
 		const signal = await this.getCellularSignal();
