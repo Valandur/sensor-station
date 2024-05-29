@@ -27,23 +27,15 @@
 				</colgroup>
 				<tbody>
 					<tr>
-						<td>Connected</td>
-						<td colspan="2">
-							{#if cell.operator !== null}
-								<i class="icofont-check" />
-							{:else}
-								<i class="icofont-close" />
-							{/if}
-						</td>
-					</tr>
-					<tr>
-						<td>Signal</td>
-						<td colspan="3">{cell.signal ? cell.signal.toFixed(0) + '%' : '---'}</td>
-					</tr>
-					<tr>
 						<td>Operator</td>
 						<td colspan="2">{cell.operator}</td>
 						<td>{cell.netType}</td>
+					</tr>
+					<tr>
+						<td>Signal</td>
+						<td>{cell.signal ? cell.signal.toFixed(0) + '%' : '---'}</td>
+						<td>{cell.mcc}-{cell.mnc}</td>
+						<td>{cell.lac}-{cell.cid}</td>
 					</tr>
 					<tr>
 						<td>Time</td>
