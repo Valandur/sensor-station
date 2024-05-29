@@ -12,6 +12,8 @@ import type { ModemData } from '$lib/models/ModemData';
 import { Device } from './Device';
 import { minutesToTz } from './utils';
 
+const UNWIRED_URL = 'https://eu1.unwiredlabs.com/v2/process';
+
 const ENABLED = env.MODEM_ENABLED === '1';
 const CACHE_TIME = Number(env.MODEM_CACHE_TIME);
 const DEVICE_PATH = env.MODEM_DEVICE_PATH;
@@ -20,10 +22,13 @@ const PAUSE_TIME = Number(env.MODEM_PAUSE_TIME);
 const WAIT_TIME = Number(env.MODEM_WAIT_TIME);
 const CMD_TIMEOUT = Number(env.MODEM_CMD_TIMEOUT);
 const GOOGLE_KEY = env.GOOGLE_KEY;
+const UNWIRED_TOKEN = env.MODEM_UNWIRED_TOKEN;
 
 const logger = new BaseLogger('MODEM');
 const cache = new BaseCache<ModemData>(logger, CACHE_TIME);
 const client = new Client({});
+
+let prevTower = '';
 
 export async function getData(forceUpdate = false): Promise<ModemData> {
 	let device: Device | null = null;
@@ -78,36 +83,71 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 				};
 			}
 
-			const towers: CellTower[] = [];
-			if (data.mcc && data.mnc && data.cid && data.lac && data.signal) {
-				towers.push({
-					mobileCountryCode: data.mcc,
-					mobileNetworkCode: data.mnc,
-					signalStrength: data.signal,
-					cellId: data.cid,
-					locationAreaCode: data.lac
-				});
-			}
-			const { data: geoData } = await client.geolocate({
-				data: {
-					considerIp: true,
-					carrier: data.operator ?? undefined,
-					radioType: (data.netType as any) ?? undefined,
-					cellTowers: towers
-				},
-				params: {
-					key: GOOGLE_KEY
-				}
-			});
-			logger.debug('Geo response:', JSON.stringify(geoData));
-
 			let geo = null;
-			if ('location' in geoData) {
-				geo = {
-					lat: geoData.location.lat,
-					lng: geoData.location.lng,
-					tz: getTimezone(geoData.location.lat, geoData.location.lng)
-				};
+			if (data.mcc && data.mnc && data.lac && data.cid) {
+				const tower = `${data.mcc}-${data.mnc}-${data.lac}-${data.cid}`;
+
+				if (tower != prevTower) {
+					const resp = await fetch(UNWIRED_URL, {
+						method: 'POST',
+						body: JSON.stringify({
+							token: UNWIRED_TOKEN,
+							radio: data.netType,
+							mcc: data.mcc,
+							mnc: data.mnc,
+							cells: [
+								{
+									lac: data.lac,
+									cid: data.cid
+								}
+							],
+							address: 2
+						}),
+						headers: { 'Content-Type': 'application/json' }
+					});
+
+					const unwiredData = await resp.json();
+					logger.debug('Unwired geo response:', JSON.stringify(unwiredData));
+
+					if (unwiredData.status === 'ok') {
+						geo = {
+							lat: unwiredData.lat,
+							lng: unwiredData.lon,
+							tz: getTimezone(unwiredData.lat, unwiredData.lon)
+						};
+					} else {
+						const { data: googleData } = await client.geolocate({
+							data: {
+								considerIp: true,
+								carrier: data.operator ?? undefined,
+								radioType: (data.netType as any) ?? undefined,
+								cellTowers: [
+									{
+										mobileCountryCode: data.mcc,
+										mobileNetworkCode: data.mnc,
+										signalStrength: data.signal ?? undefined,
+										cellId: data.cid,
+										locationAreaCode: data.lac
+									}
+								]
+							},
+							params: {
+								key: GOOGLE_KEY
+							}
+						});
+						logger.debug('Google geo response:', JSON.stringify(googleData));
+
+						if ('location' in googleData) {
+							geo = {
+								lat: googleData.location.lat,
+								lng: googleData.location.lng,
+								tz: getTimezone(googleData.location.lat, googleData.location.lng)
+							};
+						}
+					}
+
+					prevTower = tower;
+				}
 			}
 
 			return {
