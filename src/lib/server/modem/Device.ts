@@ -12,7 +12,7 @@ const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
 const CCLK_REGEX = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS_REGEX = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
 const CNSMOD_REGEX = /\+CNSMOD: (\d+),(\d+)/i;
-const CPSI_REGEX = /\+CPSI: (.+),(.+),(\d+)-(\d+),(\d+),(\d+)/i;
+const CPSI_REGEX = /\+CPSI: (.+),(.+),(\d+)-(\d+),([x\da-f]+),(\d+),/i;
 // TODO: AT+CMGRMI=4 for neighbouring cells
 
 export interface Config {
