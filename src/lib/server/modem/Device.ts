@@ -51,7 +51,6 @@ export class Device {
 		this.port.pipe(this.parser);
 		await this.send('ATE0'); // turn off command echo
 		await this.send('AT+CMEE=2'); // extended error reporting
-		await this.send('AT+CREG=2'); // network registration response mode
 	}
 
 	public async close(): Promise<void> {

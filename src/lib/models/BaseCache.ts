@@ -1,4 +1,4 @@
-import { error, type HttpError } from '@sveltejs/kit';
+import { type HttpError } from '@sveltejs/kit';
 import { differenceInSeconds } from 'date-fns';
 
 import type { BaseLogger } from './BaseLogger';
