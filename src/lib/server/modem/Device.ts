@@ -11,9 +11,9 @@ const COPS_REGEX = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
 const CCLK_REGEX = /\+CCLK: "(\d+)\/(\d+)\/(\d+),(\d+):(\d+):(\d+)([-+]\d+)"/i;
 const GPS_REGEX = /\+CGPSINFO: ([\d.]+),(\w),([\d.]+),(\w),(\d+),([\d.]+),([\d.]+),([\d.]+),/i;
-const CREG_REGEX = /\+CREG: (\d+),(\d+),([\dA-F]+),([\dA-F]+)/i;
 const CNSMOD_REGEX = /\+CNSMOD: (\d+),(\d+)/i;
-const CPSI_REGEX = /\+CPSI: (.*),(.*),(.*)-(.*),/i;
+const CPSI_REGEX = /\+CPSI: (.+),(.+),(\d+)-(\d+),(\d+),(\d+)/i;
+// TODO: AT+CMGRMI=4 for neighbouring cells
 
 export interface Config {
 	devicePath: string;
@@ -78,8 +78,7 @@ export class Device {
 		const operator = await this.getCellularOperator();
 		const signal = await this.getCellularSignal();
 		const netType = await this.getNetworkType();
-		const [mcc, mnc] = await this.getMccMnc();
-		const [lac, cid] = await this.getLacAndCid();
+		const [mcc, mnc, lac, cid] = await this.getTower();
 		const [time, timeTz] = await this.getCellularTimeAndTz();
 		const [lat, lng] = await this.getGPS();
 
@@ -129,28 +128,18 @@ export class Device {
 		return null;
 	}
 
-	private async getLacAndCid(): Promise<[number, number] | [null, null]> {
-		const resp = await this.send('AT+CREG?');
-		const match = CREG_REGEX.exec(resp);
-		if (match) {
-			const lac = Number(`0x${match[3]}`);
-			const cid = Number(`0x${match[4]}`);
-			return [lac, cid];
-		}
-
-		return [null, null];
-	}
-
-	private async getMccMnc(): Promise<[number, number] | [null, null]> {
+	private async getTower(): Promise<[number, number, number, number] | [null, null, null, null]> {
 		const resp = await this.send('AT+CPSI?');
 		const match = CPSI_REGEX.exec(resp);
 		if (match) {
 			const mcc = Number(match[3]);
 			const mnc = Number(match[4]);
-			return [mcc, mnc];
+			const lac = Number(match[5]);
+			const cid = Number(match[6]);
+			return [mcc, mnc, lac, cid];
 		}
 
-		return [null, null];
+		return [null, null, null, null];
 	}
 
 	private async getCellularTimeAndTz(): Promise<[Date, string] | [null, null]> {
@@ -205,7 +194,7 @@ export class Device {
 				reject(timeoutError);
 				resolved = true;
 			};
-			const timeout = setTimeout(onTimeout, this.config.timeoutMs);
+			let timeout = setTimeout(onTimeout, this.config.timeoutMs);
 
 			const onData = (buffer: Buffer) => {
 				const response = buffer.toString('utf-8').trim().replace(/\n\n/g, '\n');
@@ -222,10 +211,15 @@ export class Device {
 
 				clearTimeout(timeout);
 
-				resolve(response);
-				resolved = true;
+				if (lines.some((l) => l.trim() === 'OK')) {
+					this.parser.off('data', onData);
+					resolved = true;
+					resolve(response);
+				} else {
+					timeout = setTimeout(onTimeout, this.config.timeoutMs);
+				}
 			};
-			this.parser.once('data', onData);
+			this.parser.on('data', onData);
 
 			this.port.write(`${data}\r\n`, (err) => {
 				this.logger.debug('>>', data);

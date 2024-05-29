@@ -5,6 +5,8 @@ export interface ModemData extends BaseData {
 		operator: string | null;
 		signal: number | null;
 		netType: string | null;
+		mcc: number | null;
+		mnc: number | null;
 		lac: number | null;
 		cid: number | null;
 		time: Date | null;
