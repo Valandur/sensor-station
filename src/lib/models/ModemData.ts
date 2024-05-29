@@ -12,14 +12,12 @@ export interface ModemData extends BaseData {
 		time: Date | null;
 		tz: string | null;
 	};
-	gps: {
-		lat: number;
-		lng: number;
-		tz: string | null;
-	} | null;
-	geo: {
-		lat: number;
-		lng: number;
-		tz: string | null;
-	} | null;
+	gps: ModemLocation | null;
+	geo: ModemLocation | null;
+}
+
+export interface ModemLocation {
+	lat: number;
+	lng: number;
+	tz: string | null;
 }

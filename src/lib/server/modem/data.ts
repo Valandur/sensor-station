@@ -1,13 +1,13 @@
 import { error } from '@sveltejs/kit';
 import { find } from 'geo-tz/now';
-import { Client, type CellTower } from '@googlemaps/google-maps-services-js';
+import { Client } from '@googlemaps/google-maps-services-js';
 
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 
 import { BaseCache } from '$lib/models/BaseCache';
 import { BaseLogger } from '$lib/models/BaseLogger';
-import type { ModemData } from '$lib/models/ModemData';
+import type { ModemData, ModemLocation } from '$lib/models/ModemData';
 
 import { Device } from './Device';
 import { minutesToTz } from './utils';
@@ -29,6 +29,7 @@ const cache = new BaseCache<ModemData>(logger, CACHE_TIME);
 const client = new Client({});
 
 let prevTower = '';
+let prevGeo: ModemLocation | null = null;
 
 export async function getData(forceUpdate = false): Promise<ModemData> {
 	let device: Device | null = null;
@@ -154,9 +155,13 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 							logger.error('Google geo error', err);
 						}
 					}
-				}
 
-				prevTower = tower;
+					prevTower = tower;
+					prevGeo = JSON.parse(JSON.stringify(geo));
+				} else {
+					geo = JSON.parse(JSON.stringify(prevGeo));
+					logger.debug('Using cached geo info', JSON.stringify(geo));
+				}
 			}
 
 			return {
