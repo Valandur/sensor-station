@@ -1,14 +1,13 @@
 import { fail } from '@sveltejs/kit';
+import { parseISO } from 'date-fns';
 
 import { deleteUpload, getUploads, saveUploads, storeUpload } from '$lib/server/uploads/data';
 import type { UploadItem } from '$lib/models/UploadItem';
 
 import type { Actions, PageServerLoad } from './$types';
-import { parseISO } from 'date-fns';
 
 export const load: PageServerLoad = async () => {
-	const uploads = getUploads();
-
+	const uploads = await getUploads();
 	return {
 		uploads
 	};

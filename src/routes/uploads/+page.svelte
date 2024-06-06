@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { format, parseISO } from 'date-fns';
 	import { de } from 'date-fns/locale';
+	import { enhance } from '$app/forms';
 
 	import type { PageData } from './$types';
-	import { enhance } from '$app/forms';
 
 	export let data: PageData;
 	$: uploads = data.uploads;
@@ -86,7 +86,13 @@
 						/>
 					</td>
 					<td>
-						<form id="formNew" method="POST" action="?/add" use:enhance>
+						<form
+							id="formNew"
+							method="POST"
+							action="?/add"
+							enctype="multipart/form-data"
+							use:enhance
+						>
 							<button
 								class="btn btn-sm"
 								class:btn-outline-success={newImg && newDate && newTitle}

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { error } from '@sveltejs/kit';
 import { parseISO } from 'date-fns';
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
 import mime from 'mime-types';
@@ -42,6 +42,7 @@ export async function storeUpload(ts: Date, title: string, file: File): Promise<
 	const img = `${hash}.${ext}`;
 	const fileName = `${UPLOADS_DIR}/${img}`;
 
+	await mkdir(UPLOADS_DIR, { recursive: true });
 	await writeFile(fileName, data);
 	const ratio = await getRatio(fileName, data);
 
