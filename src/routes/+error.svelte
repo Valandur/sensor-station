@@ -10,7 +10,7 @@
 	$: params = $page.error?.params;
 </script>
 
-<div class="container-fluid h-100 overflow-auto p-2">
+<div class="container-fluid h-100 overflow-auto py-1">
 	{#if !embedded}
 		<PageTitle showReload>Server Error</PageTitle>
 	{/if}

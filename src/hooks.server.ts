@@ -9,6 +9,8 @@ import { setup as setupBattery } from '$lib/server/battery/data';
 import { setup as setupScreens } from '$lib/server/screen/data';
 import { setup as setupSensor } from '$lib/server/sensor/data';
 import { setup as setupUploads } from '$lib/server/uploads/data';
+import servicesService from '$lib/server/services';
+import widgetService from '$lib/server/widgets';
 
 const logger = new BaseLogger('MAIN');
 
@@ -41,6 +43,8 @@ async function init() {
 
 	logger.info('Starting...');
 
+	await servicesService.get();
+	await widgetService.get();
 	setupBattery();
 	setupScreens();
 	setupSensor();

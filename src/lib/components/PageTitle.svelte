@@ -1,5 +1,6 @@
 <script lang="ts">
-	export let showReload = false;
+	export let showReload: boolean = false;
+	export let closeUrl: string = '/';
 
 	function reload() {
 		window.location.reload();
@@ -19,7 +20,7 @@
 				<i class="icofont-refresh" />
 			</button>
 		{/if}
-		<a class="btn btn-sm btn-danger" href="/">
+		<a class="btn btn-sm btn-danger" href={closeUrl}>
 			<i class="icofont-ui-close" />
 		</a>
 	</div>

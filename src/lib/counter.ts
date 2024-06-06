@@ -96,3 +96,41 @@ export class Counter {
 		}
 	}
 }
+
+export function fit(type: CounterType, max: number, index: number, amount: number) {
+	switch (type) {
+		case CounterType.Clamp:
+			return Math.max(Math.min(index, max - amount), 0);
+
+		case CounterType.Wrap:
+			const idx = index % max;
+			if (idx >= 0) {
+				return idx;
+			} else {
+				return max + idx;
+			}
+	}
+}
+
+export function slice<T>(
+	type: CounterType,
+	max: number,
+	index: number,
+	amount: number,
+	array: T[]
+): T[] {
+	const idx = fit(type, max, index, amount);
+
+	switch (type) {
+		case CounterType.Clamp: {
+			return array.slice(idx, idx + amount);
+		}
+
+		case CounterType.Wrap: {
+			return [
+				...array.slice(idx, idx + amount),
+				...array.slice(0, Math.max(amount - (max - idx), 0))
+			];
+		}
+	}
+}

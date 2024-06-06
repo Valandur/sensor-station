@@ -10,22 +10,22 @@
 	import { paused, progress, reset, start } from '$lib/stores/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
 	import { time } from '$lib/stores/time';
+	import { tz } from '$lib/stores/tz';
+	import { WIDGETS } from '$lib/widgets';
 
-	import type { LayoutData } from './$types';
+	import type { PageData } from './$types';
 
-	const SWITCH_INTERVAL = 20000;
-	const UPDATE_INTERVAL = 60000;
-
-	export let data: LayoutData;
+	export let data: PageData;
 	$: index = data.index;
-	$: timeStr = formatInTimeZone($time, data.tz, 'HH:mm', { locale: de });
-	$: tzStr = formatInTimeZone($time, data.tz, 'O', { locale: de });
-	$: secondStr = formatInTimeZone($time, data.tz, 'ss', { locale: de });
-	$: date = formatInTimeZone($time, data.tz, 'd. MMMM yyyy', { locale: de });
-	$: dateSub = formatInTimeZone($time, data.tz, 'eeee', { locale: de }).replace('.', '');
+	$: screen = data.screen;
 	$: modem = data.modem;
 	$: battery = data.battery;
 	$: holiday = data.holiday;
+	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
+	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
+	$: secondStr = formatInTimeZone($time, $tz, 'ss', { locale: de });
+	$: date = formatInTimeZone($time, $tz, 'd. MMMM yyyy', { locale: de });
+	$: dateSub = formatInTimeZone($time, $tz, 'eeee', { locale: de }).replace('.', '');
 
 	let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -37,9 +37,9 @@
 		}
 		if (!$paused && data.nextScreen) {
 			const next = data.nextScreen;
-			start(() => goto(next), SWITCH_INTERVAL);
+			start(() => goto(next), data.switchInterval);
 		} else if ($paused) {
-			timer = setInterval(() => invalidate('screens:layout'), UPDATE_INTERVAL);
+			timer = setInterval(() => invalidate('carousel'), data.updateInterval);
 		}
 	}
 
@@ -57,17 +57,24 @@
 	}
 
 	function onSwipe(e: SwipeEvent) {
+		console.log(e.detail.dir, data.nextPage);
 		if (e.detail.dir === 'left' && data.nextScreen) {
 			goto(data.nextScreen);
 		} else if (e.detail.dir === 'right' && data.prevScreen) {
 			goto(data.prevScreen);
+		} else if (e.detail.dir === 'up' && data.nextPage) {
+			goto(data.nextPage);
+		} else if (e.detail.dir === 'down' && data.prevPage) {
+			goto(data.prevPage);
 		}
 	}
 </script>
 
-<svelte:component this={data.comp} {...data.props} />
-
-<div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
+<div
+	class="container-fluid vh-100 d-flex flex-column"
+	use:swipe={{ x: 200, y: 100 }}
+	on:swipe={onSwipe}
+>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div
 			role="presentation"
@@ -154,7 +161,16 @@
 	<div class="row flex-fill position-relative">
 		{#key index}
 			<div class="h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
-				<slot />
+				{#if screen.widget}
+					{@const comps = WIDGETS[screen.widget.type]}
+					<svelte:component this={comps.main} {...data.props} />
+				{:else}
+					<p class="alert alert-info m-2">
+						There are no screens setup! Check the
+						<a class="alert-link" href="/settings">settings</a>
+						to add some.
+					</p>
+				{/if}
 			</div>
 		{/key}
 	</div>

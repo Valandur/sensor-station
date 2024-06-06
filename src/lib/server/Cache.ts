@@ -1,22 +1,28 @@
 import { type HttpError } from '@sveltejs/kit';
 import { differenceInSeconds } from 'date-fns';
+import { env } from '$env/dynamic/private';
 
-import type { BaseLogger } from './BaseLogger';
-import type { BaseCacheEntry } from './BaseCacheEntry';
+import type { BaseCacheEntry } from '$lib/models/BaseCacheEntry';
+import type { BaseLogger } from '$lib/models/BaseLogger';
 
 const DEFAULT_KEY = '__default__';
+const DEFAULT_RESULT_CACHE_TIME = Number(env.CACHE_DEFAULT_RESULT_CACHE_TIME);
+const DEFAULT_ERROR_CACHE_TIME = Number(env.CACHE_DEFAULT_ERROR_CACHE_TIME);
 
-export class BaseCache<T> {
+interface CacheOptions {
+	key?: string;
+	force?: boolean;
+	resultCacheTime?: number;
+	errorCacheTime?: number;
+}
+
+export class Cache<T> {
 	private readonly logger: BaseLogger;
-	private readonly cacheTime: number;
-	private readonly errorCacheTime: number;
 
 	protected readonly cache: Map<string, BaseCacheEntry<T>> = new Map();
 
-	public constructor(logger: BaseLogger, cacheTime: number, errorCacheTime = 60) {
+	public constructor(logger: BaseLogger) {
 		this.logger = logger;
-		this.cacheTime = cacheTime;
-		this.errorCacheTime = errorCacheTime;
 	}
 
 	public getDefaultData(): T | null {
@@ -27,33 +33,24 @@ export class BaseCache<T> {
 		return this.cache.get(key)?.data || null;
 	}
 
-	public async withDefault(
-		force: boolean,
-		onTry: () => Promise<T>,
-		onFinally?: () => Promise<void>,
-		onCatch?: (err: HttpError) => Promise<void>
-	): Promise<T> {
-		return this.with(DEFAULT_KEY, force, onTry, onFinally, onCatch);
-	}
-
 	public async with(
-		key: string,
-		force: boolean,
-		onTry: () => Promise<T>,
+		options: CacheOptions,
+		onTry: (prev: T | null) => Promise<T>,
 		onFinally?: () => Promise<void>,
 		onCatch?: (err: HttpError) => Promise<void>
 	): Promise<T> {
+		const key = options.key ?? DEFAULT_KEY;
 		const cacheEntry = this.cache.get(key);
 		let updatedAt = cacheEntry?.updatedAt || new Date(0);
 		let cachedData: T | null = cacheEntry?.data || null;
 		let cachedError = cacheEntry?.error || null;
 
-		if (!force) {
+		if (!options.force) {
 			const timeDiff = differenceInSeconds(new Date(), updatedAt);
-			if (cachedData && timeDiff <= this.cacheTime) {
+			if (cachedData && timeDiff <= (options.resultCacheTime ?? DEFAULT_RESULT_CACHE_TIME)) {
 				this.logger.debug('Using cached data');
 				return cachedData;
-			} else if (cachedError && timeDiff <= this.errorCacheTime) {
+			} else if (cachedError && timeDiff <= (options.errorCacheTime ?? DEFAULT_ERROR_CACHE_TIME)) {
 				this.logger.debug('Using cached error');
 				throw cachedError;
 			}
@@ -63,7 +60,7 @@ export class BaseCache<T> {
 		const startTime = process.hrtime.bigint();
 
 		try {
-			const newData = await onTry();
+			const newData = await onTry(cachedData);
 
 			cachedData = newData;
 			cachedError = null;

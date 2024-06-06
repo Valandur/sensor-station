@@ -13,7 +13,7 @@ let lastCheck = new Date(0);
 export function getHoliday() {
 	const now = new Date();
 	if (isSameDay(lastCheck, now)) {
-		logger.debug('Using cached holiday');
+		logger.debug('Using cached data');
 		return lastHoliday;
 	}
 

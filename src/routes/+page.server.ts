@@ -4,7 +4,7 @@ import { exec } from 'node:child_process';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	throw redirect(302, '/screens');
+	throw redirect(302, '/carousel');
 };
 
 export const actions: Actions = {
