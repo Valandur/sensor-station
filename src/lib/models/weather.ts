@@ -26,6 +26,8 @@ export interface WeatherWidgetProps extends WidgetProps {
 // Service
 // ---------
 
+export const WEATHER_SERVICE_TYPE = 'weather';
+
 export interface WeatherServiceData extends ServiceData {
 	location: WeatherLocation;
 	alerts: WeatherAlert[];
@@ -38,8 +40,8 @@ export interface WeatherServiceConfig extends ServiceConfig {
 	useGeo: boolean;
 	lat: number;
 	lng: number;
-	apiKey: string;
 	minDiff: number;
+	apiKey: string;
 }
 
 // ---------

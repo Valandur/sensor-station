@@ -1,6 +1,7 @@
 import { error, fail, type Actions } from '@sveltejs/kit';
 
 import widgetService from '$lib/server/widgets';
+import servicesService from '$lib/server/services';
 
 import type { PageServerLoad } from './$types';
 
@@ -11,12 +12,14 @@ export const load: PageServerLoad = async ({ params }) => {
 		error(404, { key: 'widget.notFound', message: 'Widget not found' });
 	}
 
+	const services = [...servicesService.all().values()];
 	const config = instance.config;
 
 	return {
 		name: instance.name,
 		type: instance.type,
-		config
+		config,
+		services
 	};
 };
 

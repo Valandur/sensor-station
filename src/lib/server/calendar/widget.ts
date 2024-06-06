@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 import { CounterType, fit, slice } from '$lib/counter';
 import type { CalendarWidgetConfig, CalendarWidgetProps } from '$lib/models/calendar';
@@ -14,6 +14,10 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 	}
 
 	public async props(config: CalendarWidgetConfig, page: number): Promise<CalendarWidgetProps> {
+		if (!config.serviceName) {
+			error(400, { key: 'calendar.widget.config', message: 'Invalid calendar widget config' });
+		}
+
 		const data = await service.getByName(config.serviceName);
 		const events = slice(CounterType.Clamp, data.events.length, page, ITEMS_PER_PAGE, data.events);
 		const prevPage = page > 0 ? page - 1 : 0;
@@ -24,11 +28,11 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 	public async validate(config: FormData): Promise<CalendarWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
-			return fail(400, { message: 'Invalid service name' });
+			throw new Error('Invalid service name');
 		}
 		const instance = this.services.byName(serviceName, true);
 		if (instance.type !== service.type) {
-			return fail(400, { message: 'Invalid service type' });
+			throw new Error('Invalid service type');
 		}
 
 		return {

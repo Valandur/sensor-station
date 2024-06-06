@@ -1,15 +1,19 @@
-import type { CarouselConfig, CarouselData, CarouselScreen } from '$lib/models/carousel';
+import type {
+	CarouselServiceConfig,
+	CarouselServiceData,
+	CarouselScreen
+} from '$lib/models/carousel';
 import { dirname } from 'path';
 import { mkdir, readFile } from 'fs/promises';
 
-import service from './widgets';
+import widgetService from './widgets';
 import { BaseService } from './BaseService';
 
 const SCREENS_PATH = 'data/carousel/screens.json';
 const SWITCH_INTERVAL = 20000;
 const UPDATE_INTERVAL = 60000;
 
-class CarouselService extends BaseService<CarouselConfig, CarouselData> {
+class CarouselService extends BaseService<CarouselServiceConfig, CarouselServiceData> {
 	public readonly type: string = 'carousel';
 
 	private loaded: boolean = false;
@@ -19,7 +23,7 @@ class CarouselService extends BaseService<CarouselConfig, CarouselData> {
 		super('CAROUSEL');
 	}
 
-	public override async get(): Promise<CarouselData> {
+	public override async get(): Promise<CarouselServiceData> {
 		if (!this.loaded) {
 			await this.load();
 		}
@@ -32,7 +36,7 @@ class CarouselService extends BaseService<CarouselConfig, CarouselData> {
 		};
 	}
 
-	public validate(): Promise<CarouselConfig> {
+	public validate(): Promise<CarouselServiceConfig> {
 		throw new Error('Not supported');
 	}
 
@@ -43,7 +47,9 @@ class CarouselService extends BaseService<CarouselConfig, CarouselData> {
 		await mkdir(dirname(SCREENS_PATH), { recursive: true });
 		const newScreens = JSON.parse(await readFile(SCREENS_PATH, 'utf-8').catch(() => '[]'));
 
-		this.screens = newScreens.map((s: { name: string }) => ({ widget: service.byName(s.name) }));
+		this.screens = newScreens.map((s: { widget: string }) => ({
+			widget: widgetService.byName(s.widget)
+		}));
 		this.loaded = true;
 
 		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;

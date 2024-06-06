@@ -2,36 +2,19 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
-	import { goto } from '$app/navigation';
-
-	import { swipe } from '$lib/swipe';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import type { WeatherAlert, WeatherLocation } from '$lib/models/weather';
+	import { tz } from '$lib/stores/tz';
 
-	import type { PageData } from './$types';
+	import Marker from './Marker.svelte';
 
-	export let data: PageData;
-	$: loc = data.location;
-	$: alert = data.alert;
-	$: prevPage = data.prevPage;
-	$: nextPage = data.nextPage;
+	export let location: WeatherLocation;
+	export let alert: WeatherAlert;
 </script>
 
-<div
-	class="h-100 d-flex flex-column justify-content-end"
-	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
->
-	<div class="row d-flex flex-row justify-content-end mb-2">
-		<div class="col-auto text-muted">
-			<i class="icofont-location-pin" />
-			{#if loc.place}
-				{loc.place}
-			{:else}
-				{loc.lat}, {loc.lng}
-			{/if}
-		</div>
-	</div>
+<div class="h-100 d-flex flex-column justify-content-between">
+	<Marker {location} />
 
 	{#if alert}
 		<div class="row mh-100 overflow-hidden">
@@ -43,8 +26,8 @@
 						</div>
 						<div>
 							<i class="icofont-calendar" />
-							{formatInTimeZone(alert.start, data.tz, 'dd.MM.yy HH:mm', { locale: de })} -
-							{formatInTimeZone(alert.end, data.tz, 'dd.MM.yy HH:mm', { locale: de })}
+							{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
+							{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
 						</div>
 					</svelte:fragment>
 

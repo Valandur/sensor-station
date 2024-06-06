@@ -1,4 +1,5 @@
-import { fail } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
+import { isAfter } from 'date-fns/isAfter';
 
 import { CounterType, slice } from '$lib/counter';
 import {
@@ -11,6 +12,7 @@ import { BaseWidget, type WidgetValidateFailure } from '../BaseWidget';
 import service from './service';
 
 const VALID_TYPES = ['daily', 'hourly', 'alerts'];
+const ITEMS_PER_PAGE = 7;
 
 class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> {
 	public constructor() {
@@ -18,13 +20,19 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 	}
 
 	public async props(config: WeatherWidgetConfig, page: number): Promise<WeatherWidgetProps> {
+		if (!config.serviceName || !VALID_TYPES.includes(config.type)) {
+			error(400, { key: 'weather.widget.config', message: 'Invalid weather widget config' });
+		}
+
+		const now = new Date();
 		const data = await service.getByName(config.serviceName);
 		const alerts = slice(CounterType.Wrap, data.alerts.length, page, 1, data.alerts);
+		const hourly = data.hourly.filter((f) => isAfter(f.ts, now)).filter((_, i) => i % 2 === 0);
 		return {
 			type: config.type,
 			location: data.location,
-			daily: data.daily,
-			hourly: data.hourly,
+			daily: slice(CounterType.Clamp, data.daily.length, 0, ITEMS_PER_PAGE, data.daily),
+			hourly: slice(CounterType.Clamp, hourly.length, 0, ITEMS_PER_PAGE, hourly),
 			alert: alerts[0]
 		};
 	}
@@ -37,11 +45,11 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
-			return fail(400, { message: 'Invalid service name' });
+			throw new Error('Invalid service name');
 		}
 		const instance = this.services.byName(serviceName, true);
 		if (instance.type !== service.type) {
-			return fail(400, { message: 'Invalid service type' });
+			throw new Error('Invalid service type');
 		}
 
 		return {

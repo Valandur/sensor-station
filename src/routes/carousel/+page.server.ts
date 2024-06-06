@@ -59,6 +59,7 @@ export const load: PageServerLoad = async ({ url, depends }) => {
 		} else if (!props) {
 			error(500, { key: 'props.missing', message: 'Missing props' });
 		}
+
 		if (typeof props.prevPage === 'number') {
 			prevPage = getScreenUrl(idx, dir, props.prevPage);
 		}

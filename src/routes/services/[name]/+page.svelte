@@ -1,16 +1,16 @@
 <script lang="ts">
 	import ErrorCard from '$lib/components/ErrorCard.svelte';
 	import PageLayout from '$lib/components/PageLayout.svelte';
-	import { WIDGETS } from '$lib/widgets';
+	import { SERVICES } from '$lib/services';
 
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
 	export let form: ActionData;
-	$: comps = WIDGETS[data.type];
+	$: comps = SERVICES[data.type];
 </script>
 
-<PageLayout title={data.name + ' [' + data.type + ']'} closeUrl="/widgets">
+<PageLayout title={data.name + ' [' + data.type + ']'} closeUrl="/services">
 	{#if form?.message}
 		<ErrorCard message={form.message} />
 	{:else if form?.success}

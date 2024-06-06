@@ -3,7 +3,11 @@ import { google } from 'googleapis';
 import { parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 
-import type { CalendarServiceConfig, CalendarServiceData } from '$lib/models/calendar';
+import {
+	CALENDAR_SERVICE_TYPE,
+	type CalendarServiceConfig,
+	type CalendarServiceData
+} from '$lib/models/calendar';
 
 import { BaseService } from '../BaseService';
 
@@ -11,7 +15,7 @@ const ENABLED = env.CALENDAR_ENABLED === '1';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
 class CalendarService extends BaseService<CalendarServiceConfig, CalendarServiceData> {
-	public override readonly type = 'calendar';
+	public override readonly type = CALENDAR_SERVICE_TYPE;
 
 	public constructor() {
 		super('CALENDAR');
@@ -21,13 +25,6 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 		config: CalendarServiceConfig,
 		forceUpdate = false
 	): Promise<CalendarServiceData> {
-		if (!ENABLED) {
-			error(400, {
-				message: `Calendar is disabled`,
-				key: 'calendar.disabled'
-			});
-		}
-
 		return this.cache.with(
 			{
 				key: config.calendarId,
@@ -36,6 +33,13 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 				errorCacheTime: config.errorCacheTime
 			},
 			async () => {
+				if (!ENABLED) {
+					error(400, {
+						message: `Calendar is disabled`,
+						key: 'calendar.disabled'
+					});
+				}
+
 				const jwtClient = new google.auth.JWT(
 					config.serviceEmail,
 					undefined,

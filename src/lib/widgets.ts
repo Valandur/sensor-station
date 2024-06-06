@@ -1,18 +1,30 @@
+import type { SvelteComponent } from 'svelte';
+
 import { CALENDAR_WIDGET_TYPE } from './models/calendar';
 import { WEATHER_WIDGET_TYPE } from './models/weather';
+import type { WidgetConfig } from './models/widget';
+import type { ServiceInstance } from './models/service';
+import CalendarWidgetConfig from './components/calendar/WidgetConfig.svelte';
+import CalendarWidgetMain from './components/calendar/WidgetMain.svelte';
+import WeatherWidgetConfig from './components/weather/WidgetConfig.svelte';
+import WeatherWidgetMain from './components/weather/WidgetMain.svelte';
 
-import CalendarMainComp from './components/calendar/Main.svelte';
-import CalendarConfigComp from './components/calendar/Config.svelte';
-import WeatherMainComp from './components/weather/Main.svelte';
-import WeatherConfigComp from './components/weather/Config.svelte';
+type WidgetMap = {
+	[key: string]: {
+		main: typeof SvelteComponent<any>;
+		config:
+			| typeof SvelteComponent<{ name: string; config: WidgetConfig; services: ServiceInstance[] }>
+			| null;
+	};
+};
 
-export const WIDGETS = {
+export const WIDGETS: WidgetMap = {
 	[CALENDAR_WIDGET_TYPE]: {
-		main: CalendarMainComp,
-		config: CalendarConfigComp
+		main: CalendarWidgetMain,
+		config: CalendarWidgetConfig
 	},
 	[WEATHER_WIDGET_TYPE]: {
-		main: WeatherMainComp,
-		config: WeatherConfigComp
+		main: WeatherWidgetMain,
+		config: WeatherWidgetConfig
 	}
 };

@@ -19,6 +19,8 @@ export interface CalendarWidgetProps extends WidgetProps {
 // Service
 // ---------
 
+export const CALENDAR_SERVICE_TYPE = 'calendar';
+
 export interface CalendarServiceData extends ServiceData {
 	events: CalendarEvent[];
 }

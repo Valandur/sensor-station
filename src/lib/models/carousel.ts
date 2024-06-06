@@ -1,15 +1,14 @@
-import type { BaseConfig } from './BaseConfig';
-import type { BaseData } from './BaseData';
+import type { ServiceConfig, ServiceData } from './service';
 import type { WidgetInstance } from './widget';
 
 export interface CarouselScreen {
 	widget: WidgetInstance;
 }
 
-export interface CarouselData extends BaseData {
+export interface CarouselServiceData extends ServiceData {
 	screens: CarouselScreen[];
 	switchInterval: number;
 	updateInterval: number;
 }
 
-export interface CarouselConfig extends BaseConfig {}
+export interface CarouselServiceConfig extends ServiceConfig {}

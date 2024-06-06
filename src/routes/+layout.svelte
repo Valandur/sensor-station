@@ -42,7 +42,7 @@
 	/>
 	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
 		<div class="col-auto">
-			<a class="btn btn-theme" href="/screens" on:click={() => (showToolbar = false)}>
+			<a class="btn btn-theme" href="/carousel" on:click={() => (showToolbar = false)}>
 				<i class="icofont-home icofont-2x" />
 			</a>
 		</div>
@@ -65,7 +65,7 @@
 		<div class="col" />
 
 		<div class="col-auto">
-			<a class="btn btn-theme" href="/settings" on:click={() => (showToolbar = false)}>
+			<a class="btn btn-theme" href="/services" on:click={() => (showToolbar = false)}>
 				<i class="icofont-gears icofont-2x" />
 			</a>
 		</div>

@@ -7,7 +7,8 @@ import {
 	type WeatherAlert,
 	type WeatherServiceConfig,
 	type WeatherServiceData,
-	type WeatherForecast
+	type WeatherForecast,
+	WEATHER_SERVICE_TYPE
 } from '$lib/models/weather';
 
 import { BaseService } from '../BaseService';
@@ -23,7 +24,7 @@ const ICON_PREFIX = '/icons/';
 const ICON_SUFFIX = '.png';
 
 class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceData> {
-	public readonly type: string = 'weather';
+	public override readonly type = WEATHER_SERVICE_TYPE;
 
 	private client = new Client({});
 
@@ -35,13 +36,6 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		config: WeatherServiceConfig,
 		forceUpdate = false
 	): Promise<WeatherServiceData> {
-		if (!ENABLED) {
-			throw error(400, {
-				message: `Weather is disabled`,
-				key: 'weather.disabled'
-			});
-		}
-
 		return this.cache.with(
 			{
 				key: config.lat + '-' + config.lng,
@@ -50,6 +44,19 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 				errorCacheTime: config.errorCacheTime
 			},
 			async (prevData) => {
+				if (!ENABLED) {
+					error(400, {
+						message: `Weather is disabled`,
+						key: 'weather.disabled'
+					});
+				}
+				if (typeof config.lat !== 'number' || typeof config.lng !== 'number' || !config.apiKey) {
+					error(400, {
+						key: 'weather.config',
+						message: 'Invalid weather config'
+					});
+				}
+
 				let location = prevData?.location ?? { lat: config.lat, lng: config.lng };
 				let lat = location.lat;
 				let lng = location.lng;
@@ -163,8 +170,42 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		);
 	}
 
-	public validate(config: FormData): Promise<WeatherServiceConfig> {
-		throw new Error('Method not implemented.');
+	public async validate(config: FormData): Promise<WeatherServiceConfig> {
+		const useGps = config.get('useGps') === 'on';
+		const useGeo = config.get('useGeo') === 'on';
+
+		const lat = Number(config.get('lat'));
+		if (!isFinite(lat)) {
+			throw new Error('Invalid latitude');
+		}
+
+		const lng = Number(config.get('lng'));
+		if (!isFinite(lng)) {
+			throw new Error('Invalid longitude');
+		}
+
+		const minDiff = Number(config.get('minDiff'));
+		if (!isFinite(minDiff)) {
+			throw new Error('Invalid min diff');
+		}
+
+		const apiKey = config.get('apiKey');
+		if (typeof apiKey !== 'string') {
+			throw new Error('Invalid api key');
+		}
+
+		// Test using supplied base cooridnates
+		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
+		await fetch(forecastUrl);
+
+		return {
+			useGps,
+			useGeo,
+			lat,
+			lng,
+			minDiff,
+			apiKey
+		};
 	}
 
 	private distance(lat1: number, lng1: number, lat2: number, lng2: number) {

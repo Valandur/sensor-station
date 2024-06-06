@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 
 	import PageLayout from '$lib/components/PageLayout.svelte';
+	import { WIDGETS } from '$lib/widgets';
 
 	import type { PageData } from './$types';
 
@@ -64,9 +65,11 @@
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="name" value={widget.name} />
 									<div class="btn-group">
-										<a href="/widgets/{widget.name}" class="btn btn-theme">
-											<i class="icofont-ui-edit" />
-										</a>
+										{#if WIDGETS[widget.type].config !== null}
+											<a href="/widgets/{widget.name}" class="btn btn-theme">
+												<i class="icofont-ui-edit" />
+											</a>
+										{/if}
 										<button class="btn btn-danger">
 											<i class="icofont-ui-delete" />
 										</button>

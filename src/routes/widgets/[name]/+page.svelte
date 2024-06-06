@@ -16,5 +16,10 @@
 	{:else if form?.success}
 		<div class="alert alert-success m-0">Config saved!</div>
 	{/if}
-	<svelte:component this={comps.config} name={data.name} config={data.config} />
+	<svelte:component
+		this={comps.config}
+		name={data.name}
+		config={data.config}
+		services={data.services}
+	/>
 </PageLayout>

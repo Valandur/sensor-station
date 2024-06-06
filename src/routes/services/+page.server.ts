@@ -1,15 +1,15 @@
 import { fail } from '@sveltejs/kit';
 
-import widgetService from '$lib/server/widgets';
+import servicesService from '$lib/server/services';
 
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const widgets = widgetService.all();
-	const types = widgetService.types();
+	const services = servicesService.all();
+	const types = servicesService.types();
 	return {
 		types,
-		widgets: widgets.map((w) => ({ name: w.name, type: w.type }))
+		services: [...services.values()].map((s) => ({ name: s.name, type: s.type }))
 	};
 };
 
@@ -28,7 +28,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await widgetService.add(newName, newType);
+			await servicesService.add(newName, newType);
 		} catch (err) {
 			if (err && typeof err === 'object' && 'status' in err) {
 				return err;
@@ -44,6 +44,6 @@ export const actions: Actions = {
 			return fail(400, { name: 'invalid' });
 		}
 
-		await widgetService.remove(name);
+		await servicesService.remove(name);
 	}
 };

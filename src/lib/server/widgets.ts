@@ -1,9 +1,8 @@
 import { dirname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
-import type { WIDGETS } from '$lib/widgets';
-import type { WidgetInstance } from '$lib/models/widget';
+import type { WidgetInstance, WidgetProps } from '$lib/models/widget';
 import type { BaseData } from '$lib/models/BaseData';
 import type { BaseConfig } from '$lib/models/BaseConfig';
 import { CALENDAR_WIDGET_TYPE } from '$lib/models/calendar';
@@ -14,8 +13,7 @@ import { BaseService } from './BaseService';
 import calendar from './calendar/widget';
 import weather from './weather/widget';
 
-type WidgetMapKey = keyof typeof WIDGETS;
-type WidgetMap = { [key in WidgetMapKey]: BaseWidget };
+type WidgetMap = { [key: string]: BaseWidget };
 
 const WIDGETS_PATH = 'data/widgets.json';
 const WIDGET_MAP: WidgetMap = {
@@ -43,6 +41,16 @@ class WidgetService extends BaseService {
 		throw new Error('Not supported');
 	}
 
+	public async props(widget: WidgetInstance, page: number): Promise<WidgetProps | null> {
+		const w = WIDGET_MAP[widget.type];
+		if (!w) {
+			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });
+		}
+
+		const props = await w.props(widget.config, page);
+		return props;
+	}
+
 	public types() {
 		return Object.keys(WIDGET_MAP);
 	}
@@ -68,7 +76,7 @@ class WidgetService extends BaseService {
 	}
 
 	public async set(widget: WidgetInstance, configData: FormData) {
-		const srv = WIDGET_MAP[widget.type as WidgetMapKey];
+		const srv = WIDGET_MAP[widget.type];
 		widget.config = await srv.validate(configData);
 
 		await this.save();

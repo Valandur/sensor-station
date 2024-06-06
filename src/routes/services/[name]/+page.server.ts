@@ -1,14 +1,14 @@
 import { error, fail, type Actions } from '@sveltejs/kit';
 
-import widgetService from '$lib/server/widgets';
+import servicesService from '$lib/server/services';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const name = params.name;
-	const instance = widgetService.byName(name);
+	const instance = servicesService.byName(name);
 	if (!instance) {
-		error(404, { key: 'widget.notFound', message: 'Widget not found' });
+		error(404, { key: 'service.notFound', message: 'Service not found' });
 	}
 
 	const config = instance.config;
@@ -26,16 +26,16 @@ export const actions: Actions = {
 
 		const name = data.get('name');
 		if (typeof name !== 'string') {
-			return fail(400, { name, error: true, message: 'Invalid widget name' });
+			return fail(400, { name, error: true, message: 'Invalid service name' });
 		}
 
-		const widget = widgetService.byName(name);
-		if (!widget) {
-			return fail(400, { name, error: true, message: 'Widget not found' });
+		const service = servicesService.byName(name);
+		if (!service) {
+			return fail(400, { name, error: true, message: 'Service not found' });
 		}
 
 		try {
-			const { config } = await widgetService.set(widget, data);
+			const { config } = await servicesService.set(service, data);
 			return { success: true, config };
 		} catch (err) {
 			const msg =

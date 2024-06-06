@@ -7,13 +7,13 @@
 
 	export let data: PageData;
 	$: types = data.types;
-	$: widgets = data.widgets;
+	$: services = data.services;
 
 	let newName = '';
 	let newType = '';
 </script>
 
-<PageLayout title="Widgets">
+<PageLayout title="Services">
 	<div class="row overflow-auto">
 		<div class="col">
 			<table class="table">
@@ -52,19 +52,19 @@
 						</td>
 					</tr>
 
-					{#each widgets as widget}
+					{#each services as service}
 						<tr>
 							<td>
-								{widget.name}
+								{service.name}
 							</td>
 							<td>
-								{widget.type}
+								{service.type}
 							</td>
 							<td>
 								<form method="POST" action="?/delete" use:enhance>
-									<input type="hidden" name="name" value={widget.name} />
+									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
-										<a href="/widgets/{widget.name}" class="btn btn-theme">
+										<a href="/services/{service.name}" class="btn btn-theme">
 											<i class="icofont-ui-edit" />
 										</a>
 										<button class="btn btn-danger">
