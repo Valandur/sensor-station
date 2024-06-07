@@ -11,6 +11,7 @@ import { BaseService } from './BaseService';
 import calendar from './calendar/widget';
 import weather from './weather/widget';
 import epicGames from './epic-games/widget';
+import prusa from './prusa/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -18,7 +19,8 @@ const WIDGETS_PATH = 'data/widgets.json';
 const WIDGET_MAP: WidgetMap = {
 	[calendar.type]: calendar,
 	[weather.type]: weather,
-	[epicGames.type]: epicGames
+	[epicGames.type]: epicGames,
+	[prusa.type]: prusa
 };
 
 class WidgetService extends BaseService {

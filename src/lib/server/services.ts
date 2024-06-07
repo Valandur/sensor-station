@@ -10,6 +10,8 @@ import { BaseService } from './BaseService';
 import calendar from './calendar/service';
 import weather from './weather/service';
 import epicGames from './epic-games/service';
+import network from './network/service';
+import prusa from './prusa/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -17,7 +19,9 @@ const PATH = 'data/services.json';
 const SERVICE_MAP: ServiceMap = {
 	[calendar.type]: calendar,
 	[weather.type]: weather,
-	[epicGames.type]: epicGames
+	[epicGames.type]: epicGames,
+	[network.type]: network,
+	[prusa.type]: prusa
 };
 
 class ServicesService extends BaseService {

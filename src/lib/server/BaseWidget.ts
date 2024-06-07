@@ -19,6 +19,6 @@ export abstract class BaseWidget<
 		this.logger = new BaseLogger(name);
 	}
 
-	public abstract props(config: CONFIG, page: number): Promise<PROPS>;
+	public abstract props(config: CONFIG, page: number): Promise<PROPS | null>;
 	public abstract validate(config: FormData): Promise<CONFIG | WidgetValidateFailure>;
 }

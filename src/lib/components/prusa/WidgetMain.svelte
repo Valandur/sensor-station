@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { add, formatDistanceToNow } from 'date-fns';
 	import { de } from 'date-fns/locale';
+	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+	import { add } from 'date-fns/add';
 
+	import type { JobInfo, PrinterInfo } from '$lib/models/prusa';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
-	import type { PageData } from './$types';
-	import Card from '$lib/components/Card.svelte';
+	import Card from '../Card.svelte';
 
-	export let data: PageData;
-	$: job = data.info.job;
-	$: printer = data.info.printer;
+	export let job: JobInfo;
+	export let printer: PrinterInfo;
 
 	$: getETA = () => {
 		const eta = add(new Date(), { seconds: job.time_remaining });

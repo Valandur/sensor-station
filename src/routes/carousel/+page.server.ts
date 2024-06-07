@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ url, depends }) => {
 	const screen = screens[idx];
 	const nextScreen = getScreenUrl(counter.fit(idx + 1), 'next');
 	const prevScreen = getScreenUrl(counter.fit(idx - 1), 'prev');
-	const skipScreen = dir === 'next' ? nextScreen : prevScreen;
+	const skipScreen = screens.length > 1 ? (dir === 'next' ? nextScreen : prevScreen) : null;
 	const switchInterval = carousel.switchInterval;
 	const updateInterval = carousel.updateInterval;
 
@@ -57,7 +57,7 @@ export const load: PageServerLoad = async ({ url, depends }) => {
 		if (!props && skipScreen) {
 			redirect(302, skipScreen);
 		} else if (!props) {
-			error(500, { key: 'props.missing', message: 'Missing props' });
+			error(500, { key: 'props.missing', message: "Missing props and can't skip screen" });
 		}
 
 		if (typeof props.prevPage === 'number') {
