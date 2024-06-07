@@ -1,7 +1,10 @@
 <script lang="ts">
+	export let action: string;
 	export let simple: boolean;
 	export let head: string;
 	export let body: string;
+
+	$: console.log(action, head);
 </script>
 
 <svelte:head>

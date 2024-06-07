@@ -18,9 +18,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	}
 
 	return {
-		name: instance.name,
 		type: instance.type,
 		action: params.action,
-		...props
+		props
 	};
 };

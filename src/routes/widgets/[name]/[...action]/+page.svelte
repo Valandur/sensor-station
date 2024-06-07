@@ -7,4 +7,4 @@
 	$: comps = WIDGETS[data.type];
 </script>
 
-<svelte:component this={comps.action} name={data.name} action={data.action} />
+<svelte:component this={comps.action} action={data.action} {...data.props} />

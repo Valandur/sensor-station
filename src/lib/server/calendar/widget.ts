@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-import { CounterType, fit, slice } from '$lib/counter';
+import { clamp } from '$lib/counter';
 import {
 	CALENDAR_WIDGET_TYPE,
 	type CalendarWidgetConfig,
@@ -29,9 +29,12 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 		}
 
 		const data = await service.getByName(config.serviceName);
-		const events = slice(CounterType.Clamp, data.events.length, page, ITEMS_PER_PAGE, data.events);
-		const prevPage = page > 0 ? page - 1 : 0;
-		const nextPage = fit(CounterType.Clamp, data.events.length, page + 1, ITEMS_PER_PAGE);
+		const [events, prevPage, nextPage] = clamp(
+			data.events.length,
+			page,
+			ITEMS_PER_PAGE,
+			data.events
+		);
 		return {
 			name,
 			prevPage,

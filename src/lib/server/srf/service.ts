@@ -24,7 +24,7 @@ import { Cache } from '../Cache';
 import { BaseService } from '../BaseService';
 
 const ENABLED = env.SRF_ENABLED === '1';
-const CACHE_PATH = 'data/news';
+const CACHE_PATH = 'data/srf';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
 const DESCR_REGEX = /<img src="(.*?)".*?>(.*)/;
 
@@ -88,8 +88,7 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 						: new Date();
 
 					await mkdir(`${CACHE_PATH}/${config.feedId}/${id}`, { recursive: true });
-					const imgFileName = `${config.feedId}/${id}/${basename(imgUrl)}`;
-					const imgFilePath = `${CACHE_PATH}/${imgFileName}`;
+					const imgFilePath = `${CACHE_PATH}/${config.feedId}/${id}/${basename(imgUrl)}`;
 
 					if (!(await stat(imgFilePath).catch(() => null))) {
 						const res = await fetch(imgUrl);
@@ -103,7 +102,7 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 						title: item.title,
 						link: item.link,
 						content: content || '',
-						image: imgFileName
+						image: imgFilePath
 					});
 				}
 

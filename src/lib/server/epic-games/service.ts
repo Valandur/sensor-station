@@ -18,7 +18,7 @@ import {
 import { BaseService } from '../BaseService';
 
 const ENABLED = env.EPIC_GAMES_ENABLED === '1';
-const CACHE_PATH = 'data/games';
+const CACHE_PATH = 'data/epic-games';
 const BASE_URL = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions';
 const URL = `${BASE_URL}?locale=en-US&country=CH&allowCountries=CH`;
 
@@ -83,10 +83,9 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 						)?.url ||
 						game.keyImages[0]?.url ||
 						null;
-					const fileName = imgUrl ? basename(imgUrl) : null;
+					const localFilePath = imgUrl ? `${CACHE_PATH}/${basename(imgUrl)}` : null;
 
-					if (imgUrl && fileName) {
-						const localFilePath = `${CACHE_PATH}/${fileName}`;
+					if (imgUrl && localFilePath) {
 						if (!(await stat(localFilePath).catch(() => null))) {
 							const stream = createWriteStream(localFilePath);
 							superagent.get(imgUrl).pipe(stream);
@@ -99,7 +98,7 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 						pct: offer.pct,
 						startsAt: offer.start,
 						endsAt: offer.end,
-						image: fileName
+						image: localFilePath
 					});
 				}
 

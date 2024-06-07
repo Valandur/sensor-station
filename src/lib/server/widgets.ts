@@ -56,7 +56,7 @@ class WidgetService extends BaseService {
 		return props;
 	}
 
-	public async getAction(widget: WidgetInstance, action: string): Promise<object | null> {
+	public async getAction(widget: WidgetInstance, action: string): Promise<WidgetProps | null> {
 		const w = WIDGET_MAP[widget.type];
 		if (!w) {
 			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-import { CounterType, fit, slice } from '$lib/counter';
+import { wrap } from '$lib/counter';
 import {
 	SRF_WIDGET_TYPE,
 	type SrfWidgetAction,
@@ -27,9 +27,7 @@ class SrfWidget extends BaseWidget<SrfWidgetConfig, SrfWidgetProps, SrfWidgetAct
 		}
 
 		const data = await service.getByName(config.serviceName);
-		const items = slice(CounterType.Wrap, data.items.length, page, ITEMS_PER_PAGE, data.items);
-		const prevPage = fit(CounterType.Wrap, data.items.length, page - 1, ITEMS_PER_PAGE);
-		const nextPage = fit(CounterType.Wrap, data.items.length, page + 1, ITEMS_PER_PAGE);
+		const [items, prevPage, nextPage] = wrap(data.items.length, page, ITEMS_PER_PAGE, data.items);
 		return {
 			name,
 			prevPage,

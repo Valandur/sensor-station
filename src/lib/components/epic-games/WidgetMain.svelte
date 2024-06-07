@@ -32,7 +32,7 @@
 						</svelte:fragment>
 
 						<div slot="body" class="p-1">
-							<img src={`/data/games/${game.image}`} class="card-img" alt={game.title} />
+							<img src={game.image} class="card-img" alt={game.title} />
 
 							<div class="card-img-overlay d-flex flex-column justify-content-end p-1 z-2">
 								<div class="bg-black bg-opacity-75 fw-bold text-white px-1">{game.title}</div>

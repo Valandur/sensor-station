@@ -32,7 +32,7 @@
 		{#each items as item}
 			<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
 				<div class="col-3 me-1 image">
-					<img alt="Thumbnail" src={`/data/news/${item.image}`} />
+					<img alt="Thumbnail" src={item.image} />
 				</div>
 				<div class="col abstract d-flex flex-column justify-content-around">
 					<div class="fs-4">{item.title}</div>

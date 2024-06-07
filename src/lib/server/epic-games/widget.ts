@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-import { CounterType, fit, slice } from '$lib/counter';
+import { clamp } from '$lib/counter';
 import {
 	EPIC_GAMES_WIDGET_TYPE,
 	type EpicGamesWidgetConfig,
@@ -29,9 +29,7 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 		}
 
 		const data = await service.getByName(config.serviceName);
-		const games = slice(CounterType.Clamp, data.games.length, page, ITEMS_PER_PAGE, data.games);
-		const prevPage = page > 0 ? page - 1 : 0;
-		const nextPage = fit(CounterType.Clamp, data.games.length, page + 1, ITEMS_PER_PAGE);
+		const [games, prevPage, nextPage] = clamp(data.games.length, page, ITEMS_PER_PAGE, data.games);
 		return {
 			name,
 			prevPage,
