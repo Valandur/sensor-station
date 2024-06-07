@@ -10,6 +10,7 @@ import {
 	EPIC_GAMES_SERVICE_TYPE,
 	type EpicGamesServiceConfig,
 	type EpicGamesServiceData,
+	type EpicGamesServiceInstance,
 	type GameItem,
 	type RawGame
 } from '$lib/models/epic-games';
@@ -29,8 +30,7 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 	}
 
 	public get(
-		name: string,
-		config: EpicGamesServiceConfig,
+		{ name, config }: EpicGamesServiceInstance,
 		forceUpdate?: boolean | undefined
 	): Promise<EpicGamesServiceData> {
 		return this.cache.with(
@@ -112,7 +112,10 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 		);
 	}
 
-	public validate(name: string, config: FormData): Promise<EpicGamesServiceConfig> {
+	public validate(
+		instance: EpicGamesServiceInstance,
+		config: FormData
+	): Promise<EpicGamesServiceConfig> {
 		throw new Error('Method not implemented.');
 	}
 }

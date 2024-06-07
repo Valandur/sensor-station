@@ -4,6 +4,7 @@ import { CounterType, fit, slice } from '$lib/counter';
 import {
 	CALENDAR_WIDGET_TYPE,
 	type CalendarWidgetConfig,
+	type CalendarWidgetInstance,
 	type CalendarWidgetProps
 } from '$lib/models/calendar';
 
@@ -20,8 +21,7 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 	}
 
 	public async props(
-		name: string,
-		config: CalendarWidgetConfig,
+		{ name, config }: CalendarWidgetInstance,
 		page: number
 	): Promise<CalendarWidgetProps> {
 		if (!config.serviceName) {
@@ -41,15 +41,15 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 	}
 
 	public async validate(
-		name: string,
+		instance: CalendarWidgetInstance,
 		config: FormData
 	): Promise<CalendarWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');
 		}
-		const instance = this.services.byName(serviceName, true);
-		if (instance.type !== service.type) {
+		const serviceInstance = this.services.byName(serviceName, true);
+		if (serviceInstance.type !== service.type) {
 			throw new Error('Invalid service type');
 		}
 

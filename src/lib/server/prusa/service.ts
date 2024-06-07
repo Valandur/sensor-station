@@ -4,7 +4,8 @@ import { env } from '$env/dynamic/private';
 import {
 	PRUSA_SERVICE_TYPE,
 	type PrusaServiceConfig,
-	type PrusaServiceData
+	type PrusaServiceData,
+	type PrusaServiceInstance
 } from '$lib/models/prusa';
 
 import { BaseService } from '../BaseService';
@@ -19,8 +20,7 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 	}
 
 	public get(
-		name: string,
-		config: PrusaServiceConfig,
+		{ name, config }: PrusaServiceInstance,
 		forceUpdate?: boolean | undefined
 	): Promise<PrusaServiceData> {
 		return this.cache.with(
@@ -50,7 +50,10 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 		);
 	}
 
-	public async validate(name: string, config: FormData): Promise<PrusaServiceConfig> {
+	public async validate(
+		instance: PrusaServiceInstance,
+		config: FormData
+	): Promise<PrusaServiceConfig> {
 		const apiUrl = config.get('apiUrl');
 		if (typeof apiUrl !== 'string') {
 			throw new Error('Invalid api url');

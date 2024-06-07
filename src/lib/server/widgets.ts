@@ -3,8 +3,7 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import { error, fail } from '@sveltejs/kit';
 
 import type { WidgetInstance, WidgetProps } from '$lib/models/widget';
-import type { BaseData } from '$lib/models/BaseData';
-import type { BaseConfig } from '$lib/models/BaseConfig';
+import type { ServiceConfig, ServiceData } from '$lib/models/service';
 
 import type { BaseWidget } from './BaseWidget';
 import { BaseService } from './BaseService';
@@ -38,22 +37,32 @@ class WidgetService extends BaseService {
 		super('WIDGETS');
 	}
 
-	public override async get(): Promise<BaseData> {
+	public override async get(): Promise<ServiceData> {
 		await this.load();
-		return { ts: new Date() };
+		return { ts: new Date(), name: 'widgets' };
 	}
 
-	public override validate(config: FormData): Promise<BaseConfig> {
+	public override validate(): Promise<ServiceConfig> {
 		throw new Error('Not supported');
 	}
 
-	public async props(widget: WidgetInstance, page: number): Promise<WidgetProps | null> {
+	public async getProps(widget: WidgetInstance, page: number): Promise<WidgetProps | null> {
 		const w = WIDGET_MAP[widget.type];
 		if (!w) {
 			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });
 		}
 
-		const props = await w.props(widget.config, page);
+		const props = await w.props(widget, page);
+		return props;
+	}
+
+	public async getAction(widget: WidgetInstance, action: string): Promise<object | null> {
+		const w = WIDGET_MAP[widget.type];
+		if (!w) {
+			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });
+		}
+
+		const props = await w.action(widget, action);
 		return props;
 	}
 
@@ -83,7 +92,7 @@ class WidgetService extends BaseService {
 
 	public async set(widget: WidgetInstance, configData: FormData) {
 		const srv = WIDGET_MAP[widget.type];
-		widget.config = await srv.validate(configData);
+		widget.config = await srv.validate(widget, configData);
 
 		await this.save();
 

@@ -1,11 +1,13 @@
-import type { ServiceConfig, ServiceData } from './service';
-import type { WidgetConfig, WidgetProps } from './widget';
+import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
+import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const EPIC_GAMES_WIDGET_TYPE = 'epic-games';
+
+export type EpicGamesWidgetInstance = WidgetInstance<EpicGamesWidgetConfig>;
 
 export interface EpicGamesWidgetConfig extends WidgetConfig {
 	serviceName: string;
@@ -20,6 +22,8 @@ export interface EpicGamesWidgetProps extends WidgetProps {
 // ---------
 
 export const EPIC_GAMES_SERVICE_TYPE = 'epic-games';
+
+export type EpicGamesServiceInstance = ServiceInstance<EpicGamesServiceConfig>;
 
 export interface EpicGamesServiceData extends ServiceData {
 	games: GameItem[];

@@ -4,6 +4,7 @@ import { CounterType, fit, slice } from '$lib/counter';
 import {
 	EPIC_GAMES_WIDGET_TYPE,
 	type EpicGamesWidgetConfig,
+	type EpicGamesWidgetInstance,
 	type EpicGamesWidgetProps
 } from '$lib/models/epic-games';
 
@@ -20,8 +21,7 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 	}
 
 	public async props(
-		name: string,
-		config: EpicGamesWidgetConfig,
+		{ name, config }: EpicGamesWidgetInstance,
 		page: number
 	): Promise<EpicGamesWidgetProps> {
 		if (!config.serviceName) {
@@ -41,15 +41,15 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 	}
 
 	public async validate(
-		name: string,
+		instance: EpicGamesWidgetInstance,
 		config: FormData
 	): Promise<EpicGamesWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');
 		}
-		const instance = this.services.byName(serviceName, true);
-		if (instance.type !== service.type) {
+		const serviceInstance = this.services.byName(serviceName, true);
+		if (serviceInstance.type !== service.type) {
 			throw new Error('Invalid service type');
 		}
 

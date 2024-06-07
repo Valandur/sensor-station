@@ -5,6 +5,7 @@ import { CounterType, slice } from '$lib/counter';
 import {
 	WEATHER_WIDGET_TYPE,
 	type WeatherWidgetConfig,
+	type WeatherWidgetInstance,
 	type WeatherWidgetProps,
 	type WeatherWidgetType
 } from '$lib/models/weather';
@@ -23,8 +24,7 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 	}
 
 	public async props(
-		name: string,
-		config: WeatherWidgetConfig,
+		{ name, config }: WeatherWidgetInstance,
 		page: number
 	): Promise<WeatherWidgetProps> {
 		if (!config.serviceName || !VALID_TYPES.includes(config.type)) {
@@ -46,7 +46,7 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 	}
 
 	public async validate(
-		name: string,
+		instance: WeatherWidgetInstance,
 		config: FormData
 	): Promise<WeatherWidgetConfig | WidgetValidateFailure> {
 		const type = config.get('type');
@@ -58,8 +58,8 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');
 		}
-		const instance = this.services.byName(serviceName, true);
-		if (instance.type !== service.type) {
+		const serviceInstance = this.services.byName(serviceName, true);
+		if (serviceInstance.type !== service.type) {
 			throw new Error('Invalid service type');
 		}
 

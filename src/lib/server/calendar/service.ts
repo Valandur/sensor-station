@@ -6,7 +6,8 @@ import { env } from '$env/dynamic/private';
 import {
 	CALENDAR_SERVICE_TYPE,
 	type CalendarServiceConfig,
-	type CalendarServiceData
+	type CalendarServiceData,
+	type CalendarServiceInstance
 } from '$lib/models/calendar';
 
 import { BaseService } from '../BaseService';
@@ -22,8 +23,7 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 	}
 
 	public override async get(
-		name: string,
-		config: CalendarServiceConfig,
+		{ name, config }: CalendarServiceInstance,
 		forceUpdate = false
 	): Promise<CalendarServiceData> {
 		return this.cache.with(
@@ -83,7 +83,10 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 		);
 	}
 
-	public async validate(name: string, config: FormData): Promise<CalendarServiceConfig> {
+	public async validate(
+		instance: CalendarServiceInstance,
+		config: FormData
+	): Promise<CalendarServiceConfig> {
 		const calendarId = config.get('calendarId');
 		if (typeof calendarId !== 'string') {
 			throw new Error('Invalid calendar id');

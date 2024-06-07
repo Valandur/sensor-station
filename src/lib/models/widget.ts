@@ -1,4 +1,4 @@
-export interface WidgetInstance<CONFIG extends {} = {}> {
+export interface WidgetInstance<CONFIG extends WidgetConfig = WidgetConfig> {
 	name: string;
 	type: string;
 	config: CONFIG;

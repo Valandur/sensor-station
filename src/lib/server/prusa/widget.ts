@@ -3,6 +3,7 @@ import { error } from '@sveltejs/kit';
 import {
 	PRUSA_WIDGET_TYPE,
 	type PrusaWidgetConfig,
+	type PrusaWidgetInstance,
 	type PrusaWidgetProps
 } from '$lib/models/prusa';
 
@@ -17,8 +18,7 @@ class PrusaWidget extends BaseWidget<PrusaWidgetConfig, PrusaWidgetProps> {
 	}
 
 	public async props(
-		name: string,
-		config: PrusaWidgetConfig,
+		{ name, config }: PrusaWidgetInstance,
 		page: number
 	): Promise<PrusaWidgetProps | null> {
 		if (!config.serviceName) {
@@ -44,15 +44,15 @@ class PrusaWidget extends BaseWidget<PrusaWidgetConfig, PrusaWidgetProps> {
 	}
 
 	public async validate(
-		name: string,
+		instance: PrusaWidgetInstance,
 		config: FormData
 	): Promise<PrusaWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');
 		}
-		const instance = this.services.byName(serviceName, true);
-		if (instance.type !== service.type) {
+		const serviceInstance = this.services.byName(serviceName, true);
+		if (serviceInstance.type !== service.type) {
 			throw new Error('Invalid service type');
 		}
 

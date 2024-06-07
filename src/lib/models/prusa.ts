@@ -1,11 +1,13 @@
-import type { ServiceConfig, ServiceData } from './service';
-import type { WidgetConfig, WidgetProps } from './widget';
+import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
+import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const PRUSA_WIDGET_TYPE = 'prusa';
+
+export type PrusaWidgetInstance = WidgetInstance<PrusaWidgetConfig>;
 
 export interface PrusaWidgetConfig extends WidgetConfig {
 	serviceName: string;
@@ -22,6 +24,8 @@ export interface PrusaWidgetProps extends WidgetProps {
 // ---------
 
 export const PRUSA_SERVICE_TYPE = 'prusa';
+
+export type PrusaServiceInstance = ServiceInstance<PrusaServiceConfig>;
 
 export interface PrusaServiceData extends ServiceData {
 	job: JobInfo;

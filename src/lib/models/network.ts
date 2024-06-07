@@ -1,4 +1,4 @@
-import type { ServiceConfig, ServiceData } from './service';
+import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
 
 // ---------
 // Widgets
@@ -9,6 +9,8 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const NETWORK_SERVICE_TYPE = 'network';
+
+export type NetworkServiceInstance = ServiceInstance<NetworkServiceConfig>;
 
 export interface NetworkServiceData extends ServiceData {
 	interfaces: NetworkInterface[];

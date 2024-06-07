@@ -1,11 +1,13 @@
-import type { ServiceConfig, ServiceData } from './service';
-import type { WidgetConfig, WidgetProps } from './widget';
+import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
+import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const TUYA_WIDGET_TYPE = 'tuya';
+
+export type TuyaWidgetInstance = WidgetInstance<TuyaWidgetConfig>;
 
 export interface TuyaWidgetConfig extends WidgetConfig {
 	serviceName: string;
@@ -20,6 +22,8 @@ export interface TuyaWidgetProps extends WidgetProps {
 // ---------
 
 export const TUYA_SERVICE_TYPE = 'tuya';
+
+export type TuyaServiceInstance = ServiceInstance<TuyaServiceConfig>;
 
 export interface TuyaServiceConfig extends ServiceConfig {
 	clientId: string;

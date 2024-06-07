@@ -2,9 +2,7 @@ import { dirname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { error, fail } from '@sveltejs/kit';
 
-import type { BaseConfig } from '$lib/models/BaseConfig';
-import type { BaseData } from '$lib/models/BaseData';
-import type { ServiceConfig, ServiceInstance } from '$lib/models/service';
+import type { ServiceConfig, ServiceData, ServiceInstance } from '$lib/models/service';
 
 import { BaseService } from './BaseService';
 import calendar from './calendar/service';
@@ -38,12 +36,12 @@ class ServicesService extends BaseService {
 		super('SERVICES');
 	}
 
-	public override async get(): Promise<BaseData> {
+	public override async get(): Promise<ServiceData> {
 		await this.load();
-		return { ts: new Date() };
+		return { ts: new Date(), name: 'services' };
 	}
 
-	public override validate(): Promise<BaseConfig> {
+	public override validate(): Promise<ServiceConfig> {
 		throw new Error('Not supported');
 	}
 
@@ -87,7 +85,7 @@ class ServicesService extends BaseService {
 
 	public async set(service: ServiceInstance, configData: FormData) {
 		const srv = SERVICE_MAP[service.type];
-		service.config = await srv.validate(configData);
+		service.config = await srv.validate(service, configData);
 
 		await this.save();
 

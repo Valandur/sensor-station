@@ -7,7 +7,8 @@ import {
 	type NetworkAddress,
 	type NetworkInterface,
 	type NetworkServiceConfig,
-	type NetworkServiceData
+	type NetworkServiceData,
+	type NetworkServiceInstance
 } from '$lib/models/network';
 
 import { BaseService } from '../BaseService';
@@ -22,8 +23,7 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 	}
 
 	public get(
-		name: string,
-		config: NetworkServiceConfig,
+		{ name, config }: NetworkServiceInstance,
 		forceUpdate?: boolean | undefined
 	): Promise<NetworkServiceData> {
 		return this.cache.with(
@@ -70,7 +70,10 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 		);
 	}
 
-	public validate(name: string, config: FormData): Promise<NetworkServiceConfig> {
+	public validate(
+		instance: NetworkServiceInstance,
+		config: FormData
+	): Promise<NetworkServiceConfig> {
 		throw new Error('Method not implemented.');
 	}
 }

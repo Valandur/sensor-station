@@ -53,7 +53,7 @@ export const load: PageServerLoad = async ({ url, depends }) => {
 	let prevPage: string | null = null;
 	let nextPage: string | null = null;
 	if (screen) {
-		props = await widgetsService.props(screen.widget, page);
+		props = await widgetsService.getProps(screen.widget, page);
 		if (!props && skipScreen) {
 			redirect(302, skipScreen);
 		} else if (!props) {

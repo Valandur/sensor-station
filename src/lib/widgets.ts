@@ -20,6 +20,7 @@ import TuyaWidgetMain from './components/tuya/WidgetMain.svelte';
 import TuyaWidgetConfig from './components/tuya/WidgetConfig.svelte';
 import SrfWidgetMain from './components/srf/WidgetMain.svelte';
 import SrfWidgetConfig from './components/srf/WidgetConfig.svelte';
+import SrfWidgetAction from './components/srf/WidgetAction.svelte';
 
 type WidgetMap = {
 	[key: string]: {
@@ -59,6 +60,7 @@ export const WIDGETS: WidgetMap = {
 	},
 	[SRF_WIDGET_TYPE]: {
 		main: SrfWidgetMain,
-		config: SrfWidgetConfig
+		config: SrfWidgetConfig,
+		action: SrfWidgetAction
 	}
 };

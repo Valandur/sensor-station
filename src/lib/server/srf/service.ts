@@ -1,40 +1,46 @@
 import { basename } from 'node:path';
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { finished } from 'node:stream/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { Readable } from 'node:stream';
+import { finished } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
 import { error } from '@sveltejs/kit';
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { parse } from 'date-fns';
 import { parse as parseHtml } from 'node-html-parser';
 import Parser from 'rss-parser';
-
 import { env } from '$env/dynamic/private';
 
-import { BaseService } from '../BaseService';
 import {
 	SRF_SERVICE_TYPE,
 	type NewsItem,
+	type SrfServiceAction,
 	type SrfServiceConfig,
-	type SrfServiceData
+	type SrfServiceData,
+	type SrfServiceInstance
 } from '$lib/models/srf';
+
+import { Cache } from '../Cache';
+import { BaseService } from '../BaseService';
 
 const ENABLED = env.SRF_ENABLED === '1';
 const CACHE_PATH = 'data/news';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
 const DESCR_REGEX = /<img src="(.*?)".*?>(.*)/;
 
-class SrfService extends BaseService<SrfServiceConfig, SrfServiceData> {
+class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServiceAction> {
 	public override readonly type = SRF_SERVICE_TYPE;
+
+	protected readonly articleCache: Cache<SrfServiceAction>;
 
 	public constructor() {
 		super('SRF');
+
+		this.articleCache = new Cache(this.logger);
 	}
 
 	public get(
-		name: string,
-		config: SrfServiceConfig,
+		{ name, config }: SrfServiceInstance,
 		forceUpdate?: boolean | undefined
 	): Promise<SrfServiceData> {
 		return this.cache.with(
@@ -121,11 +127,13 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData> {
 		);
 	}
 
-	public async validate(name: string, config: FormData): Promise<SrfServiceConfig> {
+	public async validate(instance: SrfServiceInstance, config: FormData): Promise<SrfServiceConfig> {
 		const feedId = config.get('feedId');
 		if (typeof feedId !== 'string') {
 			throw new Error('Invalid feed ID');
 		}
+
+		const simpleDetails = config.get('simpleDetails') === 'on';
 
 		const res = await fetch(`${BASE_URL}${feedId}`);
 		if (res.status === 404) {
@@ -135,98 +143,106 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData> {
 		}
 
 		return {
-			feedId
+			feedId,
+			simpleDetails
 		};
+	}
+
+	public override async action(
+		instance: SrfServiceInstance,
+		action: string
+	): Promise<SrfServiceAction | null> {
+		const { name, config } = instance;
+
+		return this.articleCache.with(
+			{
+				key: action,
+				resultCacheTime: config.resultCacheTime,
+				errorCacheTime: config.errorCacheTime
+			},
+			async () => {
+				if (!ENABLED) {
+					throw error(400, {
+						message: `News is disabled`,
+						key: 'news.disabled'
+					});
+				}
+
+				const [feedId, articleId] = action.split('/', 2);
+
+				let feedData = this.cache.getData(feedId);
+				if (!feedData) {
+					feedData = await this.get(instance, false);
+				}
+
+				let page = '';
+				const article = feedData.items.find((a) => a.id === articleId);
+				if (!article) {
+					throw error(400, {
+						message: `Article ${articleId} in feed ${feedId} not found`,
+						key: 'news.articleNotFound',
+						params: { feedId, articleId }
+					});
+				}
+
+				const filePath = `${CACHE_PATH}/${feedId}/${article.id}/article.html`;
+				if (await stat(filePath).catch(() => null)) {
+					this.logger.debug('Using cached article file', feedId, article.id);
+					page = await readFile(filePath, 'utf-8');
+				} else {
+					this.logger.debug('Downloading article file', feedId, article.id);
+					const res = await fetch(article.link);
+					const text = await res.text();
+					await writeFile(filePath, text, 'utf-8');
+					page = text;
+				}
+
+				const html = parseHtml(page);
+				const head = html.getElementsByTagName('head')[0];
+				for (const script of head.getElementsByTagName('script')) {
+					script.remove();
+				}
+
+				const body = html.getElementsByTagName('body')[0];
+				const main = body.getElementsByTagName('main')[0];
+				const title = main.getElementsByTagName('header')[0];
+				const section = main.getElementsByTagName('section')[0];
+
+				if (config.simpleDetails) {
+					// strip divs
+					for (const div of body.getElementsByTagName('div')) {
+						div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
+					}
+					// strip images
+					for (const figure of body.getElementsByTagName('figure')) {
+						figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
+					}
+					// strip link in title
+					title.getElementById('skiplink__contentlink')?.remove();
+
+					body.childNodes = [title, section];
+				} else {
+					const header = main.getElementsByTagName('div')[0];
+					const section = main.getElementsByTagName('section')[0];
+					const config = body.getElementById('config__js')!;
+					const scripts = body.getElementsByTagName('script');
+					body.childNodes = [header, title, section, config, ...scripts];
+				}
+
+				return {
+					ts: new Date(),
+					simple: config.simpleDetails,
+					name,
+					head: head.innerHTML,
+					body: body.innerHTML.toString()
+				};
+			},
+			undefined,
+			async (err) => {
+				err.body.embedded = true;
+			}
+		);
 	}
 }
 
 export default new SrfService();
-
-/*
-export async function getArticle(feedId: string, articleId: string, forceUpdate = false) {
-	return articleCache.with(
-		`${feedId}-${articleId}`,
-		forceUpdate,
-		async () => {
-			if (!ENABLED) {
-				throw error(400, {
-					message: `News is disabled`,
-					key: 'news.disabled'
-				});
-			}
-
-			const feedData = feedCache.getData(feedId);
-			if (!feedData) {
-				throw error(400, {
-					message: `Feed ${feedId} not loaded`,
-					key: 'news.feedNotLoaded',
-					params: { feedId, articleId }
-				});
-			}
-
-			let page = '';
-			const article = feedData.items.find((a) => a.id === articleId);
-			if (!article) {
-				throw error(400, {
-					message: `Article ${articleId} in feed ${feedId} not found`,
-					key: 'news.articleNotFound',
-					params: { feedId, articleId }
-				});
-			}
-
-			const filePath = `${CACHE_PATH}/${feedId}/${article.id}/article.html`;
-			if (await stat(filePath).catch(() => null)) {
-				logger.debug('Using cached article file', feedId, article.id);
-				page = await readFile(filePath, 'utf-8');
-			} else {
-				logger.debug('Downloading article file', feedId, article.id);
-				const { text } = await superagent.get(article.link);
-				await writeFile(filePath, text, 'utf-8');
-				page = text;
-			}
-
-			const html = parseHtml(page);
-			const head = html.getElementsByTagName('head')[0];
-			for (const script of head.getElementsByTagName('script')) {
-				script.remove();
-			}
-
-			const body = html.getElementsByTagName('body')[0];
-			const main = body.getElementsByTagName('main')[0];
-			const title = main.getElementsByTagName('header')[0];
-			const section = main.getElementsByTagName('section')[0];
-
-			if (SIMPLE_DETAILS) {
-				// strip divs
-				for (const div of body.getElementsByTagName('div')) {
-					div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
-				}
-				// strip images
-				for (const figure of body.getElementsByTagName('figure')) {
-					figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
-				}
-				// strip link in title
-				title.getElementById('skiplink__contentlink')?.remove();
-
-				body.childNodes = [title, section];
-			} else {
-				const header = main.getElementsByTagName('div')[0];
-				const section = main.getElementsByTagName('section')[0];
-				const config = body.getElementById('config__js');
-				const scripts = body.getElementsByTagName('script');
-				body.childNodes = [header, title, section, config, ...scripts];
-			}
-
-			return {
-				ts: new Date(),
-				head: head.innerHTML,
-				body: body.innerHTML.toString()
-			};
-		},
-		undefined,
-		async (err) => {
-			err.body.embedded = true;
-		}
-	);
-}
-*/

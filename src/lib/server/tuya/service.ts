@@ -6,7 +6,8 @@ import {
 	PROP_MAP,
 	TUYA_SERVICE_TYPE,
 	type TuyaServiceConfig,
-	type TuyaServiceData
+	type TuyaServiceData,
+	type TuyaServiceInstance
 } from '$lib/models/tuya';
 
 import { BaseService } from '../BaseService';
@@ -21,8 +22,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 	}
 
 	public get(
-		name: string,
-		config: TuyaServiceConfig,
+		{ name, config }: TuyaServiceInstance,
 		forceUpdate?: boolean | undefined
 	): Promise<TuyaServiceData> {
 		const device = new TuyAPI({
@@ -91,7 +91,10 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 		);
 	}
 
-	public async validate(name: string, config: FormData): Promise<TuyaServiceConfig> {
+	public async validate(
+		instance: TuyaServiceInstance,
+		config: FormData
+	): Promise<TuyaServiceConfig> {
 		const clientId = config.get('clientId');
 		if (typeof clientId !== 'string') {
 			throw new Error('Invalid client id');

@@ -7,6 +7,7 @@
 
 	import EmptyCard from '../EmptyCard.svelte';
 
+	export let name: string;
 	export let feedId: string;
 	export let items: NewsItem[];
 
@@ -20,7 +21,7 @@
 <div class="h-100 d-flex flex-column">
 	{#if selectedItem}
 		<div class="details" transition:fade={{ duration: 500 }}>
-			<iframe title="Story" src={`/widgets/news/${feedId}/${selectedItem.id}`} />
+			<iframe title="Story" src={`/widgets/${name}/${feedId}/${selectedItem.id}`} />
 			<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
 				<i class="icofont-ui-close" />
 			</button>

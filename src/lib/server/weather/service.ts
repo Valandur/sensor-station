@@ -4,11 +4,12 @@ import { Client } from '@googlemaps/google-maps-services-js';
 
 import {
 	ICON_MAP,
+	WEATHER_SERVICE_TYPE,
 	type WeatherAlert,
 	type WeatherServiceConfig,
 	type WeatherServiceData,
 	type WeatherForecast,
-	WEATHER_SERVICE_TYPE
+	type WeatherServiceInstance
 } from '$lib/models/weather';
 
 import { BaseService } from '../BaseService';
@@ -33,8 +34,7 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 	}
 
 	public override async get(
-		name: string,
-		config: WeatherServiceConfig,
+		{ name, config }: WeatherServiceInstance,
 		forceUpdate = false
 	): Promise<WeatherServiceData> {
 		return this.cache.with(
@@ -172,7 +172,10 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		);
 	}
 
-	public async validate(name: string, config: FormData): Promise<WeatherServiceConfig> {
+	public async validate(
+		instance: WeatherServiceInstance,
+		config: FormData
+	): Promise<WeatherServiceConfig> {
 		const useGps = config.get('useGps') === 'on';
 		const useGeo = config.get('useGeo') === 'on';
 
