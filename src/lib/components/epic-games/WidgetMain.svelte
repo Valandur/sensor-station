@@ -1,25 +1,17 @@
 <script lang="ts">
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
-	import { goto } from '$app/navigation';
 
-	import { swipe } from '$lib/swipe';
+	import { tz } from '$lib/stores/tz';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import Card from '$lib/components/Card.svelte';
+	import type { GameItem } from '$lib/models/epic-games';
 
-	import type { PageData } from './$types';
+	import Card from '../Card.svelte';
 
-	export let data: PageData;
-	$: games = data.games;
-	$: prevPage = data.prevPage;
-	$: nextPage = data.nextPage;
+	export let games: GameItem[];
 </script>
 
-<div
-	class="h-100 d-flex flex-column justify-content-end"
-	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
->
+<div class="h-100 d-flex flex-column justify-content-end">
 	{#if games.length > 0}
 		<div class="row row-cols-2">
 			{#each games as game}
@@ -27,10 +19,8 @@
 					<Card>
 						<svelte:fragment slot="header">
 							<div>
-								{formatInTimeZone(game.startsAt, data.tz, 'dd MMM', { locale: de })} -
-								{game.endsAt
-									? formatInTimeZone(game.endsAt, data.tz, 'dd MMM', { locale: de })
-									: ''}
+								{formatInTimeZone(game.startsAt, $tz, 'dd MMM', { locale: de })} -
+								{game.endsAt ? formatInTimeZone(game.endsAt, $tz, 'dd MMM', { locale: de }) : ''}
 							</div>
 							<div>
 								{#if game.pct === 0}

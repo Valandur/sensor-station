@@ -11,6 +11,7 @@ export abstract class BaseWidget<
 	CONFIG extends WidgetConfig = WidgetConfig,
 	PROPS extends WidgetProps = WidgetProps
 > {
+	public abstract readonly type: string;
 	protected readonly logger: BaseLogger;
 	protected readonly services = services;
 

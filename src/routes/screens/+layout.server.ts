@@ -6,8 +6,6 @@ import { getData as getModemData } from '$lib/server/modem/data';
 import { getHoliday } from '$lib/server/holidays';
 import { getScreenUrl, getScreens } from '$lib/server/screen/data';
 import type { Screen } from '$lib/models/Screen';
-import { CalendarWidget } from '$lib/widgets/calendar';
-import type { BaseWidget } from '$lib/models/BaseWidget';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -52,15 +50,6 @@ export const load: LayoutServerLoad = async ({ url, depends }) => {
 	const prevScreen = idx !== null ? getScreenUrl(counter.fit(idx - 1), 'prev') : null;
 	const skipScreen = idx !== null ? (dir === 'next' ? nextScreen : prevScreen) : null;
 
-	const widget: BaseWidget = new CalendarWidget();
-	const comp = widget.getComponent();
-	const props = await widget.getProps(page);
-	if (!props && skipScreen) {
-		redirect(302, skipScreen);
-	} else if (!props) {
-		error(500, { key: 'no', message: 'No' });
-	}
-
 	return {
 		dir,
 		index,
@@ -73,9 +62,6 @@ export const load: LayoutServerLoad = async ({ url, depends }) => {
 		modem,
 		battery,
 		holiday,
-		widget,
-		comp,
-		props,
 		tz: modem?.gps?.tz || modem?.geo?.tz || modem?.cellular.tz || localTz
 	};
 };

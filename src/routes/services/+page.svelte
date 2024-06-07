@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 
 	import PageLayout from '$lib/components/PageLayout.svelte';
+	import { SERVICES } from '$lib/services';
 
 	import type { PageData } from './$types';
 
@@ -64,9 +65,11 @@
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
-										<a href="/services/{service.name}" class="btn btn-theme">
-											<i class="icofont-ui-edit" />
-										</a>
+										{#if SERVICES[service.type].config !== null}
+											<a href="/services/{service.name}" class="btn btn-theme">
+												<i class="icofont-ui-edit" />
+											</a>
+										{/if}
 										<button class="btn btn-danger">
 											<i class="icofont-ui-delete" />
 										</button>

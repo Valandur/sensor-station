@@ -3,6 +3,7 @@ import { isAfter } from 'date-fns/isAfter';
 
 import { CounterType, slice } from '$lib/counter';
 import {
+	WEATHER_WIDGET_TYPE,
 	type WeatherWidgetConfig,
 	type WeatherWidgetProps,
 	type WeatherWidgetType
@@ -15,6 +16,8 @@ const VALID_TYPES = ['daily', 'hourly', 'alerts'];
 const ITEMS_PER_PAGE = 7;
 
 class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> {
+	public override readonly type = WEATHER_WIDGET_TYPE;
+
 	public constructor() {
 		super('WEATHER');
 	}

@@ -1,7 +1,11 @@
 import { error } from '@sveltejs/kit';
 
 import { CounterType, fit, slice } from '$lib/counter';
-import type { CalendarWidgetConfig, CalendarWidgetProps } from '$lib/models/calendar';
+import {
+	CALENDAR_WIDGET_TYPE,
+	type CalendarWidgetConfig,
+	type CalendarWidgetProps
+} from '$lib/models/calendar';
 
 import { BaseWidget, type WidgetValidateFailure } from '../BaseWidget';
 import service from './service';
@@ -9,6 +13,8 @@ import service from './service';
 const ITEMS_PER_PAGE = 6;
 
 class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProps> {
+	public override readonly type = CALENDAR_WIDGET_TYPE;
+
 	public constructor() {
 		super('CALENDAR');
 	}

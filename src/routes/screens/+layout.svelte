@@ -65,8 +65,6 @@
 	}
 </script>
 
-<svelte:component this={data.comp} {...data.props} />
-
 <div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div

@@ -9,13 +9,15 @@ import type { ServiceConfig, ServiceInstance } from '$lib/models/service';
 import { BaseService } from './BaseService';
 import calendar from './calendar/service';
 import weather from './weather/service';
+import epicGames from './epic-games/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
 const PATH = 'data/services.json';
 const SERVICE_MAP: ServiceMap = {
 	[calendar.type]: calendar,
-	[weather.type]: weather
+	[weather.type]: weather,
+	[epicGames.type]: epicGames
 };
 
 class ServicesService extends BaseService {

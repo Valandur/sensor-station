@@ -5,6 +5,7 @@ import { WEATHER_SERVICE_TYPE } from './models/weather';
 import type { ServiceConfig } from './models/service';
 import CalendarServiceConfig from './components/calendar/ServiceConfig.svelte';
 import WeatherServiceConfig from './components/weather/ServiceConfig.svelte';
+import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
 
 type ServiceMap = {
 	[key: string]: { config: typeof SvelteComponent<{ name: string; config: ServiceConfig }> | null };
@@ -16,5 +17,8 @@ export const SERVICES: ServiceMap = {
 	},
 	[WEATHER_SERVICE_TYPE]: {
 		config: WeatherServiceConfig
+	},
+	[EPIC_GAMES_SERVICE_TYPE]: {
+		config: null
 	}
 };

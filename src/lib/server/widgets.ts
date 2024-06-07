@@ -5,20 +5,20 @@ import { error, fail } from '@sveltejs/kit';
 import type { WidgetInstance, WidgetProps } from '$lib/models/widget';
 import type { BaseData } from '$lib/models/BaseData';
 import type { BaseConfig } from '$lib/models/BaseConfig';
-import { CALENDAR_WIDGET_TYPE } from '$lib/models/calendar';
-import { WEATHER_WIDGET_TYPE } from '$lib/models/weather';
 
 import type { BaseWidget } from './BaseWidget';
 import { BaseService } from './BaseService';
 import calendar from './calendar/widget';
 import weather from './weather/widget';
+import epicGames from './epic-games/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
 const WIDGETS_PATH = 'data/widgets.json';
 const WIDGET_MAP: WidgetMap = {
-	[CALENDAR_WIDGET_TYPE]: calendar,
-	[WEATHER_WIDGET_TYPE]: weather
+	[calendar.type]: calendar,
+	[weather.type]: weather,
+	[epicGames.type]: epicGames
 };
 
 class WidgetService extends BaseService {
