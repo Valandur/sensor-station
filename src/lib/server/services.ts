@@ -12,6 +12,8 @@ import network from './network/service';
 import prusa from './prusa/service';
 import tuya from './tuya/service';
 import srf from './srf/service';
+import sbbDepartures from './sbb-departures/service';
+import sbbAlerts from './sbb-alerts/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -23,7 +25,9 @@ const SERVICE_MAP: ServiceMap = {
 	[network.type]: network,
 	[prusa.type]: prusa,
 	[tuya.type]: tuya,
-	[srf.type]: srf
+	[srf.type]: srf,
+	[sbbDepartures.type]: sbbDepartures,
+	[sbbAlerts.type]: sbbAlerts
 };
 
 class ServicesService extends BaseService {

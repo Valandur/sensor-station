@@ -6,12 +6,16 @@ import { WEATHER_SERVICE_TYPE } from './models/weather';
 import { PRUSA_SERVICE_TYPE } from './models/prusa';
 import { TUYA_SERVICE_TYPE } from './models/tuya';
 import { SRF_SERVICE_TYPE } from './models/srf';
+import { SBB_DEPARTURES_SERVICE_TYPE } from './models/sbb-departures';
+import { SBB_ALERTS_SERVICE_TYPE } from './models/sbb-alerts';
 
 import CalendarServiceConfig from './components/calendar/ServiceConfig.svelte';
 import WeatherServiceConfig from './components/weather/ServiceConfig.svelte';
 import PrusaServiceConfig from './components/prusa/ServiceConfig.svelte';
 import TuyaServiceConfig from './components/tuya/ServiceConfig.svelte';
 import SrfServiceConfig from './components/srf/ServiceConfig.svelte';
+import SbbDeparturesServiceConfig from './components/sbb-departures/ServiceConfig.svelte';
+import SbbAlertsServiceConfig from './components/sbb-alerts/ServiceConfig.svelte';
 
 type ServiceMap = {
 	[key: string]: {
@@ -35,5 +39,11 @@ export const SERVICES: ServiceMap = {
 	},
 	[SRF_SERVICE_TYPE]: {
 		config: SrfServiceConfig
+	},
+	[SBB_DEPARTURES_SERVICE_TYPE]: {
+		config: SbbDeparturesServiceConfig
+	},
+	[SBB_ALERTS_SERVICE_TYPE]: {
+		config: SbbAlertsServiceConfig
 	}
 };

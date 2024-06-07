@@ -8,6 +8,8 @@ import { EPIC_GAMES_WIDGET_TYPE } from './models/epic-games';
 import { PRUSA_WIDGET_TYPE } from './models/prusa';
 import { TUYA_WIDGET_TYPE } from './models/tuya';
 import { SRF_WIDGET_TYPE } from './models/srf';
+import { SBB_DEPARTURES_WIDGET_TYPE } from './models/sbb-departures';
+import { SBB_ALERTS_WIDGET_TYPE } from './models/sbb-alerts';
 import CalendarWidgetConfig from './components/calendar/WidgetConfig.svelte';
 import CalendarWidgetMain from './components/calendar/WidgetMain.svelte';
 import WeatherWidgetConfig from './components/weather/WidgetConfig.svelte';
@@ -21,6 +23,10 @@ import TuyaWidgetConfig from './components/tuya/WidgetConfig.svelte';
 import SrfWidgetMain from './components/srf/WidgetMain.svelte';
 import SrfWidgetConfig from './components/srf/WidgetConfig.svelte';
 import SrfWidgetAction from './components/srf/WidgetAction.svelte';
+import SbbDeparturesWidgetMain from './components/sbb-departures/WidgetMain.svelte';
+import SbbDeparturesWidgetConfig from './components/sbb-departures/WidgetConfig.svelte';
+import SbbAlertsWidgetMain from './components/sbb-alerts/WidgetMain.svelte';
+import SbbAlertsWidgetConfig from './components/sbb-alerts/WidgetConfig.svelte';
 
 type WidgetMap = {
 	[key: string]: {
@@ -31,7 +37,6 @@ type WidgetMap = {
 			services: ServiceInstance[];
 		}>;
 		action?: typeof SvelteComponent<{
-			name: string;
 			action: string;
 		}>;
 	};
@@ -62,5 +67,13 @@ export const WIDGETS: WidgetMap = {
 		main: SrfWidgetMain,
 		config: SrfWidgetConfig,
 		action: SrfWidgetAction
+	},
+	[SBB_DEPARTURES_WIDGET_TYPE]: {
+		main: SbbDeparturesWidgetMain,
+		config: SbbDeparturesWidgetConfig
+	},
+	[SBB_ALERTS_WIDGET_TYPE]: {
+		main: SbbAlertsWidgetMain,
+		config: SbbAlertsWidgetConfig
 	}
 };

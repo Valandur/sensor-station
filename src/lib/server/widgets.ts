@@ -13,6 +13,8 @@ import epicGames from './epic-games/widget';
 import prusa from './prusa/widget';
 import tuya from './tuya/widget';
 import srf from './srf/widget';
+import sbbDepartures from './sbb-departures/widget';
+import sbbAlerts from './sbb-alerts/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -23,7 +25,9 @@ const WIDGET_MAP: WidgetMap = {
 	[epicGames.type]: epicGames,
 	[prusa.type]: prusa,
 	[tuya.type]: tuya,
-	[srf.type]: srf
+	[srf.type]: srf,
+	[sbbDepartures.type]: sbbDepartures,
+	[sbbAlerts.type]: sbbAlerts
 };
 
 class WidgetService extends BaseService {

@@ -36,7 +36,7 @@
 		<div class="col">
 			<input
 				id="inputClientSecret"
-				type="text"
+				type="password"
 				name="clientSecret"
 				value={config.clientSecret ?? ''}
 				class="form-control"

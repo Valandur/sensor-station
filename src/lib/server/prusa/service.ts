@@ -25,6 +25,7 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 	): Promise<PrusaServiceData> {
 		return this.cache.with(
 			{
+				key: config.apiUrl,
 				force: forceUpdate,
 				resultCacheTime: config.resultCacheTime,
 				errorCacheTime: config.errorCacheTime
