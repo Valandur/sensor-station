@@ -28,7 +28,11 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 		const games = slice(CounterType.Clamp, data.games.length, page, ITEMS_PER_PAGE, data.games);
 		const prevPage = page > 0 ? page - 1 : 0;
 		const nextPage = fit(CounterType.Clamp, data.games.length, page + 1, ITEMS_PER_PAGE);
-		return { prevPage, nextPage, games };
+		return {
+			prevPage,
+			nextPage,
+			games
+		};
 	}
 
 	public async validate(config: FormData): Promise<EpicGamesWidgetConfig | WidgetValidateFailure> {

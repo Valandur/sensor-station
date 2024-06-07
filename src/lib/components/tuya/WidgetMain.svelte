@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Card from '$lib/components/Card.svelte';
-	import type { PageData } from './$types';
+	import type { TuyaInfo } from '$lib/models/tuya';
 
-	export let data: PageData;
-	$: info = data.info;
+	import Card from '../Card.svelte';
+
+	export let info: TuyaInfo;
 </script>
 
 <div class="h-100 d-flex flex-column justify-content-end">

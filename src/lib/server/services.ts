@@ -12,6 +12,7 @@ import weather from './weather/service';
 import epicGames from './epic-games/service';
 import network from './network/service';
 import prusa from './prusa/service';
+import tuya from './tuya/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -21,7 +22,8 @@ const SERVICE_MAP: ServiceMap = {
 	[weather.type]: weather,
 	[epicGames.type]: epicGames,
 	[network.type]: network,
-	[prusa.type]: prusa
+	[prusa.type]: prusa,
+	[tuya.type]: tuya
 };
 
 class ServicesService extends BaseService {

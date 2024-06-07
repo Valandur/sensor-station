@@ -12,6 +12,7 @@ import calendar from './calendar/widget';
 import weather from './weather/widget';
 import epicGames from './epic-games/widget';
 import prusa from './prusa/widget';
+import tuya from './tuya/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -20,7 +21,8 @@ const WIDGET_MAP: WidgetMap = {
 	[calendar.type]: calendar,
 	[weather.type]: weather,
 	[epicGames.type]: epicGames,
-	[prusa.type]: prusa
+	[prusa.type]: prusa,
+	[tuya.type]: tuya
 };
 
 class WidgetService extends BaseService {

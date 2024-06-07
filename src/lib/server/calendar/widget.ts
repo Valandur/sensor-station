@@ -28,7 +28,11 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 		const events = slice(CounterType.Clamp, data.events.length, page, ITEMS_PER_PAGE, data.events);
 		const prevPage = page > 0 ? page - 1 : 0;
 		const nextPage = fit(CounterType.Clamp, data.events.length, page + 1, ITEMS_PER_PAGE);
-		return { prevPage, nextPage, events };
+		return {
+			prevPage,
+			nextPage,
+			events
+		};
 	}
 
 	public async validate(config: FormData): Promise<CalendarWidgetConfig | WidgetValidateFailure> {

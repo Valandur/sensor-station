@@ -65,7 +65,7 @@
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="name" value={widget.name} />
 									<div class="btn-group">
-										{#if WIDGETS[widget.type].config !== null}
+										{#if !!WIDGETS[widget.type]?.config}
 											<a href="/widgets/{widget.name}" class="btn btn-theme">
 												<i class="icofont-ui-edit" />
 											</a>

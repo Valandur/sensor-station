@@ -6,6 +6,7 @@ import { CALENDAR_WIDGET_TYPE } from './models/calendar';
 import { WEATHER_WIDGET_TYPE } from './models/weather';
 import { EPIC_GAMES_WIDGET_TYPE } from './models/epic-games';
 import { PRUSA_WIDGET_TYPE } from './models/prusa';
+import { TUYA_WIDGET_TYPE } from './models/tuya';
 import CalendarWidgetConfig from './components/calendar/WidgetConfig.svelte';
 import CalendarWidgetMain from './components/calendar/WidgetMain.svelte';
 import WeatherWidgetConfig from './components/weather/WidgetConfig.svelte';
@@ -14,6 +15,8 @@ import EpicGamesWidgetMain from './components/epic-games/WidgetMain.svelte';
 import EpicGamesWidgetConfig from './components/epic-games/WidgetConfig.svelte';
 import PrusaWidgetMain from './components/prusa/WidgetMain.svelte';
 import PrusaWidgetConfig from './components/prusa/WidgetConfig.svelte';
+import TuyaWidgetMain from './components/tuya/WidgetMain.svelte';
+import TuyaWidgetConfig from './components/tuya/WidgetConfig.svelte';
 
 type WidgetMap = {
 	[key: string]: {
@@ -40,5 +43,9 @@ export const WIDGETS: WidgetMap = {
 	[PRUSA_WIDGET_TYPE]: {
 		main: PrusaWidgetMain,
 		config: PrusaWidgetConfig
+	},
+	[TUYA_WIDGET_TYPE]: {
+		main: TuyaWidgetMain,
+		config: TuyaWidgetConfig
 	}
 };

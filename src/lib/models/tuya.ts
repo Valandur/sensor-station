@@ -1,4 +1,57 @@
-import type { TuyaInfo } from '$lib/models/TuyaInfo';
+import type { ServiceConfig, ServiceData } from './service';
+import type { WidgetConfig, WidgetProps } from './widget';
+
+// ---------
+// Widgets
+// ---------
+
+export const TUYA_WIDGET_TYPE = 'tuya';
+
+export interface TuyaWidgetConfig extends WidgetConfig {
+	serviceName: string;
+}
+
+export interface TuyaWidgetProps extends WidgetProps {
+	info: TuyaInfo;
+}
+
+// ---------
+// Service
+// ---------
+
+export const TUYA_SERVICE_TYPE = 'tuya';
+
+export interface TuyaServiceConfig extends ServiceConfig {
+	clientId: string;
+	clientSecret: string;
+	protocolVersion: string;
+	deviceIp: string;
+}
+
+export interface TuyaServiceData extends ServiceData {
+	info: TuyaInfo;
+}
+
+// ---------
+// Others
+// ---------
+
+export interface TuyaInfo {
+	on: boolean;
+	waterTime: number;
+	filterLife: number;
+	pumpTime: number;
+	waterReset: boolean;
+	filterReset: boolean;
+	pumpReset: boolean;
+	uv: boolean;
+	uvRuntime: number;
+	waterLevel: number;
+	waterLack: boolean;
+	ecoMode: number;
+	waterState: boolean;
+	waterEmpty: boolean;
+}
 
 const FILTER_LIFE_MAX = 43200;
 const PUMP_TIME_MAX = 86400;
