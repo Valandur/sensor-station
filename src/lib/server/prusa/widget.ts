@@ -16,7 +16,11 @@ class PrusaWidget extends BaseWidget<PrusaWidgetConfig, PrusaWidgetProps> {
 		super('PRUSA');
 	}
 
-	public async props(config: PrusaWidgetConfig, page: number): Promise<PrusaWidgetProps | null> {
+	public async props(
+		name: string,
+		config: PrusaWidgetConfig,
+		page: number
+	): Promise<PrusaWidgetProps | null> {
 		if (!config.serviceName) {
 			error(400, {
 				key: 'prusa.widget.config',
@@ -32,13 +36,17 @@ class PrusaWidget extends BaseWidget<PrusaWidgetConfig, PrusaWidgetProps> {
 		}
 
 		return {
+			name,
 			job: data.job,
 			printer: data.printer,
 			storage: data.storage
 		};
 	}
 
-	public async validate(config: FormData): Promise<PrusaWidgetConfig | WidgetValidateFailure> {
+	public async validate(
+		name: string,
+		config: FormData
+	): Promise<PrusaWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');

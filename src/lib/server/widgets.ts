@@ -13,6 +13,7 @@ import weather from './weather/widget';
 import epicGames from './epic-games/widget';
 import prusa from './prusa/widget';
 import tuya from './tuya/widget';
+import srf from './srf/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -22,7 +23,8 @@ const WIDGET_MAP: WidgetMap = {
 	[weather.type]: weather,
 	[epicGames.type]: epicGames,
 	[prusa.type]: prusa,
-	[tuya.type]: tuya
+	[tuya.type]: tuya,
+	[srf.type]: srf
 };
 
 class WidgetService extends BaseService {

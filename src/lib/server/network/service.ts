@@ -22,6 +22,7 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 	}
 
 	public get(
+		name: string,
 		config: NetworkServiceConfig,
 		forceUpdate?: boolean | undefined
 	): Promise<NetworkServiceData> {
@@ -62,13 +63,14 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 
 				return {
 					ts: new Date(),
-					interfaces: interfaces
+					name,
+					interfaces
 				};
 			}
 		);
 	}
 
-	public validate(config: FormData): Promise<NetworkServiceConfig> {
+	public validate(name: string, config: FormData): Promise<NetworkServiceConfig> {
 		throw new Error('Method not implemented.');
 	}
 }

@@ -12,18 +12,26 @@ class TuyaWidget extends BaseWidget<TuyaWidgetConfig, TuyaWidgetProps> {
 		super('TUYA');
 	}
 
-	public async props(config: TuyaWidgetConfig, page: number): Promise<TuyaWidgetProps> {
+	public async props(
+		name: string,
+		config: TuyaWidgetConfig,
+		page: number
+	): Promise<TuyaWidgetProps> {
 		if (!config.serviceName) {
 			error(400, { key: 'tuya.widget.config', message: 'Invalid tuya widget config' });
 		}
 
 		const data = await service.getByName(config.serviceName);
 		return {
+			name,
 			info: data.info
 		};
 	}
 
-	public async validate(config: FormData): Promise<TuyaWidgetConfig | WidgetValidateFailure> {
+	public async validate(
+		name: string,
+		config: FormData
+	): Promise<TuyaWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');

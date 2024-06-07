@@ -19,7 +19,11 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 		super('EPIC_GAMES');
 	}
 
-	public async props(config: EpicGamesWidgetConfig, page: number): Promise<EpicGamesWidgetProps> {
+	public async props(
+		name: string,
+		config: EpicGamesWidgetConfig,
+		page: number
+	): Promise<EpicGamesWidgetProps> {
 		if (!config.serviceName) {
 			error(400, { key: 'epic_games.widget.config', message: 'Invalid epic games widget config' });
 		}
@@ -29,13 +33,17 @@ class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetP
 		const prevPage = page > 0 ? page - 1 : 0;
 		const nextPage = fit(CounterType.Clamp, data.games.length, page + 1, ITEMS_PER_PAGE);
 		return {
+			name,
 			prevPage,
 			nextPage,
 			games
 		};
 	}
 
-	public async validate(config: FormData): Promise<EpicGamesWidgetConfig | WidgetValidateFailure> {
+	public async validate(
+		name: string,
+		config: FormData
+	): Promise<EpicGamesWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');

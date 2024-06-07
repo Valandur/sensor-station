@@ -13,6 +13,7 @@ import epicGames from './epic-games/service';
 import network from './network/service';
 import prusa from './prusa/service';
 import tuya from './tuya/service';
+import srf from './srf/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -23,7 +24,8 @@ const SERVICE_MAP: ServiceMap = {
 	[epicGames.type]: epicGames,
 	[network.type]: network,
 	[prusa.type]: prusa,
-	[tuya.type]: tuya
+	[tuya.type]: tuya,
+	[srf.type]: srf
 };
 
 class ServicesService extends BaseService {

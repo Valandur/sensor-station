@@ -1,0 +1,19 @@
+import { error } from '@sveltejs/kit';
+
+import servicesService from '$lib/server/services';
+
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ params }) => {
+	const name = params.name;
+	const instance = servicesService.byName(name);
+	if (!instance) {
+		error(404, { key: 'service.notFound', message: 'Service not found' });
+	}
+
+	return {
+		name: instance.name,
+		type: instance.type,
+		action: params.action
+	};
+};

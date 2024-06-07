@@ -22,6 +22,7 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 	}
 
 	public override async get(
+		name: string,
 		config: CalendarServiceConfig,
 		forceUpdate = false
 	): Promise<CalendarServiceData> {
@@ -75,13 +76,14 @@ class CalendarService extends BaseService<CalendarServiceConfig, CalendarService
 
 				return {
 					ts: new Date(),
+					name,
 					events
 				};
 			}
 		);
 	}
 
-	public async validate(config: FormData): Promise<CalendarServiceConfig> {
+	public async validate(name: string, config: FormData): Promise<CalendarServiceConfig> {
 		const calendarId = config.get('calendarId');
 		if (typeof calendarId !== 'string') {
 			throw new Error('Invalid calendar id');

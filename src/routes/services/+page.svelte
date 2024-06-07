@@ -66,7 +66,7 @@
 									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
 										{#if !!SERVICES[service.type]?.config}
-											<a href="/services/{service.name}" class="btn btn-theme">
+											<a href="/services/{service.name}/config" class="btn btn-theme">
 												<i class="icofont-ui-edit" />
 											</a>
 										{/if}

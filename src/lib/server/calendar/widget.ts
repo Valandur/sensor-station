@@ -19,7 +19,11 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 		super('CALENDAR');
 	}
 
-	public async props(config: CalendarWidgetConfig, page: number): Promise<CalendarWidgetProps> {
+	public async props(
+		name: string,
+		config: CalendarWidgetConfig,
+		page: number
+	): Promise<CalendarWidgetProps> {
 		if (!config.serviceName) {
 			error(400, { key: 'calendar.widget.config', message: 'Invalid calendar widget config' });
 		}
@@ -29,13 +33,17 @@ class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProp
 		const prevPage = page > 0 ? page - 1 : 0;
 		const nextPage = fit(CounterType.Clamp, data.events.length, page + 1, ITEMS_PER_PAGE);
 		return {
+			name,
 			prevPage,
 			nextPage,
 			events
 		};
 	}
 
-	public async validate(config: FormData): Promise<CalendarWidgetConfig | WidgetValidateFailure> {
+	public async validate(
+		name: string,
+		config: FormData
+	): Promise<CalendarWidgetConfig | WidgetValidateFailure> {
 		const serviceName = config.get('serviceName');
 		if (typeof serviceName !== 'string') {
 			throw new Error('Invalid service name');

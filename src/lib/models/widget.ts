@@ -7,6 +7,7 @@ export interface WidgetInstance<CONFIG extends {} = {}> {
 export interface WidgetConfig {}
 
 export interface WidgetProps {
+	name: string;
 	prevPage?: number;
 	nextPage?: number;
 }

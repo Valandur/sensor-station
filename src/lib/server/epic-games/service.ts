@@ -29,6 +29,7 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 	}
 
 	public get(
+		name: string,
 		config: EpicGamesServiceConfig,
 		forceUpdate?: boolean | undefined
 	): Promise<EpicGamesServiceData> {
@@ -104,13 +105,14 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 
 				return {
 					ts: new Date(),
+					name,
 					games: games.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
 				};
 			}
 		);
 	}
 
-	public validate(config: FormData): Promise<EpicGamesServiceConfig> {
+	public validate(name: string, config: FormData): Promise<EpicGamesServiceConfig> {
 		throw new Error('Method not implemented.');
 	}
 }

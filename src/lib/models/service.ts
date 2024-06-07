@@ -1,5 +1,6 @@
 export interface ServiceData {
 	ts: Date;
+	name: string;
 }
 
 export interface ServiceConfig {

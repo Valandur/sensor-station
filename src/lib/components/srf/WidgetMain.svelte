@@ -1,44 +1,26 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { formatDistanceToNow } from 'date-fns';
-	import { de } from 'date-fns/locale';
-	import { goto } from '$app/navigation';
+	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+	import { de } from 'date-fns/locale/de';
 
-	import { paused } from '$lib/stores/screen';
-	import { swipe } from '$lib/swipe';
-	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import type { NewsItem } from '$lib/models/NewsItem';
+	import type { NewsItem } from '$lib/models/srf';
 
-	import type { PageData } from './$types';
+	import EmptyCard from '../EmptyCard.svelte';
 
-	export let data: PageData;
-	$: feedId = data.feedId;
-	$: items = data.items;
-	$: prevPage = data.prevPage;
-	$: nextPage = data.nextPage;
+	export let feedId: string;
+	export let items: NewsItem[];
 
-	let wasPaused = false;
 	let selectedItem: NewsItem | null = null;
 
 	function select(item: NewsItem | null) {
 		selectedItem = item;
-		if (item) {
-			wasPaused = $paused;
-			paused.set(true);
-		} else {
-			paused.set(wasPaused);
-		}
 	}
 </script>
 
-<div
-	class="h-100 d-flex flex-column"
-	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
->
+<div class="h-100 d-flex flex-column">
 	{#if selectedItem}
 		<div class="details" transition:fade={{ duration: 500 }}>
-			<iframe title="Story" src={`/screens/news/${feedId}/${selectedItem.id}`} />
+			<iframe title="Story" src={`/widgets/news/${feedId}/${selectedItem.id}`} />
 			<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
 				<i class="icofont-ui-close" />
 			</button>

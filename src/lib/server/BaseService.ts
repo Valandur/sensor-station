@@ -31,8 +31,8 @@ export abstract class BaseService<
 			});
 		}
 
-		return this.get(instance.config as CONFIG, forceUpdate);
+		return this.get(instance.name, instance.config as CONFIG, forceUpdate);
 	}
-	public abstract get(config: CONFIG, forceUpdate?: boolean): Promise<DATA>;
-	public abstract validate(config: FormData): Promise<CONFIG>;
+	public abstract get(name: string, config: CONFIG, forceUpdate?: boolean): Promise<DATA>;
+	public abstract validate(name: string, config: FormData): Promise<CONFIG>;
 }

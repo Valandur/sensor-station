@@ -21,6 +21,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 	}
 
 	public get(
+		name: string,
 		config: TuyaServiceConfig,
 		forceUpdate?: boolean | undefined
 	): Promise<TuyaServiceData> {
@@ -79,6 +80,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 
 				return {
 					ts: new Date(),
+					name,
 					info
 				};
 			},
@@ -89,7 +91,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 		);
 	}
 
-	public async validate(config: FormData): Promise<TuyaServiceConfig> {
+	public async validate(name: string, config: FormData): Promise<TuyaServiceConfig> {
 		const clientId = config.get('clientId');
 		if (typeof clientId !== 'string') {
 			throw new Error('Invalid client id');

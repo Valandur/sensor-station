@@ -19,6 +19,7 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 	}
 
 	public get(
+		name: string,
 		config: PrusaServiceConfig,
 		forceUpdate?: boolean | undefined
 	): Promise<PrusaServiceData> {
@@ -42,13 +43,14 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 
 				return {
 					ts: new Date(),
+					name,
 					...body
 				};
 			}
 		);
 	}
 
-	public async validate(config: FormData): Promise<PrusaServiceConfig> {
+	public async validate(name: string, config: FormData): Promise<PrusaServiceConfig> {
 		const apiUrl = config.get('apiUrl');
 		if (typeof apiUrl !== 'string') {
 			throw new Error('Invalid api url');
@@ -60,7 +62,10 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 		}
 
 		const statusUrl = `${apiUrl}/api/v1/status`;
-		await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
+		const res = await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
+		if (res.status !== 200) {
+			throw new Error('Invalid config: ' + res.statusText);
+		}
 
 		return {
 			apiUrl,

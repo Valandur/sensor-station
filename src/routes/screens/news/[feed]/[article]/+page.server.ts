@@ -1,4 +1,4 @@
-import { SIMPLE_DETAILS, getArticle } from '$lib/server/news/data';
+import { SIMPLE_DETAILS, getArticle } from '$lib/server/srf/data';
 
 import type { PageServerLoad } from './$types';
 

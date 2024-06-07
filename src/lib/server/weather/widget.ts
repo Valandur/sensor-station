@@ -22,7 +22,11 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 		super('WEATHER');
 	}
 
-	public async props(config: WeatherWidgetConfig, page: number): Promise<WeatherWidgetProps> {
+	public async props(
+		name: string,
+		config: WeatherWidgetConfig,
+		page: number
+	): Promise<WeatherWidgetProps> {
 		if (!config.serviceName || !VALID_TYPES.includes(config.type)) {
 			error(400, { key: 'weather.widget.config', message: 'Invalid weather widget config' });
 		}
@@ -32,6 +36,7 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 		const alerts = slice(CounterType.Wrap, data.alerts.length, page, 1, data.alerts);
 		const hourly = data.hourly.filter((f) => isAfter(f.ts, now)).filter((_, i) => i % 2 === 0);
 		return {
+			name,
 			type: config.type,
 			location: data.location,
 			daily: slice(CounterType.Clamp, data.daily.length, 0, ITEMS_PER_PAGE, data.daily),
@@ -40,7 +45,10 @@ class WeatherWidget extends BaseWidget<WeatherWidgetConfig, WeatherWidgetProps> 
 		};
 	}
 
-	public async validate(config: FormData): Promise<WeatherWidgetConfig | WidgetValidateFailure> {
+	public async validate(
+		name: string,
+		config: FormData
+	): Promise<WeatherWidgetConfig | WidgetValidateFailure> {
 		const type = config.get('type');
 		if (typeof type !== 'string' || !VALID_TYPES.includes(type)) {
 			throw new Error('Invalid type');

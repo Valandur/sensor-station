@@ -33,6 +33,7 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 	}
 
 	public override async get(
+		name: string,
 		config: WeatherServiceConfig,
 		forceUpdate = false
 	): Promise<WeatherServiceData> {
@@ -161,6 +162,7 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 
 				return {
 					ts: new Date(),
+					name,
 					location,
 					alerts,
 					hourly,
@@ -170,7 +172,7 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		);
 	}
 
-	public async validate(config: FormData): Promise<WeatherServiceConfig> {
+	public async validate(name: string, config: FormData): Promise<WeatherServiceConfig> {
 		const useGps = config.get('useGps') === 'on';
 		const useGeo = config.get('useGeo') === 'on';
 
@@ -196,7 +198,10 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 
 		// Test using supplied base cooridnates
 		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
-		await fetch(forecastUrl);
+		const res = await fetch(forecastUrl);
+		if (res.status !== 200) {
+			throw new Error('Invalid config: ' + res.statusText);
+		}
 
 		return {
 			useGps,
