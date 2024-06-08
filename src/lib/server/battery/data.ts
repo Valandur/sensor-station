@@ -33,7 +33,7 @@ export async function getData(forceUpdate = false): Promise<BatteryData> {
 	let device: Device | null = null;
 
 	if (!ENABLED) {
-		throw error(400, {
+		error(400, {
 			message: `Battery is disabled`,
 			key: 'battery.disabled'
 		});
@@ -50,7 +50,7 @@ export async function getData(forceUpdate = false): Promise<BatteryData> {
 					return getMockData();
 				}
 
-				throw error(500, {
+				error(500, {
 					message: `Battery not ready`,
 					key: 'battery.notReady'
 				});

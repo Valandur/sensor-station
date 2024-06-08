@@ -42,7 +42,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `TUYA is disabled`,
 						key: 'tuya.disabled'
 					});
@@ -67,7 +67,7 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 				this.logger.debug(`Status ${JSON.stringify(status)}`);
 
 				if (typeof status !== 'object') {
-					throw error(500, {
+					error(500, {
 						message: 'Could not parse TUYA data',
 						key: 'tuya.status.invalid'
 					});

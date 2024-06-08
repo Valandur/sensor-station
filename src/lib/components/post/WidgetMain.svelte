@@ -1,20 +1,15 @@
 <script lang="ts">
-	import { parseISO } from 'date-fns';
-	import { formatInTimeZone } from 'date-fns-tz/fp';
-	import { de } from 'date-fns/locale';
+	import { de } from 'date-fns/locale/de';
+	import { formatInTimeZone } from 'date-fns-tz';
+	import { parseISO } from 'date-fns/parseISO';
 
-	import { goto } from '$app/navigation';
-
-	import { swipe } from '$lib/swipe';
+	import { tz } from '$lib/stores/tz';
+	import type { PostShipment } from '$lib/models/post';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import Card from '$lib/components/Card.svelte';
 
-	import type { PageData } from './$types';
+	import Card from '../Card.svelte';
 
-	export let data: PageData;
-	$: shipment = data.shipment;
-	$: prevPage = data.prevPage;
-	$: nextPage = data.nextPage;
+	export let shipment: PostShipment;
 
 	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;
@@ -25,11 +20,7 @@
 	}
 </script>
 
-<div
-	class="h-100 d-flex flex-column justify-content-end"
-	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
->
+<div class="h-100 d-flex flex-column justify-content-end">
 	{#if shipment}
 		<div class="row">
 			<div class="col">
@@ -41,7 +32,7 @@
 						{#if shipment.arrival}
 							<div>
 								<i class="icofont-calendar" />
-								{formatInTimeZone(parseISO(shipment.arrival), data.tz, 'dd.MM.yy', { locale: de })}
+								{formatInTimeZone(parseISO(shipment.arrival), $tz, 'dd.MM.yy', { locale: de })}
 							</div>
 						{/if}
 					</svelte:fragment>

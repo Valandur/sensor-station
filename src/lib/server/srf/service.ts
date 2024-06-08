@@ -52,7 +52,7 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `SRF is disabled`,
 						key: 'srf.disabled'
 					});
@@ -161,7 +161,7 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `News is disabled`,
 						key: 'news.disabled'
 					});
@@ -177,7 +177,7 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 				let page = '';
 				const article = feedData.items.find((a) => a.id === articleId);
 				if (!article) {
-					throw error(400, {
+					error(400, {
 						message: `Article ${articleId} in feed ${feedId} not found`,
 						key: 'news.articleNotFound',
 						params: { feedId, articleId }

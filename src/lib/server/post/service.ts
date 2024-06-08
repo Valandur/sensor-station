@@ -1,0 +1,426 @@
+import { decode } from 'html-entities';
+import { error } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
+import makeFetchCookie from 'fetch-cookie';
+
+import {
+	POST_SERVICE_TYPE,
+	type PostServiceConfig,
+	type PostServiceData,
+	type PostShipment,
+	type RecursiveMap
+} from '$lib/models/post';
+import type { ServiceInstance } from '$lib/models/service';
+
+import { BaseService } from '../BaseService';
+
+const ENABLED = env.POST_ENABLED === '1';
+const URL_START =
+	'https://account.post.ch/idp/?targetURL=https%3A%2F%2Fservice.post.ch%2Fekp-web%2Fsecure%2F%3Flang%3Den%26service%3Dekp%26app%3Dekp&lang=en&service=ekp&inIframe=&inMobileApp=';
+const URL_INIT = 'https://login.swissid.ch/api-login/authenticate/init';
+const URL_LOGIN = 'https://login.swissid.ch/api-login/authenticate/basic';
+const URL_ANOMALY = 'https://login.swissid.ch/api-login/anomaly-detection/device-print';
+const FORM_REGEX = /<form .*?action="((?:.|\n)*?)"/i;
+const INPUT_REGEX = /<input .*?name="(.*?)" .*?value="(.*?)".*?\/>/gi;
+const URL_USER = 'https://service.post.ch/ekp-web/api/user';
+const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
+const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/events/';
+const URL_TEXTS =
+	'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
+
+export class PostService extends BaseService<PostServiceConfig, PostServiceData> {
+	public override readonly type = POST_SERVICE_TYPE;
+
+	private hasTexts = false;
+	private shipmentTexts: RecursiveMap = new Map();
+	private fetchCookie = makeFetchCookie(fetch);
+
+	public constructor() {
+		super('POST');
+	}
+
+	public get(
+		{ name, config }: ServiceInstance<PostServiceConfig>,
+		forceUpdate?: boolean | undefined
+	): Promise<PostServiceData> {
+		return this.cache.with(
+			{
+				force: forceUpdate,
+				resultCacheTime: config.resultCacheTime,
+				errorCacheTime: config.errorCacheTime
+			},
+			async () => {
+				if (!ENABLED) {
+					error(400, {
+						message: `Post is disabled`,
+						key: 'post.disabled'
+					});
+				}
+
+				await this.updateTexts();
+
+				let url = URL_START;
+				const resPre = await this.request('pre', url, {
+					headers: { Accept: 'text/html' }
+				});
+
+				const redir = resPre.url;
+				if (!redir) {
+					error(500, {
+						message: 'Missing redirect URL',
+						key: 'post.missingRedirectUrl'
+					});
+				}
+
+				const params = new URL(redir).searchParams.toString();
+				url = `${URL_INIT}?${params}`;
+
+				const resInit = await this.request('init', url, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({})
+				});
+				const bodyInit = await resInit.json();
+
+				this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+				url = `${URL_LOGIN}?${params}`;
+				let authId = bodyInit.tokens.authId;
+				const loginData = { username: config.username, password: config.password };
+
+				const resBasic = await this.request('basic', url, {
+					method: 'POST',
+					headers: {
+						Accept: 'application/json',
+						'Content-Type': 'application/json',
+						authId: authId
+					},
+					body: JSON.stringify(loginData)
+				});
+				const bodyBasic = await resBasic.json();
+
+				authId = bodyBasic.tokens.authId;
+				url = `${URL_ANOMALY}?${params}`;
+
+				const resAnomaly = await this.request('anomaly', url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						authId: authId
+					},
+					body: JSON.stringify({})
+				});
+				const anomalyBody = await resAnomaly.json();
+
+				url = decodeURI(anomalyBody.nextAction.successUrl.trim());
+
+				const resAuth = await this.request('auth', url, {
+					headers: {
+						Accept: 'text/html'
+					}
+				});
+				const authBody = await resAuth.text();
+
+				let rawUrl = FORM_REGEX.exec(authBody)?.[1]?.trim();
+				if (!rawUrl) {
+					error(500, {
+						message: 'Could not find auth form',
+						key: 'post.authFormNotFound'
+					});
+				}
+
+				url = decode(rawUrl);
+
+				const resDone = await this.request('done', url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					}
+				});
+				const doneBody = await resDone.text();
+
+				rawUrl = FORM_REGEX.exec(doneBody)?.[1]?.trim();
+				if (!rawUrl) {
+					error(500, {
+						message: 'Could not find submit form',
+						key: 'post.submitFormNotFound'
+					});
+				}
+
+				url = decode(rawUrl);
+				let matches = INPUT_REGEX.exec(doneBody);
+				const data: Record<string, string> = {};
+				while (matches !== null) {
+					data[matches[1]] = matches[2];
+					matches = INPUT_REGEX.exec(doneBody);
+				}
+
+				await this.request('post', url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					},
+					body: JSON.stringify(data)
+				});
+
+				const resUser = await this.request('user', URL_USER, {
+					headers: {
+						Accept: 'application/json'
+					}
+				});
+				const userBody = await resUser.json();
+
+				url = `${URL_SHIPMENTS}/user/${userBody.userIdentifier}`;
+
+				const resShipmentReq = await this.request('shipments-req', url, {
+					headers: {
+						Accept: 'application/json'
+					}
+				});
+				const shipmentReqBody = await resShipmentReq.json();
+
+				url = `${URL_SHIPMENTS}/result/${shipmentReqBody}`;
+
+				const resShipments = await this.request('shipments', url, {
+					headers: {
+						Accept: 'application/json'
+					}
+				});
+				let shipmentsBody = await resShipments.json();
+
+				// Retry 5 times until the shipment is "DONE"
+				for (let i = 0; i < 5; i++) {
+					if (shipmentsBody.status === 'DONE') {
+						break;
+					}
+					await new Promise<void>((res) => setTimeout(res, 1000));
+					const resShipments = await this.request('shipments', url, {
+						headers: {
+							Accept: 'application/json'
+						}
+					});
+					shipmentsBody = await resShipments.json();
+				}
+
+				if (shipmentsBody.status !== 'DONE') {
+					error(500, {
+						message: 'Shipment query status did not change to DONE',
+						key: 'post.shipmentQueryFailed',
+						params: { status: shipmentsBody.status }
+					});
+				}
+
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const rawShipments: any[] = shipmentsBody.shipments;
+				const shipments: PostShipment[] = rawShipments
+					.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
+					.map(({ shipment }) => {
+						const phys = shipment.physicalProperties;
+						let type = this.getText(shipment.product) || shipment.product;
+						if (shipment.internationalProduct) {
+							const newType = this.getText(shipment.internationalProduct);
+							if (newType) {
+								type = newType;
+							}
+						}
+
+						return {
+							id: shipment.identity,
+							number: shipment.formattedShipmentNumber ?? '-- unbekannt --',
+							type: type,
+							arrival: shipment.calculatedDeliveryDate ?? null,
+							status: null,
+							sender: shipment.debitorDescription ?? null,
+							dims: phys.dimension1
+								? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
+								: null,
+							weight: phys.weight ?? null
+						};
+					});
+
+				for (const shipment of shipments) {
+					const eventsRes = await this.request(
+						`events-${shipment.number}`,
+						URL_EVENTS.replace('$id', shipment.id),
+						{
+							headers: {
+								Accept: 'application/json'
+							}
+						}
+					);
+					const eventsBody = await eventsRes.json();
+					const event = eventsBody[0];
+					if (!event) {
+						continue;
+					}
+
+					shipment.status = this.getText(event.eventCode) || event.eventCode;
+				}
+
+				return {
+					ts: new Date(),
+					name,
+					shipments
+				};
+			}
+		);
+	}
+
+	public async validate(
+		instance: ServiceInstance<PostServiceConfig>,
+		config: FormData
+	): Promise<PostServiceConfig> {
+		const username = config.get('username');
+		if (typeof username !== 'string') {
+			throw new Error('Invalid username');
+		}
+
+		const password = config.get('password');
+		if (typeof password !== 'string') {
+			throw new Error('Invalid password');
+		}
+
+		let url = URL_START;
+		const resPre = await this.request('pre', url, {
+			headers: { Accept: 'text/html' }
+		});
+
+		const redir = resPre.url;
+		if (!redir) {
+			throw new Error('Missing redirect URL');
+		}
+
+		const params = new URL(redir).searchParams.toString();
+		url = `${URL_INIT}?${params}`;
+
+		const resInit = await this.request('init', url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({})
+		});
+		const bodyInit = await resInit.json();
+
+		this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+		url = `${URL_LOGIN}?${params}`;
+		let authId = bodyInit.tokens.authId;
+		if (!authId) {
+			throw new Error('Missing auth ID');
+		}
+
+		const loginData = { username, password };
+
+		const resBasic = await this.request('basic', url, {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authId: authId
+			},
+			body: JSON.stringify(loginData)
+		});
+		const bodyBasic = await resBasic.json();
+
+		authId = bodyBasic.tokens.authId;
+		if (!authId) {
+			throw new Error('Missing auth ID');
+		}
+
+		return {
+			username,
+			password
+		};
+	}
+
+	private async request(name: string, url: string, init: RequestInit) {
+		this.logger.debug(name, init.method ?? 'GET', url);
+		try {
+			const resp = await this.fetchCookie(url, {
+				...init,
+				redirect: 'follow',
+				credentials: 'include'
+			});
+			this.logger.debug(name, 'status:', resp.status);
+			if (resp.status < 200 || resp.status >= 400) {
+				const body = await resp.json();
+				throw new Error(`Invalid status: ${resp.status}: ${body?.title ?? resp.statusText}`);
+			}
+			return resp;
+		} catch (err: unknown) {
+			this.logger.error(name, (err as any).cause ?? err);
+			throw (err as any).cause ?? err;
+		}
+	}
+
+	private async updateTexts() {
+		if (this.hasTexts) {
+			return;
+		}
+
+		const resTexts = await fetch(URL_TEXTS);
+		const bodyTexts = await resTexts.json();
+		const texts: Record<string, string> = bodyTexts['shipment-text--'];
+		for (const [key, value] of Object.entries(texts)) {
+			const splits = key.split('.');
+			let entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+			let split: string | undefined;
+			while ((split = splits.shift())) {
+				let subEntry = entry[1].get(split);
+				if (typeof subEntry === 'undefined') {
+					subEntry = ['', new Map()];
+					entry[1].set(split, subEntry);
+				}
+				entry = subEntry;
+			}
+			entry[0] = value.trim();
+		}
+
+		this.hasTexts = true;
+	}
+
+	private getText(code: string) {
+		const splits = code.split('.');
+		const entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+		const text = this.getRecursiveTexts(entry, splits, 0);
+		return text;
+	}
+
+	private getRecursiveTexts(
+		entry: [string, RecursiveMap],
+		splits: string[],
+		index: number
+	): string | undefined {
+		const split = splits[index];
+		if (!split) {
+			// Find the text -> Either the current entry if there is text, or the first sub entry with key '*' and text (recursivly)
+			let subEntry = entry;
+			while (!subEntry[0]) {
+				const nextSubEntry = subEntry[1].get('*');
+				if (!nextSubEntry) {
+					break;
+				}
+				subEntry = nextSubEntry;
+			}
+			return subEntry[0];
+		}
+
+		const specific = entry[1].get(split);
+		if (specific) {
+			const res = this.getRecursiveTexts(specific, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+		const generic = entry[1].get('*');
+		if (generic) {
+			const res = this.getRecursiveTexts(generic, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+
+		return undefined;
+	}
+}
+
+export default new PostService();

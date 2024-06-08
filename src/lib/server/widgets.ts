@@ -15,6 +15,7 @@ import tuya from './tuya/widget';
 import srf from './srf/widget';
 import sbbDepartures from './sbb-departures/widget';
 import sbbAlerts from './sbb-alerts/widget';
+import post from './post/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -27,7 +28,8 @@ const WIDGET_MAP: WidgetMap = {
 	[tuya.type]: tuya,
 	[srf.type]: srf,
 	[sbbDepartures.type]: sbbDepartures,
-	[sbbAlerts.type]: sbbAlerts
+	[sbbAlerts.type]: sbbAlerts,
+	[post.type]: post
 };
 
 class WidgetService extends BaseService {

@@ -34,7 +34,7 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `Network is disabled`,
 						key: 'network.disabled'
 					});

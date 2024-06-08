@@ -10,6 +10,8 @@ import { TUYA_WIDGET_TYPE } from './models/tuya';
 import { SRF_WIDGET_TYPE } from './models/srf';
 import { SBB_DEPARTURES_WIDGET_TYPE } from './models/sbb-departures';
 import { SBB_ALERTS_WIDGET_TYPE } from './models/sbb-alerts';
+import { POST_WIDGET_TYPE } from './models/post';
+
 import CalendarWidgetConfig from './components/calendar/WidgetConfig.svelte';
 import CalendarWidgetMain from './components/calendar/WidgetMain.svelte';
 import WeatherWidgetConfig from './components/weather/WidgetConfig.svelte';
@@ -27,6 +29,8 @@ import SbbDeparturesWidgetMain from './components/sbb-departures/WidgetMain.svel
 import SbbDeparturesWidgetConfig from './components/sbb-departures/WidgetConfig.svelte';
 import SbbAlertsWidgetMain from './components/sbb-alerts/WidgetMain.svelte';
 import SbbAlertsWidgetConfig from './components/sbb-alerts/WidgetConfig.svelte';
+import PostWidgetMain from './components/post/WidgetMain.svelte';
+import PostWidgetConfig from './components/post/WidgetConfig.svelte';
 
 type WidgetMap = {
 	[key: string]: {
@@ -75,5 +79,9 @@ export const WIDGETS: WidgetMap = {
 	[SBB_ALERTS_WIDGET_TYPE]: {
 		main: SbbAlertsWidgetMain,
 		config: SbbAlertsWidgetConfig
+	},
+	[POST_WIDGET_TYPE]: {
+		main: PostWidgetMain,
+		config: PostWidgetConfig
 	}
 };

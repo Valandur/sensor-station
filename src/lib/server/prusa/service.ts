@@ -32,7 +32,7 @@ class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `Prusa is disabled`,
 						key: 'prusa.disabled'
 					});

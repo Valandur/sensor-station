@@ -39,7 +39,7 @@ class SbbDeparturesService extends BaseService<
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `SBB departures is disabled`,
 						key: 'sbb_departures.disabled'
 					});

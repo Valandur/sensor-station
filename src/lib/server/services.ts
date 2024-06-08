@@ -14,6 +14,7 @@ import tuya from './tuya/service';
 import srf from './srf/service';
 import sbbDepartures from './sbb-departures/service';
 import sbbAlerts from './sbb-alerts/service';
+import post from './post/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -27,7 +28,8 @@ const SERVICE_MAP: ServiceMap = {
 	[tuya.type]: tuya,
 	[srf.type]: srf,
 	[sbbDepartures.type]: sbbDepartures,
-	[sbbAlerts.type]: sbbAlerts
+	[sbbAlerts.type]: sbbAlerts,
+	[post.type]: post
 };
 
 class ServicesService extends BaseService {

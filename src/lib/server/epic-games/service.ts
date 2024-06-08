@@ -41,7 +41,7 @@ class EpicGamesService extends BaseService<EpicGamesServiceConfig, EpicGamesServ
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `Games is disabled`,
 						key: 'games.disabled'
 					});

@@ -38,7 +38,7 @@ class SbbAlertsService extends BaseService<SbbAlertsServiceConfig, SbbAlertsServ
 			},
 			async () => {
 				if (!ENABLED) {
-					throw error(400, {
+					error(400, {
 						message: `SBB alerts is disabled`,
 						key: 'sbb_alerts.disabled'
 					});

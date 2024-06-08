@@ -21,7 +21,7 @@ let uploads: UploadItem[] = [];
 
 export async function getUploads() {
 	if (!ENABLED) {
-		throw error(400, {
+		error(400, {
 			message: `Uploads is disabled`,
 			key: 'uploads.disabled'
 		});

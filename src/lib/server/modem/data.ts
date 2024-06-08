@@ -35,7 +35,7 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 	let device: Device | null = null;
 
 	if (!ENABLED) {
-		throw error(400, {
+		error(400, {
 			message: `Modem is disabled`,
 			key: 'modem.disabled'
 		});
@@ -58,7 +58,7 @@ export async function getData(forceUpdate = false): Promise<ModemData> {
 					return getMockData();
 				}
 
-				throw error(500, {
+				error(500, {
 					message: `Modem not available`,
 					key: 'modem.notAvailable'
 				});

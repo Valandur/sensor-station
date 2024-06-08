@@ -29,7 +29,7 @@ let lastRecordedTs: Date = new Date(0);
 
 export async function getData(forceUpdate = false) {
 	if (!ENABLED) {
-		throw error(400, {
+		error(400, {
 			message: `SBB is disabled`,
 			key: 'sbb.disabled'
 		});
@@ -41,7 +41,7 @@ export async function getData(forceUpdate = false) {
 				return getMockData();
 			}
 
-			throw error(500, {
+			error(500, {
 				message: `Sensor not ready`,
 				key: 'sensor.notReady'
 			});
