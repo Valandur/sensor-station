@@ -15,6 +15,7 @@ import srf from './srf/service';
 import sbbDepartures from './sbb-departures/service';
 import sbbAlerts from './sbb-alerts/service';
 import post from './post/service';
+import gallery from './gallery/service';
 
 type ServiceMap = { [key: string]: BaseService };
 
@@ -29,7 +30,8 @@ const SERVICE_MAP: ServiceMap = {
 	[srf.type]: srf,
 	[sbbDepartures.type]: sbbDepartures,
 	[sbbAlerts.type]: sbbAlerts,
-	[post.type]: post
+	[post.type]: post,
+	[gallery.type]: gallery
 };
 
 class ServicesService extends BaseService {
@@ -57,6 +59,10 @@ class ServicesService extends BaseService {
 
 	public all() {
 		return this.services;
+	}
+
+	public allOfType(type: string) {
+		return [...this.services.values()].filter((s) => s.type === type);
 	}
 
 	public byName<CONFIG extends ServiceConfig = ServiceConfig>(

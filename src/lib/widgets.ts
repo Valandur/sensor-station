@@ -11,6 +11,7 @@ import { SRF_WIDGET_TYPE } from './models/srf';
 import { SBB_DEPARTURES_WIDGET_TYPE } from './models/sbb-departures';
 import { SBB_ALERTS_WIDGET_TYPE } from './models/sbb-alerts';
 import { POST_WIDGET_TYPE } from './models/post';
+import { GALLERY_WIDGET_TYPE } from './models/gallery';
 
 import CalendarWidgetConfig from './components/calendar/WidgetConfig.svelte';
 import CalendarWidgetMain from './components/calendar/WidgetMain.svelte';
@@ -31,6 +32,8 @@ import SbbAlertsWidgetMain from './components/sbb-alerts/WidgetMain.svelte';
 import SbbAlertsWidgetConfig from './components/sbb-alerts/WidgetConfig.svelte';
 import PostWidgetMain from './components/post/WidgetMain.svelte';
 import PostWidgetConfig from './components/post/WidgetConfig.svelte';
+import GalleryWidgetMain from './components/gallery/WidgetMain.svelte';
+import GalleryWidgetConfig from './components/gallery/WidgetConfig.svelte';
 
 type WidgetMap = {
 	[key: string]: {
@@ -83,5 +86,9 @@ export const WIDGETS: WidgetMap = {
 	[POST_WIDGET_TYPE]: {
 		main: PostWidgetMain,
 		config: PostWidgetConfig
+	},
+	[GALLERY_WIDGET_TYPE]: {
+		main: GalleryWidgetMain,
+		config: GalleryWidgetConfig
 	}
 };

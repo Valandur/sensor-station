@@ -6,7 +6,7 @@
 	import { enhance } from '$app/forms';
 
 	export let data: PageData;
-	$: uploads = data.uploads;
+	$: images = data.images;
 
 	let fileInput: HTMLInputElement;
 	let newImg: string | null = null;
@@ -99,7 +99,7 @@
 					</td>
 				</tr>
 
-				{#each uploads as upload, i}
+				{#each images as upload, i}
 					<tr>
 						<td class="m-0 p-1">
 							{#if upload.img.endsWith('.mp4')}
@@ -153,9 +153,9 @@
 									<input type="hidden" name="dir" value="down" />
 									<button
 										class="btn btn-sm"
-										class:btn-outline-theme={i < uploads.length - 1}
-										class:btn-outline-secondary={i === uploads.length - 1}
-										disabled={i === uploads.length - 1}
+										class:btn-outline-theme={i < images.length - 1}
+										class:btn-outline-secondary={i === images.length - 1}
+										disabled={i === images.length - 1}
 									>
 										<i class="icofont-caret-down" />
 									</button>

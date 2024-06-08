@@ -16,6 +16,7 @@ import srf from './srf/widget';
 import sbbDepartures from './sbb-departures/widget';
 import sbbAlerts from './sbb-alerts/widget';
 import post from './post/widget';
+import gallery from './gallery/widget';
 
 type WidgetMap = { [key: string]: BaseWidget };
 
@@ -29,7 +30,8 @@ const WIDGET_MAP: WidgetMap = {
 	[srf.type]: srf,
 	[sbbDepartures.type]: sbbDepartures,
 	[sbbAlerts.type]: sbbAlerts,
-	[post.type]: post
+	[post.type]: post,
+	[gallery.type]: gallery
 };
 
 class WidgetService extends BaseService {

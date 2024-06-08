@@ -1,47 +1,37 @@
 <script lang="ts">
-	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
-	import { goto } from '$app/navigation';
-
-	import { swipe } from '$lib/swipe';
+	import type { GalleryImage } from '$lib/models/gallery';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
+	import { formatInTimeZone } from 'date-fns-tz';
+	import { tz } from '$lib/stores/tz';
 
-	import type { PageData } from './$types';
-
-	export let data: PageData;
-	$: upload = data.upload;
-	$: prevPage = data.prevPage;
-	$: nextPage = data.nextPage;
+	export let image: GalleryImage;
 </script>
 
-<div
-	class="h-100 d-flex flex-column justify-content-end"
-	use:swipe={{ y: 100 }}
-	on:swipe={(e) => goto(e.detail.dir === 'up' ? nextPage : prevPage)}
->
-	{#if upload}
-		<div class="row align-items-end" class:h-100={upload.ratio < 1}>
+<div class="h-100 d-flex flex-column justify-content-end">
+	{#if image}
+		<div class="row align-items-end" class:h-100={image.ratio < 1}>
 			<div
 				class="col mh-100 image-container"
-				class:full={upload.ratio < 1}
-				class:m-1={upload.ratio < 1}
+				class:full={image.ratio < 1}
+				class:m-1={image.ratio < 1}
 			>
-				{#if upload.img.endsWith('.mp4')}
-					<video src={'/data/uploads/' + upload.img} autoplay muted loop />
+				{#if image.img.endsWith('.mp4')}
+					<video src={'/data/gallery/' + image.img} autoplay muted loop />
 				{:else}
-					<img src={'/data/uploads/' + upload.img} alt="Upload" />
+					<img src={'/data/gallery/' + image.img} alt="Upload" />
 				{/if}
 			</div>
 
 			<div
 				class="col mh-100 align-self-stretch d-flex flex-column justify-content-between description"
-				class:ps-2={upload.ratio >= 1}
-				class:text-end={upload.ratio >= 1}
+				class:ps-2={image.ratio >= 1}
+				class:text-end={image.ratio >= 1}
 			>
 				<div class="row">
 					<div class="col">
-						{#each upload.title.split('\n') as line}
+						{#each image.title.split('\n') as line}
 							{line}
 							<br />
 						{/each}
@@ -50,7 +40,7 @@
 
 				<div class="row">
 					<div class="rol">
-						{formatInTimeZone(upload.ts, data.tz, 'dd. MMM yyyy', { locale: de })}
+						{formatInTimeZone(image.ts, $tz, 'dd. MMM yyyy', { locale: de })}
 					</div>
 				</div>
 			</div>
