@@ -134,7 +134,7 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 				const resDone = await this.request('done', url, {
 					method: 'POST',
 					headers: {
-						'Content-Type': 'multipart/form-data'
+						'Content-Type': 'application/x-www-form-urlencoded'
 					}
 				});
 				const doneBody = await resDone.text();
@@ -149,18 +149,20 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 
 				url = decode(rawUrl);
 				let matches = INPUT_REGEX.exec(doneBody);
-				const data: Record<string, string> = {};
+				const data = new URLSearchParams();
 				while (matches !== null) {
-					data[matches[1]] = matches[2];
+					const key = matches[1];
+					const value = matches[2];
+					data.append(key, value);
 					matches = INPUT_REGEX.exec(doneBody);
 				}
 
 				await this.request('post', url, {
 					method: 'POST',
 					headers: {
-						'Content-Type': 'multipart/form-data'
+						'Content-Type': 'application/x-www-form-urlencoded'
 					},
-					body: JSON.stringify(data)
+					body: data
 				});
 
 				const resUser = await this.request('user', URL_USER, {
@@ -342,8 +344,11 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 			});
 			this.logger.debug(name, 'status:', resp.status);
 			if (resp.status < 200 || resp.status >= 400) {
-				const body = await resp.json();
-				throw new Error(`Invalid status: ${resp.status}: ${body?.title ?? resp.statusText}`);
+				const body = await resp.json().catch(() => null);
+				const text = body ? null : await resp.text().catch(() => null);
+				throw new Error(
+					`Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`
+				);
 			}
 			return resp;
 		} catch (err: unknown) {
