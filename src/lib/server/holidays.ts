@@ -1,35 +1,53 @@
-import { isSameDay } from 'date-fns';
 import Holidays, { type HolidaysTypes } from 'date-holidays';
 
-import { BaseLogger } from '$lib/models/BaseLogger';
+import {
+	HOLIDAY_SERVICE_TYPE,
+	type HolidayServiceConfig,
+	type HolidayServiceData,
+	type HolidayServiceInstance
+} from '$lib/models/holiday';
 
-const holidays = new Holidays('CH', 'ZH');
+import { BaseService } from './BaseService';
 
-const logger = new BaseLogger('HOLIDAYS');
+let holiday: HolidaysTypes.Holiday | null = null;
 
-let lastHoliday: HolidaysTypes.Holiday | null = null;
-let lastCheck = new Date(0);
+class HolidayService extends BaseService<HolidayServiceConfig, HolidayServiceData> {
+	public override readonly type = HOLIDAY_SERVICE_TYPE;
 
-export function getHoliday() {
-	const now = new Date();
-	if (isSameDay(lastCheck, now)) {
-		logger.debug('Using cached data');
-		return lastHoliday;
+	public constructor() {
+		super('HOLIDAY');
 	}
 
-	logger.debug('Updating...');
-	const startTime = process.hrtime.bigint();
-
-	try {
-		const holi = holidays.isHoliday(now);
-		lastHoliday = holi ? holi[0] : null;
-		lastCheck = now;
-	} catch (err) {
-		logger.toSvelteError(err);
-	} finally {
-		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-		logger.info('Updated', diffTime, 'ms');
+	public get(
+		{ name, config }: HolidayServiceInstance,
+		forceUpdate?: boolean | undefined
+	): Promise<HolidayServiceData> {
+		return this.cache.with(
+			{
+				key: `${config.country}-${config.state}`,
+				force: forceUpdate,
+				resultCacheTime: config.resultCacheTime,
+				errorCacheTime: config.errorCacheTime
+			},
+			async () => {
+				const holidays = new Holidays(config.country, config.state);
+				const holi = holidays.isHoliday(new Date());
+				holiday = holi ? holi[0] : null;
+				return {
+					ts: new Date(),
+					name,
+					holiday
+				};
+			}
+		);
 	}
 
-	return lastHoliday;
+	public validate(
+		instance: HolidayServiceInstance,
+		config: FormData
+	): Promise<HolidayServiceConfig> {
+		throw new Error('Method not implemented.');
+	}
 }
+
+export default new HolidayService();

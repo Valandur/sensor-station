@@ -1,7 +1,8 @@
 import type {
 	CarouselServiceConfig,
 	CarouselServiceData,
-	CarouselScreen
+	CarouselScreen,
+	CarouselServiceInstance
 } from '$lib/models/carousel';
 import { dirname } from 'path';
 import { mkdir, readFile } from 'fs/promises';
@@ -10,8 +11,6 @@ import widgetService from './widgets';
 import { BaseService } from './BaseService';
 
 const SCREENS_PATH = 'data/carousel/screens.json';
-const SWITCH_INTERVAL = 20000;
-const UPDATE_INTERVAL = 60000;
 
 class CarouselService extends BaseService<CarouselServiceConfig, CarouselServiceData> {
 	public readonly type: string = 'carousel';
@@ -23,16 +22,20 @@ class CarouselService extends BaseService<CarouselServiceConfig, CarouselService
 		super('CAROUSEL');
 	}
 
-	public override async get(): Promise<CarouselServiceData> {
+	public override async get({
+		name,
+		config
+	}: CarouselServiceInstance): Promise<CarouselServiceData> {
 		if (!this.loaded) {
 			await this.load();
 		}
 
 		return {
 			ts: new Date(),
+			name,
 			screens: this.screens,
-			switchInterval: SWITCH_INTERVAL,
-			updateInterval: UPDATE_INTERVAL
+			switchInterval: config.switchInterval * 1000,
+			updateInterval: config.updateInterval * 1000
 		};
 	}
 

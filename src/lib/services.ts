@@ -9,6 +9,7 @@ import { SRF_SERVICE_TYPE } from './models/srf';
 import { SBB_DEPARTURES_SERVICE_TYPE } from './models/sbb-departures';
 import { SBB_ALERTS_SERVICE_TYPE } from './models/sbb-alerts';
 import { POST_SERVICE_TYPE } from './models/post';
+import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 
 import CalendarServiceConfig from './components/calendar/ServiceConfig.svelte';
 import WeatherServiceConfig from './components/weather/ServiceConfig.svelte';
@@ -18,6 +19,7 @@ import SrfServiceConfig from './components/srf/ServiceConfig.svelte';
 import SbbDeparturesServiceConfig from './components/sbb-departures/ServiceConfig.svelte';
 import SbbAlertsServiceConfig from './components/sbb-alerts/ServiceConfig.svelte';
 import PostServiceConfig from './components/post/ServiceConfig.svelte';
+import CarouselServiceConfig from './components/carousel/ServiceConfig.svelte';
 
 type ServiceMap = {
 	[key: string]: {
@@ -29,6 +31,9 @@ type ServiceMap = {
 export const SERVICES: ServiceMap = {
 	[CALENDAR_SERVICE_TYPE]: {
 		config: CalendarServiceConfig
+	},
+	[CAROUSEL_SERVICE_TYPE]: {
+		config: CarouselServiceConfig
 	},
 	[WEATHER_SERVICE_TYPE]: {
 		config: WeatherServiceConfig

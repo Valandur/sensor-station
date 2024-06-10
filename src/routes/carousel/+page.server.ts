@@ -3,9 +3,9 @@ import { error, redirect } from '@sveltejs/kit';
 import { Counter, CounterType } from '$lib/counter';
 import { getData as getBatteryData } from '$lib/server/battery/data';
 import { getData as getModemData } from '$lib/server/modem/data';
-import { getHoliday } from '$lib/server/holidays';
 import carouselService from '$lib/server/carousel';
 import widgetsService from '$lib/server/widgets';
+import holidayService from '$lib/server/holidays';
 import type { BaseProps } from '$lib/models/BaseProps';
 
 import type { PageServerLoad } from './$types';
@@ -29,12 +29,12 @@ export const load: PageServerLoad = async ({ url, depends }) => {
 		page = 0;
 	}
 
-	const [carousel, battery, modem] = await Promise.all([
+	const [carousel, { holiday }, battery, modem] = await Promise.all([
 		carouselService.get(),
+		holidayService.get(),
 		getBatteryData().catch(() => null),
 		getModemData().catch(() => null)
 	]);
-	const holiday = getHoliday();
 
 	depends('carousel');
 
