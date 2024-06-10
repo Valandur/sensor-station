@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { parseISO } from 'date-fns';
-	import { formatInTimeZone } from 'date-fns-tz/fp';
 	import { de } from 'date-fns/locale';
+	import { formatInTimeZone } from 'date-fns-tz';
 
 	import { goto } from '$app/navigation';
 
