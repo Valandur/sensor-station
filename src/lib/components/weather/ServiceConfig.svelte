@@ -1,21 +1,21 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
-	import type { WeatherServiceConfig } from '$lib/models/weather';
+	import type { WeatherServiceInstance } from '$lib/models/weather';
 
-	export let name: string;
-	export let config: WeatherServiceConfig;
+	export let instance: WeatherServiceInstance;
+
+	$: config = instance.config;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
 			applyAction(result)}
 >
-	<input type="hidden" name="name" value={name} />
+	<input type="hidden" name="name" value={instance.name} />
 
 	<div class="row mb-2">
 		<div class="col">

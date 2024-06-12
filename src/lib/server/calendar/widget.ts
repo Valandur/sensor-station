@@ -1,65 +1,107 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 import { clamp } from '$lib/counter';
+import type { WidgetActionFailure } from '$lib/models/widget';
 import {
-	CALENDAR_WIDGET_TYPE,
+	CALENDAR_SERVICE_TYPE,
+	CALENDAR_WIDGET_ACTIONS,
+	type CalendarWidgetAction,
 	type CalendarWidgetConfig,
-	type CalendarWidgetInstance,
-	type CalendarWidgetProps
+	type CalendarWidgetData
 } from '$lib/models/calendar';
 
-import { BaseWidget, type WidgetValidateFailure } from '../BaseWidget';
-import service from './service';
+import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOpations } from '../BaseWidget';
+import serviceManager from '../services';
+import { CalendarService } from './service';
 
-const ITEMS_PER_PAGE = 6;
+export class CalendarWidget extends BaseWidget<
+	CalendarWidgetAction,
+	CalendarWidgetConfig,
+	CalendarWidgetData
+> {
+	public static readonly actions = CALENDAR_WIDGET_ACTIONS;
 
-class CalendarWidget extends BaseWidget<CalendarWidgetConfig, CalendarWidgetProps> {
-	public override readonly type = CALENDAR_WIDGET_TYPE;
-
-	public constructor() {
-		super('CALENDAR');
+	protected generateDefaultConfig(): CalendarWidgetConfig {
+		return {
+			itemsPerPage: 6,
+			service: serviceManager.getInstances(CALENDAR_SERVICE_TYPE)[0]?.name ?? ''
+		};
 	}
 
-	public async props(
-		{ name, config }: CalendarWidgetInstance,
-		page: number
-	): Promise<CalendarWidgetProps> {
-		if (!config.serviceName) {
-			error(400, { key: 'calendar.widget.config', message: 'Invalid calendar widget config' });
+	public async getData(
+		action: CalendarWidgetAction,
+		options: WidgetGetDataOptions
+	): Promise<CalendarWidgetData | null> {
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action,
+				config: this.config,
+				services: serviceManager.getInstances(CALENDAR_SERVICE_TYPE)
+			};
 		}
 
-		const data = await service.getByName(config.serviceName);
+		const service = serviceManager.getByName<CalendarService>(this.config.service);
+
+		const data = await service.getData('', options);
+		if (!data || data.action !== '') {
+			error(400, { key: 'calendar.noData', message: 'No calendar data available' });
+		}
+
+		let page = Number(options.url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
 		const [events, prevPage, nextPage] = clamp(
 			data.events.length,
 			page,
-			ITEMS_PER_PAGE,
+			this.config.itemsPerPage,
 			data.events
 		);
+
 		return {
-			name,
+			ts: new Date(),
+			name: this.name,
+			type: this.type,
+			action,
+			events,
 			prevPage,
-			nextPage,
-			events
+			nextPage
 		};
 	}
 
-	public async validate(
-		instance: CalendarWidgetInstance,
-		config: FormData
-	): Promise<CalendarWidgetConfig | WidgetValidateFailure> {
-		const serviceName = config.get('serviceName');
-		if (typeof serviceName !== 'string') {
-			throw new Error('Invalid service name');
-		}
-		const serviceInstance = this.services.byName(serviceName, true);
-		if (serviceInstance.type !== service.type) {
-			throw new Error('Invalid service type');
+	public async setData(
+		action: CalendarWidgetAction,
+		{ form }: WidgetSetDataOpations
+	): Promise<void | WidgetActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'calendar.action.invalid', message: 'Invalid action' });
 		}
 
-		return {
-			serviceName
+		const service = form.get('service');
+		if (typeof service !== 'string') {
+			return fail(400, {
+				key: 'calendar.servie.invalid',
+				message: 'Invalid calendar widget service'
+			});
+		}
+
+		// Try to get the service to validate it exists
+		serviceManager.getByName(service);
+
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'calendar.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		this.config = {
+			service,
+			itemsPerPage
 		};
 	}
 }
-
-export default new CalendarWidget();

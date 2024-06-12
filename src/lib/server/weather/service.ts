@@ -1,7 +1,8 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { Client } from '@googlemaps/google-maps-services-js';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
 	ICON_MAP,
 	WEATHER_SERVICE_TYPE,
@@ -9,23 +10,28 @@ import {
 	type WeatherServiceConfig,
 	type WeatherServiceData,
 	type WeatherForecast,
-	type WeatherServiceInstance
+	type WeatherServiceInstance,
+	type WeatherServiceAction,
+	WEATHER_SERVICE_ACTIONS
 } from '$lib/models/weather';
 
 import { BaseService } from '../BaseService';
 import { getData } from '../modem/data';
 
-export const WEATHER_TYPE = 'weather';
 const ENABLED = env.WEATHER_ENABLED === '1';
 const GOOGLE_KEY = env.GOOGLE_KEY;
-const CACHE_FILE = 'data/weather.json';
 const FORECAST_URL = `https://api.openweathermap.org/data/3.0/onecall?lang=de&units=metric&exclude=current,minutely`;
 const GEOCODE_URL = `https://api.openweathermap.org/geo/1.0/reverse?limit=3`;
 const ICON_PREFIX = '/icons/';
 const ICON_SUFFIX = '.png';
 
-class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceData> {
+class WeatherService extends BaseService<
+	WeatherServiceConfig,
+	WeatherServiceData,
+	WeatherServiceAction
+> {
 	public override readonly type = WEATHER_SERVICE_TYPE;
+	public override readonly actions = WEATHER_SERVICE_ACTIONS;
 
 	private client = new Client({});
 
@@ -33,10 +39,29 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		super('WEATHER');
 	}
 
-	public override async get(
-		{ name, config }: WeatherServiceInstance,
-		forceUpdate = false
-	): Promise<WeatherServiceData> {
+	public override async getData(
+		instance: WeatherServiceInstance,
+		action: WeatherServiceAction,
+		forceUpdate: boolean = false
+	): Promise<WeatherServiceData | null> {
+		const { config } = instance;
+
+		if (!ENABLED) {
+			error(400, {
+				message: `Weather is disabled`,
+				key: 'weather.disabled'
+			});
+		}
+		if (action === 'config') {
+			return null;
+		}
+		if (typeof config.lat !== 'number' || typeof config.lng !== 'number' || !config.apiKey) {
+			error(400, {
+				key: 'weather.config.invalid',
+				message: 'Invalid weather config'
+			});
+		}
+
 		return this.cache.with(
 			{
 				key: config.lat + '-' + config.lng,
@@ -45,19 +70,6 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 				errorCacheTime: config.errorCacheTime
 			},
 			async (prevData) => {
-				if (!ENABLED) {
-					error(400, {
-						message: `Weather is disabled`,
-						key: 'weather.disabled'
-					});
-				}
-				if (typeof config.lat !== 'number' || typeof config.lng !== 'number' || !config.apiKey) {
-					error(400, {
-						key: 'weather.config',
-						message: 'Invalid weather config'
-					});
-				}
-
 				let location = prevData?.location ?? { lat: config.lat, lng: config.lng };
 				let lat = location.lat;
 				let lng = location.lng;
@@ -162,7 +174,7 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 
 				return {
 					ts: new Date(),
-					name,
+					instance,
 					location,
 					alerts,
 					hourly,
@@ -172,41 +184,40 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 		);
 	}
 
-	public async validate(
+	public async setData(
 		instance: WeatherServiceInstance,
+		action: WeatherServiceAction,
 		config: FormData
-	): Promise<WeatherServiceConfig> {
+	): Promise<void | ServiceActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'weather.action.invalid', message: 'Invalid action' });
+		}
+
 		const useGps = config.get('useGps') === 'on';
 		const useGeo = config.get('useGeo') === 'on';
 
 		const lat = Number(config.get('lat'));
 		if (!isFinite(lat)) {
-			throw new Error('Invalid latitude');
+			return fail(400, { key: 'weather.lat.invalid', message: 'Invalid latitude' });
 		}
 
 		const lng = Number(config.get('lng'));
 		if (!isFinite(lng)) {
-			throw new Error('Invalid longitude');
+			return fail(400, { key: 'weather.lng.invalid', message: 'Invalid longitude' });
 		}
 
 		const minDiff = Number(config.get('minDiff'));
 		if (!isFinite(minDiff)) {
-			throw new Error('Invalid min diff');
+			return fail(400, { key: 'weather.minDiff.invalid', message: 'Invalid min diff' });
 		}
 
 		const apiKey = config.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			throw new Error('Invalid api key');
+			return fail(400, { key: 'weather.apiKey.invalid', message: 'Invalid api key' });
 		}
 
-		// Test using supplied base cooridnates
-		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
-		const res = await fetch(forecastUrl);
-		if (res.status !== 200) {
-			throw new Error('Invalid config: ' + res.statusText);
-		}
-
-		return {
+		// Save config before testing it
+		instance.config = {
 			useGps,
 			useGeo,
 			lat,
@@ -214,6 +225,16 @@ class WeatherService extends BaseService<WeatherServiceConfig, WeatherServiceDat
 			minDiff,
 			apiKey
 		};
+
+		// Test using supplied base cooridnates
+		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
+		const res = await fetch(forecastUrl);
+		if (res.status !== 200) {
+			return fail(400, {
+				key: 'weather.response.statusNot200',
+				message: 'Could not access weather'
+			});
+		}
 	}
 
 	private distance(lat1: number, lng1: number, lat2: number, lng2: number) {

@@ -1,52 +1,66 @@
 <script lang="ts">
-	import { applyAction, enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 
-	import type { CarouselServiceConfig } from '$lib/models/carousel';
+	import type { CarouselServiceConfigData } from '$lib/models/carousel';
 
 	export let name: string;
-	export let config: CarouselServiceConfig;
+	export let data: CarouselServiceConfigData;
+
+	$: widgets = data.widgets;
+	$: screens = data.config.screens;
+
+	let newName = '';
 </script>
 
-<form
-	id="form"
-	method="POST"
-	action="?/save"
-	class="mt-2"
-	use:enhance={() =>
-		({ result }) =>
-			applyAction(result)}
->
-	<input type="hidden" name="name" value={name} />
+<div class="row overflow-auto">
+	<div class="col">
+		<table class="table">
+			<colgroup>
+				<col width="100%" />
+				<col />
+			</colgroup>
 
-	<div class="row mb-2">
-		<label for="inputSwitchInterval" class="col-3 col-form-label">Switch Interval</label>
-		<div class="col">
-			<input
-				id="inputSwitchInterval"
-				type="number"
-				name="switchInterval"
-				value={config.switchInterval ?? '20'}
-				class="form-control"
-			/>
-		</div>
-	</div>
+			<tbody>
+				<tr>
+					<td>
+						<select form="formNew" name="widget" class="form-select" bind:value={newName}>
+							<option value="" selected disabled>---</option>
+							{#each widgets as widget}
+								<option value={widget.name}>{widget.name} [{widget.type}]</option>
+							{/each}
+						</select>
+					</td>
+					<td>
+						<form id="formNew" method="POST" use:enhance>
+							<input type="hidden" name="name" value={name} />
+							<input type="hidden" name="action" value="add" />
+							<button type="submit" class="btn btn-theme" disabled={!newName}>
+								<i class="icofont-ui-add" />
+							</button>
+						</form>
+					</td>
+				</tr>
 
-	<div class="row mb-2">
-		<label for="inputUpdateInterval" class="col-3 col-form-label">Update Interval</label>
-		<div class="col">
-			<input
-				id="inputUpdateInterval"
-				type="number"
-				name="updateInterval"
-				value={config.updateInterval ?? '60'}
-				class="form-control"
-			/>
-		</div>
+				{#each screens as screen, index}
+					<tr>
+						<td>
+							{screen.widget}
+						</td>
+						<td>
+							<form method="POST" use:enhance>
+								<input type="hidden" name="name" value={name} />
+								<input type="hidden" name="action" value="delete" />
+								<input type="hidden" name="index" value={index} />
+								<div class="btn-group">
+									<button class="btn btn-danger">
+										<i class="icofont-ui-delete" />
+									</button>
+								</div>
+							</form>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	</div>
-
-	<div class="row justify-content-end">
-		<div class="col-auto">
-			<button type="submit" class="btn btn-theme mt-2">Save</button>
-		</div>
-	</div>
-</form>
+</div>

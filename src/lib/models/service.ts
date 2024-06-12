@@ -1,6 +1,8 @@
-export interface ServiceData {
-	ts: Date;
+import type { ActionFailure } from '@sveltejs/kit';
+
+export interface ServiceInstance {
 	name: string;
+	type: string;
 }
 
 export interface ServiceConfig {
@@ -8,8 +10,15 @@ export interface ServiceConfig {
 	errorCacheTime?: number;
 }
 
-export interface ServiceInstance<CONFIG extends ServiceConfig = ServiceConfig> {
+export interface ServiceData<ACTION extends string = string> {
+	ts: Date;
 	name: string;
 	type: string;
-	config: CONFIG;
+	action: ACTION;
 }
+
+export type ServiceActionFailure = ActionFailure<{
+	success?: boolean;
+	key: string;
+	message: string;
+}>;

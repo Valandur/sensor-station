@@ -1,39 +1,38 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
+import type { ServiceConfig, ServiceData } from './service';
+import type { WidgetConfig, WidgetData, WidgetInstance } from './widget';
 
 // ---------
 // Widgets
 // ---------
-
-export const CAROUSEL_WIDGET_TYPE = 'carousel';
-
-export type CarouselWidgetInstance = WidgetInstance<CarouselWidgetConfig>;
-
-export interface CarouselWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface CarouselWidgetProps extends WidgetProps {
-	screens: CarouselScreen[];
-	switchInterval: number;
-	updateInterval: number;
-}
 
 // ---------
 // Service
 // ---------
 
 export const CAROUSEL_SERVICE_TYPE = 'carousel';
+export const CAROUSEL_SERVICE_ACTIONS = ['', 'config', 'live'] as const;
 
-export type CarouselServiceInstance = ServiceInstance<CarouselServiceConfig>;
+export type CarouselServiceAction = (typeof CAROUSEL_SERVICE_ACTIONS)[number];
 
-export interface CarouselServiceData extends ServiceData {
-	screens: CarouselScreen[];
+export interface CarouselServiceMainData extends ServiceData<CarouselServiceAction> {
+	action: '' | 'live';
+	index: number;
+	screenWidget: WidgetInstance;
+	screenData: WidgetData;
+	prevScreen: string | null;
+	nextScreen: string | null;
 	switchInterval: number;
 	updateInterval: number;
 }
+export interface CarouselServiceConfigData extends ServiceData<CarouselServiceAction> {
+	action: 'config';
+	config: CarouselServiceConfig;
+	widgets: WidgetInstance[];
+}
+export type CarouselServiceData = CarouselServiceMainData | CarouselServiceConfigData;
 
 export interface CarouselServiceConfig extends ServiceConfig {
+	screens: { widget: string }[];
 	switchInterval: number;
 	updateInterval: number;
 }

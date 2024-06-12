@@ -5,11 +5,14 @@ import widgetService from '$lib/server/widgets';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const widgets = widgetService.all();
-	const types = widgetService.types();
+	const types = widgetService.getTypes();
+	const widgets = widgetService.getInstances();
 	return {
 		types,
-		widgets: widgets.map((w) => ({ name: w.name, type: w.type }))
+		widgets: [...widgets.values()].map((w) => ({
+			name: w.name,
+			type: types.find((t) => t.name === w.type)!
+		}))
 	};
 };
 

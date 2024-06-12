@@ -39,8 +39,8 @@
 						<td>
 							<select form="formNew" name="newType" class="form-select" bind:value={newType}>
 								<option value="" selected disabled>---</option>
-								{#each types as type}
-									<option value={type}>{type}</option>
+								{#each types as { name }}
+									<option value={name}>{name}</option>
 								{/each}
 							</select>
 						</td>
@@ -59,16 +59,23 @@
 								{service.name}
 							</td>
 							<td>
-								{service.type}
+								{service.type.name}
 							</td>
 							<td>
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
-										{#if !!SERVICES[service.type]?.config}
-											<a href="/services/{service.name}/config" class="btn btn-theme">
-												<i class="icofont-ui-edit" />
-											</a>
+										{#if !!SERVICES[service.type.name]}
+											{#if service.type.actions.includes('')}
+												<a href="/services/{service.name}" class="btn btn-primary">
+													<i class="icofont-eye-alt"></i>
+												</a>
+											{/if}
+											{#if service.type.actions.includes('config')}
+												<a href="/services/{service.name}/config" class="btn btn-theme">
+													<i class="icofont-gear"></i>
+												</a>
+											{/if}
 										{/if}
 										<button class="btn btn-danger">
 											<i class="icofont-ui-delete" />

@@ -7,7 +7,7 @@
 	}
 </script>
 
-<div class="row">
+<div class="row z-1">
 	<div class="col-auto">
 		<h1><slot /></h1>
 	</div>

@@ -30,7 +30,7 @@
 <slot />
 
 {#if dev}
-	<div class="dev-note">DEV</div>
+	<div class="dev-note z-2">DEV</div>
 {/if}
 
 {#if showToolbar}
@@ -93,7 +93,7 @@
 	.dev-note {
 		position: fixed;
 		top: 4px;
-		left: 4px;
+		left: 50%;
 		padding: 2px 8px;
 		font-weight: 600;
 		color: var(--bs-black);

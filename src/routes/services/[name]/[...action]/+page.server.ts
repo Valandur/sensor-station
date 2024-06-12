@@ -1,25 +1,54 @@
-import { error } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 
-import servicesService from '$lib/server/services';
+import serviceManager from '$lib/server/services';
 
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url, cookies }) => {
 	const name = params.name;
-	const instance = servicesService.byName(name);
-	if (!instance) {
-		error(404, { key: 'service.notFound', message: `Service ${name} found` });
-	}
-
 	const action = params.action;
-	const props = await servicesService.actionByName(name, action);
-	if (!props) {
-		error(404, { key: 'service.actionNotFound', message: `Service action ${action} not found` });
-	}
+
+	const service = serviceManager.getByName(name);
+	const data = await service.getData(action, { url, cookies });
 
 	return {
-		type: instance.type,
-		action: params.action,
-		props
+		name: service.name,
+		type: service.type,
+		data
 	};
+};
+
+export const actions: Actions = {
+	default: async ({ params, request, url, cookies }) => {
+		const form = await request.formData();
+
+		const name = form.get('name');
+		if (typeof name !== 'string') {
+			return fail(400, { name, error: true, message: 'Invalid service name' });
+		}
+
+		const action = params.action;
+		const service = serviceManager.getByName(name);
+
+		try {
+			const result = await service.setData(action, { url, cookies, form });
+			await serviceManager.save();
+			if (result) {
+				result.data.success = false;
+				return result;
+			} else {
+				return { success: true };
+			}
+		} catch (err) {
+			const msg =
+				err && typeof err === 'object' && 'message' in err
+					? typeof err.message === 'string' ||
+						typeof err.message === 'boolean' ||
+						typeof err.message === 'number'
+						? err.message.toString()
+						: JSON.stringify(err.message)
+					: JSON.stringify(err);
+			return fail(400, { name, error: true, message: msg });
+		}
+	}
 };

@@ -1,23 +1,22 @@
 <script lang="ts">
-	import { isSameDay } from 'date-fns';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
+	import { isSameDay } from 'date-fns/isSameDay';
 
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 	import type { CalendarEvent } from '$lib/models/calendar';
 	import { tz } from '$lib/stores/tz';
 
 	export let events: CalendarEvent[];
-
-	$: mappedEvents = events?.map((event) => ({ ...event, isSameDay: false, isOdd: false }));
-	$: mappedEvents?.forEach((event, i, arr) => {
+	$: formattedEvents = events?.map((event) => ({ ...event, isSameDay: false, isOdd: false }));
+	$: formattedEvents?.forEach((event, i, arr) => {
 		event.isSameDay = i > 0 && isSameDay(arr[i].tsStart, arr[i - 1].tsStart);
 		event.isOdd = event.isSameDay ? arr[i - 1].isOdd : !arr[i - 1]?.isOdd;
 	});
 </script>
 
-{#if mappedEvents.length > 0}
-	{#each mappedEvents as event}
+{#if formattedEvents.length > 0}
+	{#each formattedEvents as event}
 		<div class="row fs-2" class:same={event.isSameDay} class:odd={event.isOdd}>
 			{#if !event.isSameDay}
 				<div class="col-1">{formatInTimeZone(event.tsStart, $tz, 'iii', { locale: de })}</div>

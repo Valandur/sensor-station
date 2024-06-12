@@ -11,7 +11,7 @@
 	export let games: GameItem[];
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end">
+<div class="h-100 d-flex flex-column justify-content-end overflow-hidden">
 	{#if games.length > 0}
 		<div class="row row-cols-2">
 			{#each games as game}
@@ -32,7 +32,7 @@
 						</svelte:fragment>
 
 						<div slot="body" class="p-1">
-							<img src={game.image} class="card-img" alt={game.title} />
+							<img src={'/' + game.image} class="card-img" alt={game.title} />
 
 							<div class="card-img-overlay d-flex flex-column justify-content-end p-1 z-2">
 								<div class="bg-black bg-opacity-75 fw-bold text-white px-1">{game.title}</div>

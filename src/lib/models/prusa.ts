@@ -1,5 +1,5 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
+import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
 
 // ---------
 // Widgets
@@ -13,7 +13,7 @@ export interface PrusaWidgetConfig extends WidgetConfig {
 	serviceName: string;
 }
 
-export interface PrusaWidgetProps extends WidgetProps {
+export interface PrusaWidgetProps extends WidgetData {
 	job: JobInfo;
 	storage: StorageInfo;
 	printer: PrinterInfo;

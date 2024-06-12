@@ -1,5 +1,5 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
+import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
 
 // ---------
 // Widgets
@@ -16,7 +16,7 @@ export interface WeatherWidgetConfig extends WidgetConfig {
 	serviceName: string;
 }
 
-export interface WeatherWidgetProps extends WidgetProps {
+export interface WeatherWidgetProps extends WidgetData {
 	type: WeatherWidgetType;
 	location: WeatherLocation;
 	daily: WeatherForecast[];
@@ -29,7 +29,9 @@ export interface WeatherWidgetProps extends WidgetProps {
 // ---------
 
 export const WEATHER_SERVICE_TYPE = 'weather';
+export const WEATHER_SERVICE_ACTIONS = ['', 'config'];
 
+export type WeatherServiceAction = (typeof WEATHER_SERVICE_ACTIONS)[number];
 export type WeatherServiceInstance = ServiceInstance<WeatherServiceConfig>;
 
 export interface WeatherServiceData extends ServiceData {

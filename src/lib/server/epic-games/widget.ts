@@ -1,60 +1,106 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 import { clamp } from '$lib/counter';
+import type { WidgetActionFailure } from '$lib/models/widget';
 import {
-	EPIC_GAMES_WIDGET_TYPE,
+	EPIC_GAMES_SERVICE_TYPE,
+	EPIC_GAMES_WIDGET_ACTIONS,
 	type EpicGamesWidgetConfig,
-	type EpicGamesWidgetInstance,
-	type EpicGamesWidgetProps
+	type EpicGamesWidgetData,
+	type EpicGamesWidgetAction
 } from '$lib/models/epic-games';
 
-import { BaseWidget, type WidgetValidateFailure } from '../BaseWidget';
-import service from './service';
+import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOpations } from '../BaseWidget';
+import serviceManager from '../services';
+import type { EpicGamesService } from './service';
 
-const ITEMS_PER_PAGE = 2;
+export class EpicGamesWidget extends BaseWidget<
+	EpicGamesWidgetAction,
+	EpicGamesWidgetConfig,
+	EpicGamesWidgetData
+> {
+	public static readonly actions = EPIC_GAMES_WIDGET_ACTIONS;
 
-class EpicGamesWidget extends BaseWidget<EpicGamesWidgetConfig, EpicGamesWidgetProps> {
-	public override readonly type = EPIC_GAMES_WIDGET_TYPE;
-
-	public constructor() {
-		super('EPIC_GAMES');
+	protected generateDefaultConfig(): EpicGamesWidgetConfig {
+		return {
+			itemsPerPage: 2,
+			service: serviceManager.getInstances(EPIC_GAMES_SERVICE_TYPE)[0]?.name ?? ''
+		};
 	}
 
-	public async props(
-		{ name, config }: EpicGamesWidgetInstance,
-		page: number
-	): Promise<EpicGamesWidgetProps> {
-		if (!config.serviceName) {
-			error(400, { key: 'epic_games.widget.config', message: 'Invalid epic games widget config' });
+	public async getData(
+		action: EpicGamesWidgetAction,
+		options: WidgetGetDataOptions
+	): Promise<EpicGamesWidgetData> {
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action,
+				config: this.config,
+				services: serviceManager.getInstances(EPIC_GAMES_SERVICE_TYPE)
+			};
 		}
 
-		const data = await service.getByName(config.serviceName);
-		const [games, prevPage, nextPage] = clamp(data.games.length, page, ITEMS_PER_PAGE, data.games);
+		const service = serviceManager.getByName<EpicGamesService>(this.config.service);
+
+		const data = await service.getData('', options);
+		if (!data || data.action !== '') {
+			error(400, { key: 'epicGames.noData', message: 'No calendar data available' });
+		}
+
+		let page = Number(options.url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [games, prevPage, nextPage] = clamp(
+			data.games.length,
+			page,
+			this.config.itemsPerPage,
+			data.games
+		);
 		return {
-			name,
+			ts: new Date(),
+			name: this.name,
+			type: this.type,
+			action,
 			prevPage,
 			nextPage,
 			games
 		};
 	}
 
-	public async validate(
-		instance: EpicGamesWidgetInstance,
-		config: FormData
-	): Promise<EpicGamesWidgetConfig | WidgetValidateFailure> {
-		const serviceName = config.get('serviceName');
-		if (typeof serviceName !== 'string') {
-			throw new Error('Invalid service name');
-		}
-		const serviceInstance = this.services.byName(serviceName, true);
-		if (serviceInstance.type !== service.type) {
-			throw new Error('Invalid service type');
+	public async setData(
+		action: EpicGamesWidgetAction,
+		{ form }: WidgetSetDataOpations
+	): Promise<void | WidgetActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'epicGames.action.invalid', message: 'Invalid action' });
 		}
 
-		return {
-			serviceName
+		const service = form.get('service');
+		if (typeof service !== 'string') {
+			return fail(400, {
+				key: 'calendar.servie.invalid',
+				message: 'Invalid calendar widget service'
+			});
+		}
+
+		// Try to get the service to validate it exists
+		serviceManager.getByName(service);
+
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'calendar.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		this.config = {
+			service,
+			itemsPerPage
 		};
 	}
 }
-
-export default new EpicGamesWidget();

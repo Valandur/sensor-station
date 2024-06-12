@@ -1,26 +1,22 @@
 <script lang="ts">
 	import { beforeNavigate, goto, invalidate } from '$app/navigation';
-	import { browser } from '$app/environment';
 	import { fade } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { navigating } from '$app/stores';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { de } from 'date-fns/locale';
 
+	import type { CarouselServiceMainData } from '$lib/models/carousel';
 	import { paused, progress, reset, start } from '$lib/stores/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
 	import { time } from '$lib/stores/time';
 	import { tz } from '$lib/stores/tz';
 	import { WIDGETS } from '$lib/widgets';
 
-	import type { PageData } from './$types';
-
-	export let data: PageData;
+	export let data: CarouselServiceMainData;
 	$: index = data.index;
-	$: screen = data.screen;
-	$: modem = data.modem;
-	$: battery = data.battery;
-	$: holiday = data.holiday;
+	$: screenWidget = data.screenWidget;
+	$: screenData = data.screenData;
 	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
 	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
 	$: secondStr = formatInTimeZone($time, $tz, 'ss', { locale: de });
@@ -29,7 +25,7 @@
 
 	let timer: ReturnType<typeof setInterval> | null = null;
 
-	$: if (browser) {
+	onMount(() => {
 		reset();
 		if (timer) {
 			clearInterval(timer);
@@ -41,15 +37,20 @@
 		} else if ($paused) {
 			timer = setInterval(() => invalidate('carousel'), data.updateInterval);
 		}
-	}
-
-	beforeNavigate(() => reset(false));
-	onDestroy(() => {
+	});
+	beforeNavigate((nav) => {
+		reset(false);
 		if (timer) {
 			clearInterval(timer);
 			timer = null;
 		}
+	});
+	onDestroy(() => {
 		reset();
+		if (timer) {
+			clearInterval(timer);
+			timer = null;
+		}
 	});
 
 	function togglePause() {
@@ -57,24 +58,15 @@
 	}
 
 	function onSwipe(e: SwipeEvent) {
-		console.log(e.detail.dir, data.nextPage);
 		if (e.detail.dir === 'left' && data.nextScreen) {
 			goto(data.nextScreen);
 		} else if (e.detail.dir === 'right' && data.prevScreen) {
 			goto(data.prevScreen);
-		} else if (e.detail.dir === 'up' && data.nextPage) {
-			goto(data.nextPage);
-		} else if (e.detail.dir === 'down' && data.prevPage) {
-			goto(data.prevPage);
 		}
 	}
 </script>
 
-<div
-	class="container-fluid vh-100 d-flex flex-column"
-	use:swipe={{ x: 200, y: 100 }}
-	on:swipe={onSwipe}
->
+<div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
 	<div class="row flex-nowrap mb-2 p-1">
 		<div
 			role="presentation"
@@ -90,7 +82,7 @@
 
 		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
 			<div class="row icons flex-nowrap justify-content-end">
-				{#if modem?.cellular.operator}
+				<!--{#if modem?.cellular.operator}
 					<div class="col-auto">
 						<i class="icofont-globe" />
 						{modem.cellular.operator.split(' ', 2)[0]}
@@ -135,7 +127,7 @@
 					<div class="col-auto">
 						<i class="icofont-plugin" />
 					</div>
-				{/if}
+				{/if}-->
 
 				{#if $paused}
 					<div class="col-auto">
@@ -149,10 +141,10 @@
 			</div>
 
 			<div class="row align-items-center flex-nowrap">
-				{#if holiday}
+				<!--{#if holiday}
 					<div class="col-auto text-nowrap m-0">{holiday.name}</div>
 					<div class="col-auto m-0">•</div>
-				{/if}
+				{/if}-->
 				<div class="col-auto fw-bold text-white text-nowrap m-0">{dateSub}</div>
 			</div>
 		</div>
@@ -161,9 +153,15 @@
 	<div class="row flex-fill position-relative">
 		{#key index}
 			<div class="h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
-				{#if screen.widget}
-					{@const comps = WIDGETS[screen.widget.type]}
-					<svelte:component this={comps.main} {...data.props} />
+				{#if screenWidget}
+					{@const comp = WIDGETS[screenWidget.type]}
+					<svelte:component
+						this={comp}
+						name={screenWidget.name}
+						data={screenData}
+						form={null}
+						isEmbedded
+					/>
 				{:else}
 					<p class="alert alert-info m-2">
 						There are no screens setup! Check the

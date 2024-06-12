@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
-import type { Screen } from '$lib/models/Screen';
+import type { Screen } from '$lib/$¨£££££/Screen';
 
 const SCREENS_PATH = 'data/screens.json';
 

@@ -1,20 +1,31 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
+import type { WidgetConfig, WidgetData } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const EPIC_GAMES_WIDGET_TYPE = 'epic-games';
+export const EPIC_GAMES_WIDGET_ACTIONS = ['', 'config'] as const;
 
-export type EpicGamesWidgetInstance = WidgetInstance<EpicGamesWidgetConfig>;
+export type EpicGamesWidgetAction = (typeof EPIC_GAMES_WIDGET_ACTIONS)[number];
+
+export interface EpicGamesWidgetMainData extends WidgetData<EpicGamesWidgetAction> {
+	action: '';
+	games: GameItem[];
+	prevPage: number;
+	nextPage: number;
+}
+export interface EpicGamesWidgetConfigData extends WidgetData<EpicGamesWidgetAction> {
+	action: 'config';
+	config: EpicGamesWidgetConfig;
+	services: ServiceInstance[];
+}
+export type EpicGamesWidgetData = EpicGamesWidgetMainData | EpicGamesWidgetConfigData;
 
 export interface EpicGamesWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface EpicGamesWidgetProps extends WidgetProps {
-	games: GameItem[];
+	service: string;
+	itemsPerPage: number;
 }
 
 // ---------
@@ -22,10 +33,11 @@ export interface EpicGamesWidgetProps extends WidgetProps {
 // ---------
 
 export const EPIC_GAMES_SERVICE_TYPE = 'epic-games';
+export const EPIC_GAMES_SERVICE_ACTIONS = [''] as const;
 
-export type EpicGamesServiceInstance = ServiceInstance<EpicGamesServiceConfig>;
+export type EpicGamesServiceAction = (typeof EPIC_GAMES_SERVICE_ACTIONS)[number];
 
-export interface EpicGamesServiceData extends ServiceData {
+export interface EpicGamesServiceData extends ServiceData<EpicGamesServiceAction> {
 	games: GameItem[];
 }
 

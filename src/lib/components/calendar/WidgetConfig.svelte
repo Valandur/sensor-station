@@ -1,20 +1,15 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { ServiceInstance } from '$lib/models/service';
-	import { CALENDAR_SERVICE_TYPE, type CalendarWidgetConfig } from '$lib/models/calendar';
+	import type { CalendarWidgetConfigData } from '$lib/models/calendar';
 
 	export let name: string;
-	export let config: CalendarWidgetConfig;
-	export let services: ServiceInstance[];
-
-	$: validServices = services.filter((s) => s.type === CALENDAR_SERVICE_TYPE);
+	export let data: CalendarWidgetConfigData;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
@@ -25,11 +20,27 @@
 	<div class="row mb-2">
 		<label for="inputService" class="col-3 col-form-label">Service</label>
 		<div class="col">
-			<select id="inputService" name="serviceName" class="form-select" value={config.serviceName}>
-				{#each validServices as srv}
-					<option value={srv.name}>{srv.name}</option>
+			<select id="inputService" name="service" class="form-select" value={data.config.service}>
+				{#each data.services as service}
+					<option value={service.name}>{service.name}</option>
 				{/each}
 			</select>
+		</div>
+	</div>
+
+	<div class="row mb-2">
+		<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
+		<div class="col">
+			<input
+				id="inputItemsPerPage"
+				type="number"
+				name="itemsPerPage"
+				min="1"
+				max="100"
+				step="1"
+				value={data.config.itemsPerPage}
+				class="form-control"
+			/>
 		</div>
 	</div>
 

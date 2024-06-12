@@ -1,13 +1,21 @@
-export interface WidgetInstance<CONFIG extends WidgetConfig = WidgetConfig> {
+import type { ActionFailure } from '@sveltejs/kit';
+
+export interface WidgetInstance {
 	name: string;
 	type: string;
-	config: CONFIG;
 }
 
 export interface WidgetConfig {}
 
-export interface WidgetProps {
+export interface WidgetData<ACTION extends string = string> {
+	ts: Date;
 	name: string;
-	prevPage?: number;
-	nextPage?: number;
+	type: string;
+	action: ACTION;
 }
+
+export type WidgetActionFailure = ActionFailure<{
+	success?: boolean;
+	key: string;
+	message: string;
+}>;

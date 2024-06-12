@@ -4,8 +4,10 @@ import { env } from '$env/dynamic/private';
 
 import {
 	NETWORK_SERVICE_TYPE,
+	NETWORK_SERVICE_ACTIONS,
 	type NetworkAddress,
 	type NetworkInterface,
+	type NetworkServiceAction,
 	type NetworkServiceConfig,
 	type NetworkServiceData,
 	type NetworkServiceInstance
@@ -15,22 +17,28 @@ import { BaseService } from '../BaseService';
 
 const ENABLED = env.NETWORK_ENABLED === '1';
 
-class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceData> {
+class NetworkService extends BaseService<
+	NetworkServiceConfig,
+	NetworkServiceData,
+	NetworkServiceAction
+> {
 	public override readonly type = NETWORK_SERVICE_TYPE;
+	public override readonly actions = NETWORK_SERVICE_ACTIONS;
 
 	public constructor() {
 		super('NETWORK');
 	}
 
-	public get(
-		{ name, config }: NetworkServiceInstance,
-		forceUpdate?: boolean | undefined
+	public getData(
+		instance: NetworkServiceInstance,
+		action: NetworkServiceAction,
+		forceRefresh: boolean = false
 	): Promise<NetworkServiceData> {
 		return this.cache.with(
 			{
-				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				force: forceRefresh,
+				resultCacheTime: instance.config.resultCacheTime,
+				errorCacheTime: instance.config.errorCacheTime
 			},
 			async () => {
 				if (!ENABLED) {
@@ -63,18 +71,19 @@ class NetworkService extends BaseService<NetworkServiceConfig, NetworkServiceDat
 
 				return {
 					ts: new Date(),
-					name,
+					instance,
 					interfaces
 				};
 			}
 		);
 	}
 
-	public validate(
+	public setData(
 		instance: NetworkServiceInstance,
-		config: FormData
-	): Promise<NetworkServiceConfig> {
-		throw new Error('Method not implemented.');
+		action: NetworkServiceAction,
+		newData: FormData
+	): Promise<void> {
+		throw new Error('Not supported');
 	}
 }
 

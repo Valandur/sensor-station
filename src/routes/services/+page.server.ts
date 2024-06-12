@@ -1,15 +1,19 @@
 import { fail } from '@sveltejs/kit';
 
-import servicesService from '$lib/server/services';
+import servicesManager from '$lib/server/services';
 
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const services = servicesService.all();
-	const types = servicesService.types();
+	const types = servicesManager.getTypes();
+	const services = servicesManager.getInstances();
+
 	return {
 		types,
-		services: [...services.values()].map((s) => ({ name: s.name, type: s.type }))
+		services: [...services.values()].map((s) => ({
+			name: s.name,
+			type: types.find((t) => t.name === s.type)!
+		}))
 	};
 };
 
@@ -28,7 +32,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await servicesService.add(newName, newType);
+			await servicesManager.add(newName, newType);
 		} catch (err) {
 			if (err && typeof err === 'object' && 'status' in err) {
 				return err;
@@ -44,6 +48,6 @@ export const actions: Actions = {
 			return fail(400, { name: 'invalid' });
 		}
 
-		await servicesService.remove(name);
+		await servicesManager.remove(name);
 	}
 };

@@ -2,117 +2,31 @@ import { dirname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { error, fail } from '@sveltejs/kit';
 
-import type { WidgetInstance, WidgetProps } from '$lib/models/widget';
-import type { ServiceConfig, ServiceData } from '$lib/models/service';
+import { BaseLogger } from '$lib/models/BaseLogger';
+import { CALENDAR_WIDGET_TYPE } from '$lib/models/calendar';
 
 import type { BaseWidget } from './BaseWidget';
-import { BaseService } from './BaseService';
-import calendar from './calendar/widget';
-import weather from './weather/widget';
-import epicGames from './epic-games/widget';
-import prusa from './prusa/widget';
-import tuya from './tuya/widget';
-import srf from './srf/widget';
-import sbbDepartures from './sbb-departures/widget';
-import sbbAlerts from './sbb-alerts/widget';
-import post from './post/widget';
-import gallery from './gallery/widget';
+import { CalendarWidget } from './calendar/widget';
+import { EPIC_GAMES_WIDGET_TYPE } from '$lib/models/epic-games';
+import { EpicGamesWidget } from './epic-games/widget';
 
-type WidgetMap = { [key: string]: BaseWidget };
+type WidgetConstructor = new (name: string, type: string, config?: any) => BaseWidget;
+type WidgetMap = { [key: string]: WidgetConstructor & { actions: Readonly<string[]> } };
 
 const WIDGETS_PATH = 'data/widgets.json';
-const WIDGET_MAP: WidgetMap = {
-	[calendar.type]: calendar,
-	[weather.type]: weather,
-	[epicGames.type]: epicGames,
-	[prusa.type]: prusa,
-	[tuya.type]: tuya,
-	[srf.type]: srf,
-	[sbbDepartures.type]: sbbDepartures,
-	[sbbAlerts.type]: sbbAlerts,
-	[post.type]: post,
-	[gallery.type]: gallery
+const WIDGETS: WidgetMap = {
+	[CALENDAR_WIDGET_TYPE]: CalendarWidget,
+	[EPIC_GAMES_WIDGET_TYPE]: EpicGamesWidget
 };
 
-class WidgetService extends BaseService {
-	public readonly type: string = 'widgets';
-
+class WidgetManager {
 	private loaded: boolean = false;
-	private widgets: WidgetInstance[] = [];
-	private widgetMap: Map<string, WidgetInstance> = new Map();
+	private logger: BaseLogger = new BaseLogger('WIDGETS');
+	private widgets: Map<string, BaseWidget> = new Map();
 
-	public constructor() {
-		super('WIDGETS');
-	}
+	public constructor() {}
 
-	public override async get(): Promise<ServiceData> {
-		await this.load();
-		return { ts: new Date(), name: 'widgets' };
-	}
-
-	public override validate(): Promise<ServiceConfig> {
-		throw new Error('Not supported');
-	}
-
-	public async getProps(widget: WidgetInstance, page: number): Promise<WidgetProps | null> {
-		const w = WIDGET_MAP[widget.type];
-		if (!w) {
-			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });
-		}
-
-		const props = await w.props(widget, page);
-		return props;
-	}
-
-	public async getAction(widget: WidgetInstance, action: string): Promise<WidgetProps | null> {
-		const w = WIDGET_MAP[widget.type];
-		if (!w) {
-			error(400, { key: 'widgets.invalid', message: `Invalid widget type ${widget.type}` });
-		}
-
-		const props = await w.action(widget, action);
-		return props;
-	}
-
-	public types() {
-		return Object.keys(WIDGET_MAP);
-	}
-
-	public all() {
-		return this.widgets;
-	}
-
-	public byName(name: string) {
-		return this.widgetMap.get(name);
-	}
-
-	public async add(name: string, type: string) {
-		if (this.widgetMap.has(name)) {
-			throw fail(400, { name: 'duplicate' });
-		}
-
-		const instance: WidgetInstance = { name, type, config: {} };
-		this.widgetMap.set(name, instance);
-		this.widgets.push(instance);
-
-		await this.save();
-	}
-
-	public async set(widget: WidgetInstance, configData: FormData) {
-		const srv = WIDGET_MAP[widget.type];
-		widget.config = await srv.validate(widget, configData);
-
-		await this.save();
-
-		return widget;
-	}
-
-	public async remove(name: string) {
-		this.widgetMap.delete(name);
-		this.widgets = this.widgets.filter((w) => w.name !== name);
-	}
-
-	private async load() {
+	public async load() {
 		if (this.loaded) {
 			return;
 		}
@@ -123,32 +37,73 @@ class WidgetService extends BaseService {
 		await mkdir(dirname(WIDGETS_PATH), { recursive: true });
 		const rawWidgets = JSON.parse(await readFile(WIDGETS_PATH, 'utf-8').catch(() => '[]'));
 
-		const newWidgetMap: Map<string, WidgetInstance> = new Map();
+		const widgets: Map<string, BaseWidget> = new Map();
 		for (const rawWidget of rawWidgets) {
-			newWidgetMap.set(rawWidget.name, {
-				name: rawWidget.name,
-				type: rawWidget.type,
-				config: rawWidget.config
-			});
+			const constr = WIDGETS[rawWidget.type];
+			const service = new constr(rawWidget.name, rawWidget.type, rawWidget.config);
+			widgets.set(rawWidget.name, service);
 		}
 
-		this.widgetMap = newWidgetMap;
-		this.widgets = [...newWidgetMap.values()];
+		this.widgets = widgets;
 		this.loaded = true;
 
 		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-		this.logger.info('Loaded', rawWidgets.length, 'widgets', diffTime, 'ms');
+		this.logger.info('Loaded', this.widgets.size, 'widgets', diffTime, 'ms');
 	}
 
-	private async save() {
+	public async add(name: string, type: string) {
+		if (this.widgets.has(name)) {
+			throw fail(400, { key: 'widgets.duplicate', message: 'Duplicate widget name' });
+		}
+
+		const constr = WIDGETS[type];
+		const widget = new constr(name, type);
+		this.widgets.set(name, widget);
+
+		await this.save();
+	}
+
+	public async remove(name: string) {
+		this.widgets.delete(name);
+
+		await this.save();
+	}
+
+	public async save() {
 		this.logger.debug('Saving...');
 		const startTime = process.hrtime.bigint();
 
-		await writeFile(WIDGETS_PATH, JSON.stringify(this.widgets), 'utf-8');
+		const widgets = [...this.widgets.values()].map((s) => ({
+			name: s.name,
+			type: s.type,
+			config: s.config
+		}));
+		await writeFile(WIDGETS_PATH, JSON.stringify(widgets), 'utf-8');
 
 		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-		this.logger.info('Saved', this.widgets.length, 'screens', diffTime, 'ms');
+		this.logger.info('Saved', this.widgets.size, 'widgets', diffTime, 'ms');
+	}
+
+	public getTypes() {
+		return Object.entries(WIDGETS).map(([type, clazz]) => ({
+			name: type,
+			actions: clazz.actions
+		}));
+	}
+
+	public getInstances(type?: string) {
+		return [...this.widgets.values()]
+			.filter((i) => !type || i.type === type)
+			.map((s) => ({ name: s.name, type: s.type }));
+	}
+
+	public getByName<WIDGET extends BaseWidget = BaseWidget>(name: string): WIDGET {
+		const widget = this.widgets.get(name);
+		if (!widget) {
+			error(404, { key: 'widgets.notFound', message: `Widget ${name} not found` });
+		}
+		return widget as WIDGET;
 	}
 }
 
-export default new WidgetService();
+export default new WidgetManager();

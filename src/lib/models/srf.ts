@@ -1,5 +1,5 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from './widget';
+import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
 
 // ---------
 // Widgets
@@ -13,13 +13,13 @@ export interface SrfWidgetConfig extends WidgetConfig {
 	serviceName: string;
 }
 
-export interface SrfWidgetProps extends WidgetProps {
+export interface SrfWidgetProps extends WidgetData {
 	name: string;
 	feedId: string;
 	items: NewsItem[];
 }
 
-export interface SrfWidgetAction extends WidgetProps {
+export interface SrfWidgetAction extends WidgetData {
 	simple: boolean;
 	head: string;
 	body: string;

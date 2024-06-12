@@ -39,8 +39,8 @@
 						<td>
 							<select form="formNew" name="newType" class="form-select" bind:value={newType}>
 								<option value="" selected disabled>---</option>
-								{#each types as type}
-									<option value={type}>{type}</option>
+								{#each types as { name }}
+									<option value={name}>{name}</option>
 								{/each}
 							</select>
 						</td>
@@ -59,16 +59,23 @@
 								{widget.name}
 							</td>
 							<td>
-								{widget.type}
+								{widget.type.name}
 							</td>
 							<td>
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="name" value={widget.name} />
 									<div class="btn-group">
-										{#if !!WIDGETS[widget.type]?.config}
-											<a href="/widgets/{widget.name}/config" class="btn btn-theme">
-												<i class="icofont-ui-edit" />
-											</a>
+										{#if !!WIDGETS[widget.type.name]}
+											{#if widget.type.actions.includes('')}
+												<a href="/widgets/{widget.name}" class="btn btn-primary">
+													<i class="icofont-eye-alt"></i>
+												</a>
+											{/if}
+											{#if widget.type.actions.includes('config')}
+												<a href="/widgets/{widget.name}/config" class="btn btn-theme">
+													<i class="icofont-gear"></i>
+												</a>
+											{/if}
 										{/if}
 										<button class="btn btn-danger">
 											<i class="icofont-ui-delete" />

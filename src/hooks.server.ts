@@ -5,9 +5,6 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { building } from '$app/environment';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
-import { setup as setupBattery } from '$lib/server/battery/data';
-import { setup as setupScreens } from '$lib/server/screen/data';
-import { setup as setupSensor } from '$lib/server/sensor/data';
 import servicesService from '$lib/server/services';
 import widgetService from '$lib/server/widgets';
 
@@ -42,9 +39,6 @@ async function init() {
 
 	logger.info('Starting...');
 
-	await servicesService.get();
-	await widgetService.get();
-	setupBattery();
-	setupScreens();
-	setupSensor();
+	await servicesService.load();
+	await widgetService.load();
 }

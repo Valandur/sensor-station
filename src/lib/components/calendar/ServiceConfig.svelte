@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
-	import type { CalendarServiceConfig } from '$lib/models/calendar';
+
+	import type { CalendarServiceConfigData } from '$lib/models/calendar';
 
 	export let name: string;
-	export let config: CalendarServiceConfig;
+	export let data: CalendarServiceConfigData;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
@@ -24,7 +24,7 @@
 				id="inputCalendarId"
 				type="text"
 				name="calendarId"
-				value={config.calendarId ?? ''}
+				value={data.config.calendarId ?? ''}
 				class="form-control"
 			/>
 		</div>
@@ -37,7 +37,7 @@
 				id="inputServiceEmail"
 				type="text"
 				name="serviceEmail"
-				value={config.serviceEmail ?? ''}
+				value={data.config.serviceEmail ?? ''}
 				class="form-control"
 			/>
 		</div>
@@ -49,7 +49,7 @@
 			<textarea
 				id="inputPrivateKey"
 				name="privateKey"
-				value={config.privateKey ?? ''}
+				value={data.config.privateKey ?? ''}
 				class="form-control"
 				rows="3"
 			/>

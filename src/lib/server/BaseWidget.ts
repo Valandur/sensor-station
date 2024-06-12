@@ -1,33 +1,40 @@
-import type { ActionFailure } from '@sveltejs/kit';
+import type { Cookies } from '@sveltejs/kit';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
-import type { WidgetConfig, WidgetInstance, WidgetProps } from '$lib/models/widget';
+import type { WidgetConfig, WidgetData, WidgetActionFailure } from '$lib/models/widget';
 
-import services from './services';
+export interface WidgetGetDataOptions {
+	url: URL;
+	cookies: Cookies;
+}
 
-export type WidgetValidateFailure = ActionFailure<{ message: string }>;
+export interface WidgetSetDataOpations extends WidgetGetDataOptions {
+	form: FormData;
+}
 
 export abstract class BaseWidget<
+	ACTION extends string = string,
 	CONFIG extends WidgetConfig = WidgetConfig,
-	PROPS extends WidgetProps = WidgetProps,
-	ACTION extends WidgetProps = PROPS
+	DATA extends WidgetData = WidgetData<ACTION>
 > {
-	public abstract readonly type: string;
+	public readonly name: string;
+	public readonly type: string;
+	public config: CONFIG;
+
 	protected readonly logger: BaseLogger;
-	protected readonly services = services;
 
-	protected constructor(name: string) {
-		this.logger = new BaseLogger(name);
+	public constructor(name: string, type: string, config?: CONFIG) {
+		this.name = name;
+		this.type = type;
+		this.config = config ?? this.generateDefaultConfig();
+		this.logger = new BaseLogger('WIDGET/' + name);
 	}
 
-	public abstract props(instance: WidgetInstance<CONFIG>, page: number): Promise<PROPS | null>;
+	protected abstract generateDefaultConfig(): CONFIG;
 
-	public abstract validate(
-		instance: WidgetInstance<CONFIG>,
-		config: FormData
-	): Promise<CONFIG | WidgetValidateFailure>;
-
-	public async action(instance: WidgetInstance<CONFIG>, action: string): Promise<ACTION | null> {
-		return null;
-	}
+	public abstract getData(action: ACTION, options: WidgetGetDataOptions): Promise<DATA | null>;
+	public abstract setData(
+		action: ACTION,
+		options: WidgetSetDataOpations
+	): Promise<void | WidgetActionFailure>;
 }

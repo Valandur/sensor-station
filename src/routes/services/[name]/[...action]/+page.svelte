@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { SERVICES } from '$lib/services';
 
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
-	$: comps = SERVICES[data.type];
+	export let form: ActionData;
+
+	$: name = data.name;
+	$: type = data.type;
+	$: serviceData = data.data;
+
+	$: comp = SERVICES[type];
 </script>
 
-<svelte:component this={comps.action} action={data.action} {...data.props} />
+<svelte:component this={comp} {name} data={serviceData} {form} />
