@@ -11,56 +11,172 @@ import { parse as parseHtml } from 'node-html-parser';
 import Parser from 'rss-parser';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
-	SRF_SERVICE_TYPE,
+	SRF_SERVICE_ACTIONS,
 	type NewsItem,
 	type SrfServiceAction,
 	type SrfServiceConfig,
-	type SrfServiceData,
-	type SrfServiceInstance
+	type SrfServiceData
 } from '$lib/models/srf';
 
 import { Cache } from '../Cache';
-import { BaseService } from '../BaseService';
+import {
+	BaseService,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
 const ENABLED = env.SRF_ENABLED === '1';
-const CACHE_PATH = 'data/srf';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
 const DESCR_REGEX = /<img src="(.*?)".*?>(.*)/;
 
-class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServiceAction> {
-	public override readonly type = SRF_SERVICE_TYPE;
+export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, SrfServiceData> {
+	public static readonly actions = SRF_SERVICE_ACTIONS;
 
-	protected readonly articleCache: Cache<SrfServiceAction>;
+	protected readonly articleCache: Cache<SrfServiceData>;
 
-	public constructor() {
-		super('SRF');
+	protected generateDefaultConfig(): SrfServiceConfig {
+		return {
+			feedId: '',
+			simpleDetails: false
+		};
+	}
 
+	public constructor(name: string, type: string, config?: SrfServiceConfig) {
+		super(name, type, config);
 		this.articleCache = new Cache(this.logger);
 	}
 
-	public get(
-		{ name, config }: SrfServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<SrfServiceData> {
+	public async getData(
+		action: SrfServiceAction,
+		{ url }: ServiceGetDataOptions
+	): Promise<SrfServiceData | null> {
+		if (!ENABLED) {
+			error(400, {
+				message: `SRF is disabled`,
+				key: 'srf.disabled'
+			});
+		}
+
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action: 'config',
+				config: this.config
+			};
+		}
+
+		if (!this.config.feedId) {
+			error(400, {
+				key: 'srf.config.invalid',
+				message: 'Invalid srf config'
+			});
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
+		const folderPath = `data/${this.name}/${this.config.feedId}`;
+		await mkdir(folderPath, { recursive: true });
+
+		if (action === 'details') {
+			return this.articleCache.with(
+				{
+					resultCacheTime: this.config.resultCacheTime,
+					errorCacheTime: this.config.errorCacheTime
+				},
+				async () => {
+					const articleId = url.searchParams.get('article');
+
+					let feedData = this.cache.getData(this.config.feedId);
+					if (!feedData || feedData.action !== '') {
+						error(400, {
+							key: 'srf.cache.empty',
+							message: 'Cache does not contain aritcle'
+						});
+					}
+
+					let page = '';
+					const article = feedData.items.find((a) => a.id === articleId);
+					if (!article) {
+						error(400, {
+							message: `Article ${articleId} in feed ${this.config.feedId} not found`,
+							key: 'srf.articleNotFound'
+						});
+					}
+
+					const filePath = `${folderPath}/${article.id}/article.html`;
+					if (await stat(filePath).catch(() => null)) {
+						this.logger.debug('Using cached article file', this.config.feedId, article.id);
+						page = await readFile(filePath, 'utf-8');
+					} else {
+						this.logger.debug('Downloading article file', this.config.feedId, article.id);
+						const res = await fetch(article.link);
+						const text = await res.text();
+						await writeFile(filePath, text, 'utf-8');
+						page = text;
+					}
+
+					const html = parseHtml(page);
+					const head = html.getElementsByTagName('head')[0];
+					for (const script of head.getElementsByTagName('script')) {
+						script.remove();
+					}
+
+					const body = html.getElementsByTagName('body')[0];
+					const main = body.getElementsByTagName('main')[0];
+					const title = main.getElementsByTagName('header')[0];
+					const section = main.getElementsByTagName('section')[0];
+
+					if (this.config.simpleDetails) {
+						// strip divs
+						for (const div of body.getElementsByTagName('div')) {
+							div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
+						}
+						// strip images
+						for (const figure of body.getElementsByTagName('figure')) {
+							figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
+						}
+						// strip link in title
+						title.getElementById('skiplink__contentlink')?.remove();
+
+						body.childNodes = [title, section];
+					} else {
+						const header = main.getElementsByTagName('div')[0];
+						const section = main.getElementsByTagName('section')[0];
+						const config = body.getElementById('config__js')!;
+						const scripts = body.getElementsByTagName('script');
+						body.childNodes = [header, title, section, config, ...scripts];
+					}
+
+					return {
+						ts: new Date(),
+						name: this.name,
+						type: this.type,
+						action: 'details',
+						simple: this.config.simpleDetails,
+						head: head.innerHTML,
+						body: body.innerHTML.toString()
+					};
+				},
+				undefined,
+				async (err) => {
+					err.body.embedded = true;
+				}
+			);
+		}
+
 		return this.cache.with(
 			{
-				key: config.feedId,
+				key: this.config.feedId,
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `SRF is disabled`,
-						key: 'srf.disabled'
-					});
-				}
-
-				await mkdir(`${CACHE_PATH}/${config.feedId}`, { recursive: true });
-
-				const res = await fetch(`${BASE_URL}${config.feedId}`);
+				const res = await fetch(`${BASE_URL}${this.config.feedId}`);
 				const text = await res.text();
 
 				const parser = new Parser({ customFields: { item: ['description'] } });
@@ -87,8 +203,8 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 						? parse(item.pubDate.substring(5), 'dd MMM yyyy HH:mm:ss x', new Date())
 						: new Date();
 
-					await mkdir(`${CACHE_PATH}/${config.feedId}/${id}`, { recursive: true });
-					const imgFilePath = `${CACHE_PATH}/${config.feedId}/${id}/${basename(imgUrl)}`;
+					await mkdir(`${folderPath}/${id}`, { recursive: true });
+					const imgFilePath = `${folderPath}/${id}/${basename(imgUrl)}`;
 
 					if (!(await stat(imgFilePath).catch(() => null))) {
 						const res = await fetch(imgUrl);
@@ -106,142 +222,43 @@ class SrfService extends BaseService<SrfServiceConfig, SrfServiceData, SrfServic
 					});
 				}
 
-				const articles = await readdir(`${CACHE_PATH}/${config.feedId}`);
+				const articles = await readdir(folderPath);
 				for (const fileName of articles) {
 					if (!items.some((item) => item.id === fileName)) {
-						await rm(`${CACHE_PATH}/${config.feedId}/${fileName}`, {
-							recursive: true,
-							force: true
-						});
+						await rm(`${folderPath}/${fileName}`, { recursive: true, force: true });
 					}
 				}
 
 				return {
 					ts: new Date(),
-					name,
-					feedId: config.feedId,
+					name: this.name,
+					type: this.type,
+					action,
 					items
 				};
 			}
 		);
 	}
 
-	public async validate(instance: SrfServiceInstance, config: FormData): Promise<SrfServiceConfig> {
-		const feedId = config.get('feedId');
+	public async setData(
+		action: SrfServiceAction,
+		{ form }: ServiceSetDataOptions
+	): Promise<void | ServiceActionFailure> {
+		const feedId = form.get('feedId');
 		if (typeof feedId !== 'string') {
-			throw new Error('Invalid feed ID');
+			error(400, { key: 'srf.feed.invalid', message: 'Invalid feed ID' });
 		}
 
-		const simpleDetails = config.get('simpleDetails') === 'on';
+		const simpleDetails = form.get('simpleDetails') === 'on';
 
 		const res = await fetch(`${BASE_URL}${feedId}`);
 		if (res.status === 404) {
-			throw new Error('Unknown feed ID');
+			error(400, { key: 'srf.feed.unknown', message: 'Unknown feed ID' });
 		} else if (res.status !== 200) {
-			throw new Error('Invalid config: ' + res.statusText);
+			error(400, { key: 'srf.config.invalid', message: 'Invalid srf config' });
 		}
 
-		return {
-			feedId,
-			simpleDetails
-		};
-	}
-
-	public override async action(
-		instance: SrfServiceInstance,
-		action: string
-	): Promise<SrfServiceAction | null> {
-		const { name, config } = instance;
-
-		return this.articleCache.with(
-			{
-				key: action,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
-			},
-			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `News is disabled`,
-						key: 'news.disabled'
-					});
-				}
-
-				const [feedId, articleId] = action.split('/', 2);
-
-				let feedData = this.cache.getData(feedId);
-				if (!feedData) {
-					feedData = await this.get(instance, false);
-				}
-
-				let page = '';
-				const article = feedData.items.find((a) => a.id === articleId);
-				if (!article) {
-					error(400, {
-						message: `Article ${articleId} in feed ${feedId} not found`,
-						key: 'news.articleNotFound',
-						params: { feedId, articleId }
-					});
-				}
-
-				const filePath = `${CACHE_PATH}/${feedId}/${article.id}/article.html`;
-				if (await stat(filePath).catch(() => null)) {
-					this.logger.debug('Using cached article file', feedId, article.id);
-					page = await readFile(filePath, 'utf-8');
-				} else {
-					this.logger.debug('Downloading article file', feedId, article.id);
-					const res = await fetch(article.link);
-					const text = await res.text();
-					await writeFile(filePath, text, 'utf-8');
-					page = text;
-				}
-
-				const html = parseHtml(page);
-				const head = html.getElementsByTagName('head')[0];
-				for (const script of head.getElementsByTagName('script')) {
-					script.remove();
-				}
-
-				const body = html.getElementsByTagName('body')[0];
-				const main = body.getElementsByTagName('main')[0];
-				const title = main.getElementsByTagName('header')[0];
-				const section = main.getElementsByTagName('section')[0];
-
-				if (config.simpleDetails) {
-					// strip divs
-					for (const div of body.getElementsByTagName('div')) {
-						div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
-					}
-					// strip images
-					for (const figure of body.getElementsByTagName('figure')) {
-						figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
-					}
-					// strip link in title
-					title.getElementById('skiplink__contentlink')?.remove();
-
-					body.childNodes = [title, section];
-				} else {
-					const header = main.getElementsByTagName('div')[0];
-					const section = main.getElementsByTagName('section')[0];
-					const config = body.getElementById('config__js')!;
-					const scripts = body.getElementsByTagName('script');
-					body.childNodes = [header, title, section, config, ...scripts];
-				}
-
-				return {
-					ts: new Date(),
-					simple: config.simpleDetails,
-					name,
-					head: head.innerHTML,
-					body: body.innerHTML.toString()
-				};
-			},
-			undefined,
-			async (err) => {
-				err.body.embedded = true;
-			}
-		);
+		this.config.feedId = feedId;
+		this.config.simpleDetails = simpleDetails;
 	}
 }
-
-export default new SrfService();

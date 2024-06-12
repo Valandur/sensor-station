@@ -7,6 +7,7 @@ import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
 import { GALLERY_SERVICE_TYPE } from './models/gallery';
 import { NETWORK_SERVICE_TYPE } from './models/network';
 import { SBB_DEPARTURES_SERVICE_TYPE } from './models/sbb-departures';
+import { SRF_SERVICE_TYPE } from './models/srf';
 import { SWISS_POST_SERVICE_TYPE } from './models/swiss-post';
 
 import CalendarService from './components/calendar/Service.svelte';
@@ -15,6 +16,7 @@ import EpicGamesService from './components/epic-games/Service.svelte';
 import GalleryService from './components/gallery/Service.svelte';
 import NetworkService from './components/network/Service.svelte';
 import SbbDeparturesService from './components/sbb-departures/Service.svelte';
+import SrfService from './components/srf/Service.svelte';
 import SwissPostService from './components/swiss-post/Service.svelte';
 
 type ServiceMap = {
@@ -32,5 +34,6 @@ export const SERVICES: ServiceMap = {
 	[GALLERY_SERVICE_TYPE]: GalleryService,
 	[NETWORK_SERVICE_TYPE]: NetworkService,
 	[SBB_DEPARTURES_SERVICE_TYPE]: SbbDeparturesService,
+	[SRF_SERVICE_TYPE]: SrfService,
 	[SWISS_POST_SERVICE_TYPE]: SwissPostService
 };
