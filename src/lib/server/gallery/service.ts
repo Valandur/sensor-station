@@ -208,8 +208,8 @@ export class GalleryService extends BaseService<
 				}
 
 				return size.orientation && size.orientation >= 5
-					? size.height / size.width
-					: size.width / size.height; // If the image is rotated 90° switch the ratio
+					? size.height / size.width // If the image is rotated 90° switch the ratio
+					: size.width / size.height;
 			} catch (err) {
 				this.logger.warn('Could not get image size', err);
 			}

@@ -11,9 +11,9 @@
 	export let games: GameItem[];
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end overflow-hidden">
+<div class="h-100 d-flex flex-column justify-content-end">
 	{#if games.length > 0}
-		<div class="row row-cols-2">
+		<div class="row row-cols-2 overflow-auto">
 			{#each games as game}
 				<div class="col">
 					<Card>

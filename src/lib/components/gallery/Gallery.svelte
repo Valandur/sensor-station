@@ -7,27 +7,34 @@
 	import { tz } from '$lib/stores/tz';
 
 	export let image: GalleryImage;
+
+	$: isVideo = image && image.img.endsWith('.mp4');
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end">
-	{#if image}
-		<div class="row align-items-end" class:h-100={image.ratio < 1}>
-			<div
-				class="col mh-100 image-container"
-				class:full={image.ratio < 1}
-				class:m-1={image.ratio < 1}
-			>
-				{#if image.img.endsWith('.mp4')}
-					<video src={'/' + image.img} autoplay muted loop />
+{#if image}
+	{#if image.ratio > 1}
+		<div class="row h-100">
+			<div class="col h-100 d-flex flex-column justify-content-end">
+				{#if isVideo}
+					<video
+						src={'/' + image.img}
+						autoplay
+						muted
+						loop
+						class="mh-100 mw-100"
+						style="object-fit: contain"
+					/>
 				{:else}
-					<img src={'/' + image.img} alt="Upload" />
+					<img
+						src={'/' + image.img}
+						alt={image.title}
+						class="mh-100 mw-100"
+						style="object-fit: contain"
+					/>
 				{/if}
 			</div>
-
 			<div
-				class="col mh-100 align-self-stretch d-flex flex-column justify-content-between description"
-				class:ps-2={image.ratio >= 1}
-				class:text-end={image.ratio >= 1}
+				class="col-4 mh-100 align-self-stretch d-flex flex-column justify-content-between text-end"
 			>
 				<div class="row">
 					<div class="col">
@@ -46,36 +53,52 @@
 			</div>
 		</div>
 	{:else}
-		<EmptyCard>Es wurden noch keine Bilder hochgeladen</EmptyCard>
+		<div
+			class="position-fixed top-0 bottom-0 end-0 w-50 p-1 bg d-flex flex-row justify-content-end"
+		>
+			{#if isVideo}
+				<video
+					src={'/' + image.img}
+					autoplay
+					muted
+					loop
+					class="mh-100 mw-100"
+					style="object-fit: contain"
+				/>
+			{:else}
+				<img
+					src={'/' + image.img}
+					alt={image.title}
+					class="h-100 mw-0"
+					style="object-fit: contain"
+				/>
+			{/if}
+		</div>
+		<div class="row h-100">
+			<div class="col-4 mh-100 align-self-stretch d-flex flex-column justify-content-between">
+				<div class="row">
+					<div class="col">
+						{#each image.title.split('\n') as line}
+							{line}
+							<br />
+						{/each}
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="rol">
+						{formatInTimeZone(image.ts, $tz, 'dd. MMM yyyy', { locale: de })}
+					</div>
+				</div>
+			</div>
+		</div>
 	{/if}
-</div>
+{:else}
+	<EmptyCard>Es wurden noch keine Bilder hochgeladen</EmptyCard>
+{/if}
 
 <style lang="scss">
-	.image-container {
-		max-width: 55%;
-
-		img,
-		video {
-			max-height: 100%;
-			max-width: 100%;
-		}
-
-		&.full {
-			position: fixed;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			background-image: linear-gradient(to left, rgba(var(--bs-dark-rgb), 1) 60%, transparent);
-
-			> img,
-			video {
-				position: absolute;
-				right: 0;
-			}
-		}
-	}
-
-	.description {
-		max-width: 45%;
+	.bg {
+		background-image: linear-gradient(to left, rgba(var(--bs-dark-rgb), 1) 60%, transparent);
 	}
 </style>
