@@ -1,67 +1,171 @@
 import { createHash } from 'node:crypto';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { parseISO } from 'date-fns';
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import getDimensions from 'get-video-dimensions';
 import imageSize from 'image-size';
 import mime from 'mime-types';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
-	GALLERY_SERVICE_TYPE,
-	type GalleryImage,
+	GALLERY_WIDGET_ACTIONS,
+	type GalleryServiceAction,
 	type GalleryServiceConfig,
-	type GalleryServiceData,
-	type GalleryServiceInstance
+	type GalleryServiceData
 } from '$lib/models/gallery';
 
-import { BaseService } from '../BaseService';
+import {
+	BaseService,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
-const ENABLED = env.UPLOADS_ENABLED === '1';
-const UPLOADS_FILE = 'data/gallery/gallery.json';
-const UPLOADS_DIR = 'data/gallery/';
+const ENABLED = env.GALLERY_ENABLED === '1';
 
-class GalleryService extends BaseService<GalleryServiceConfig, GalleryServiceData> {
-	public override readonly type = GALLERY_SERVICE_TYPE;
+export class GalleryService extends BaseService<
+	GalleryServiceAction,
+	GalleryServiceConfig,
+	GalleryServiceData
+> {
+	public static readonly actions = GALLERY_WIDGET_ACTIONS;
 
-	private loaded = false;
-	private uploads: GalleryImage[] = [];
-
-	public constructor() {
-		super('GALLERY');
+	protected generateDefaultConfig(): GalleryServiceConfig {
+		return {
+			images: []
+		};
 	}
 
-	public async get(
-		{ name }: GalleryServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<GalleryServiceData> {
+	public async getData(
+		action: GalleryServiceAction,
+		options: ServiceGetDataOptions
+	): Promise<GalleryServiceData | null> {
 		if (!ENABLED) {
 			error(400, {
-				message: `Uploads is disabled`,
-				key: 'uploads.disabled'
+				message: `Gallery is disabled`,
+				key: 'gallery.disabled'
 			});
-		}
-
-		if (!this.loaded) {
-			await this.load();
-			this.loaded = true;
 		}
 
 		return {
 			ts: new Date(),
-			name,
-			images: this.uploads
+			name: this.name,
+			type: this.type,
+			action,
+			images: this.config.images
 		};
 	}
 
-	public validate(
-		instance: GalleryServiceInstance,
-		config: FormData
-	): Promise<GalleryServiceConfig> {
-		throw new Error('Method not implemented.');
+	public async setData(
+		action: GalleryServiceAction,
+		{ form }: ServiceSetDataOptions
+	): Promise<void | ServiceActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'gallery.action.invalid', message: 'Invalid gallery action' });
+		}
+
+		const formAction = form.get('action');
+		switch (formAction) {
+			case 'add': {
+				const newDateStr = form.get('newDate');
+				if (typeof newDateStr !== 'string') {
+					return fail(400, { key: 'gallery.form.newDate.invalid', message: 'Invalid date' });
+				}
+				const newDate = parseISO(newDateStr);
+
+				const newTitle = form.get('newTitle');
+				if (typeof newTitle !== 'string') {
+					return fail(400, { key: 'gallery.form.newTitle.invalid', message: 'Invalid title' });
+				}
+
+				const newImage = form.get('newImage');
+				if (!newImage || typeof newImage === 'string') {
+					return fail(400, { key: 'gallery.form.newImage.invalid', message: 'Invalid image' });
+				}
+
+				await this.saveUpload(newDate, newTitle, newImage);
+				break;
+			}
+
+			case 'delete': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+				}
+
+				await this.deleteUpload(index);
+				break;
+			}
+
+			case 'save': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+				}
+
+				const dateStr = form.get('date');
+				if (typeof dateStr !== 'string') {
+					return fail(400, { key: 'gallery.form.date.invalid', message: 'Invalid date' });
+				}
+				const date = parseISO(dateStr);
+
+				const title = form.get('title');
+				if (typeof title !== 'string') {
+					return fail(400, { key: 'gallery.form.title.invalid', message: 'Invalid title' });
+				}
+
+				this.config.images[index].ts = date;
+				this.config.images[index].title = title;
+				break;
+			}
+
+			case 'move': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+				}
+
+				const dir = form.get('dir');
+				if (dir !== 'up' && dir !== 'down') {
+					return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+				}
+
+				if (dir === 'up') {
+					if (index === 0) {
+						return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+					}
+
+					this.config.images = [
+						...this.config.images.slice(0, index - 1),
+						this.config.images[index],
+						this.config.images[index - 1],
+						...this.config.images.slice(index + 1)
+					];
+				} else if (dir === 'down') {
+					if (index === this.config.images.length - 1) {
+						return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+					}
+
+					this.config.images = [
+						...this.config.images.slice(0, index),
+						this.config.images[index + 1],
+						this.config.images[index],
+						...this.config.images.slice(index + 2)
+					];
+				}
+				break;
+			}
+
+			default: {
+				return fail(400, {
+					key: 'gallery.form.action.invalid',
+					message: `Unknown form action ${formAction}`
+				});
+			}
+		}
 	}
 
-	public async storeUpload(ts: Date, title: string, file: File): Promise<GalleryImage[]> {
+	private async saveUpload(ts: Date, title: string, file: File) {
 		const data = Buffer.from(await file.arrayBuffer());
 		const hash = createHash('md5')
 			.update(ts.toISOString(), 'utf-8')
@@ -70,71 +174,22 @@ class GalleryService extends BaseService<GalleryServiceConfig, GalleryServiceDat
 			.digest('hex');
 		const ext = mime.extension(file.type);
 
-		const img = `${hash}.${ext}`;
-		const fileName = `${UPLOADS_DIR}/${img}`;
+		const folderPath = `data/${this.name}`;
+		const img = `${folderPath}/${hash}.${ext}`;
 
-		await writeFile(fileName, data);
-		const ratio = await this.getRatio(fileName, data);
+		await mkdir(folderPath, { recursive: true });
+		await writeFile(img, data);
+		const ratio = await this.getRatio(img, data);
 
-		const newUploads = this.uploads.concat({ ts, title, img, ratio });
-		await this.saveUploads(newUploads);
-
-		return newUploads;
+		this.config.images = this.config.images.concat({ ts, title, img, ratio });
 	}
 
 	public async deleteUpload(index: number) {
-		const item = this.uploads[index];
+		const item = this.config.images[index];
 
-		await rm(`${UPLOADS_DIR}/${item.img}`);
+		await rm(`${item.img}`);
 
-		const newUploads = this.uploads.filter((_, i) => i !== index);
-		await this.saveUploads(newUploads);
-	}
-
-	public async saveUploads(newUploads: GalleryImage[]): Promise<void> {
-		this.uploads = newUploads.sort((a, b) => a.ts.getTime() - b.ts.getTime());
-
-		this.logger.debug('Saving...');
-		const startTime = process.hrtime.bigint();
-
-		await writeFile(UPLOADS_FILE, JSON.stringify(newUploads), 'utf-8');
-
-		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-		this.logger.info('Saved', newUploads.length, 'uploads', diffTime, 'ms');
-	}
-
-	private async load() {
-		this.logger.debug('Loading...');
-		const startTime = process.hrtime.bigint();
-
-		const newUploads: GalleryImage[] = JSON.parse(
-			await readFile(UPLOADS_FILE, 'utf-8').catch(() => '[]')
-		).map((item: Record<string, string>) => ({ ...item, ts: parseISO(item.ts) }));
-
-		let added = false;
-		const files = await readdir(UPLOADS_DIR).catch(() => []);
-		for (const file of files) {
-			if (newUploads.some((item) => item.img === file)) {
-				continue;
-			}
-			if (file.endsWith('.json')) {
-				continue;
-			}
-
-			this.logger.warn(`Found upload file without data entry: ${file}`);
-			const ratio = await this.getRatio(`${UPLOADS_DIR}/${file}`);
-			newUploads.push({ ts: new Date(), title: '', img: file, ratio });
-			added = true;
-		}
-
-		this.uploads = newUploads;
-
-		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
-		this.logger.info('Loaded', newUploads.length, 'uploads', diffTime, 'ms');
-
-		if (added) {
-			await this.saveUploads(newUploads);
-		}
+		this.config.images = this.config.images.filter((_, i) => i !== index);
 	}
 
 	private async getRatio(fileName: string, data?: Buffer) {
@@ -163,5 +218,3 @@ class GalleryService extends BaseService<GalleryServiceConfig, GalleryServiceDat
 		return 1;
 	}
 }
-
-export default new GalleryService();

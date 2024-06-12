@@ -13,8 +13,6 @@ export type EpicGamesWidgetAction = (typeof EPIC_GAMES_WIDGET_ACTIONS)[number];
 export interface EpicGamesWidgetMainData extends WidgetData<EpicGamesWidgetAction> {
 	action: '';
 	games: GameItem[];
-	prevPage: number;
-	nextPage: number;
 }
 export interface EpicGamesWidgetConfigData extends WidgetData<EpicGamesWidgetAction> {
 	action: 'config';

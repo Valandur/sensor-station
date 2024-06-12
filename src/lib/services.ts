@@ -4,10 +4,12 @@ import type { ServiceData } from './models/service';
 import { CALENDAR_SERVICE_TYPE } from './models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
+import { GALLERY_SERVICE_TYPE } from './models/gallery';
 
 import CalendarService from './components/calendar/Service.svelte';
 import CarouselService from './components/carousel/Service.svelte';
 import EpicGamesService from './components/epic-games/Service.svelte';
+import GalleryService from './components/gallery/Service.svelte';
 
 type ServiceMap = {
 	[key: string]: typeof SvelteComponent<{
@@ -20,5 +22,6 @@ type ServiceMap = {
 export const SERVICES: ServiceMap = {
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
-	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService
+	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
+	[GALLERY_SERVICE_TYPE]: GalleryService
 };

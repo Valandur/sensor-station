@@ -77,13 +77,13 @@ export class CalendarWidget extends BaseWidget<
 		{ form }: WidgetSetDataOpations
 	): Promise<void | WidgetActionFailure> {
 		if (action !== 'config') {
-			error(400, { key: 'calendar.action.invalid', message: 'Invalid action' });
+			error(400, { key: 'calendar.action.invalid', message: 'Invalid calendar action' });
 		}
 
 		const service = form.get('service');
 		if (typeof service !== 'string') {
 			return fail(400, {
-				key: 'calendar.servie.invalid',
+				key: 'calendar.service.invalid',
 				message: 'Invalid calendar widget service'
 			});
 		}

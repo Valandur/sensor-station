@@ -4,11 +4,13 @@ import { error, fail } from '@sveltejs/kit';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
 import { CALENDAR_WIDGET_TYPE } from '$lib/models/calendar';
+import { EPIC_GAMES_WIDGET_TYPE } from '$lib/models/epic-games';
+import { GALLERY_WIDGET_TYPE } from '$lib/models/gallery';
 
 import type { BaseWidget } from './BaseWidget';
 import { CalendarWidget } from './calendar/widget';
-import { EPIC_GAMES_WIDGET_TYPE } from '$lib/models/epic-games';
 import { EpicGamesWidget } from './epic-games/widget';
+import { GalleryWidget } from './gallery/widget';
 
 type WidgetConstructor = new (name: string, type: string, config?: any) => BaseWidget;
 type WidgetMap = { [key: string]: WidgetConstructor & { actions: Readonly<string[]> } };
@@ -16,7 +18,8 @@ type WidgetMap = { [key: string]: WidgetConstructor & { actions: Readonly<string
 const WIDGETS_PATH = 'data/widgets.json';
 const WIDGETS: WidgetMap = {
 	[CALENDAR_WIDGET_TYPE]: CalendarWidget,
-	[EPIC_GAMES_WIDGET_TYPE]: EpicGamesWidget
+	[EPIC_GAMES_WIDGET_TYPE]: EpicGamesWidget,
+	[GALLERY_WIDGET_TYPE]: GalleryWidget
 };
 
 class WidgetManager {

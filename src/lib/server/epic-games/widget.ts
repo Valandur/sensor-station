@@ -47,7 +47,7 @@ export class EpicGamesWidget extends BaseWidget<
 
 		const data = await service.getData('', options);
 		if (!data || data.action !== '') {
-			error(400, { key: 'epicGames.noData', message: 'No calendar data available' });
+			error(400, { key: 'epicGames.noData', message: 'No epic games data available' });
 		}
 
 		let page = Number(options.url.searchParams.get('page'));
@@ -65,8 +65,6 @@ export class EpicGamesWidget extends BaseWidget<
 			name: this.name,
 			type: this.type,
 			action,
-			prevPage,
-			nextPage,
 			games
 		};
 	}
@@ -76,13 +74,13 @@ export class EpicGamesWidget extends BaseWidget<
 		{ form }: WidgetSetDataOpations
 	): Promise<void | WidgetActionFailure> {
 		if (action !== 'config') {
-			error(400, { key: 'epicGames.action.invalid', message: 'Invalid action' });
+			error(400, { key: 'epicGames.action.invalid', message: 'Invalid epic games action' });
 		}
 
 		const service = form.get('service');
 		if (typeof service !== 'string') {
 			return fail(400, {
-				key: 'calendar.servie.invalid',
+				key: 'calendar.service.invalid',
 				message: 'Invalid calendar widget service'
 			});
 		}

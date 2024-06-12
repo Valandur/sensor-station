@@ -106,7 +106,7 @@ export class CarouselService extends BaseService<
 		{ form }: ServiceSetDataOptions
 	): Promise<void | ServiceActionFailure> {
 		if (action !== 'config') {
-			error(400, { key: 'carousel.action.invalid', message: 'Invalid action' });
+			error(400, { key: 'carousel.action.invalid', message: 'Invalid carousel action' });
 		}
 
 		const formAction = form.get('action');

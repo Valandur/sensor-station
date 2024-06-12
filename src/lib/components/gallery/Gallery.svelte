@@ -18,9 +18,9 @@
 				class:m-1={image.ratio < 1}
 			>
 				{#if image.img.endsWith('.mp4')}
-					<video src={'/data/gallery/' + image.img} autoplay muted loop />
+					<video src={'/' + image.img} autoplay muted loop />
 				{:else}
-					<img src={'/data/gallery/' + image.img} alt="Upload" />
+					<img src={'/' + image.img} alt="Upload" />
 				{/if}
 			</div>
 

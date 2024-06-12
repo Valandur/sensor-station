@@ -5,12 +5,14 @@ import { error, fail } from '@sveltejs/kit';
 import { BaseLogger } from '$lib/models/BaseLogger';
 import { CALENDAR_SERVICE_TYPE } from '$lib/models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
+import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
+import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 
 import { BaseService } from './BaseService';
 import { CalendarService } from './calendar/service';
 import { CarouselService } from './carousel/service';
-import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { EpicGamesService } from './epic-games/service';
+import { GalleryService } from './gallery/service';
 
 type ServiceConstructor = new (name: string, type: string, config?: any) => BaseService;
 type ServiceMap = { [key: string]: ServiceConstructor & { actions: Readonly<string[]> } };
@@ -19,7 +21,8 @@ const PATH = 'data/services.json';
 const SERVICES: ServiceMap = {
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
-	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService
+	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
+	[GALLERY_SERVICE_TYPE]: GalleryService
 };
 
 class ServiceManager {

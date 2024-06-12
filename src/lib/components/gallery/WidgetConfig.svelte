@@ -1,20 +1,15 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { ServiceInstance } from '$lib/models/service';
-	import { GALLERY_SERVICE_TYPE, type GalleryWidgetConfig } from '$lib/models/gallery';
+	import type { GalleryWidgetConfigData } from '$lib/models/gallery';
 
 	export let name: string;
-	export let config: GalleryWidgetConfig;
-	export let services: ServiceInstance[];
-
-	$: validServices = services.filter((s) => s.type === GALLERY_SERVICE_TYPE);
+	export let data: GalleryWidgetConfigData;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
@@ -25,9 +20,9 @@
 	<div class="row mb-2">
 		<label for="inputService" class="col-3 col-form-label">Service</label>
 		<div class="col">
-			<select id="inputService" name="serviceName" class="form-select" value={config.serviceName}>
-				{#each validServices as srv}
-					<option value={srv.name}>{srv.name}</option>
+			<select id="inputService" name="service" class="form-select" value={data.config.service}>
+				{#each data.services as service}
+					<option value={service.name}>{service.name}</option>
 				{/each}
 			</select>
 		</div>
