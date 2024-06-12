@@ -4,12 +4,12 @@
 	import { parseISO } from 'date-fns/parseISO';
 
 	import { tz } from '$lib/stores/tz';
-	import type { PostShipment } from '$lib/models/post';
+	import type { Shipment } from '$lib/models/swiss-post';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import Card from '../Card.svelte';
 
-	export let shipment: PostShipment;
+	export let shipment: Shipment;
 
 	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;

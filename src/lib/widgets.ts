@@ -4,10 +4,12 @@ import type { WidgetData } from './models/widget';
 import { CALENDAR_WIDGET_TYPE } from './models/calendar';
 import { EPIC_GAMES_WIDGET_TYPE } from './models/epic-games';
 import { GALLERY_WIDGET_TYPE } from './models/gallery';
+import { SWISS_POST_WIDGET_TYPE } from './models/swiss-post';
 
 import CalendarWidget from './components/calendar/Widget.svelte';
 import EpicGamesWidget from './components/epic-games/Widget.svelte';
 import GalleryWidget from './components/gallery/Widget.svelte';
+import SwissPostWidget from './components/swiss-post/Widget.svelte';
 
 type WidgetMap = {
 	[key: string]: typeof SvelteComponent<{
@@ -21,5 +23,6 @@ type WidgetMap = {
 export const WIDGETS: WidgetMap = {
 	[CALENDAR_WIDGET_TYPE]: CalendarWidget,
 	[EPIC_GAMES_WIDGET_TYPE]: EpicGamesWidget,
-	[GALLERY_WIDGET_TYPE]: GalleryWidget
+	[GALLERY_WIDGET_TYPE]: GalleryWidget,
+	[SWISS_POST_WIDGET_TYPE]: SwissPostWidget
 };

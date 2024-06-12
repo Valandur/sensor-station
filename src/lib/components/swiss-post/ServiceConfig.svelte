@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { PostServiceConfig } from '$lib/models/post';
+	import type { SwissPostServiceConfigData } from '$lib/models/swiss-post';
 
 	export let name: string;
-	export let config: PostServiceConfig;
+	export let data: SwissPostServiceConfigData;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
@@ -25,7 +24,7 @@
 				id="inputUsername"
 				type="text"
 				name="username"
-				value={config.username ?? ''}
+				value={data.config.username ?? ''}
 				class="form-control"
 			/>
 		</div>
@@ -38,7 +37,7 @@
 				id="inputPassword"
 				type="password"
 				name="password"
-				value={config.password ?? ''}
+				value={data.config.password ?? ''}
 				class="form-control"
 			/>
 		</div>

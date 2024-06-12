@@ -140,11 +140,9 @@ export class CalendarService extends BaseService<
 			return fail(400, { key: 'calendar.privateKey.invalid', message: 'Invalid private key' });
 		}
 
-		this.config = {
-			calendarId,
-			serviceEmail,
-			privateKey
-		};
+		this.config.calendarId = calendarId;
+		this.config.serviceEmail = serviceEmail;
+		this.config.privateKey = privateKey;
 
 		const jwtClient = new google.auth.JWT(serviceEmail, undefined, privateKey, SCOPES);
 		const calendar = google.calendar({ version: 'v3', auth: jwtClient });

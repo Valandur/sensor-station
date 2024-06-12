@@ -10,7 +10,7 @@ import {
 	type EpicGamesWidgetAction
 } from '$lib/models/epic-games';
 
-import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOpations } from '../BaseWidget';
+import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOptions } from '../BaseWidget';
 import serviceManager from '../services';
 import type { EpicGamesService } from './service';
 
@@ -71,7 +71,7 @@ export class EpicGamesWidget extends BaseWidget<
 
 	public async setData(
 		action: EpicGamesWidgetAction,
-		{ form }: WidgetSetDataOpations
+		{ form }: WidgetSetDataOptions
 	): Promise<void | WidgetActionFailure> {
 		if (action !== 'config') {
 			error(400, { key: 'epicGames.action.invalid', message: 'Invalid epic games action' });
@@ -96,9 +96,7 @@ export class EpicGamesWidget extends BaseWidget<
 			});
 		}
 
-		this.config = {
-			service,
-			itemsPerPage
-		};
+		this.config.service = service;
+		this.config.itemsPerPage = itemsPerPage;
 	}
 }

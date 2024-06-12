@@ -3,34 +3,34 @@ import { error, fail } from '@sveltejs/kit';
 import { wrap } from '$lib/counter';
 import type { WidgetActionFailure } from '$lib/models/widget';
 import {
-	GALLERY_SERVICE_TYPE,
-	GALLERY_WIDGET_ACTIONS,
-	type GalleryWidgetAction,
-	type GalleryWidgetConfig,
-	type GalleryWidgetData
-} from '$lib/models/gallery';
+	SWISS_POST_SERVICE_TYPE,
+	SWISS_POST_WIDGET_ACTIONS,
+	type SwissPostWidgetAction,
+	type SwissPostWidgetConfig,
+	type SwissPostWidgetData
+} from '$lib/models/swiss-post';
 
 import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOptions } from '../BaseWidget';
 import serviceManager from '../services';
-import type { GalleryService } from './service';
+import type { SwissPostService } from './service';
 
-export class GalleryWidget extends BaseWidget<
-	GalleryWidgetAction,
-	GalleryWidgetConfig,
-	GalleryWidgetData
+export class SwissPostWidget extends BaseWidget<
+	SwissPostWidgetAction,
+	SwissPostWidgetConfig,
+	SwissPostWidgetData
 > {
-	public static readonly actions = GALLERY_WIDGET_ACTIONS;
+	public static readonly actions = SWISS_POST_WIDGET_ACTIONS;
 
-	protected generateDefaultConfig(): GalleryWidgetConfig {
+	protected generateDefaultConfig(): SwissPostWidgetConfig {
 		return {
-			service: serviceManager.getInstances(GALLERY_SERVICE_TYPE)[0]?.name ?? ''
+			service: serviceManager.getInstances(SWISS_POST_SERVICE_TYPE)[0]?.name
 		};
 	}
 
 	public async getData(
-		action: GalleryWidgetAction,
+		action: SwissPostWidgetAction,
 		options: WidgetGetDataOptions
-	): Promise<GalleryWidgetData | null> {
+	): Promise<SwissPostWidgetData | null> {
 		if (action === 'config') {
 			return {
 				ts: new Date(),
@@ -38,45 +38,45 @@ export class GalleryWidget extends BaseWidget<
 				type: this.type,
 				action,
 				config: this.config,
-				services: serviceManager.getInstances(GALLERY_SERVICE_TYPE)
+				services: serviceManager.getInstances(SWISS_POST_SERVICE_TYPE)
 			};
 		}
 
-		const service = serviceManager.getByName<GalleryService>(this.config.service);
+		const service = serviceManager.getByName<SwissPostService>(this.config.service);
 
 		const data = await service.getData('', options);
 		if (!data || data.action !== '') {
-			error(400, { key: 'epicGames.noData', message: 'No gallery data available' });
+			error(400, { key: 'post.noData', message: 'No post data available' });
 		}
 
 		let page = Number(options.url.searchParams.get('page'));
 		if (!isFinite(page)) {
 			page = 0;
 		}
-		const [[image], prevPage, nextPage] = wrap(data.images.length, page, 1, data.images);
+		const [[shipment], prevPage, nextPage] = wrap(data.shipments.length, page, 1, data.shipments);
 
 		return {
 			ts: new Date(),
 			name: this.name,
 			type: this.type,
 			action,
-			image
+			shipment
 		};
 	}
 
 	public async setData(
-		action: GalleryWidgetAction,
+		action: SwissPostWidgetAction,
 		{ form }: WidgetSetDataOptions
 	): Promise<void | WidgetActionFailure> {
 		if (action !== 'config') {
-			error(400, { key: 'gallery.action.invalid', message: 'Invalid gallery action' });
+			error(400, { key: 'post.action.invalid', message: 'Invalid post action' });
 		}
 
 		const service = form.get('service');
 		if (typeof service !== 'string') {
 			return fail(400, {
-				key: 'gallery.service.invalid',
-				message: 'Invalid gallery widget service'
+				key: 'post.service.invalid',
+				message: 'Invalid post widget service'
 			});
 		}
 

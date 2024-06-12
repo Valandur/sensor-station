@@ -8,7 +8,7 @@ export interface WidgetGetDataOptions {
 	cookies: Cookies;
 }
 
-export interface WidgetSetDataOpations extends WidgetGetDataOptions {
+export interface WidgetSetDataOptions extends WidgetGetDataOptions {
 	form: FormData;
 }
 
@@ -35,6 +35,6 @@ export abstract class BaseWidget<
 	public abstract getData(action: ACTION, options: WidgetGetDataOptions): Promise<DATA | null>;
 	public abstract setData(
 		action: ACTION,
-		options: WidgetSetDataOpations
+		options: WidgetSetDataOptions
 	): Promise<void | WidgetActionFailure>;
 }

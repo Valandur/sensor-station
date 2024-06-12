@@ -3,16 +3,21 @@ import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import makeFetchCookie from 'fetch-cookie';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
-	POST_SERVICE_TYPE,
-	type PostServiceConfig,
-	type PostServiceData,
-	type PostShipment,
+	SWISS_POST_SERVICE_ACTIONS,
+	type SwissPostServiceAction,
+	type SwissPostServiceConfig,
+	type SwissPostServiceData,
+	type Shipment,
 	type RecursiveMap
-} from '$lib/models/post';
-import type { ServiceInstance } from '$lib/models/service';
+} from '$lib/models/swiss-post';
 
-import { BaseService } from '../BaseService';
+import {
+	BaseService,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
 const ENABLED = env.POST_ENABLED === '1';
 const URL_START =
@@ -28,35 +33,61 @@ const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/e
 const URL_TEXTS =
 	'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
 
-export class PostService extends BaseService<PostServiceConfig, PostServiceData> {
-	public override readonly type = POST_SERVICE_TYPE;
+export class SwissPostService extends BaseService<
+	SwissPostServiceAction,
+	SwissPostServiceConfig,
+	SwissPostServiceData
+> {
+	public static readonly actions = SWISS_POST_SERVICE_ACTIONS;
 
 	private hasTexts = false;
 	private shipmentTexts: RecursiveMap = new Map();
 	private fetchCookie = makeFetchCookie(fetch);
 
-	public constructor() {
-		super('POST');
+	protected generateDefaultConfig(): SwissPostServiceConfig {
+		return {
+			username: '',
+			password: ''
+		};
 	}
 
-	public get(
-		{ name, config }: ServiceInstance<PostServiceConfig>,
-		forceUpdate?: boolean | undefined
-	): Promise<PostServiceData> {
+	public async getData(
+		action: SwissPostServiceAction,
+		{ url }: ServiceGetDataOptions
+	): Promise<SwissPostServiceData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Post is disabled`,
+				key: 'post.disabled'
+			});
+		}
+
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action: 'config',
+				config: this.config
+			};
+		}
+
+		if (!this.config.username || !this.config.password) {
+			error(400, {
+				key: 'post.config.invalid',
+				message: 'Invalid post config'
+			});
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
 		return this.cache.with(
 			{
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `Post is disabled`,
-						key: 'post.disabled'
-					});
-				}
-
 				await this.updateTexts();
 
 				let url = URL_START;
@@ -86,7 +117,7 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 
 				url = `${URL_LOGIN}?${params}`;
 				let authId = bodyInit.tokens.authId;
-				const loginData = { username: config.username, password: config.password };
+				const loginData = { username: this.config.username, password: this.config.password };
 
 				const resBasic = await this.request('basic', url, {
 					method: 'POST',
@@ -214,7 +245,7 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const rawShipments: any[] = shipmentsBody.shipments;
-				const shipments: PostShipment[] = rawShipments
+				const shipments: Shipment[] = rawShipments
 					.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
 					.map(({ shipment }) => {
 						const phys = shipment.physicalProperties;
@@ -261,23 +292,25 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 
 				return {
 					ts: new Date(),
-					name,
+					name: this.name,
+					type: this.type,
+					action,
 					shipments
 				};
 			}
 		);
 	}
 
-	public async validate(
-		instance: ServiceInstance<PostServiceConfig>,
-		config: FormData
-	): Promise<PostServiceConfig> {
-		const username = config.get('username');
+	public async setData(
+		action: SwissPostServiceAction,
+		{ form }: ServiceSetDataOptions
+	): Promise<void | ServiceActionFailure> {
+		const username = form.get('username');
 		if (typeof username !== 'string') {
 			throw new Error('Invalid username');
 		}
 
-		const password = config.get('password');
+		const password = form.get('password');
 		if (typeof password !== 'string') {
 			throw new Error('Invalid password');
 		}
@@ -328,10 +361,8 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 			throw new Error('Missing auth ID');
 		}
 
-		return {
-			username,
-			password
-		};
+		this.config.username = username;
+		this.config.password = password;
 	}
 
 	private async request(name: string, url: string, init: RequestInit) {
@@ -427,5 +458,3 @@ export class PostService extends BaseService<PostServiceConfig, PostServiceData>
 		return undefined;
 	}
 }
-
-export default new PostService();

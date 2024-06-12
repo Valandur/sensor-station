@@ -10,7 +10,7 @@ import {
 	type CalendarWidgetData
 } from '$lib/models/calendar';
 
-import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOpations } from '../BaseWidget';
+import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOptions } from '../BaseWidget';
 import serviceManager from '../services';
 import { CalendarService } from './service';
 
@@ -74,7 +74,7 @@ export class CalendarWidget extends BaseWidget<
 
 	public async setData(
 		action: CalendarWidgetAction,
-		{ form }: WidgetSetDataOpations
+		{ form }: WidgetSetDataOptions
 	): Promise<void | WidgetActionFailure> {
 		if (action !== 'config') {
 			error(400, { key: 'calendar.action.invalid', message: 'Invalid calendar action' });
@@ -99,9 +99,7 @@ export class CalendarWidget extends BaseWidget<
 			});
 		}
 
-		this.config = {
-			service,
-			itemsPerPage
-		};
+		this.config.service = service;
+		this.config.itemsPerPage = itemsPerPage;
 	}
 }
