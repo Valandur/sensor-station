@@ -1,28 +1,23 @@
 <script lang="ts">
-	import type {
-		NetworkServiceAction,
-		NetworkServiceData,
-		NetworkServiceInstance
-	} from '$lib/models/network';
+	import type { NetworkServiceData } from '$lib/models/network';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
-	import ServiceMain from './ServiceMain.svelte';
+	import Interfaces from './Interfaces.svelte';
 
-	export let instance: NetworkServiceInstance;
-	export let action: NetworkServiceAction;
+	export let name: string;
 	export let data: NetworkServiceData | null;
 	export let form: Record<string, any> | null;
 </script>
 
-<PageLayout title="Network" subTitle={instance.name} closeUrl="/services">
-	{#if !action}
-		{#if data}
-			<ServiceMain {data} />
+<PageLayout title="Network" subTitle={name} closeUrl="/services">
+	{#if data}
+		{#if !data.action}
+			<Interfaces interfaces={data.interfaces} />
 		{:else}
-			<ErrorCard title="Network" message="Missing data" />
+			<ErrorCard title="Gallery" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Calendar" message="Unknown action" params={{ instance, action, data }} />
+		<ErrorCard title="Gallery" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

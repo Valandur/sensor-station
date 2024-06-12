@@ -1,9 +1,7 @@
 <script lang="ts">
-	import type { NetworkServiceData } from '$lib/models/network';
+	import type { NetworkInterface } from '$lib/models/network';
 
-	export let data: NetworkServiceData;
-
-	$: interfaces = data.interfaces;
+	export let interfaces: NetworkInterface[];
 </script>
 
 <div class="row overflow-auto">

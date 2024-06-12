@@ -8,6 +8,7 @@ import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 import { SWISS_POST_SERVICE_TYPE } from '$lib/models/swiss-post';
+import { NETWORK_SERVICE_TYPE } from '$lib/models/network';
 
 import { BaseService } from './BaseService';
 import { CalendarService } from './calendar/service';
@@ -15,6 +16,7 @@ import { CarouselService } from './carousel/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
 import { SwissPostService } from './swiss-post/service';
+import { NetworkService } from './network/service';
 
 type ServiceConstructor = new (name: string, type: string, config?: any) => BaseService;
 type ServiceMap = { [key: string]: ServiceConstructor & { actions: Readonly<string[]> } };
@@ -25,7 +27,8 @@ const SERVICES: ServiceMap = {
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
-	[SWISS_POST_SERVICE_TYPE]: SwissPostService
+	[SWISS_POST_SERVICE_TYPE]: SwissPostService,
+	[NETWORK_SERVICE_TYPE]: NetworkService
 };
 
 class ServiceManager {
