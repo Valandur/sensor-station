@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { SbbDeparturesServiceConfig } from '$lib/models/sbb-departures';
+	import type { SbbDeparturesServiceConfigData } from '$lib/models/sbb-departures';
 
 	export let name: string;
-	export let config: SbbDeparturesServiceConfig;
+	export let data: SbbDeparturesServiceConfigData;
 </script>
 
 <form
 	id="form"
 	method="POST"
-	action="?/save"
 	class="mt-2"
 	use:enhance={() =>
 		({ result }) =>
@@ -25,7 +24,7 @@
 				id="inputApiKey"
 				type="password"
 				name="apiKey"
-				value={config.apiKey ?? ''}
+				value={data.config.apiKey ?? ''}
 				class="form-control"
 			/>
 		</div>
@@ -38,7 +37,7 @@
 				id="inputStopPoint"
 				type="text"
 				name="stopPoint"
-				value={config.stopPoint ?? ''}
+				value={data.config.stopPoint ?? ''}
 				class="form-control"
 			/>
 		</div>

@@ -1,5 +1,5 @@
 import { decode } from 'html-entities';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import makeFetchCookie from 'fetch-cookie';
 
@@ -19,7 +19,7 @@ import {
 	type ServiceSetDataOptions
 } from '../BaseService';
 
-const ENABLED = env.POST_ENABLED === '1';
+const ENABLED = env.SWISS_POST_ENABLED === '1';
 const URL_START =
 	'https://account.post.ch/idp/?targetURL=https%3A%2F%2Fservice.post.ch%2Fekp-web%2Fsecure%2F%3Flang%3Den%26service%3Dekp%26app%3Dekp&lang=en&service=ekp&inIframe=&inMobileApp=';
 const URL_INIT = 'https://login.swissid.ch/api-login/authenticate/init';
@@ -307,12 +307,12 @@ export class SwissPostService extends BaseService<
 	): Promise<void | ServiceActionFailure> {
 		const username = form.get('username');
 		if (typeof username !== 'string') {
-			throw new Error('Invalid username');
+			return fail(400, { key: 'swissPost.username.invalid', message: 'Invalid username' });
 		}
 
 		const password = form.get('password');
 		if (typeof password !== 'string') {
-			throw new Error('Invalid password');
+			return fail(400, { key: 'swissPost.password.invalid', message: 'Invalid password' });
 		}
 
 		let url = URL_START;
@@ -322,7 +322,7 @@ export class SwissPostService extends BaseService<
 
 		const redir = resPre.url;
 		if (!redir) {
-			throw new Error('Missing redirect URL');
+			return fail(400, { key: 'swissPost.redirectUrl.invalid', message: 'Missing redirect URL' });
 		}
 
 		const params = new URL(redir).searchParams.toString();
@@ -340,7 +340,7 @@ export class SwissPostService extends BaseService<
 		url = `${URL_LOGIN}?${params}`;
 		let authId = bodyInit.tokens.authId;
 		if (!authId) {
-			throw new Error('Missing auth ID');
+			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
 		}
 
 		const loginData = { username, password };
@@ -358,7 +358,7 @@ export class SwissPostService extends BaseService<
 
 		authId = bodyBasic.tokens.authId;
 		if (!authId) {
-			throw new Error('Missing auth ID');
+			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
 		}
 
 		this.config.username = username;
@@ -377,9 +377,10 @@ export class SwissPostService extends BaseService<
 			if (resp.status < 200 || resp.status >= 400) {
 				const body = await resp.json().catch(() => null);
 				const text = body ? null : await resp.text().catch(() => null);
-				throw new Error(
-					`Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`
-				);
+				error(400, {
+					key: 'Invalid status',
+					message: `Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`
+				});
 			}
 			return resp;
 		} catch (err: unknown) {

@@ -1,58 +1,87 @@
 import { differenceInMinutes, parseISO } from 'date-fns';
 import { Parser } from 'xml2js';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
-	SBB_DEPARTURES_SERVICE_TYPE,
+	SBB_DEPARTURES_SERVICE_ACTIONS,
 	type SbbDeparture,
+	type SbbDeparturesServiceAction,
 	type SbbDeparturesServiceConfig,
 	type SbbDeparturesServiceData,
-	type SbbDeparturesServiceInstance
+	type SbbDeparturesWidgetAction
 } from '$lib/models/sbb-departures';
 
-import { BaseService } from '../BaseService';
+import {
+	BaseService,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
 const ENABLED = env.SBB_DEPARTURES_ENABLED === '1';
 const STOP_URL = 'https://api.opentransportdata.swiss/trias2020';
 
-class SbbDeparturesService extends BaseService<
+export class SbbDeparturesService extends BaseService<
+	SbbDeparturesServiceAction,
 	SbbDeparturesServiceConfig,
 	SbbDeparturesServiceData
 > {
-	public override readonly type = SBB_DEPARTURES_SERVICE_TYPE;
+	public static readonly actions = SBB_DEPARTURES_SERVICE_ACTIONS;
 
-	public constructor() {
-		super('SBB_DEPARTURES');
+	protected generateDefaultConfig(): SbbDeparturesServiceConfig {
+		return {
+			apiKey: '',
+			stopPoint: ''
+		};
 	}
 
-	public get(
-		{ name, config }: SbbDeparturesServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<SbbDeparturesServiceData> {
+	public async getData(
+		action: SbbDeparturesServiceAction,
+		{ url }: ServiceGetDataOptions
+	): Promise<SbbDeparturesServiceData | null> {
+		if (!ENABLED) {
+			error(400, {
+				message: `SBB departures is disabled`,
+				key: 'sbbDepartures.disabled'
+			});
+		}
+
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action: 'config',
+				config: this.config
+			};
+		}
+
+		if (!this.config.apiKey || !this.config.stopPoint) {
+			error(400, {
+				key: 'sbbDepartures.config.invalid',
+				message: 'Invalid SBB departures config'
+			});
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
 		return this.cache.with(
 			{
-				key: config.stopPoint,
+				key: this.config.stopPoint,
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `SBB departures is disabled`,
-						key: 'sbb_departures.disabled'
-					});
-				}
-
 				const parser = new Parser({ async: true });
 
-				const body = this.getRequestBody(config.stopPoint);
+				const body = this.getRequestBody(this.config.stopPoint);
 				const res = await fetch(STOP_URL, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/xml',
-						Authorization: config.apiKey
+						Authorization: this.config.apiKey
 					},
 					body
 				});
@@ -98,31 +127,31 @@ class SbbDeparturesService extends BaseService<
 
 				return {
 					ts: new Date(),
-					name,
+					name: this.name,
+					type: this.type,
+					action,
 					departures
 				};
 			}
 		);
 	}
 
-	public async validate(
-		instance: SbbDeparturesServiceInstance,
-		config: FormData
-	): Promise<SbbDeparturesServiceConfig> {
-		const apiKey = config.get('apiKey');
+	public async setData(
+		action: SbbDeparturesWidgetAction,
+		{ form }: ServiceSetDataOptions
+	): Promise<void | ServiceActionFailure> {
+		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			throw new Error('Invalid api key');
+			return fail(400, { key: 'sbbDepartures.apiKey.invalid', message: 'Invalid api key' });
 		}
 
-		const stopPoint = config.get('stopPoint');
+		const stopPoint = form.get('stopPoint');
 		if (typeof stopPoint !== 'string') {
-			throw new Error('Invalid stop key');
+			return fail(400, { key: 'sbbDepartures.stopPoint.invalid', message: 'Invalid stop point' });
 		}
 
-		return {
-			apiKey,
-			stopPoint
-		};
+		this.config.apiKey = apiKey;
+		this.config.stopPoint = stopPoint;
 	}
 
 	private getRequestBody(stopPoint: string) {
@@ -150,5 +179,3 @@ class SbbDeparturesService extends BaseService<
 	</Trias>`;
 	}
 }
-
-export default new SbbDeparturesService();

@@ -6,12 +6,14 @@ import { BaseLogger } from '$lib/models/BaseLogger';
 import { CALENDAR_WIDGET_TYPE } from '$lib/models/calendar';
 import { EPIC_GAMES_WIDGET_TYPE } from '$lib/models/epic-games';
 import { GALLERY_WIDGET_TYPE } from '$lib/models/gallery';
+import { SBB_DEPARTURES_WIDGET_TYPE } from '$lib/models/sbb-departures';
 import { SWISS_POST_WIDGET_TYPE } from '$lib/models/swiss-post';
 
 import type { BaseWidget } from './BaseWidget';
 import { CalendarWidget } from './calendar/widget';
 import { EpicGamesWidget } from './epic-games/widget';
 import { GalleryWidget } from './gallery/widget';
+import { SbbDeparturesWidget } from './sbb-departures/widget';
 import { SwissPostWidget } from './swiss-post/widget';
 
 type WidgetConstructor = new (name: string, type: string, config?: any) => BaseWidget;
@@ -22,6 +24,7 @@ const WIDGETS: WidgetMap = {
 	[CALENDAR_WIDGET_TYPE]: CalendarWidget,
 	[EPIC_GAMES_WIDGET_TYPE]: EpicGamesWidget,
 	[GALLERY_WIDGET_TYPE]: GalleryWidget,
+	[SBB_DEPARTURES_WIDGET_TYPE]: SbbDeparturesWidget,
 	[SWISS_POST_WIDGET_TYPE]: SwissPostWidget
 };
 

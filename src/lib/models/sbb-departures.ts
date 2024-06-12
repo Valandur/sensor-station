@@ -1,20 +1,29 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
+import type { WidgetConfig, WidgetData } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const SBB_DEPARTURES_WIDGET_TYPE = 'sbb-departures';
+export const SBB_DEPARTURES_WIDGET_ACTIONS = ['', 'config'] as const;
 
-export type SbbDeparturesWidgetInstance = WidgetInstance<SbbDeparturesWidgetConfig>;
+export type SbbDeparturesWidgetAction = (typeof SBB_DEPARTURES_WIDGET_ACTIONS)[number];
+
+export interface SbbDeparturesWidgetMainData extends WidgetData<SbbDeparturesWidgetAction> {
+	action: '';
+	departures: SbbDeparture[];
+}
+export interface SbbDeparturesWidgetConfigData extends WidgetData<SbbDeparturesWidgetAction> {
+	action: 'config';
+	config: SbbDeparturesWidgetConfig;
+	services: ServiceInstance[];
+}
+export type SbbDeparturesWidgetData = SbbDeparturesWidgetMainData | SbbDeparturesWidgetConfigData;
 
 export interface SbbDeparturesWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface SbbDeparturesWidgetProps extends WidgetData {
-	departures: SbbDeparture[];
+	service: string;
+	itemsPerPage: number;
 }
 
 // ---------
@@ -22,12 +31,21 @@ export interface SbbDeparturesWidgetProps extends WidgetData {
 // ---------
 
 export const SBB_DEPARTURES_SERVICE_TYPE = 'sbb-departures';
+export const SBB_DEPARTURES_SERVICE_ACTIONS = ['', 'config'] as const;
 
-export type SbbDeparturesServiceInstance = ServiceInstance<SbbDeparturesServiceConfig>;
+export type SbbDeparturesServiceAction = (typeof SBB_DEPARTURES_SERVICE_ACTIONS)[number];
 
-export interface SbbDeparturesServiceData extends ServiceData {
+export interface SbbDeparturesServiceMainData extends ServiceData<SbbDeparturesServiceAction> {
+	action: '';
 	departures: SbbDeparture[];
 }
+export interface SbbDeparturesServiceConfigData extends ServiceData<SbbDeparturesServiceAction> {
+	action: 'config';
+	config: SbbDeparturesServiceConfig;
+}
+export type SbbDeparturesServiceData =
+	| SbbDeparturesServiceMainData
+	| SbbDeparturesServiceConfigData;
 
 export interface SbbDeparturesServiceConfig extends ServiceConfig {
 	apiKey: string;

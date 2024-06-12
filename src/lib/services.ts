@@ -5,15 +5,17 @@ import { CALENDAR_SERVICE_TYPE } from './models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
 import { GALLERY_SERVICE_TYPE } from './models/gallery';
-import { SWISS_POST_SERVICE_TYPE } from './models/swiss-post';
 import { NETWORK_SERVICE_TYPE } from './models/network';
+import { SBB_DEPARTURES_SERVICE_TYPE } from './models/sbb-departures';
+import { SWISS_POST_SERVICE_TYPE } from './models/swiss-post';
 
 import CalendarService from './components/calendar/Service.svelte';
 import CarouselService from './components/carousel/Service.svelte';
 import EpicGamesService from './components/epic-games/Service.svelte';
 import GalleryService from './components/gallery/Service.svelte';
-import SwissPostService from './components/swiss-post/Service.svelte';
 import NetworkService from './components/network/Service.svelte';
+import SbbDeparturesService from './components/sbb-departures/Service.svelte';
+import SwissPostService from './components/swiss-post/Service.svelte';
 
 type ServiceMap = {
 	[key: string]: typeof SvelteComponent<{
@@ -28,6 +30,7 @@ export const SERVICES: ServiceMap = {
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
-	[SWISS_POST_SERVICE_TYPE]: SwissPostService,
-	[NETWORK_SERVICE_TYPE]: NetworkService
+	[NETWORK_SERVICE_TYPE]: NetworkService,
+	[SBB_DEPARTURES_SERVICE_TYPE]: SbbDeparturesService,
+	[SWISS_POST_SERVICE_TYPE]: SwissPostService
 };
