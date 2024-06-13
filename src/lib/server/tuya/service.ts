@@ -1,53 +1,135 @@
 import TuyAPI, { type DPSObject } from 'tuyapi';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
 	PROP_MAP,
+	TUYA_SERVICE_ACTIONS,
 	TUYA_SERVICE_TYPE,
+	type TuyaInfo,
+	type TuyaServiceAction,
 	type TuyaServiceConfig,
-	type TuyaServiceData,
-	type TuyaServiceInstance
+	type TuyaServiceConfigData,
+	type TuyaServiceMainData
 } from '$lib/models/tuya';
 
-import { BaseService } from '../BaseService';
+import { Cache } from '../Cache';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	info: TuyaInfo;
+}
 
 const ENABLED = env.TUYA_ENABLED === '1';
 
-class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
+export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfig> {
+	public static readonly actions = TUYA_SERVICE_ACTIONS;
 	public override readonly type = TUYA_SERVICE_TYPE;
 
-	public constructor() {
-		super('TUYA');
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+
+	protected getDefaultConfig(): TuyaServiceConfig {
+		return {
+			clientId: '',
+			clientSecret: '',
+			deviceIp: '',
+			protocolVersion: '3.3'
+		};
 	}
 
-	public get(
-		{ name, config }: TuyaServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<TuyaServiceData> {
+	protected getActions(): ServiceActions<TuyaServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig(_: ServiceGetDataOptions): Promise<TuyaServiceConfigData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `TUYA is disabled`,
+				key: 'tuya.disabled'
+			});
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const clientId = form.get('clientId');
+		if (typeof clientId !== 'string') {
+			return fail(400, { key: 'tuya.clientId.invalid', message: 'Invalid client id' });
+		}
+
+		const clientSecret = form.get('clientSecret');
+		if (typeof clientSecret !== 'string') {
+			return fail(400, { key: 'tuya.clientSecret.invalid', message: 'Invalid client secret' });
+		}
+
+		const deviceIp = form.get('deviceIp');
+		if (typeof deviceIp !== 'string') {
+			return fail(400, { key: 'tuya.deviceIp.invalid', message: 'Invalid device IP' });
+		}
+
+		const protocolVersion = form.get('protocolVersion');
+		if (typeof protocolVersion !== 'string') {
+			return fail(400, {
+				key: 'tuya.protocolVersion.invalid',
+				message: 'Invalid protocol version'
+			});
+		}
+
+		this.config.clientId = clientId;
+		this.config.clientSecret = clientSecret;
+		this.config.deviceIp = deviceIp;
+		this.config.protocolVersion = protocolVersion;
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<TuyaServiceMainData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `TUYA is disabled`,
+				key: 'tuya.disabled'
+			});
+		}
+
 		const device = new TuyAPI({
-			id: config.clientId,
-			key: config.clientSecret,
-			ip: config.deviceIp,
-			version: config.protocolVersion,
+			id: this.config.clientId,
+			key: this.config.clientSecret,
+			ip: this.config.deviceIp,
+			version: this.config.protocolVersion,
 			issueGetOnConnect: false
 		});
 
-		return this.cache.with(
+		const forceUpdate = url.searchParams.has('force');
+
+		const data = await this.cache.with(
 			{
-				key: config.clientId,
+				key: this.config.clientId,
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `TUYA is disabled`,
-						key: 'tuya.disabled'
-					});
-				}
-
 				await device.find();
 				this.logger.debug('Device found');
 
@@ -80,7 +162,6 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 
 				return {
 					ts: new Date(),
-					name,
 					info
 				};
 			},
@@ -89,39 +170,11 @@ class TuyaService extends BaseService<TuyaServiceConfig, TuyaServiceData> {
 				this.logger.debug('Device disconnected');
 			}
 		);
-	}
-
-	public async validate(
-		instance: TuyaServiceInstance,
-		config: FormData
-	): Promise<TuyaServiceConfig> {
-		const clientId = config.get('clientId');
-		if (typeof clientId !== 'string') {
-			throw new Error('Invalid client id');
-		}
-
-		const clientSecret = config.get('clientSecret');
-		if (typeof clientSecret !== 'string') {
-			throw new Error('Invalid client secret');
-		}
-
-		const deviceIp = config.get('deviceIp');
-		if (typeof deviceIp !== 'string') {
-			throw new Error('Invalid device ip');
-		}
-
-		const protocolVersion = config.get('protocolVersion');
-		if (typeof protocolVersion !== 'string') {
-			throw new Error('Invalid protocol version');
-		}
 
 		return {
-			clientId,
-			clientSecret,
-			deviceIp,
-			protocolVersion
+			ts: data.ts,
+			type: 'data',
+			info: data.info
 		};
 	}
 }
-
-export default new TuyaService();

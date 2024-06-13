@@ -5,6 +5,7 @@ import { error, fail } from '@sveltejs/kit';
 import { BaseLogger } from '$lib/models/BaseLogger';
 import type { ServiceInstance, ServiceType } from '$lib/models/service';
 import { CALENDAR_SERVICE_TYPE } from '$lib/models/calendar';
+import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 import { HOLIDAY_SERVICE_TYPE } from '$lib/models/holiday';
@@ -14,11 +15,12 @@ import { SBB_ALERTS_SERVICE_TYPE } from '$lib/models/sbb-alerts';
 import { SBB_DEPARTURES_SERVICE_TYPE } from '$lib/models/sbb-departures';
 import { SRF_SERVICE_TYPE } from '$lib/models/srf';
 import { SWISS_POST_SERVICE_TYPE } from '$lib/models/swiss-post';
+import { TUYA_SERVICE_TYPE } from '$lib/models/tuya';
 import { WEATHER_SERVICE_TYPE } from '$lib/models/weather';
-import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 
 import { BaseService } from './BaseService';
 import { CalendarService } from './calendar/service';
+import { CarouselService } from './carousel/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
 import { HolidayService } from './holidays/service';
@@ -28,8 +30,8 @@ import { SbbAlertsService } from './sbb-alerts/service';
 import { SbbDeparturesService } from './sbb-departures/service';
 import { SrfService } from './srf/service';
 import { SwissPostService } from './swiss-post/service';
+import { TuyaService } from './tuya/service';
 import { WeatherService } from './weather/service';
-import { CarouselService } from './carousel/service';
 
 type ServiceConstructor = new (name: string, config?: any) => BaseService;
 type ServiceMap = { [key: string]: ServiceConstructor & { actions: Readonly<string[]> } };
@@ -47,6 +49,7 @@ const SERVICES: ServiceMap = {
 	[SBB_DEPARTURES_SERVICE_TYPE]: SbbDeparturesService,
 	[SRF_SERVICE_TYPE]: SrfService,
 	[SWISS_POST_SERVICE_TYPE]: SwissPostService,
+	[TUYA_SERVICE_TYPE]: TuyaService,
 	[WEATHER_SERVICE_TYPE]: WeatherService
 };
 

@@ -1,39 +1,29 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const TUYA_WIDGET_TYPE = 'tuya';
-
-export type TuyaWidgetInstance = WidgetInstance<TuyaWidgetConfig>;
-
-export interface TuyaWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface TuyaWidgetProps extends WidgetData {
-	info: TuyaInfo;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const TUYA_SERVICE_TYPE = 'tuya';
+export const TUYA_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
-export type TuyaServiceInstance = ServiceInstance<TuyaServiceConfig>;
+export type TuyaServiceAction = (typeof TUYA_SERVICE_ACTIONS)[number];
+
+export interface TuyaServiceMainData extends ServiceData {
+	type: 'data';
+	info: TuyaInfo;
+}
+export interface TuyaServiceConfigData extends ServiceData {
+	type: 'config';
+	config: TuyaServiceConfig;
+}
+export type TuyaServiceData = TuyaServiceMainData | TuyaServiceConfigData;
 
 export interface TuyaServiceConfig extends ServiceConfig {
 	clientId: string;
 	clientSecret: string;
 	protocolVersion: string;
 	deviceIp: string;
-}
-
-export interface TuyaServiceData extends ServiceData {
-	info: TuyaInfo;
 }
 
 // ---------

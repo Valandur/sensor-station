@@ -2,6 +2,7 @@ import type { SvelteComponent } from 'svelte';
 
 import type { ServiceData } from './models/service';
 import { CALENDAR_SERVICE_TYPE } from './models/calendar';
+import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
 import { GALLERY_SERVICE_TYPE } from './models/gallery';
 import { HOLIDAY_SERVICE_TYPE } from './models/holiday';
@@ -11,10 +12,11 @@ import { SBB_ALERTS_SERVICE_TYPE } from './models/sbb-alerts';
 import { SBB_DEPARTURES_SERVICE_TYPE } from './models/sbb-departures';
 import { SRF_SERVICE_TYPE } from './models/srf';
 import { SWISS_POST_SERVICE_TYPE } from './models/swiss-post';
+import { TUYA_SERVICE_TYPE } from './models/tuya';
 import { WEATHER_SERVICE_TYPE } from './models/weather';
-import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 
 import CalendarService from './components/calendar/Service.svelte';
+import CarouselService from './components/carousel/Service.svelte';
 import EpicGamesService from './components/epic-games/Service.svelte';
 import GalleryService from './components/gallery/Service.svelte';
 import HolidayService from './components/holiday/Service.svelte';
@@ -24,8 +26,8 @@ import SbbAlertsService from './components/sbb-alerts/Service.svelte';
 import SbbDeparturesService from './components/sbb-departures/Service.svelte';
 import SrfService from './components/srf/Service.svelte';
 import SwissPostService from './components/swiss-post/Service.svelte';
+import TuyaService from './components/tuya/Service.svelte';
 import WeatherService from './components/weather/Service.svelte';
-import CarouselService from './components/carousel/Service.svelte';
 
 type ServiceMap = {
 	[key: string]: typeof SvelteComponent<{
@@ -49,5 +51,6 @@ export const SERVICES: ServiceMap = {
 	[SBB_DEPARTURES_SERVICE_TYPE]: SbbDeparturesService,
 	[SRF_SERVICE_TYPE]: SrfService,
 	[SWISS_POST_SERVICE_TYPE]: SwissPostService,
+	[TUYA_SERVICE_TYPE]: TuyaService,
 	[WEATHER_SERVICE_TYPE]: WeatherService
 };
