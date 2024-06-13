@@ -9,13 +9,14 @@
 	export let name: string;
 	export let data: CalendarServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Calendar" subTitle={name} closeUrl="/services">
+<PageLayout title="Calendar" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
-		{#if !data.action}
+		{#if data.type === 'data'}
 			<Events events={data.events} />
-		{:else if data.action === 'config'}
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{:else if form?.success}

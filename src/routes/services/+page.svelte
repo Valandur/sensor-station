@@ -66,8 +66,8 @@
 									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
 										{#if !!SERVICES[service.type.name]}
-											{#if service.type.actions.includes('')}
-												<a href="/services/{service.name}" class="btn btn-primary">
+											{#if service.type.actions.includes('preview')}
+												<a href="/services/{service.name}/preview" class="btn btn-primary">
 													<i class="icofont-eye-alt"></i>
 												</a>
 											{/if}

@@ -1,19 +1,16 @@
 import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
-// Widgets
-// ---------
-
-// ---------
 // Service
 // ---------
 
 export const NETWORK_SERVICE_TYPE = 'network';
-export const NETWORK_SERVICE_ACTIONS = [''] as const;
+export const NETWORK_SERVICE_ACTIONS = ['preview'] as const;
 
 export type NetworkServiceAction = (typeof NETWORK_SERVICE_ACTIONS)[number];
 
-export interface NetworkServiceData extends ServiceData<NetworkServiceAction> {
+export interface NetworkServiceData extends ServiceData {
+	type: 'data';
 	interfaces: NetworkInterface[];
 }
 

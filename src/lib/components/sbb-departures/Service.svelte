@@ -9,13 +9,14 @@
 	export let name: string;
 	export let data: SbbDeparturesServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Swiss Post" subTitle={name} closeUrl="/services">
+<PageLayout title="SBB Departures" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
-		{#if !data.action}
+		{#if data.type === 'data'}
 			<Departures departures={data.departures} />
-		{:else if data.action === 'config'}
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{:else if form?.success}
@@ -23,9 +24,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Swiss Post" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="SBB Departures" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Swiss Post" message="Missing data" params={{ name }} />
+		<ErrorCard title="SBB Departures" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

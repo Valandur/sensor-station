@@ -7,12 +7,11 @@
 
 	export let name: string;
 	export let data: NetworkServiceData | null;
-	export let form: Record<string, any> | null;
 </script>
 
 <PageLayout title="Network" subTitle={name} closeUrl="/services">
 	{#if data}
-		{#if !data.action}
+		{#if data.type === 'data'}
 			<Interfaces interfaces={data.interfaces} />
 		{:else}
 			<ErrorCard title="Gallery" message="Unknown action" params={{ name, data }} />

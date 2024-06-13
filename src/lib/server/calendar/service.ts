@@ -3,57 +3,133 @@ import { google } from 'googleapis';
 import { parseISO } from 'date-fns';
 import { env } from '$env/dynamic/private';
 
+import { clamp } from '$lib/counter';
 import type { ServiceActionFailure } from '$lib/models/service';
 import {
+	CALENDAR_SERVICE_TYPE,
 	CALENDAR_SERVICE_ACTIONS,
 	type CalendarServiceConfig,
-	type CalendarServiceData,
-	type CalendarServiceAction
+	type CalendarServiceAction,
+	type CalendarServiceConfigData,
+	type CalendarServiceMainData,
+	type CalendarEvent
 } from '$lib/models/calendar';
 
+import { Cache } from '../Cache';
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
 
+interface CacheData {
+	ts: Date;
+	events: CalendarEvent[];
+}
+
 const ENABLED = env.CALENDAR_ENABLED === '1';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
-export class CalendarService extends BaseService<
-	CalendarServiceAction,
-	CalendarServiceConfig,
-	CalendarServiceData
-> {
+export class CalendarService extends BaseService<CalendarServiceAction, CalendarServiceConfig> {
 	public static readonly actions = CALENDAR_SERVICE_ACTIONS;
+	public override readonly type = CALENDAR_SERVICE_TYPE;
 
-	protected generateDefaultConfig(): CalendarServiceConfig {
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+
+	protected getDefaultConfig(): CalendarServiceConfig {
 		return {
 			calendarId: '',
 			privateKey: '',
-			serviceEmail: ''
+			serviceEmail: '',
+			itemsPerPage: 6
 		};
 	}
 
-	public override async getData(
-		action: CalendarServiceAction,
-		{ url }: ServiceGetDataOptions
-	): Promise<CalendarServiceData | null> {
+	protected getActions(): ServiceActions<CalendarServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig(_: ServiceGetDataOptions): Promise<CalendarServiceConfigData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Calendar is disabled`,
+				key: 'calendar.disabled'
+			});
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const calendarId = form.get('calendarId');
+		if (typeof calendarId !== 'string') {
+			return fail(400, { key: 'calendar.calendarId.invalid', message: 'Invalid calendar id' });
+		}
+
+		const serviceEmail = form.get('serviceEmail');
+		if (typeof serviceEmail !== 'string') {
+			return fail(400, { key: 'calendar.serviceEmail.invalid', message: 'Invalid service email' });
+		}
+
+		const privateKey = form.get('privateKey');
+		if (typeof privateKey !== 'string') {
+			return fail(400, { key: 'calendar.privateKey.invalid', message: 'Invalid private key' });
+		}
+
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'calendar.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		this.config.calendarId = calendarId;
+		this.config.serviceEmail = serviceEmail;
+		this.config.privateKey = privateKey;
+		this.config.itemsPerPage = itemsPerPage;
+
+		const jwtClient = new google.auth.JWT(serviceEmail, undefined, privateKey, SCOPES);
+		const calendar = google.calendar({ version: 'v3', auth: jwtClient });
+
+		const res = await calendar.events.list({
+			calendarId: calendarId,
+			timeMin: new Date().toISOString(),
+			maxResults: 10,
+			singleEvents: true,
+			orderBy: 'startTime'
+		});
+
+		if (res.status !== 200) {
+			return fail(400, {
+				key: 'calendar.response.statusNot200',
+				message: 'Could not access calendar'
+			});
+		}
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<CalendarServiceMainData> {
 		if (!ENABLED) {
 			error(400, {
 				message: `Calendar is disabled`,
 				key: 'service.calendar.disabled'
 			});
-		}
-
-		if (action === 'config') {
-			return {
-				ts: new Date(),
-				name: this.name,
-				type: this.type,
-				action: 'config',
-				config: this.config
-			};
 		}
 
 		if (!this.config.calendarId || !this.config.serviceEmail || !this.config.privateKey) {
@@ -65,7 +141,7 @@ export class CalendarService extends BaseService<
 
 		const forceUpdate = url.searchParams.has('force');
 
-		return this.cache.with(
+		const data = await this.cache.with(
 			{
 				key: this.config.calendarId,
 				force: forceUpdate,
@@ -108,58 +184,27 @@ export class CalendarService extends BaseService<
 
 				return {
 					ts: new Date(),
-					name: this.name,
-					type: this.type,
-					action,
 					events
 				};
 			}
 		);
-	}
 
-	public async setData(
-		action: CalendarServiceAction,
-		{ form }: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		if (action !== 'config') {
-			error(400, { key: 'calendar.action.invalid', message: 'Invalid action' });
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
 		}
 
-		const calendarId = form.get('calendarId');
-		if (typeof calendarId !== 'string') {
-			return fail(400, { key: 'calendar.calendarId.invalid', message: 'Invalid calendar id' });
-		}
+		const [events, prevPage, nextPage] = clamp(
+			data.events.length,
+			page,
+			this.config.itemsPerPage,
+			data.events
+		);
 
-		const serviceEmail = form.get('serviceEmail');
-		if (typeof serviceEmail !== 'string') {
-			return fail(400, { key: 'calendar.serviceEmail.invalid', message: 'Invalid service email' });
-		}
-
-		const privateKey = form.get('privateKey');
-		if (typeof privateKey !== 'string') {
-			return fail(400, { key: 'calendar.privateKey.invalid', message: 'Invalid private key' });
-		}
-
-		this.config.calendarId = calendarId;
-		this.config.serviceEmail = serviceEmail;
-		this.config.privateKey = privateKey;
-
-		const jwtClient = new google.auth.JWT(serviceEmail, undefined, privateKey, SCOPES);
-		const calendar = google.calendar({ version: 'v3', auth: jwtClient });
-
-		const res = await calendar.events.list({
-			calendarId: calendarId,
-			timeMin: new Date().toISOString(),
-			maxResults: 10,
-			singleEvents: true,
-			orderBy: 'startTime'
-		});
-
-		if (res.status !== 200) {
-			return fail(400, {
-				key: 'calendar.response.statusNot200',
-				message: 'Could not access calendar'
-			});
-		}
+		return {
+			ts: data.ts,
+			type: 'data',
+			events
+		};
 	}
 }

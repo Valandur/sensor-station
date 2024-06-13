@@ -3,35 +3,40 @@
 	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 	import { de } from 'date-fns/locale/de';
 
-	import type { NewsItem } from '$lib/models/srf';
+	import type { NewsArticle } from '$lib/models/srf';
 
 	import EmptyCard from '../EmptyCard.svelte';
 
 	export let name: string;
-	export let items: NewsItem[];
+	export let articles: NewsArticle[];
 
-	let selectedItem: NewsItem | null = null;
+	let selectedArticle: NewsArticle | null = null;
 
-	function select(item: NewsItem | null) {
-		selectedItem = item;
+	function select(item: NewsArticle | null) {
+		selectedArticle = item;
 	}
 </script>
 
 <div class="h-100 d-flex flex-column">
-	{#if selectedItem}
+	{#if selectedArticle}
 		<div class="details" transition:fade={{ duration: 500 }}>
-			<iframe title="Story" src={`/widgets/${name}/details?article=${selectedItem.id}`} />
+			<iframe title="Story" src={`/services/${name}/details?article=${selectedArticle.id}`} />
 			<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
 				<i class="icofont-ui-close" />
 			</button>
 		</div>
 	{/if}
 
-	{#if items.length > 0}
-		{#each items as item}
-			<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
+	{#if articles.length > 0}
+		{#each articles as item}
+			<div role="presentation" class="row mb-1 flex-1" on:click={() => select(item)}>
 				<div class="col-3 me-1 image">
-					<img alt="Thumbnail" src={'/' + item.image} />
+					<img
+						alt="Thumbnail"
+						src={'/' + item.image}
+						class="mh-100 mw-100"
+						style="object-fit: contain"
+					/>
 				</div>
 				<div class="col abstract d-flex flex-column justify-content-around">
 					<div class="fs-4">{item.title}</div>

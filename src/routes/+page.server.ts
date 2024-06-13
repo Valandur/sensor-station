@@ -2,9 +2,15 @@ import { redirect, type Actions } from '@sveltejs/kit';
 import { exec } from 'node:child_process';
 
 import type { PageServerLoad } from './$types';
+import serviceManager from '$lib/server/services';
 
 export const load: PageServerLoad = async () => {
-	throw redirect(302, '/carousel');
+	const main = serviceManager.getMain();
+	if (main) {
+		throw redirect(302, `/services/${main.name}/${main.action}`);
+	}
+
+	throw redirect(302, '/services');
 };
 
 export const actions: Actions = {

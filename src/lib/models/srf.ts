@@ -1,64 +1,33 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const SRF_WIDGET_TYPE = 'srf';
-export const SRF_WIDGET_ACTIONS = ['', 'config', 'details'] as const;
-
-export type SrfWidgetAction = (typeof SRF_WIDGET_ACTIONS)[number];
-
-export interface SrfWidgetMainData extends WidgetData<SrfWidgetAction> {
-	action: '';
-	items: NewsItem[];
-}
-export interface SrfWidgetConfigData extends WidgetData<SrfWidgetAction> {
-	action: 'config';
-	config: SrfWidgetConfig;
-	services: ServiceInstance[];
-}
-export interface SrfWidgetDetailsData extends WidgetData<SrfWidgetAction> {
-	action: 'details';
-	simple: boolean;
-	head: string;
-	body: string;
-}
-export type SrfWidgetData = SrfWidgetMainData | SrfWidgetConfigData | SrfWidgetDetailsData;
-
-export interface SrfWidgetConfig extends WidgetConfig {
-	service: string;
-	itemsPerPage: number;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const SRF_SERVICE_TYPE = 'srf';
-export const SRF_SERVICE_ACTIONS = ['', 'config', 'details'] as const;
+export const SRF_SERVICE_ACTIONS = ['main', 'details', 'preview', 'config'] as const;
 
 export type SrfServiceAction = (typeof SRF_SERVICE_ACTIONS)[number];
 
-export interface SrfServiceMainData extends ServiceData<SrfServiceAction> {
-	action: '';
-	items: NewsItem[];
+export interface SrfServiceMainData extends ServiceData {
+	type: 'data';
+	articles: NewsArticle[];
 }
-export interface SrfServiceConfigData extends ServiceData<SrfServiceAction> {
-	action: 'config';
+export interface SrfServiceConfigData extends ServiceData {
+	type: 'config';
 	config: SrfServiceConfig;
 }
-export interface SrfWidgetDetailsData extends WidgetData<SrfWidgetAction> {
-	action: 'details';
+export interface SrfServiceDetailsData extends ServiceData {
+	type: 'details';
 	simple: boolean;
 	head: string;
 	body: string;
 }
-export type SrfServiceData = SrfServiceMainData | SrfServiceConfigData | SrfWidgetDetailsData;
+export type SrfServiceData = SrfServiceMainData | SrfServiceConfigData | SrfServiceDetailsData;
 
 export interface SrfServiceConfig extends ServiceConfig {
 	feedId: string;
+	itemsPerPage: number;
 	simpleDetails: boolean;
 }
 
@@ -66,7 +35,7 @@ export interface SrfServiceConfig extends ServiceConfig {
 // Others
 // ---------
 
-export interface NewsItem {
+export interface NewsArticle {
 	id: string;
 	ts: Date;
 	title: string;

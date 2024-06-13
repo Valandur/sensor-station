@@ -5,15 +5,12 @@ import servicesManager from '$lib/server/services';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const types = servicesManager.getTypes();
-	const services = servicesManager.getInstances();
+	const types = servicesManager.getTypes().sort((a, b) => a.name.localeCompare(b.name));
+	const services = servicesManager.getInstances().sort((a, b) => a.name.localeCompare(b.name));
 
 	return {
 		types,
-		services: [...services.values()].map((s) => ({
-			name: s.name,
-			type: types.find((t) => t.name === s.type)!
-		}))
+		services
 	};
 };
 

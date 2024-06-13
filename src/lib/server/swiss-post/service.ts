@@ -4,20 +4,30 @@ import { env } from '$env/dynamic/private';
 import makeFetchCookie from 'fetch-cookie';
 
 import type { ServiceActionFailure } from '$lib/models/service';
+import { wrap } from '$lib/counter';
 import {
+	SWISS_POST_SERVICE_TYPE,
 	SWISS_POST_SERVICE_ACTIONS,
 	type SwissPostServiceAction,
 	type SwissPostServiceConfig,
-	type SwissPostServiceData,
+	type SwissPostServiceConfigData,
+	type SwissPostServiceMainData,
 	type Shipment,
 	type RecursiveMap
 } from '$lib/models/swiss-post';
 
+import { Cache } from '../Cache';
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	shipments: Shipment[];
+}
 
 const ENABLED = env.SWISS_POST_ENABLED === '1';
 const URL_START =
@@ -33,56 +43,133 @@ const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/e
 const URL_TEXTS =
 	'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
 
-export class SwissPostService extends BaseService<
-	SwissPostServiceAction,
-	SwissPostServiceConfig,
-	SwissPostServiceData
-> {
+export class SwissPostService extends BaseService<SwissPostServiceAction, SwissPostServiceConfig> {
+	public override readonly type = SWISS_POST_SERVICE_TYPE;
 	public static readonly actions = SWISS_POST_SERVICE_ACTIONS;
 
 	private hasTexts = false;
 	private shipmentTexts: RecursiveMap = new Map();
 	private fetchCookie = makeFetchCookie(fetch);
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
 
-	protected generateDefaultConfig(): SwissPostServiceConfig {
+	protected getDefaultConfig(): SwissPostServiceConfig {
 		return {
 			username: '',
 			password: ''
 		};
 	}
 
-	public async getData(
-		action: SwissPostServiceAction,
-		{ url }: ServiceGetDataOptions
-	): Promise<SwissPostServiceData> {
+	protected getActions(): ServiceActions<SwissPostServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig({ url }: ServiceGetDataOptions): Promise<SwissPostServiceConfigData> {
 		if (!ENABLED) {
 			error(400, {
-				message: `Post is disabled`,
-				key: 'post.disabled'
+				message: `Swiss Post is disabled`,
+				key: 'swissPost.disabled'
 			});
 		}
 
-		if (action === 'config') {
-			return {
-				ts: new Date(),
-				name: this.name,
-				type: this.type,
-				action: 'config',
-				config: this.config
-			};
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const username = form.get('username');
+		if (typeof username !== 'string') {
+			return fail(400, { key: 'swissPost.username.invalid', message: 'Invalid username' });
+		}
+
+		const password = form.get('password');
+		if (typeof password !== 'string') {
+			return fail(400, { key: 'swissPost.password.invalid', message: 'Invalid password' });
+		}
+
+		let url = URL_START;
+		const resPre = await this.request('pre', url, {
+			headers: { Accept: 'text/html' }
+		});
+
+		const redir = resPre.url;
+		if (!redir) {
+			return fail(400, { key: 'swissPost.redirectUrl.invalid', message: 'Missing redirect URL' });
+		}
+
+		const params = new URL(redir).searchParams.toString();
+		url = `${URL_INIT}?${params}`;
+
+		const resInit = await this.request('init', url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({})
+		});
+		const bodyInit = await resInit.json();
+
+		this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+		url = `${URL_LOGIN}?${params}`;
+		let authId = bodyInit.tokens.authId;
+		if (!authId) {
+			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
+		}
+
+		const loginData = { username, password };
+
+		const resBasic = await this.request('basic', url, {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authId: authId
+			},
+			body: JSON.stringify(loginData)
+		});
+		const bodyBasic = await resBasic.json();
+
+		authId = bodyBasic.tokens.authId;
+		if (!authId) {
+			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
+		}
+
+		this.config.username = username;
+		this.config.password = password;
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<SwissPostServiceMainData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Swiss Post is disabled`,
+				key: 'swissPost.disabled'
+			});
 		}
 
 		if (!this.config.username || !this.config.password) {
 			error(400, {
-				key: 'post.config.invalid',
-				message: 'Invalid post config'
+				key: 'swissPost.config.invalid',
+				message: 'Invalid Swiss Post config'
 			});
 		}
 
 		const forceUpdate = url.searchParams.has('force');
 
-		return this.cache.with(
+		const data = await this.cache.with(
 			{
+				key: this.config.username,
 				force: forceUpdate,
 				resultCacheTime: this.config.resultCacheTime,
 				errorCacheTime: this.config.errorCacheTime
@@ -292,77 +379,22 @@ export class SwissPostService extends BaseService<
 
 				return {
 					ts: new Date(),
-					name: this.name,
-					type: this.type,
-					action,
 					shipments
 				};
 			}
 		);
-	}
 
-	public async setData(
-		action: SwissPostServiceAction,
-		{ form }: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		const username = form.get('username');
-		if (typeof username !== 'string') {
-			return fail(400, { key: 'swissPost.username.invalid', message: 'Invalid username' });
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
 		}
+		const [[shipment], prevPage, nextPage] = wrap(data.shipments.length, page, 1, data.shipments);
 
-		const password = form.get('password');
-		if (typeof password !== 'string') {
-			return fail(400, { key: 'swissPost.password.invalid', message: 'Invalid password' });
-		}
-
-		let url = URL_START;
-		const resPre = await this.request('pre', url, {
-			headers: { Accept: 'text/html' }
-		});
-
-		const redir = resPre.url;
-		if (!redir) {
-			return fail(400, { key: 'swissPost.redirectUrl.invalid', message: 'Missing redirect URL' });
-		}
-
-		const params = new URL(redir).searchParams.toString();
-		url = `${URL_INIT}?${params}`;
-
-		const resInit = await this.request('init', url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({})
-		});
-		const bodyInit = await resInit.json();
-
-		this.logger.debug('next_action', bodyInit.nextAction?.type);
-
-		url = `${URL_LOGIN}?${params}`;
-		let authId = bodyInit.tokens.authId;
-		if (!authId) {
-			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
-		}
-
-		const loginData = { username, password };
-
-		const resBasic = await this.request('basic', url, {
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				authId: authId
-			},
-			body: JSON.stringify(loginData)
-		});
-		const bodyBasic = await resBasic.json();
-
-		authId = bodyBasic.tokens.authId;
-		if (!authId) {
-			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
-		}
-
-		this.config.username = username;
-		this.config.password = password;
+		return {
+			ts: new Date(),
+			type: 'data',
+			shipment
+		};
 	}
 
 	private async request(name: string, url: string, init: RequestInit) {

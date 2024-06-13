@@ -1,38 +1,40 @@
 <script lang="ts">
-	import type {
-		WeatherServiceAction,
-		WeatherServiceData,
-		WeatherServiceInstance
-	} from '$lib/models/weather';
+	import type { WeatherServiceData } from '$lib/models/weather';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
-	import ServiceMain from './ServiceMain.svelte';
+	import Daily from './Daily.svelte';
+	import Hourly from './Hourly.svelte';
+	import Alerts from './Alerts.svelte';
 
-	export let instance: WeatherServiceInstance;
-	export let action: WeatherServiceAction;
+	export let name: string;
 	export let data: WeatherServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Weather" subTitle={instance.name} closeUrl="/services">
-	{#if !action}
-		{#if data}
-			<ServiceMain {data} />
-		{:else}
-			<ErrorCard title="Weather" message="Missing data" params={{ instance, action, data }} />
-		{/if}
-	{:else if action === 'config'}
-		{#if form}
-			{#if form.success}
-				<div class="alert alert-success m-0">Config saved!</div>
-			{:else}
-				<ErrorCard message={form.message} />
+<PageLayout title="Weather" subTitle={name} closeUrl="/services" show={!isEmbedded}>
+	{#if data}
+		{#if data.type === 'hourly'}
+			<Hourly location={data.location} hourly={data.hourly} />
+		{:else if data.type === 'daily'}
+			<Daily location={data.location} daily={data.daily} />
+		{:else if data.type === 'alerts'}
+			<Alerts location={data.location} alert={data.alert} />
+		{:else if data.type === 'config'}
+			{#if form}
+				{#if form.success}
+					<div class="alert alert-success m-0">Config saved!</div>
+				{:else}
+					<ErrorCard message={form.message} />
+				{/if}
 			{/if}
+			<ServiceConfig {name} {data} />
+		{:else}
+			<ErrorCard title="Swiss Post" message="Unknown action" params={{ name, data }} />
 		{/if}
-		<ServiceConfig {instance} />
 	{:else}
-		<ErrorCard title="Weather" message="Unknown action" params={{ instance, action, data }} />
+		<ErrorCard title="Swiss Post" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

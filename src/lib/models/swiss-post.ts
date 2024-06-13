@@ -1,46 +1,20 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const SWISS_POST_WIDGET_TYPE = 'swiss-post';
-export const SWISS_POST_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type SwissPostWidgetAction = (typeof SWISS_POST_WIDGET_ACTIONS)[number];
-
-export interface SwissPostWidgetMainData extends WidgetData<SwissPostWidgetAction> {
-	action: '';
-	shipment: Shipment;
-}
-
-export interface SwissPostWidgetConfigData extends WidgetData<SwissPostWidgetAction> {
-	action: 'config';
-	config: SwissPostWidgetConfig;
-	services: ServiceInstance[];
-}
-export type SwissPostWidgetData = SwissPostWidgetMainData | SwissPostWidgetConfigData;
-
-export interface SwissPostWidgetConfig extends WidgetConfig {
-	service: string;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const SWISS_POST_SERVICE_TYPE = 'swiss-post';
-export const SWISS_POST_SERVICE_ACTIONS = ['', 'config'] as const;
+export const SWISS_POST_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type SwissPostServiceAction = (typeof SWISS_POST_SERVICE_ACTIONS)[number];
 
-export interface SwissPostServiceMainData extends ServiceData<SwissPostServiceAction> {
-	action: '';
-	shipments: Shipment[];
+export interface SwissPostServiceMainData extends ServiceData {
+	type: 'data';
+	shipment: Shipment;
 }
-export interface SwissPostServiceConfigData extends ServiceData<SwissPostServiceAction> {
-	action: 'config';
+export interface SwissPostServiceConfigData extends ServiceData {
+	type: 'config';
 	config: SwissPostServiceConfig;
 }
 

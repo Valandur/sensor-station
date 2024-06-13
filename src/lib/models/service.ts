@@ -1,8 +1,13 @@
 import type { ActionFailure } from '@sveltejs/kit';
 
+export interface ServiceType {
+	name: string;
+	actions: Readonly<string[]>;
+}
+
 export interface ServiceInstance {
 	name: string;
-	type: string;
+	type: ServiceType;
 }
 
 export interface ServiceConfig {
@@ -10,11 +15,8 @@ export interface ServiceConfig {
 	errorCacheTime?: number;
 }
 
-export interface ServiceData<ACTION extends string = string> {
+export interface ServiceData {
 	ts: Date;
-	name: string;
-	type: string;
-	action: ACTION;
 }
 
 export type ServiceActionFailure = ActionFailure<{

@@ -3,6 +3,7 @@ import { networkInterfaces } from 'node:os';
 import { env } from '$env/dynamic/private';
 
 import {
+	NETWORK_SERVICE_TYPE,
 	NETWORK_SERVICE_ACTIONS,
 	type NetworkAddress,
 	type NetworkInterface,
@@ -11,29 +12,35 @@ import {
 	type NetworkServiceData
 } from '$lib/models/network';
 
-import {
-	BaseService,
-	type ServiceGetDataOptions,
-	type ServiceSetDataOptions
-} from '../BaseService';
+import { Cache } from '../Cache';
+import { BaseService, type ServiceActions, type ServiceGetDataOptions } from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	interfaces: NetworkInterface[];
+}
 
 const ENABLED = env.NETWORK_ENABLED === '1';
 
-export class NetworkService extends BaseService<
-	NetworkServiceAction,
-	NetworkServiceConfig,
-	NetworkServiceData
-> {
+export class NetworkService extends BaseService<NetworkServiceAction, NetworkServiceConfig> {
+	public override readonly type = NETWORK_SERVICE_TYPE;
 	public static readonly actions = NETWORK_SERVICE_ACTIONS;
 
-	protected generateDefaultConfig(): NetworkServiceConfig {
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+
+	protected getDefaultConfig(): NetworkServiceConfig {
 		return {};
 	}
 
-	public getData(
-		action: NetworkServiceAction,
-		{ url }: ServiceGetDataOptions
-	): Promise<NetworkServiceData> {
+	protected getActions(): ServiceActions<NetworkServiceAction> {
+		return {
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<NetworkServiceData> {
 		if (!ENABLED) {
 			error(400, {
 				message: `Network is disabled`,
@@ -43,7 +50,7 @@ export class NetworkService extends BaseService<
 
 		const forceUpdate = url.searchParams.has('force');
 
-		return this.cache.with(
+		const data = await this.cache.with(
 			{
 				force: forceUpdate,
 				resultCacheTime: this.config.resultCacheTime,
@@ -73,16 +80,15 @@ export class NetworkService extends BaseService<
 
 				return {
 					ts: new Date(),
-					name: this.name,
-					type: this.type,
-					action,
 					interfaces
 				};
 			}
 		);
-	}
 
-	public setData(action: NetworkServiceAction, options: ServiceSetDataOptions): Promise<void> {
-		throw new Error('Not supported');
+		return {
+			ts: data.ts,
+			type: 'data',
+			interfaces: data.interfaces
+		};
 	}
 }

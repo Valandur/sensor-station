@@ -1,45 +1,27 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const EPIC_GAMES_WIDGET_TYPE = 'epic-games';
-export const EPIC_GAMES_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type EpicGamesWidgetAction = (typeof EPIC_GAMES_WIDGET_ACTIONS)[number];
-
-export interface EpicGamesWidgetMainData extends WidgetData<EpicGamesWidgetAction> {
-	action: '';
-	games: GameItem[];
-}
-export interface EpicGamesWidgetConfigData extends WidgetData<EpicGamesWidgetAction> {
-	action: 'config';
-	config: EpicGamesWidgetConfig;
-	services: ServiceInstance[];
-}
-export type EpicGamesWidgetData = EpicGamesWidgetMainData | EpicGamesWidgetConfigData;
-
-export interface EpicGamesWidgetConfig extends WidgetConfig {
-	service: string;
-	itemsPerPage: number;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const EPIC_GAMES_SERVICE_TYPE = 'epic-games';
-export const EPIC_GAMES_SERVICE_ACTIONS = [''] as const;
+export const EPIC_GAMES_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type EpicGamesServiceAction = (typeof EPIC_GAMES_SERVICE_ACTIONS)[number];
 
-export interface EpicGamesServiceData extends ServiceData<EpicGamesServiceAction> {
+export interface EpicGamesServiceMainData extends ServiceData {
+	type: 'data';
 	games: GameItem[];
 }
+export interface EpicGamesServiceConfigData extends ServiceData {
+	type: 'config';
+	config: EpicGamesServiceConfig;
+}
+export type EpicGamesServiceData = EpicGamesServiceMainData | EpicGamesServiceConfigData;
 
-export interface EpicGamesServiceConfig extends ServiceConfig {}
+export interface EpicGamesServiceConfig extends ServiceConfig {
+	itemsPerPage: number;
+}
 
 // ---------
 // Others

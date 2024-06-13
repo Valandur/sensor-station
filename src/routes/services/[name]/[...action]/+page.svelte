@@ -8,9 +8,10 @@
 
 	$: name = data.name;
 	$: type = data.type;
+	$: action = data.action;
 	$: serviceData = data.data;
 
 	$: comp = SERVICES[type];
 </script>
 
-<svelte:component this={comp} {name} data={serviceData} {form} />
+<svelte:component this={comp} {name} {action} data={serviceData} {form} />

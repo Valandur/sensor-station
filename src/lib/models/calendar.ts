@@ -1,48 +1,20 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const CALENDAR_WIDGET_TYPE = 'calendar';
-export const CALENDAR_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type CalendarWidgetAction = (typeof CALENDAR_WIDGET_ACTIONS)[number];
-
-export interface CalendarWidgetMainData extends WidgetData<CalendarWidgetAction> {
-	action: '';
-	events: CalendarEvent[];
-	prevPage: number;
-	nextPage: number;
-}
-export interface CalendarWidgetConfigData extends WidgetData<CalendarWidgetAction> {
-	action: 'config';
-	config: CalendarWidgetConfig;
-	services: ServiceInstance[];
-}
-export type CalendarWidgetData = CalendarWidgetMainData | CalendarWidgetConfigData;
-
-export interface CalendarWidgetConfig extends WidgetConfig {
-	service: string;
-	itemsPerPage: number;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const CALENDAR_SERVICE_TYPE = 'calendar';
-export const CALENDAR_SERVICE_ACTIONS = ['', 'config'] as const;
+export const CALENDAR_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type CalendarServiceAction = (typeof CALENDAR_SERVICE_ACTIONS)[number];
 
-export interface CalendarServiceMainData extends ServiceData<CalendarWidgetAction> {
-	action: '';
+export interface CalendarServiceMainData extends ServiceData {
+	type: 'data';
 	events: CalendarEvent[];
 }
-export interface CalendarServiceConfigData extends ServiceData<CalendarWidgetAction> {
-	action: 'config';
+export interface CalendarServiceConfigData extends ServiceData {
+	type: 'config';
 	config: CalendarServiceConfig;
 }
 export type CalendarServiceData = CalendarServiceMainData | CalendarServiceConfigData;
@@ -51,6 +23,7 @@ export interface CalendarServiceConfig extends ServiceConfig {
 	calendarId: string;
 	privateKey: string;
 	serviceEmail: string;
+	itemsPerPage: number;
 }
 
 // ---------

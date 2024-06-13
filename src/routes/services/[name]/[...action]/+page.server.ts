@@ -9,11 +9,12 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 	const action = params.action;
 
 	const service = serviceManager.getByName(name);
-	const data = await service.getData(action, { url, cookies });
+	const data = await service.get(action, { url, cookies });
 
 	return {
 		name: service.name,
 		type: service.type,
+		action,
 		data
 	};
 };
@@ -31,7 +32,7 @@ export const actions: Actions = {
 		const service = serviceManager.getByName(name);
 
 		try {
-			const result = await service.setData(action, { url, cookies, form });
+			const result = await service.set(action, { url, cookies, form });
 			await serviceManager.save();
 			if (result) {
 				result.data.success = false;

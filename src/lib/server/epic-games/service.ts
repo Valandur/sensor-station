@@ -5,44 +5,94 @@ import { Readable } from 'node:stream';
 import { finished } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
 import { env } from '$env/dynamic/private';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { parseISO } from 'date-fns';
 
 import type { ServiceActionFailure } from '$lib/models/service';
+import { clamp } from '$lib/counter';
 import {
+	EPIC_GAMES_SERVICE_TYPE,
 	EPIC_GAMES_SERVICE_ACTIONS,
 	type EpicGamesServiceAction,
 	type EpicGamesServiceConfig,
-	type EpicGamesServiceData,
+	type EpicGamesServiceConfigData,
+	type EpicGamesServiceMainData,
 	type GameItem,
 	type RawGame
 } from '$lib/models/epic-games';
 
+import { Cache } from '../Cache';
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	games: GameItem[];
+}
 
 const ENABLED = env.EPIC_GAMES_ENABLED === '1';
 const BASE_URL = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions';
 const URL = `${BASE_URL}?locale=en-US&country=CH&allowCountries=CH`;
 
-export class EpicGamesService extends BaseService<
-	EpicGamesServiceAction,
-	EpicGamesServiceConfig,
-	EpicGamesServiceData
-> {
+export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGamesServiceConfig> {
 	public static readonly actions = EPIC_GAMES_SERVICE_ACTIONS;
+	public override readonly type = EPIC_GAMES_SERVICE_TYPE;
 
-	protected generateDefaultConfig(): EpicGamesServiceConfig {
-		return {};
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+
+	protected getDefaultConfig(): EpicGamesServiceConfig {
+		return {
+			itemsPerPage: 2
+		};
 	}
 
-	public getData(
-		action: EpicGamesServiceAction,
-		{ url }: ServiceGetDataOptions
-	): Promise<EpicGamesServiceData | null> {
+	protected getActions(): ServiceActions<EpicGamesServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig(_: ServiceGetDataOptions): Promise<EpicGamesServiceConfigData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Epic Games is disabled`,
+				key: 'epicGames.disabled'
+			});
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'calendar.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		this.config.itemsPerPage = itemsPerPage;
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<EpicGamesServiceMainData> {
 		if (!ENABLED) {
 			error(400, {
 				message: `Epic Games is disabled`,
@@ -52,7 +102,7 @@ export class EpicGamesService extends BaseService<
 
 		const forceUpdate = url.searchParams.has('force');
 
-		return this.cache.with(
+		const data = await this.cache.with(
 			{
 				force: forceUpdate,
 				resultCacheTime: this.config.resultCacheTime,
@@ -119,19 +169,26 @@ export class EpicGamesService extends BaseService<
 
 				return {
 					ts: new Date(),
-					name: this.name,
-					type: this.type,
-					action,
 					games: games.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
 				};
 			}
 		);
-	}
 
-	public setData(
-		action: EpicGamesServiceAction,
-		options: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		throw new Error('Method not implemented.');
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [games, prevPage, nextPage] = clamp(
+			data.games.length,
+			page,
+			this.config.itemsPerPage,
+			data.games
+		);
+
+		return {
+			ts: data.ts,
+			type: 'data',
+			games
+		};
 	}
 }

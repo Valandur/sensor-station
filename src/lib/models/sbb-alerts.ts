@@ -1,45 +1,20 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const SBB_ALERTS_WIDGET_TYPE = 'sbb-alerts';
-export const SBB_ALERTS_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type SbbAlertsWidgetAction = (typeof SBB_ALERTS_WIDGET_ACTIONS)[number];
-
-export interface SbbAlertsWidgetMainData extends WidgetData<SbbAlertsWidgetAction> {
-	action: '';
-	alert: SbbAlert;
-}
-export interface SbbAlertsWidgetConfigData extends WidgetData<SbbAlertsWidgetAction> {
-	action: 'config';
-	config: SbbAlertsWidgetConfig;
-	services: ServiceInstance[];
-}
-export type SbbAlertsWidgetData = SbbAlertsWidgetMainData | SbbAlertsWidgetConfigData;
-
-export interface SbbAlertsWidgetConfig extends WidgetConfig {
-	service: string;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const SBB_ALERTS_SERVICE_TYPE = 'sbb-alerts';
-export const SBB_ALERTS_SERVICE_ACTIONS = ['', 'config'] as const;
+export const SBB_ALERTS_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type SbbAlertsServiceAction = (typeof SBB_ALERTS_SERVICE_ACTIONS)[number];
 
-export interface SbbAlertsServiceMainData extends ServiceData<SbbAlertsServiceAction> {
-	action: '';
-	alerts: SbbAlert[];
+export interface SbbAlertsServiceMainData extends ServiceData {
+	type: 'data';
+	alert: SbbAlert;
 }
-export interface SbbAlertsServiceConfigData extends ServiceData<SbbAlertsServiceAction> {
-	action: 'config';
+export interface SbbAlertsServiceConfigData extends ServiceData {
+	type: 'config';
 	config: SbbAlertsServiceConfig;
 }
 export type SbbAlertsServiceData = SbbAlertsServiceMainData | SbbAlertsServiceConfigData;

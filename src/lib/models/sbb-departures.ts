@@ -1,46 +1,20 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const SBB_DEPARTURES_WIDGET_TYPE = 'sbb-departures';
-export const SBB_DEPARTURES_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type SbbDeparturesWidgetAction = (typeof SBB_DEPARTURES_WIDGET_ACTIONS)[number];
-
-export interface SbbDeparturesWidgetMainData extends WidgetData<SbbDeparturesWidgetAction> {
-	action: '';
-	departures: SbbDeparture[];
-}
-export interface SbbDeparturesWidgetConfigData extends WidgetData<SbbDeparturesWidgetAction> {
-	action: 'config';
-	config: SbbDeparturesWidgetConfig;
-	services: ServiceInstance[];
-}
-export type SbbDeparturesWidgetData = SbbDeparturesWidgetMainData | SbbDeparturesWidgetConfigData;
-
-export interface SbbDeparturesWidgetConfig extends WidgetConfig {
-	service: string;
-	itemsPerPage: number;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const SBB_DEPARTURES_SERVICE_TYPE = 'sbb-departures';
-export const SBB_DEPARTURES_SERVICE_ACTIONS = ['', 'config'] as const;
+export const SBB_DEPARTURES_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type SbbDeparturesServiceAction = (typeof SBB_DEPARTURES_SERVICE_ACTIONS)[number];
 
-export interface SbbDeparturesServiceMainData extends ServiceData<SbbDeparturesServiceAction> {
-	action: '';
+export interface SbbDeparturesServiceMainData extends ServiceData {
+	type: 'data';
 	departures: SbbDeparture[];
 }
-export interface SbbDeparturesServiceConfigData extends ServiceData<SbbDeparturesServiceAction> {
-	action: 'config';
+export interface SbbDeparturesServiceConfigData extends ServiceData {
+	type: 'config';
 	config: SbbDeparturesServiceConfig;
 }
 export type SbbDeparturesServiceData =
@@ -50,6 +24,7 @@ export type SbbDeparturesServiceData =
 export interface SbbDeparturesServiceConfig extends ServiceConfig {
 	apiKey: string;
 	stopPoint: string;
+	itemsPerPage: number;
 }
 
 // ---------

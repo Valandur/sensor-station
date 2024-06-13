@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { EpicGamesWidgetConfigData } from '$lib/models/epic-games';
+	import type { HolidayServiceConfigData } from '$lib/models/holiday';
 
 	export let name: string;
-	export let data: EpicGamesWidgetConfigData;
+	export let data: HolidayServiceConfigData;
 </script>
 
 <div class="row overflow-auto">
@@ -19,27 +19,26 @@
 		<input type="hidden" name="name" value={name} />
 
 		<div class="row mb-2">
-			<label for="inputService" class="col-3 col-form-label">Service</label>
+			<label for="inputCountry" class="col-3 col-form-label">Country</label>
 			<div class="col">
-				<select id="inputService" name="service" class="form-select" value={data.config.service}>
-					{#each data.services as service}
-						<option value={service.name}>{service.name}</option>
-					{/each}
-				</select>
+				<input
+					id="inputCountry"
+					type="text"
+					name="country"
+					value={data.config.country}
+					class="form-control"
+				/>
 			</div>
 		</div>
 
 		<div class="row mb-2">
-			<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
+			<label for="inputState" class="col-3 col-form-label">State</label>
 			<div class="col">
 				<input
-					id="inputItemsPerPage"
-					type="number"
-					name="itemsPerPage"
-					min="1"
-					max="100"
-					step="1"
-					value={data.config.itemsPerPage}
+					id="inputState"
+					type="text"
+					name="state"
+					value={data.config.state}
 					class="form-control"
 				/>
 			</div>

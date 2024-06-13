@@ -1,29 +1,21 @@
 <script lang="ts">
-	import type { SrfServiceData } from '$lib/models/srf';
+	import type { PrusaServiceData } from '$lib/models/prusa';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
-	import News from './News.svelte';
-	import Details from './Details.svelte';
+	import Printer from './Printer.svelte';
 
 	export let name: string;
-	export let data: SrfServiceData | null;
+	export let data: PrusaServiceData | null;
 	export let form: Record<string, any> | null;
 	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout
-	title="SRF"
-	subTitle={name}
-	closeUrl="/services"
-	show={!isEmbedded && data?.type !== 'details'}
->
+<PageLayout title="Prusa" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<News {name} articles={data.articles} />
-		{:else if data.type === 'details'}
-			<Details head={data.head} body={data.body} simple={data.simple} />
+			<Printer job={data.job} printer={data.printer} />
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
@@ -32,9 +24,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="SRF" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="Prusa" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="SRF" message="Missing data" params={{ name }} />
+		<ErrorCard title="Prusa" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

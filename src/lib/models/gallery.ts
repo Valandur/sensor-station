@@ -1,42 +1,23 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const GALLERY_WIDGET_TYPE = 'gallery';
-export const GALLERY_WIDGET_ACTIONS = ['', 'config'] as const;
-
-export type GalleryWidgetAction = (typeof GALLERY_WIDGET_ACTIONS)[number];
-
-export interface GalleryWidgetMainData extends WidgetData<GalleryWidgetAction> {
-	action: '';
-	image: GalleryImage;
-}
-export interface GalleryWidgetConfigData extends WidgetData<GalleryWidgetAction> {
-	action: 'config';
-	config: GalleryWidgetConfig;
-	services: ServiceInstance[];
-}
-export type GalleryWidgetData = GalleryWidgetMainData | GalleryWidgetConfigData;
-
-export interface GalleryWidgetConfig extends WidgetConfig {
-	service: string;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const GALLERY_SERVICE_TYPE = 'gallery';
-export const GALLERY_SERVICE_ACTIONS = ['', 'config'] as const;
+export const GALLERY_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
 export type GalleryServiceAction = (typeof GALLERY_SERVICE_ACTIONS)[number];
 
-export interface GalleryServiceData extends ServiceData<GalleryServiceAction> {
+export interface GalleryServiceMainData extends ServiceData {
+	type: 'data';
+	image: GalleryImage;
+}
+export interface GalleryServiceConfigData extends ServiceData {
+	type: 'config';
 	images: GalleryImage[];
 }
+export type GalleryServiceData = GalleryServiceMainData | GalleryServiceConfigData;
 
 export interface GalleryServiceConfig extends ServiceConfig {
 	images: GalleryImage[];

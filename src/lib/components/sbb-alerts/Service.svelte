@@ -9,13 +9,14 @@
 	export let name: string;
 	export let data: SbbAlertsServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Swiss Post" subTitle={name} closeUrl="/services">
+<PageLayout title="SBB Alerts" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
-		{#if !data.action}
-			<Alert alert={data.alerts[0]} />
-		{:else if data.action === 'config'}
+		{#if data.type === 'data'}
+			<Alert alert={data.alert} />
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{:else if form?.success}
@@ -23,9 +24,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Swiss Post" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="SBB Alerts" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Swiss Post" message="Missing data" params={{ name }} />
+		<ErrorCard title="SBB Alerts" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

@@ -7,27 +7,30 @@
 	import Carousel from './Carousel.svelte';
 
 	export let name: string;
+	export let action: string;
 	export let data: CarouselServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-{#if data?.action === 'live'}
-	<Carousel {data} />
-{:else}
-	<PageLayout title="Carousel" subTitle={name} closeUrl="/services">
-		{#if data}
-			{#if !data.action}
-				<Carousel {data} />
-			{:else if data.action === 'config'}
-				{#if form?.message}
-					<ErrorCard message={form.message} />
-				{/if}
-				<ServiceConfig {name} {data} />
-			{:else}
-				<ErrorCard title="Carousel" message="Unknown action" params={{ name, data }} />
+<PageLayout
+	title="Carousel"
+	subTitle={name}
+	closeUrl="/services"
+	show={!isEmbedded && action !== 'main'}
+>
+	{#if data}
+		{#if data.type === 'data'}
+			<Carousel {data} />
+		{:else if data.type === 'config'}
+			{#if form?.message}
+				<ErrorCard message={form.message} />
 			{/if}
+			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Carousel" message="Missing data" params={{ name }} />
+			<ErrorCard title="Carousel" message="Unknown action" params={{ name, data }} />
 		{/if}
-	</PageLayout>
-{/if}
+	{:else}
+		<ErrorCard title="Carousel" message="Missing data" params={{ name }} />
+	{/if}
+</PageLayout>

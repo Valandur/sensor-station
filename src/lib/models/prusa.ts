@@ -1,37 +1,25 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const PRUSA_WIDGET_TYPE = 'prusa';
-
-export type PrusaWidgetInstance = WidgetInstance<PrusaWidgetConfig>;
-
-export interface PrusaWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface PrusaWidgetProps extends WidgetData {
-	job: JobInfo;
-	storage: StorageInfo;
-	printer: PrinterInfo;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const PRUSA_SERVICE_TYPE = 'prusa';
+export const PRUSA_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
 
-export type PrusaServiceInstance = ServiceInstance<PrusaServiceConfig>;
+export type PrusaServiceAction = (typeof PRUSA_SERVICE_ACTIONS)[number];
 
-export interface PrusaServiceData extends ServiceData {
+export interface PrusaServiceMainData extends ServiceData {
+	type: 'data';
 	job: JobInfo;
 	storage: StorageInfo;
 	printer: PrinterInfo;
 }
+export interface PrusaServiceConfigData extends ServiceData {
+	type: 'config';
+	config: PrusaServiceConfig;
+}
+export type PrusaServiceData = PrusaServiceMainData | PrusaServiceConfigData;
 
 export interface PrusaServiceConfig extends ServiceConfig {
 	apiUrl: string;

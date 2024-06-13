@@ -9,13 +9,14 @@
 	export let name: string;
 	export let data: SwissPostServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Swiss Post" subTitle={name} closeUrl="/services">
+<PageLayout title="Swiss Post" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
-		{#if !data.action}
-			<Shipment shipment={data.shipments[0]} />
-		{:else if data.action === 'config'}
+		{#if data.type === 'data'}
+			<Shipment shipment={data.shipment} />
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{:else if form?.success}

@@ -44,6 +44,22 @@
 			</div>
 		</div>
 
+		<div class="row mb-2">
+			<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
+			<div class="col">
+				<input
+					id="inputItemsPerPage"
+					type="number"
+					name="itemsPerPage"
+					min="1"
+					max="100"
+					step="1"
+					value={data.config.itemsPerPage}
+					class="form-control"
+				/>
+			</div>
+		</div>
+
 		<div class="row justify-content-end">
 			<div class="col-auto">
 				<button type="submit" class="btn btn-theme mt-2">Save</button>

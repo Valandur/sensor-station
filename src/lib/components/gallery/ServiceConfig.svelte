@@ -4,10 +4,10 @@
 	import { de } from 'date-fns/locale/de';
 	import { parseISO } from 'date-fns/parseISO';
 
-	import type { GalleryServiceData } from '$lib/models/gallery';
+	import type { GalleryServiceConfigData } from '$lib/models/gallery';
 
 	export let name: string;
-	export let data: GalleryServiceData;
+	export let data: GalleryServiceConfigData;
 
 	$: images = data.images;
 

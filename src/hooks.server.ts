@@ -6,7 +6,6 @@ import { building } from '$app/environment';
 
 import { BaseLogger } from '$lib/models/BaseLogger';
 import servicesService from '$lib/server/services';
-import widgetService from '$lib/server/widgets';
 
 const logger = new BaseLogger('MAIN');
 
@@ -40,5 +39,4 @@ async function init() {
 	logger.info('Starting...');
 
 	await servicesService.load();
-	await widgetService.load();
 }

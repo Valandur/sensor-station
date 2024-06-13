@@ -1,81 +1,138 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
+	PRUSA_SERVICE_ACTIONS,
 	PRUSA_SERVICE_TYPE,
+	type JobInfo,
+	type PrinterInfo,
+	type PrusaServiceAction,
 	type PrusaServiceConfig,
-	type PrusaServiceData,
-	type PrusaServiceInstance
+	type PrusaServiceConfigData,
+	type PrusaServiceMainData,
+	type StorageInfo
 } from '$lib/models/prusa';
 
-import { BaseService } from '../BaseService';
+import { Cache } from '../Cache';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	job: JobInfo;
+	storage: StorageInfo;
+	printer: PrinterInfo;
+}
 
 const ENABLED = env.PRUSA_ENABLED === '1';
 
-class PrusaService extends BaseService<PrusaServiceConfig, PrusaServiceData> {
+export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceConfig> {
+	public static readonly actions = PRUSA_SERVICE_ACTIONS;
 	public override readonly type = PRUSA_SERVICE_TYPE;
 
-	public constructor() {
-		super('PRUSA');
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+
+	protected getDefaultConfig(): PrusaServiceConfig {
+		return {
+			apiKey: '',
+			apiUrl: ''
+		};
 	}
 
-	public get(
-		{ name, config }: PrusaServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<PrusaServiceData> {
-		return this.cache.with(
-			{
-				key: config.apiUrl,
-				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+	protected getActions(): ServiceActions<PrusaServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
 			},
-			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `Prusa is disabled`,
-						key: 'prusa.disabled'
-					});
-				}
-
-				const statusUrl = `${config.apiUrl}/api/v1/status`;
-				const res = await fetch(statusUrl, { headers: { 'X-API-Key': config.apiKey } });
-				const body = await res.json();
-
-				return {
-					ts: new Date(),
-					name,
-					...body
-				};
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
 			}
-		);
+		};
 	}
 
-	public async validate(
-		instance: PrusaServiceInstance,
-		config: FormData
-	): Promise<PrusaServiceConfig> {
-		const apiUrl = config.get('apiUrl');
-		if (typeof apiUrl !== 'string') {
-			throw new Error('Invalid api url');
+	public async getConfig(_: ServiceGetDataOptions): Promise<PrusaServiceConfigData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Prusa is disabled`,
+				key: 'prusa.disabled'
+			});
 		}
 
-		const apiKey = config.get('apiKey');
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const apiUrl = form.get('apiUrl');
+		if (typeof apiUrl !== 'string') {
+			return fail(400, { key: 'prusa.apiUrl.invalid', message: 'Invalid API url' });
+		}
+
+		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			throw new Error('Invalid api key');
+			return fail(400, { key: 'prusa.apiKey.invalid', message: 'Invalid API key' });
 		}
 
 		const statusUrl = `${apiUrl}/api/v1/status`;
 		const res = await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
 		if (res.status !== 200) {
-			throw new Error('Invalid config: ' + res.statusText);
+			return fail(400, {
+				key: 'prusa.priner.statusNot200',
+				message: 'Could not contact printer API'
+			});
 		}
 
+		this.config.apiUrl = apiUrl;
+		this.config.apiKey = apiKey;
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<PrusaServiceMainData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Prusa is disabled`,
+				key: 'prusa.disabled'
+			});
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
+		const data = await this.cache.with(
+			{
+				key: this.config.apiUrl,
+				force: forceUpdate,
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
+			},
+			async () => {
+				const statusUrl = `${this.config.apiUrl}/api/v1/status`;
+				const res = await fetch(statusUrl, { headers: { 'X-API-Key': this.config.apiKey } });
+				const body = await res.json();
+
+				return {
+					ts: new Date(),
+					...body
+				};
+			}
+		);
+
 		return {
-			apiUrl,
-			apiKey
+			ts: data.ts,
+			type: 'data',
+			job: data.job,
+			printer: data.printer,
+			storage: data.storage
 		};
 	}
 }
-
-export default new PrusaService();

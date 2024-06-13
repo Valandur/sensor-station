@@ -3,20 +3,38 @@ import { env } from '$env/dynamic/private';
 import { Client } from '@googlemaps/google-maps-services-js';
 
 import type { ServiceActionFailure } from '$lib/models/service';
+import { clamp, wrap } from '$lib/counter';
 import {
-	ICON_MAP,
 	WEATHER_SERVICE_TYPE,
+	WEATHER_SERVICE_ACTIONS,
+	ICON_MAP,
 	type WeatherAlert,
 	type WeatherServiceConfig,
-	type WeatherServiceData,
 	type WeatherForecast,
-	type WeatherServiceInstance,
 	type WeatherServiceAction,
-	WEATHER_SERVICE_ACTIONS
+	type WeatherServiceConfigData,
+	type WeatherServiceDailyData,
+	type WeatherLocation,
+	type WeatherServiceHourlyData,
+	type WeatherServiceAlertsData
 } from '$lib/models/weather';
 
-import { BaseService } from '../BaseService';
 import { getData } from '../modem/data';
+import { Cache } from '../Cache';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	location: WeatherLocation;
+	daily: WeatherForecast[];
+	hourly: WeatherForecast[];
+	alerts: WeatherAlert[];
+}
 
 const ENABLED = env.WEATHER_ENABLED === '1';
 const GOOGLE_KEY = env.GOOGLE_KEY;
@@ -25,63 +43,212 @@ const GEOCODE_URL = `https://api.openweathermap.org/geo/1.0/reverse?limit=3`;
 const ICON_PREFIX = '/icons/';
 const ICON_SUFFIX = '.png';
 
-class WeatherService extends BaseService<
-	WeatherServiceConfig,
-	WeatherServiceData,
-	WeatherServiceAction
-> {
+export class WeatherService extends BaseService<WeatherServiceAction, WeatherServiceConfig> {
+	public static readonly actions = WEATHER_SERVICE_ACTIONS;
 	public override readonly type = WEATHER_SERVICE_TYPE;
-	public override readonly actions = WEATHER_SERVICE_ACTIONS;
 
-	private client = new Client({});
+	private readonly client = new Client({});
+	private readonly cache: Cache<CacheData> = new Cache(this.logger);
 
-	public constructor() {
-		super('WEATHER');
+	protected getDefaultConfig(): WeatherServiceConfig {
+		return {
+			lat: 0,
+			lng: 0,
+			useGeo: true,
+			useGps: true,
+			minDiff: 1000,
+			apiKey: '',
+			itemsPerPage: 7
+		};
 	}
 
-	public override async getData(
-		instance: WeatherServiceInstance,
-		action: WeatherServiceAction,
-		forceUpdate: boolean = false
-	): Promise<WeatherServiceData | null> {
-		const { config } = instance;
+	protected getActions(): ServiceActions<WeatherServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			daily: {
+				get: this.getDaily.bind(this)
+			},
+			hourly: {
+				get: this.getHourly.bind(this)
+			},
+			alerts: {
+				get: this.getAlerts.bind(this)
+			}
+		};
+	}
 
+	private checkSetup(checkConfig = true) {
 		if (!ENABLED) {
 			error(400, {
 				message: `Weather is disabled`,
 				key: 'weather.disabled'
 			});
 		}
-		if (action === 'config') {
-			return null;
-		}
-		if (typeof config.lat !== 'number' || typeof config.lng !== 'number' || !config.apiKey) {
+
+		if (checkConfig && !this.config.apiKey) {
 			error(400, {
 				key: 'weather.config.invalid',
 				message: 'Invalid weather config'
 			});
 		}
+	}
 
+	public async getConfig(_: ServiceGetDataOptions): Promise<WeatherServiceConfigData> {
+		this.checkSetup(false);
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const useGps = form.get('useGps') === 'on';
+		const useGeo = form.get('useGeo') === 'on';
+
+		const lat = Number(form.get('lat'));
+		if (!isFinite(lat)) {
+			return fail(400, { key: 'weather.lat.invalid', message: 'Invalid latitude' });
+		}
+
+		const lng = Number(form.get('lng'));
+		if (!isFinite(lng)) {
+			return fail(400, { key: 'weather.lng.invalid', message: 'Invalid longitude' });
+		}
+
+		const minDiff = Number(form.get('minDiff'));
+		if (!isFinite(minDiff)) {
+			return fail(400, { key: 'weather.minDiff.invalid', message: 'Invalid min diff' });
+		}
+
+		const apiKey = form.get('apiKey');
+		if (typeof apiKey !== 'string') {
+			return fail(400, { key: 'weather.apiKey.invalid', message: 'Invalid api key' });
+		}
+
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'srf.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		// Save config before testing it
+		this.config.lat = lat;
+		this.config.lng = lng;
+		this.config.useGeo = useGeo;
+		this.config.useGps = useGps;
+		this.config.minDiff = minDiff;
+		this.config.apiKey = apiKey;
+		this.config.itemsPerPage = itemsPerPage;
+
+		// Test using supplied base cooridnates
+		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
+		const res = await fetch(forecastUrl);
+		if (res.status !== 200) {
+			return fail(400, {
+				key: 'weather.response.statusNot200',
+				message: 'Could not access weather'
+			});
+		}
+	}
+
+	public async getDaily({ url }: ServiceGetDataOptions): Promise<WeatherServiceDailyData> {
+		this.checkSetup();
+
+		const forceUpdate = url.searchParams.has('force');
+		const data = await this.getData(forceUpdate);
+
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [daily, prevPage, nextPage] = clamp(
+			data.daily.length,
+			page,
+			this.config.itemsPerPage,
+			data.daily
+		);
+
+		return {
+			ts: data.ts,
+			type: 'daily',
+			location: data.location,
+			daily
+		};
+	}
+
+	public async getHourly({ url }: ServiceGetDataOptions): Promise<WeatherServiceHourlyData> {
+		this.checkSetup();
+
+		const forceUpdate = url.searchParams.has('force');
+		const data = await this.getData(forceUpdate);
+
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [hourly, prevPage, nextPage] = clamp(
+			data.hourly.length,
+			page,
+			this.config.itemsPerPage,
+			data.hourly
+		);
+
+		return {
+			ts: data.ts,
+			type: 'hourly',
+			location: data.location,
+			hourly
+		};
+	}
+
+	public async getAlerts({ url }: ServiceGetDataOptions): Promise<WeatherServiceAlertsData> {
+		this.checkSetup();
+
+		const forceUpdate = url.searchParams.has('force');
+		const data = await this.getData(forceUpdate);
+
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
+
+		return {
+			ts: data.ts,
+			type: 'alerts',
+			location: data.location,
+			alert
+		};
+	}
+
+	private async getData(forceUpdate: boolean) {
 		return this.cache.with(
 			{
-				key: config.lat + '-' + config.lng,
+				key: this.config.lat + '-' + this.config.lng,
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async (prevData) => {
-				let location = prevData?.location ?? { lat: config.lat, lng: config.lng };
+				let location = prevData?.location ?? { lat: this.config.lat, lng: this.config.lng };
 				let lat = location.lat;
 				let lng = location.lng;
 
-				if (config.useGps || config.useGeo) {
+				if (this.config.useGps || this.config.useGeo) {
 					const modemData = await getData().catch(() => null);
 					if (modemData) {
-						if (config.useGps && modemData.gps) {
+						if (this.config.useGps && modemData.gps) {
 							this.logger.debug('Using modem gps location', modemData.gps);
 							lat = modemData.gps.lat;
 							lng = modemData.gps.lng;
-						} else if (config.useGeo && modemData.geo) {
+						} else if (this.config.useGeo && modemData.geo) {
 							this.logger.debug('Using modem geo location', modemData.geo);
 							lat = modemData.geo.lat;
 							lng = modemData.geo.lng;
@@ -89,7 +256,7 @@ class WeatherService extends BaseService<
 					}
 				}
 
-				const forecastUrl = `${FORECAST_URL}&appid=${config.apiKey}&lat=${lat}&lon=${lng}`;
+				const forecastUrl = `${FORECAST_URL}&appid=${this.config.apiKey}&lat=${lat}&lon=${lng}`;
 				const res = await fetch(forecastUrl);
 				const body = await res.json();
 
@@ -98,13 +265,13 @@ class WeatherService extends BaseService<
 				let place: string | undefined = prevData?.location.place;
 
 				const dist = this.distance(newLat, newLng, lat, lng);
-				if (!place || dist > config.minDiff) {
+				if (!place || dist > this.config.minDiff) {
 					// reset in case we moved, so we don't show the old location in case we can't find the new one
 					place = undefined;
 
 					this.logger.info('Moved', dist, 'meters, recalculating location');
 
-					const geocodeUrl = `${GEOCODE_URL}&appid=${config.apiKey}&lat=${newLat}&lon=${newLng}`;
+					const geocodeUrl = `${GEOCODE_URL}&appid=${this.config.apiKey}&lat=${newLat}&lon=${newLng}`;
 					const res = await fetch(geocodeUrl).catch(() => null);
 					const body = res ? await res.json() : null;
 					const entry = body?.[0];
@@ -167,14 +334,8 @@ class WeatherService extends BaseService<
 					});
 				}
 
-				/*if (dev && alerts.length === 0) {
-					this.logger.warn('Using dev mock data');
-					alerts.push(...getMockAlerts());
-				}*/
-
 				return {
 					ts: new Date(),
-					instance,
 					location,
 					alerts,
 					hourly,
@@ -182,59 +343,6 @@ class WeatherService extends BaseService<
 				};
 			}
 		);
-	}
-
-	public async setData(
-		instance: WeatherServiceInstance,
-		action: WeatherServiceAction,
-		config: FormData
-	): Promise<void | ServiceActionFailure> {
-		if (action !== 'config') {
-			error(400, { key: 'weather.action.invalid', message: 'Invalid action' });
-		}
-
-		const useGps = config.get('useGps') === 'on';
-		const useGeo = config.get('useGeo') === 'on';
-
-		const lat = Number(config.get('lat'));
-		if (!isFinite(lat)) {
-			return fail(400, { key: 'weather.lat.invalid', message: 'Invalid latitude' });
-		}
-
-		const lng = Number(config.get('lng'));
-		if (!isFinite(lng)) {
-			return fail(400, { key: 'weather.lng.invalid', message: 'Invalid longitude' });
-		}
-
-		const minDiff = Number(config.get('minDiff'));
-		if (!isFinite(minDiff)) {
-			return fail(400, { key: 'weather.minDiff.invalid', message: 'Invalid min diff' });
-		}
-
-		const apiKey = config.get('apiKey');
-		if (typeof apiKey !== 'string') {
-			return fail(400, { key: 'weather.apiKey.invalid', message: 'Invalid api key' });
-		}
-
-		// Save config before testing it
-		instance.config = {
-			useGps,
-			useGeo,
-			lat,
-			lng,
-			minDiff,
-			apiKey
-		};
-
-		// Test using supplied base cooridnates
-		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
-		const res = await fetch(forecastUrl);
-		if (res.status !== 200) {
-			return fail(400, {
-				key: 'weather.response.statusNot200',
-				message: 'Could not access weather'
-			});
-		}
 	}
 
 	private distance(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -256,5 +364,3 @@ class WeatherService extends BaseService<
 		return ICON_PREFIX + ICON_MAP[id] + ICON_SUFFIX;
 	}
 }
-
-export default new WeatherService();

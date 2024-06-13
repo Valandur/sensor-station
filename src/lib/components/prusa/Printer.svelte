@@ -3,7 +3,7 @@
 	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 	import { add } from 'date-fns/add';
 
-	import type { JobInfo, PrinterInfo } from '$lib/models/prusa';
+	import type { JobInfo, PrinterInfo, StorageInfo } from '$lib/models/prusa';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import Card from '../Card.svelte';
@@ -18,7 +18,7 @@
 </script>
 
 <div class="h-100 d-flex flex-column justify-content-end">
-	{#if job.id}
+	{#if job}
 		<div class="row">
 			<div class="col">
 				<Card>

@@ -25,7 +25,7 @@
 					id="inputCalendarId"
 					type="text"
 					name="calendarId"
-					value={data.config.calendarId ?? ''}
+					value={data.config.calendarId}
 					class="form-control"
 				/>
 			</div>
@@ -38,7 +38,7 @@
 					id="inputServiceEmail"
 					type="text"
 					name="serviceEmail"
-					value={data.config.serviceEmail ?? ''}
+					value={data.config.serviceEmail}
 					class="form-control"
 				/>
 			</div>
@@ -50,9 +50,25 @@
 				<textarea
 					id="inputPrivateKey"
 					name="privateKey"
-					value={data.config.privateKey ?? ''}
+					value={data.config.privateKey}
 					class="form-control"
 					rows="3"
+				/>
+			</div>
+		</div>
+
+		<div class="row mb-2">
+			<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
+			<div class="col">
+				<input
+					id="inputItemsPerPage"
+					type="number"
+					name="itemsPerPage"
+					min="1"
+					max="100"
+					step="1"
+					value={data.config.itemsPerPage}
+					class="form-control"
 				/>
 			</div>
 		</div>

@@ -6,16 +6,17 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { de } from 'date-fns/locale';
 
+	import { SERVICES } from '$lib/services';
 	import type { CarouselServiceMainData } from '$lib/models/carousel';
 	import { paused, progress, reset, start } from '$lib/stores/screen';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
 	import { time } from '$lib/stores/time';
 	import { tz } from '$lib/stores/tz';
-	import { WIDGETS } from '$lib/widgets';
 
 	export let data: CarouselServiceMainData;
 	$: index = data.index;
-	$: screenWidget = data.screenWidget;
+	$: screen = data.screen;
+	$: screenType = data.screenType;
 	$: screenData = data.screenData;
 	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
 	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
@@ -153,11 +154,12 @@
 	<div class="row flex-fill position-relative">
 		{#key index}
 			<div class="h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
-				{#if screenWidget}
-					{@const comp = WIDGETS[screenWidget.type]}
+				{#if screen}
+					{@const comp = SERVICES[screenType]}
 					<svelte:component
 						this={comp}
-						name={screenWidget.name}
+						name={screen.name}
+						action={screen.action}
 						data={screenData}
 						form={null}
 						isEmbedded

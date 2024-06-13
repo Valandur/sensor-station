@@ -1,29 +1,32 @@
 import { error, fail } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 import { wrapIndex } from '$lib/counter';
 import type { ServiceActionFailure } from '$lib/models/service';
 import {
+	CAROUSEL_SERVICE_TYPE,
 	CAROUSEL_SERVICE_ACTIONS,
 	type CarouselServiceConfig,
-	type CarouselServiceData,
-	type CarouselServiceAction
+	type CarouselServiceAction,
+	type CarouselServiceConfigData,
+	type CarouselServiceMainData
 } from '$lib/models/carousel';
 
-import widgetManager from '../widgets';
+import serviceManager from '../services';
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
 
-export class CarouselService extends BaseService<
-	CarouselServiceAction,
-	CarouselServiceConfig,
-	CarouselServiceData
-> {
+const ENABLED = env.CAROUSEL_ENABLED === '1';
+
+export class CarouselService extends BaseService<CarouselServiceAction, CarouselServiceConfig> {
+	public override readonly type = CAROUSEL_SERVICE_TYPE;
 	public static readonly actions = CAROUSEL_SERVICE_ACTIONS;
 
-	protected generateDefaultConfig(): CarouselServiceConfig {
+	protected getDefaultConfig(): CarouselServiceConfig {
 		return {
 			screens: [],
 			switchInterval: 20,
@@ -31,19 +34,94 @@ export class CarouselService extends BaseService<
 		};
 	}
 
-	public override async getData(
-		action: CarouselServiceAction,
+	protected getActions(): ServiceActions<CarouselServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this, 'main')
+			},
+			preview: {
+				get: this.getData.bind(this, 'preview')
+			}
+		};
+	}
+
+	public async getConfig(_: ServiceGetDataOptions): Promise<CarouselServiceConfigData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Carousel is disabled`,
+				key: 'carousel.disabled'
+			});
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config,
+			services: serviceManager.getInstances()
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const formAction = form.get('__formAction');
+
+		switch (formAction) {
+			case 'add': {
+				const serviceName = form.get('service');
+				if (typeof serviceName !== 'string') {
+					return fail(400, {
+						key: 'carousel.serviceName.invalid',
+						message: `Invalid service name ${serviceName}`
+					});
+				}
+
+				const action = form.get('action');
+				if (typeof action !== 'string') {
+					return fail(400, {
+						key: 'carousel.action.invalid',
+						message: `Invalid action ${action}`
+					});
+				}
+
+				const service = serviceManager.getByName(serviceName);
+				this.config.screens.push({ name: service.name, action });
+				break;
+			}
+
+			case 'delete': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, {
+						key: 'carousel.form.index.invalid',
+						message: `Invalid form index ${index}`
+					});
+				}
+
+				this.config.screens.splice(index, 1);
+				break;
+			}
+
+			default: {
+				return fail(400, {
+					key: 'carousel.form.action.invalid',
+					message: `Unknown form action ${formAction}`
+				});
+			}
+		}
+	}
+
+	public async getData(
+		action: string,
 		options: ServiceGetDataOptions
-	): Promise<CarouselServiceData> {
-		if (action === 'config') {
-			return {
-				ts: new Date(),
-				name: this.name,
-				type: this.type,
-				action: 'config',
-				config: this.config,
-				widgets: widgetManager.getInstances()
-			};
+	): Promise<CarouselServiceMainData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Carousel is disabled`,
+				key: 'carousel.disabled'
+			});
 		}
 
 		const screens = this.config.screens;
@@ -61,8 +139,10 @@ export class CarouselService extends BaseService<
 		index = wrapIndex(screens.length, index);
 
 		const endIndex = wrapIndex(screens.length, index - 1);
-		let screenWidget = widgetManager.getByName(screens[index].widget);
-		let screenData = await screenWidget.getData('', options);
+
+		let screen = screens[index];
+		let service = serviceManager.getByName(screen.name);
+		let screenData = await service.get(screen.action, options).catch(() => null);
 		while (screenData === null) {
 			index = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
 			// Break if we go through all screens and none of them have data to show
@@ -70,8 +150,9 @@ export class CarouselService extends BaseService<
 				break;
 			}
 
-			screenWidget = widgetManager.getByName(screens[index].widget);
-			screenData = await screenWidget.getData('', options);
+			screen = screens[index];
+			service = serviceManager.getByName(screen.name);
+			screenData = await service.get(screen.action, options).catch(() => null);
 		}
 
 		if (!screenData) {
@@ -88,54 +169,15 @@ export class CarouselService extends BaseService<
 
 		return {
 			ts: new Date(),
-			name: this.name,
-			type: this.type,
-			action,
+			type: 'data',
 			index,
-			screenWidget: { name: screenWidget.name, type: screenWidget.type },
+			screen,
+			screenType: service.type,
 			screenData,
 			nextScreen,
 			prevScreen,
 			switchInterval: this.config.switchInterval * 1000,
 			updateInterval: this.config.updateInterval * 1000
 		};
-	}
-
-	public async setData(
-		action: CarouselServiceAction,
-		{ form }: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		if (action !== 'config') {
-			error(400, { key: 'carousel.action.invalid', message: 'Invalid carousel action' });
-		}
-
-		const formAction = form.get('action');
-		if (formAction === 'add') {
-			const widgetName = form.get('widget');
-			if (typeof widgetName !== 'string') {
-				return fail(400, {
-					key: 'carousel.form.widget.invalid',
-					message: `Invalid widget name ${widgetName}`
-				});
-			}
-
-			const widget = widgetManager.getByName(widgetName);
-			this.config.screens = (this.config.screens ?? []).concat({ widget: widget.name });
-		} else if (formAction === 'delete') {
-			const index = Number(form.get('index'));
-			if (!isFinite(index)) {
-				return fail(400, {
-					key: 'carousel.form.index.invalid',
-					message: `Invalid form index ${index}`
-				});
-			}
-
-			this.config.screens.splice(index, 1);
-		} else {
-			return fail(400, {
-				key: 'carousel.form.action.invalid',
-				message: `Unknown form action ${formAction}`
-			});
-		}
 	}
 }

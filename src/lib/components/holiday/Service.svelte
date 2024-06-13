@@ -1,28 +1,27 @@
 <script lang="ts">
-	import type { SwissPostWidgetData } from '$lib/models/swiss-post';
+	import type { HolidayServiceData } from '$lib/models/holiday';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
-	import WidgetConfig from './WidgetConfig.svelte';
-	import Shipment from './Shipment.svelte';
+	import ServiceConfig from './ServiceConfig.svelte';
+	import Holiday from './Holiday.svelte';
 
 	export let name: string;
-	export let data: SwissPostWidgetData | null;
+	export let data: HolidayServiceData | null;
 	export let form: Record<string, any> | null;
-	export let isEmbedded: boolean;
 </script>
 
-<PageLayout title="Swiss Post" subTitle={name} closeUrl="/widgets" show={!isEmbedded}>
+<PageLayout title="Swiss Post" subTitle={name} closeUrl="/services">
 	{#if data}
-		{#if !data.action}
-			<Shipment shipment={data.shipment} />
-		{:else if data.action === 'config'}
+		{#if data.type === 'data'}
+			<Holiday holiday={data.holiday} />
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{:else if form?.success}
 				<div class="alert alert-success m-0">Config saved!</div>
 			{/if}
-			<WidgetConfig {name} {data} />
+			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Swiss Post" message="Unknown action" params={{ name, data }} />
 		{/if}

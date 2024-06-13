@@ -5,7 +5,7 @@ import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { Readable } from 'node:stream';
 import { finished } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { parse } from 'date-fns';
 import { parse as parseHtml } from 'node-html-parser';
 import Parser from 'rss-parser';
@@ -13,45 +13,75 @@ import { env } from '$env/dynamic/private';
 
 import type { ServiceActionFailure } from '$lib/models/service';
 import {
+	SRF_SERVICE_TYPE,
 	SRF_SERVICE_ACTIONS,
-	type NewsItem,
+	type NewsArticle,
 	type SrfServiceAction,
 	type SrfServiceConfig,
-	type SrfServiceData
+	type SrfServiceConfigData,
+	type SrfServiceMainData,
+	type SrfServiceDetailsData
 } from '$lib/models/srf';
 
 import { Cache } from '../Cache';
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
+import { wrap } from '$lib/counter';
+
+interface CacheData {
+	ts: Date;
+	articles: NewsArticle[];
+}
+
+interface CacheDetailsData {
+	ts: Date;
+	simple: boolean;
+	head: string;
+	body: string;
+}
 
 const ENABLED = env.SRF_ENABLED === '1';
 const BASE_URL = `https://www.srf.ch/news/bnf/rss/`;
 const DESCR_REGEX = /<img src="(.*?)".*?>(.*)/;
 
-export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, SrfServiceData> {
+export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> {
+	public override readonly type = SRF_SERVICE_TYPE;
 	public static readonly actions = SRF_SERVICE_ACTIONS;
 
-	protected readonly articleCache: Cache<SrfServiceData>;
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly detailsCache: Cache<CacheDetailsData> = new Cache(this.logger);
 
-	protected generateDefaultConfig(): SrfServiceConfig {
+	protected getDefaultConfig(): SrfServiceConfig {
 		return {
 			feedId: '',
-			simpleDetails: false
+			simpleDetails: false,
+			itemsPerPage: 3
 		};
 	}
 
-	public constructor(name: string, type: string, config?: SrfServiceConfig) {
-		super(name, type, config);
-		this.articleCache = new Cache(this.logger);
+	protected getActions(): ServiceActions<SrfServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			details: {
+				get: this.getDetails.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
 	}
 
-	public async getData(
-		action: SrfServiceAction,
-		{ url }: ServiceGetDataOptions
-	): Promise<SrfServiceData | null> {
+	public async getConfig(_: ServiceGetDataOptions): Promise<SrfServiceConfigData> {
 		if (!ENABLED) {
 			error(400, {
 				message: `SRF is disabled`,
@@ -59,14 +89,47 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, 
 			});
 		}
 
-		if (action === 'config') {
-			return {
-				ts: new Date(),
-				name: this.name,
-				type: this.type,
-				action: 'config',
-				config: this.config
-			};
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const feedId = form.get('feedId');
+		if (typeof feedId !== 'string') {
+			return fail(400, { key: 'srf.feed.invalid', message: 'Invalid feed ID' });
+		}
+
+		const simpleDetails = form.get('simpleDetails') === 'on';
+
+		const res = await fetch(`${BASE_URL}${feedId}`);
+		if (res.status === 404) {
+			return fail(400, { key: 'srf.feed.unknown', message: 'Unknown feed ID' });
+		} else if (res.status !== 200) {
+			return fail(400, { key: 'srf.config.invalid', message: 'Invalid srf config' });
+		}
+
+		const itemsPerPage = Number(form.get('itemsPerPage'));
+		if (!isFinite(itemsPerPage)) {
+			return fail(400, {
+				key: 'srf.itemsPerPage.invalid',
+				message: 'Invalid number of items per page'
+			});
+		}
+
+		this.config.feedId = feedId;
+		this.config.simpleDetails = simpleDetails;
+		this.config.itemsPerPage = itemsPerPage;
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<SrfServiceMainData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `SRF is disabled`,
+				key: 'srf.disabled'
+			});
 		}
 
 		if (!this.config.feedId) {
@@ -81,94 +144,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, 
 		const folderPath = `data/${this.name}/${this.config.feedId}`;
 		await mkdir(folderPath, { recursive: true });
 
-		if (action === 'details') {
-			return this.articleCache.with(
-				{
-					resultCacheTime: this.config.resultCacheTime,
-					errorCacheTime: this.config.errorCacheTime
-				},
-				async () => {
-					const articleId = url.searchParams.get('article');
-
-					let feedData = this.cache.getData(this.config.feedId);
-					if (!feedData || feedData.action !== '') {
-						error(400, {
-							key: 'srf.cache.empty',
-							message: 'Cache does not contain aritcle'
-						});
-					}
-
-					let page = '';
-					const article = feedData.items.find((a) => a.id === articleId);
-					if (!article) {
-						error(400, {
-							message: `Article ${articleId} in feed ${this.config.feedId} not found`,
-							key: 'srf.articleNotFound'
-						});
-					}
-
-					const filePath = `${folderPath}/${article.id}/article.html`;
-					if (await stat(filePath).catch(() => null)) {
-						this.logger.debug('Using cached article file', this.config.feedId, article.id);
-						page = await readFile(filePath, 'utf-8');
-					} else {
-						this.logger.debug('Downloading article file', this.config.feedId, article.id);
-						const res = await fetch(article.link);
-						const text = await res.text();
-						await writeFile(filePath, text, 'utf-8');
-						page = text;
-					}
-
-					const html = parseHtml(page);
-					const head = html.getElementsByTagName('head')[0];
-					for (const script of head.getElementsByTagName('script')) {
-						script.remove();
-					}
-
-					const body = html.getElementsByTagName('body')[0];
-					const main = body.getElementsByTagName('main')[0];
-					const title = main.getElementsByTagName('header')[0];
-					const section = main.getElementsByTagName('section')[0];
-
-					if (this.config.simpleDetails) {
-						// strip divs
-						for (const div of body.getElementsByTagName('div')) {
-							div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
-						}
-						// strip images
-						for (const figure of body.getElementsByTagName('figure')) {
-							figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
-						}
-						// strip link in title
-						title.getElementById('skiplink__contentlink')?.remove();
-
-						body.childNodes = [title, section];
-					} else {
-						const header = main.getElementsByTagName('div')[0];
-						const section = main.getElementsByTagName('section')[0];
-						const config = body.getElementById('config__js')!;
-						const scripts = body.getElementsByTagName('script');
-						body.childNodes = [header, title, section, config, ...scripts];
-					}
-
-					return {
-						ts: new Date(),
-						name: this.name,
-						type: this.type,
-						action: 'details',
-						simple: this.config.simpleDetails,
-						head: head.innerHTML,
-						body: body.innerHTML.toString()
-					};
-				},
-				undefined,
-				async (err) => {
-					err.body.embedded = true;
-				}
-			);
-		}
-
-		return this.cache.with(
+		const data = await this.cache.with(
 			{
 				key: this.config.feedId,
 				force: forceUpdate,
@@ -182,7 +158,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, 
 				const parser = new Parser({ customFields: { item: ['description'] } });
 				const xmlFeed = await parser.parseString(text);
 
-				const items: NewsItem[] = [];
+				const articles: NewsArticle[] = [];
 				const rawItems = xmlFeed.items
 					.filter((item) => !item.description.includes('Hier finden Sie'))
 					.slice(0, 10);
@@ -212,7 +188,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, 
 						await finished(Readable.fromWeb(res.body as ReadableStream<Uint8Array>).pipe(stream));
 					}
 
-					items.push({
+					articles.push({
 						id,
 						ts: date,
 						title: item.title,
@@ -222,43 +198,148 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig, 
 					});
 				}
 
-				const articles = await readdir(folderPath);
-				for (const fileName of articles) {
-					if (!items.some((item) => item.id === fileName)) {
+				const fileNames = await readdir(folderPath);
+				for (const fileName of fileNames) {
+					if (!articles.some((item) => item.id === fileName)) {
 						await rm(`${folderPath}/${fileName}`, { recursive: true, force: true });
 					}
 				}
 
 				return {
 					ts: new Date(),
-					name: this.name,
-					type: this.type,
-					action,
-					items
+					articles
 				};
 			}
 		);
+
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [articles, prevPage, nextPage] = wrap(
+			data.articles.length,
+			page,
+			this.config.itemsPerPage,
+			data.articles
+		);
+
+		return {
+			ts: new Date(),
+			type: 'data',
+			articles
+		};
 	}
 
-	public async setData(
-		action: SrfServiceAction,
-		{ form }: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		const feedId = form.get('feedId');
-		if (typeof feedId !== 'string') {
-			error(400, { key: 'srf.feed.invalid', message: 'Invalid feed ID' });
+	public async getDetails({ url }: ServiceGetDataOptions): Promise<SrfServiceDetailsData> {
+		if (!ENABLED) {
+			error(400, {
+				message: `SRF is disabled`,
+				key: 'srf.disabled'
+			});
 		}
 
-		const simpleDetails = form.get('simpleDetails') === 'on';
-
-		const res = await fetch(`${BASE_URL}${feedId}`);
-		if (res.status === 404) {
-			error(400, { key: 'srf.feed.unknown', message: 'Unknown feed ID' });
-		} else if (res.status !== 200) {
-			error(400, { key: 'srf.config.invalid', message: 'Invalid srf config' });
+		if (!this.config.feedId) {
+			error(400, {
+				key: 'srf.config.invalid',
+				message: 'Invalid srf config'
+			});
 		}
 
-		this.config.feedId = feedId;
-		this.config.simpleDetails = simpleDetails;
+		const forceUpdate = url.searchParams.has('force');
+
+		const folderPath = `data/${this.name}/${this.config.feedId}`;
+		await mkdir(folderPath, { recursive: true });
+
+		const articleId = url.searchParams.get('article');
+
+		const data = await this.detailsCache.with(
+			{
+				key: `${this.config.feedId}-${articleId}`,
+				force: forceUpdate,
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
+			},
+			async () => {
+				let feedData = this.cache.getData(this.config.feedId);
+				if (!feedData) {
+					error(400, {
+						key: 'srf.cache.empty',
+						message: 'Cache does not contain aritcle'
+					});
+				}
+
+				let page = '';
+				const article = feedData.articles.find((a) => a.id === articleId);
+				if (!article) {
+					error(400, {
+						message: `Article ${articleId} in feed ${this.config.feedId} not found`,
+						key: 'srf.article.notFound'
+					});
+				}
+
+				const filePath = `${folderPath}/${article.id}/article.html`;
+				if (await stat(filePath).catch(() => null)) {
+					this.logger.debug('Using cached article file', this.config.feedId, article.id);
+					page = await readFile(filePath, 'utf-8');
+				} else {
+					this.logger.debug('Downloading article file', this.config.feedId, article.id);
+					const res = await fetch(article.link);
+					const text = await res.text();
+					await writeFile(filePath, text, 'utf-8');
+					page = text;
+				}
+
+				const html = parseHtml(page);
+				const head = html.getElementsByTagName('head')[0];
+				for (const script of head.getElementsByTagName('script')) {
+					script.remove();
+				}
+
+				const body = html.getElementsByTagName('body')[0];
+				const main = body.getElementsByTagName('main')[0];
+				const title = main.getElementsByTagName('header')[0];
+				const section = main.getElementsByTagName('section')[0];
+
+				if (this.config.simpleDetails) {
+					// strip divs
+					for (const div of body.getElementsByTagName('div')) {
+						div.replaceWith('<span class="badge bg-dark mb-3">Element entfernt</span>');
+					}
+					// strip images
+					for (const figure of body.getElementsByTagName('figure')) {
+						figure.replaceWith('<span class="badge bg-dark mb-3">Bild/Video entfernt</span>');
+					}
+					// strip link in title
+					title.getElementById('skiplink__contentlink')?.remove();
+
+					body.childNodes = [title, section];
+				} else {
+					const header = main.getElementsByTagName('div')[0];
+					const section = main.getElementsByTagName('section')[0];
+					const config = body.getElementById('config__js')!;
+					const scripts = body.getElementsByTagName('script');
+					body.childNodes = [header, title, section, config, ...scripts];
+				}
+
+				return {
+					ts: new Date(),
+					simple: this.config.simpleDetails,
+					head: head.innerHTML,
+					body: body.innerHTML.toString()
+				};
+			},
+			undefined,
+			async (err) => {
+				err.body.embedded = true;
+			}
+		);
+
+		return {
+			ts: data.ts,
+			type: 'details',
+			simple: data.simple,
+			head: data.head,
+			body: data.body
+		};
 	}
 }

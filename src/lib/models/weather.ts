@@ -1,45 +1,38 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
-
-// ---------
-// Widgets
-// ---------
-
-export const WEATHER_WIDGET_TYPE = 'weather';
-
-export type WeatherWidgetType = 'daily' | 'hourly' | 'alerts';
-
-export type WeatherWidgetInstance = WidgetInstance<WeatherWidgetConfig>;
-
-export interface WeatherWidgetConfig extends WidgetConfig {
-	type: WeatherWidgetType;
-	serviceName: string;
-}
-
-export interface WeatherWidgetProps extends WidgetData {
-	type: WeatherWidgetType;
-	location: WeatherLocation;
-	daily: WeatherForecast[];
-	hourly: WeatherForecast[];
-	alert: WeatherAlert;
-}
+import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
 // Service
 // ---------
 
 export const WEATHER_SERVICE_TYPE = 'weather';
-export const WEATHER_SERVICE_ACTIONS = ['', 'config'];
+export const WEATHER_SERVICE_ACTIONS = ['config', 'daily', 'hourly', 'alerts'] as const;
 
 export type WeatherServiceAction = (typeof WEATHER_SERVICE_ACTIONS)[number];
-export type WeatherServiceInstance = ServiceInstance<WeatherServiceConfig>;
 
-export interface WeatherServiceData extends ServiceData {
+export interface WeatherServiceDailyData extends ServiceData {
+	type: 'daily';
 	location: WeatherLocation;
-	alerts: WeatherAlert[];
-	hourly: WeatherForecast[];
 	daily: WeatherForecast[];
 }
+export interface WeatherServiceHourlyData extends ServiceData {
+	type: 'hourly';
+	location: WeatherLocation;
+	hourly: WeatherForecast[];
+}
+export interface WeatherServiceAlertsData extends ServiceData {
+	type: 'alerts';
+	location: WeatherLocation;
+	alert: WeatherAlert;
+}
+export interface WeatherServiceConfigData extends ServiceData {
+	type: 'config';
+	config: WeatherServiceConfig;
+}
+export type WeatherServiceData =
+	| WeatherServiceDailyData
+	| WeatherServiceHourlyData
+	| WeatherServiceAlertsData
+	| WeatherServiceConfigData;
 
 export interface WeatherServiceConfig extends ServiceConfig {
 	useGps: boolean;
@@ -48,6 +41,7 @@ export interface WeatherServiceConfig extends ServiceConfig {
 	lng: number;
 	minDiff: number;
 	apiKey: string;
+	itemsPerPage: number;
 }
 
 // ---------

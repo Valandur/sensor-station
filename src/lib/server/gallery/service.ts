@@ -8,38 +8,51 @@ import mime from 'mime-types';
 import { env } from '$env/dynamic/private';
 
 import type { ServiceActionFailure } from '$lib/models/service';
+import { wrap } from '$lib/counter';
 import {
-	GALLERY_WIDGET_ACTIONS,
+	GALLERY_SERVICE_TYPE,
+	GALLERY_SERVICE_ACTIONS,
 	type GalleryServiceAction,
 	type GalleryServiceConfig,
-	type GalleryServiceData
+	type GalleryServiceConfigData,
+	type GalleryServiceMainData
 } from '$lib/models/gallery';
 
 import {
 	BaseService,
+	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
 
 const ENABLED = env.GALLERY_ENABLED === '1';
 
-export class GalleryService extends BaseService<
-	GalleryServiceAction,
-	GalleryServiceConfig,
-	GalleryServiceData
-> {
-	public static readonly actions = GALLERY_WIDGET_ACTIONS;
+export class GalleryService extends BaseService<GalleryServiceAction, GalleryServiceConfig> {
+	public static readonly actions = GALLERY_SERVICE_ACTIONS;
+	public override readonly type = GALLERY_SERVICE_TYPE;
 
-	protected generateDefaultConfig(): GalleryServiceConfig {
+	protected getDefaultConfig(): GalleryServiceConfig {
 		return {
 			images: []
 		};
 	}
 
-	public async getData(
-		action: GalleryServiceAction,
-		options: ServiceGetDataOptions
-	): Promise<GalleryServiceData | null> {
+	protected getActions(): ServiceActions<GalleryServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig(_: ServiceGetDataOptions): Promise<GalleryServiceConfigData | null> {
 		if (!ENABLED) {
 			error(400, {
 				message: `Gallery is disabled`,
@@ -49,38 +62,29 @@ export class GalleryService extends BaseService<
 
 		return {
 			ts: new Date(),
-			name: this.name,
-			type: this.type,
-			action,
+			type: 'config',
 			images: this.config.images
 		};
 	}
 
-	public async setData(
-		action: GalleryServiceAction,
-		{ form }: ServiceSetDataOptions
-	): Promise<void | ServiceActionFailure> {
-		if (action !== 'config') {
-			error(400, { key: 'gallery.action.invalid', message: 'Invalid gallery action' });
-		}
-
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const formAction = form.get('action');
 		switch (formAction) {
 			case 'add': {
 				const newDateStr = form.get('newDate');
 				if (typeof newDateStr !== 'string') {
-					return fail(400, { key: 'gallery.form.newDate.invalid', message: 'Invalid date' });
+					return fail(400, { key: 'gallery.newDate.invalid', message: 'Invalid date' });
 				}
 				const newDate = parseISO(newDateStr);
 
 				const newTitle = form.get('newTitle');
 				if (typeof newTitle !== 'string') {
-					return fail(400, { key: 'gallery.form.newTitle.invalid', message: 'Invalid title' });
+					return fail(400, { key: 'gallery.newTitle.invalid', message: 'Invalid title' });
 				}
 
 				const newImage = form.get('newImage');
 				if (!newImage || typeof newImage === 'string') {
-					return fail(400, { key: 'gallery.form.newImage.invalid', message: 'Invalid image' });
+					return fail(400, { key: 'gallery.newImage.invalid', message: 'Invalid image' });
 				}
 
 				await this.saveUpload(newDate, newTitle, newImage);
@@ -90,7 +94,7 @@ export class GalleryService extends BaseService<
 			case 'delete': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
 				}
 
 				await this.deleteUpload(index);
@@ -100,18 +104,18 @@ export class GalleryService extends BaseService<
 			case 'save': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
 				}
 
 				const dateStr = form.get('date');
 				if (typeof dateStr !== 'string') {
-					return fail(400, { key: 'gallery.form.date.invalid', message: 'Invalid date' });
+					return fail(400, { key: 'gallery.date.invalid', message: 'Invalid date' });
 				}
 				const date = parseISO(dateStr);
 
 				const title = form.get('title');
 				if (typeof title !== 'string') {
-					return fail(400, { key: 'gallery.form.title.invalid', message: 'Invalid title' });
+					return fail(400, { key: 'gallery.title.invalid', message: 'Invalid title' });
 				}
 
 				this.config.images[index].ts = date;
@@ -122,17 +126,17 @@ export class GalleryService extends BaseService<
 			case 'move': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.form.index.invalid', message: 'Invalid index' });
+					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
 				}
 
 				const dir = form.get('dir');
 				if (dir !== 'up' && dir !== 'down') {
-					return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+					return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
 				}
 
 				if (dir === 'up') {
 					if (index === 0) {
-						return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+						return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
 					}
 
 					this.config.images = [
@@ -143,7 +147,7 @@ export class GalleryService extends BaseService<
 					];
 				} else if (dir === 'down') {
 					if (index === this.config.images.length - 1) {
-						return fail(400, { key: 'gallery.form.dir.invalid', message: 'Invalid direction' });
+						return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
 					}
 
 					this.config.images = [
@@ -158,11 +162,37 @@ export class GalleryService extends BaseService<
 
 			default: {
 				return fail(400, {
-					key: 'gallery.form.action.invalid',
+					key: 'gallery.action.invalid',
 					message: `Unknown form action ${formAction}`
 				});
 			}
 		}
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<GalleryServiceMainData | null> {
+		if (!ENABLED) {
+			error(400, {
+				message: `Gallery is disabled`,
+				key: 'gallery.disabled'
+			});
+		}
+
+		let page = Number(url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [[image], prevPage, nextPage] = wrap(
+			this.config.images.length,
+			page,
+			1,
+			this.config.images
+		);
+
+		return {
+			ts: new Date(),
+			type: 'data',
+			image
+		};
 	}
 
 	private async saveUpload(ts: Date, title: string, file: File) {

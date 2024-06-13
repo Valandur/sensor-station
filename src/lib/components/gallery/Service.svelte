@@ -9,13 +9,14 @@
 	export let name: string;
 	export let data: GalleryServiceData | null;
 	export let form: Record<string, any> | null;
+	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Gallery" subTitle={name} closeUrl="/services">
+<PageLayout title="Gallery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
-		{#if !data.action}
-			<Gallery image={data.images[0]} />
-		{:else if data.action === 'config'}
+		{#if data.type === 'data'}
+			<Gallery image={data.image} />
+		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
 			{/if}

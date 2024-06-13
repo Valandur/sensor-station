@@ -2,12 +2,17 @@ import { type HttpError } from '@sveltejs/kit';
 import { differenceInSeconds } from 'date-fns';
 import { env } from '$env/dynamic/private';
 
-import type { BaseCacheEntry } from '$lib/models/BaseCacheEntry';
-import type { BaseLogger } from '$lib/models/BaseLogger';
+import type { Logger } from './Logger';
 
 const DEFAULT_KEY = '__default__';
 const DEFAULT_RESULT_CACHE_TIME = Number(env.CACHE_DEFAULT_RESULT_CACHE_TIME);
 const DEFAULT_ERROR_CACHE_TIME = Number(env.CACHE_DEFAULT_ERROR_CACHE_TIME);
+
+interface CacheEntry<T = unknown> {
+	updatedAt: Date;
+	data: T | null;
+	error: HttpError | null;
+}
 
 interface CacheOptions {
 	key?: string;
@@ -17,11 +22,11 @@ interface CacheOptions {
 }
 
 export class Cache<T> {
-	private readonly logger: BaseLogger;
+	private readonly logger: Logger;
 
-	protected readonly cache: Map<string, BaseCacheEntry<T>> = new Map();
+	protected readonly cache: Map<string, CacheEntry<T>> = new Map();
 
-	public constructor(logger: BaseLogger) {
+	public constructor(logger: Logger) {
 		this.logger = logger;
 	}
 
