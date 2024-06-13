@@ -1,52 +1,53 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { SbbAlertsServiceConfig } from '$lib/models/sbb-alerts';
+	import type { SbbAlertsServiceConfigData } from '$lib/models/sbb-alerts';
 
 	export let name: string;
-	export let config: SbbAlertsServiceConfig;
+	export let data: SbbAlertsServiceConfigData;
 </script>
 
-<form
-	id="form"
-	method="POST"
-	action="?/save"
-	class="mt-2"
-	use:enhance={() =>
-		({ result }) =>
-			applyAction(result)}
->
-	<input type="hidden" name="name" value={name} />
+<div class="row overflow-auto">
+	<form
+		id="form"
+		method="POST"
+		class="col mt-2"
+		use:enhance={() =>
+			({ result }) =>
+				applyAction(result)}
+	>
+		<input type="hidden" name="name" value={name} />
 
-	<div class="row mb-2">
-		<label for="inputApiKey" class="col-3 col-form-label">API Key</label>
-		<div class="col">
-			<input
-				id="inputApiKey"
-				type="password"
-				name="apiKey"
-				value={config.apiKey ?? ''}
-				class="form-control"
-			/>
+		<div class="row mb-2">
+			<label for="inputApiKey" class="col-3 col-form-label">API Key</label>
+			<div class="col">
+				<input
+					id="inputApiKey"
+					type="password"
+					name="apiKey"
+					value={data.config.apiKey ?? ''}
+					class="form-control"
+				/>
+			</div>
 		</div>
-	</div>
 
-	<div class="row mb-2">
-		<label for="inputWords" class="col-3 col-form-label">Words</label>
-		<div class="col">
-			<textarea
-				id="inputWords"
-				name="words"
-				value={config.words?.join('\n') ?? ''}
-				class="form-control"
-				rows="5"
-			/>
+		<div class="row mb-2">
+			<label for="inputWords" class="col-3 col-form-label">Words</label>
+			<div class="col">
+				<textarea
+					id="inputWords"
+					name="words"
+					value={data.config.words?.join('\n') ?? ''}
+					class="form-control"
+					rows="5"
+				/>
+			</div>
 		</div>
-	</div>
 
-	<div class="row justify-content-end">
-		<div class="col-auto">
-			<button type="submit" class="btn btn-theme mt-2">Save</button>
+		<div class="row justify-content-end">
+			<div class="col-auto">
+				<button type="submit" class="btn btn-theme mt-2">Save</button>
+			</div>
 		</div>
-	</div>
-</form>
+	</form>
+</div>

@@ -1,41 +1,38 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 
-	import type { ServiceInstance } from '$lib/models/service';
-	import { SBB_ALERTS_WIDGET_TYPE, type SbbAlertsWidgetConfig } from '$lib/models/sbb-alerts';
+	import type { SbbAlertsWidgetConfigData } from '$lib/models/sbb-alerts';
 
 	export let name: string;
-	export let config: SbbAlertsWidgetConfig;
-	export let services: ServiceInstance[];
-
-	$: validServices = services.filter((s) => s.type === SBB_ALERTS_WIDGET_TYPE);
+	export let data: SbbAlertsWidgetConfigData;
 </script>
 
-<form
-	id="form"
-	method="POST"
-	action="?/save"
-	class="mt-2"
-	use:enhance={() =>
-		({ result }) =>
-			applyAction(result)}
->
-	<input type="hidden" name="name" value={name} />
+<div class="row overflow-auto">
+	<form
+		id="form"
+		method="POST"
+		class="col mt-2"
+		use:enhance={() =>
+			({ result }) =>
+				applyAction(result)}
+	>
+		<input type="hidden" name="name" value={name} />
 
-	<div class="row mb-2">
-		<label for="inputService" class="col-3 col-form-label">Service</label>
-		<div class="col">
-			<select id="inputService" name="serviceName" class="form-select" value={config.serviceName}>
-				{#each validServices as srv}
-					<option value={srv.name}>{srv.name}</option>
-				{/each}
-			</select>
+		<div class="row mb-2">
+			<label for="inputService" class="col-3 col-form-label">Service</label>
+			<div class="col">
+				<select id="inputService" name="service" class="form-select" value={data.config.service}>
+					{#each data.services as service}
+						<option value={service.name}>{service.name}</option>
+					{/each}
+				</select>
+			</div>
 		</div>
-	</div>
 
-	<div class="row justify-content-end">
-		<div class="col-auto">
-			<button type="submit" class="btn btn-theme mt-2">Save</button>
+		<div class="row justify-content-end">
+			<div class="col-auto">
+				<button type="submit" class="btn btn-theme mt-2">Save</button>
+			</div>
 		</div>
-	</div>
-</form>
+	</form>
+</div>

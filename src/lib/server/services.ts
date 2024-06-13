@@ -8,6 +8,7 @@ import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 import { NETWORK_SERVICE_TYPE } from '$lib/models/network';
+import { SBB_ALERTS_SERVICE_TYPE } from '$lib/models/sbb-alerts';
 import { SBB_DEPARTURES_SERVICE_TYPE } from '$lib/models/sbb-departures';
 import { SRF_SERVICE_TYPE } from '$lib/models/srf';
 import { SWISS_POST_SERVICE_TYPE } from '$lib/models/swiss-post';
@@ -18,6 +19,7 @@ import { CarouselService } from './carousel/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
 import { NetworkService } from './network/service';
+import { SbbAlertsService } from './sbb-alerts/service';
 import { SbbDeparturesService } from './sbb-departures/service';
 import { SrfService } from './srf/service';
 import { SwissPostService } from './swiss-post/service';
@@ -32,6 +34,7 @@ const SERVICES: ServiceMap = {
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
 	[NETWORK_SERVICE_TYPE]: NetworkService,
+	[SBB_ALERTS_SERVICE_TYPE]: SbbAlertsService,
 	[SBB_DEPARTURES_SERVICE_TYPE]: SbbDeparturesService,
 	[SRF_SERVICE_TYPE]: SrfService,
 	[SWISS_POST_SERVICE_TYPE]: SwissPostService

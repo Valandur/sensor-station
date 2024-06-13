@@ -3,51 +3,82 @@ import { Parser } from 'xml2js';
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
-	SBB_ALERTS_SERVICE_TYPE,
+	SBB_ALERTS_SERVICE_ACTIONS,
 	type SbbAlert,
+	type SbbAlertsServiceAction,
 	type SbbAlertsServiceConfig,
 	type SbbAlertsServiceData,
-	type SbbAlertsServiceInstance,
 	type SituationElement,
 	type Text
 } from '$lib/models/sbb-alerts';
 
-import { BaseService } from '../BaseService';
+import {
+	BaseService,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
 const ENABLED = env.SBB_ALERTS_ENABLED === '1';
 const STATUS_URL = 'https://api.opentransportdata.swiss/siri-sx';
 
-class SbbAlertsService extends BaseService<SbbAlertsServiceConfig, SbbAlertsServiceData> {
-	public override readonly type = SBB_ALERTS_SERVICE_TYPE;
+export class SbbAlertsService extends BaseService<
+	SbbAlertsServiceAction,
+	SbbAlertsServiceConfig,
+	SbbAlertsServiceData
+> {
+	public static readonly actions = SBB_ALERTS_SERVICE_ACTIONS;
 
-	public constructor() {
-		super('SBB_ALERTS');
+	protected generateDefaultConfig(): SbbAlertsServiceConfig {
+		return {
+			apiKey: '',
+			words: []
+		};
 	}
 
-	public get(
-		{ name, config }: SbbAlertsServiceInstance,
-		forceUpdate?: boolean | undefined
-	): Promise<SbbAlertsServiceData> {
+	public async getData(
+		action: SbbAlertsServiceAction,
+		{ url }: ServiceGetDataOptions
+	): Promise<SbbAlertsServiceData | null> {
+		if (!ENABLED) {
+			error(400, {
+				message: `SBB alerts is disabled`,
+				key: 'sbbAlerts.disabled'
+			});
+		}
+
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action: 'config',
+				config: this.config
+			};
+		}
+
+		if (!this.config.apiKey || !this.config.words) {
+			error(400, {
+				key: 'sbbAlerts.config.invalid',
+				message: 'Invalid SBB alerts config'
+			});
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
 		return this.cache.with(
 			{
-				key: config.words.join(','),
+				key: this.config.words.join(','),
 				force: forceUpdate,
-				resultCacheTime: config.resultCacheTime,
-				errorCacheTime: config.errorCacheTime
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				if (!ENABLED) {
-					error(400, {
-						message: `SBB alerts is disabled`,
-						key: 'sbb_alerts.disabled'
-					});
-				}
-
 				const parser = new Parser({ async: true });
 
 				const res = await fetch(STATUS_URL, {
-					headers: { Authorization: `Bearer ${config.apiKey}` }
+					headers: { Authorization: `Bearer ${this.config.apiKey}` }
 				});
 				const resEvents = await parser.parseStringPromise(await res.text());
 				const sits: SituationElement[] =
@@ -57,7 +88,7 @@ class SbbAlertsService extends BaseService<SbbAlertsServiceConfig, SbbAlertsServ
 				const alerts: SbbAlert[] = [];
 				for (const sit of sits) {
 					const sitStr = JSON.stringify(sit);
-					if (sit.Planned?.[0] === 'true' || !config.words.some((w) => sitStr.includes(w))) {
+					if (sit.Planned?.[0] === 'true' || !this.config.words.some((w) => sitStr.includes(w))) {
 						continue;
 					}
 
@@ -82,33 +113,36 @@ class SbbAlertsService extends BaseService<SbbAlertsServiceConfig, SbbAlertsServ
 
 				return {
 					ts: new Date(),
-					name,
+					name: this.name,
+					type: this.type,
+					action,
 					alerts
 				};
 			}
 		);
 	}
 
-	public async validate(
-		instance: SbbAlertsServiceInstance,
-		config: FormData
-	): Promise<SbbAlertsServiceConfig> {
-		const apiKey = config.get('apiKey');
+	public async setData(
+		action: SbbAlertsServiceAction,
+		{ form }: ServiceSetDataOptions
+	): Promise<void | ServiceActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'sbbAlerts.action.invalid', message: 'Invalid SBB alerts action' });
+		}
+
+		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			throw new Error('Invalid api key');
+			error(400, { key: 'sbbAlerts.apiKey.invalid', message: 'Invalid api key' });
 		}
 
-		const wordsStr = config.get('words');
+		const wordsStr = form.get('words');
 		if (typeof wordsStr !== 'string') {
-			throw new Error('Invalid words');
+			error(400, { key: 'sbbAlerts.words.invalid', message: 'Invalid words' });
 		}
-
 		const words = wordsStr.split(/[\n\r,]/gi).filter((w) => !!w);
 
-		return {
-			apiKey,
-			words
-		};
+		this.config.apiKey = apiKey;
+		this.config.words = words;
 	}
 
 	private getTextDE(texts: Text[]): string;
@@ -117,5 +151,3 @@ class SbbAlertsService extends BaseService<SbbAlertsServiceConfig, SbbAlertsServ
 		return texts?.find((s) => s['$']['xml:lang'] === 'DE')?.['_'];
 	}
 }
-
-export default new SbbAlertsService();

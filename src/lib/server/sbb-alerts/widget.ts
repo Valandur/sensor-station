@@ -1,64 +1,88 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 import { wrap } from '$lib/counter';
+import type { WidgetActionFailure } from '$lib/models/widget';
 import {
-	SBB_ALERTS_WIDGET_TYPE,
+	SBB_ALERTS_SERVICE_TYPE,
+	SBB_ALERTS_WIDGET_ACTIONS,
+	type SbbAlertsWidgetAction,
 	type SbbAlertsWidgetConfig,
-	type SbbAlertsWidgetInstance,
-	type SbbAlertsWidgetProps
+	type SbbAlertsWidgetData
 } from '$lib/models/sbb-alerts';
 
-import { BaseWidget, type WidgetValidateFailure } from '../BaseWidget';
-import service from './service';
+import { BaseWidget, type WidgetGetDataOptions, type WidgetSetDataOptions } from '../BaseWidget';
+import serviceManager from '../services';
+import type { SbbAlertsService } from './service';
 
-class SbbAlertsWidget extends BaseWidget<SbbAlertsWidgetConfig, SbbAlertsWidgetProps> {
-	public override readonly type = SBB_ALERTS_WIDGET_TYPE;
+export class SbbAlertsWidget extends BaseWidget<
+	SbbAlertsWidgetAction,
+	SbbAlertsWidgetConfig,
+	SbbAlertsWidgetData
+> {
+	public static readonly actions = SBB_ALERTS_WIDGET_ACTIONS;
 
-	public constructor() {
-		super('SBB_ALERTS');
+	protected generateDefaultConfig(): SbbAlertsWidgetConfig {
+		return {
+			service: serviceManager.getInstances(SBB_ALERTS_SERVICE_TYPE)[0]?.name ?? ''
+		};
 	}
 
-	public async props(
-		{ name, config }: SbbAlertsWidgetInstance,
-		page: number
-	): Promise<SbbAlertsWidgetProps | null> {
-		if (!config.serviceName) {
-			error(400, {
-				key: 'sbb_alerts.widget.config',
-				message: 'Invalid sbb alerts widget config'
-			});
+	public async getData(
+		action: SbbAlertsWidgetAction,
+		options: WidgetGetDataOptions
+	): Promise<SbbAlertsWidgetData | null> {
+		if (action === 'config') {
+			return {
+				ts: new Date(),
+				name: this.name,
+				type: this.type,
+				action,
+				config: this.config,
+				services: serviceManager.getInstances(SBB_ALERTS_SERVICE_TYPE)
+			};
 		}
 
-		const data = await service.getByName(config.serviceName);
-		if (data.alerts.length === 0) {
-			return null;
+		const service = serviceManager.getByName<SbbAlertsService>(this.config.service);
+
+		const data = await service.getData('', options);
+		if (!data || data.action !== '') {
+			error(400, { key: 'sbbDepartures.noData', message: 'No SBB departures data available' });
 		}
 
-		const [[alert]] = wrap(data.alerts.length, page, 1, data.alerts);
+		let page = Number(options.url.searchParams.get('page'));
+		if (!isFinite(page)) {
+			page = 0;
+		}
+		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
 
 		return {
-			name,
+			ts: new Date(),
+			name: this.name,
+			type: this.type,
+			action,
 			alert
 		};
 	}
 
-	public async validate(
-		instance: SbbAlertsWidgetInstance,
-		config: FormData
-	): Promise<SbbAlertsWidgetConfig | WidgetValidateFailure> {
-		const serviceName = config.get('serviceName');
-		if (typeof serviceName !== 'string') {
-			throw new Error('Invalid service name');
-		}
-		const serviceInstance = this.services.byName(serviceName, true);
-		if (serviceInstance.type !== service.type) {
-			throw new Error('Invalid service type');
+	public async setData(
+		action: SbbAlertsWidgetAction,
+		{ form }: WidgetSetDataOptions
+	): Promise<void | WidgetActionFailure> {
+		if (action !== 'config') {
+			error(400, { key: 'sbbAlerts.action.invalid', message: 'Invalid SBB alerts action' });
 		}
 
-		return {
-			serviceName
-		};
+		const service = form.get('service');
+		if (typeof service !== 'string') {
+			return fail(400, {
+				key: 'sbbAlerts.service.invalid',
+				message: 'Invalid SBB alerts widget service'
+			});
+		}
+
+		// Try to get the service to validate it exists
+		serviceManager.getByName(service);
+
+		this.config.service = service;
 	}
 }
-
-export default new SbbAlertsWidget();

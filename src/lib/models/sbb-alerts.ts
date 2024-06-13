@@ -1,20 +1,28 @@
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
-import type { WidgetConfig, WidgetInstance, WidgetData } from './widget';
+import type { WidgetConfig, WidgetData } from './widget';
 
 // ---------
 // Widgets
 // ---------
 
 export const SBB_ALERTS_WIDGET_TYPE = 'sbb-alerts';
+export const SBB_ALERTS_WIDGET_ACTIONS = ['', 'config'] as const;
 
-export type SbbAlertsWidgetInstance = WidgetInstance<SbbAlertsWidgetConfig>;
+export type SbbAlertsWidgetAction = (typeof SBB_ALERTS_WIDGET_ACTIONS)[number];
+
+export interface SbbAlertsWidgetMainData extends WidgetData<SbbAlertsWidgetAction> {
+	action: '';
+	alert: SbbAlert;
+}
+export interface SbbAlertsWidgetConfigData extends WidgetData<SbbAlertsWidgetAction> {
+	action: 'config';
+	config: SbbAlertsWidgetConfig;
+	services: ServiceInstance[];
+}
+export type SbbAlertsWidgetData = SbbAlertsWidgetMainData | SbbAlertsWidgetConfigData;
 
 export interface SbbAlertsWidgetConfig extends WidgetConfig {
-	serviceName: string;
-}
-
-export interface SbbAlertsWidgetProps extends WidgetData {
-	alert: SbbAlert;
+	service: string;
 }
 
 // ---------
@@ -22,12 +30,19 @@ export interface SbbAlertsWidgetProps extends WidgetData {
 // ---------
 
 export const SBB_ALERTS_SERVICE_TYPE = 'sbb-alerts';
+export const SBB_ALERTS_SERVICE_ACTIONS = ['', 'config'] as const;
 
-export type SbbAlertsServiceInstance = ServiceInstance<SbbAlertsServiceConfig>;
+export type SbbAlertsServiceAction = (typeof SBB_ALERTS_SERVICE_ACTIONS)[number];
 
-export interface SbbAlertsServiceData extends ServiceData {
+export interface SbbAlertsServiceMainData extends ServiceData<SbbAlertsServiceAction> {
+	action: '';
 	alerts: SbbAlert[];
 }
+export interface SbbAlertsServiceConfigData extends ServiceData<SbbAlertsServiceAction> {
+	action: 'config';
+	config: SbbAlertsServiceConfig;
+}
+export type SbbAlertsServiceData = SbbAlertsServiceMainData | SbbAlertsServiceConfigData;
 
 export interface SbbAlertsServiceConfig extends ServiceConfig {
 	apiKey: string;
