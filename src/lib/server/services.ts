@@ -2,8 +2,8 @@ import { dirname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { error, fail } from '@sveltejs/kit';
 
-import { BaseLogger } from '$lib/models/BaseLogger';
 import type { ServiceInstance, ServiceType } from '$lib/models/service';
+import { BATTERY_SERVICE_TYPE } from '$lib/models/battery';
 import { CALENDAR_SERVICE_TYPE } from '$lib/models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
@@ -18,7 +18,9 @@ import { SWISS_POST_SERVICE_TYPE } from '$lib/models/swiss-post';
 import { TUYA_SERVICE_TYPE } from '$lib/models/tuya';
 import { WEATHER_SERVICE_TYPE } from '$lib/models/weather';
 
+import { Logger } from './Logger';
 import { BaseService } from './BaseService';
+import { BatteryService } from './battery/service';
 import { CalendarService } from './calendar/service';
 import { CarouselService } from './carousel/service';
 import { EpicGamesService } from './epic-games/service';
@@ -38,6 +40,7 @@ type ServiceMap = { [key: string]: ServiceConstructor & { actions: Readonly<stri
 
 const PATH = 'data/services.json';
 const SERVICES: ServiceMap = {
+	[BATTERY_SERVICE_TYPE]: BatteryService,
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
@@ -55,7 +58,7 @@ const SERVICES: ServiceMap = {
 
 class ServiceManager {
 	private loaded: boolean = false;
-	private logger: BaseLogger = new BaseLogger('SERVICES');
+	private logger: Logger = new Logger('SERVICES');
 	private main: { name: string; action: string } | null = null;
 	private services: Map<string, BaseService> = new Map();
 

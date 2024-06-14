@@ -1,21 +1,21 @@
 <script lang="ts">
-	import type { CalendarServiceData } from '$lib/models/calendar';
+	import type { BatteryServiceData } from '$lib/models/battery';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
-	import Events from './Events.svelte';
+	import Preview from './Preview.svelte';
 
 	export let name: string;
-	export let data: CalendarServiceData | null;
+	export let data: BatteryServiceData | null;
 	export let form: Record<string, any> | null;
 	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Calendar" subTitle={name} closeUrl="/services" show={!isEmbedded}>
+<PageLayout title="Battery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Events events={data.events} />
+			<Preview info={data.info} />
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
@@ -24,9 +24,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Calendar" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="Battery" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Calendar" message="Missing data" params={{ name }} />
+		<ErrorCard title="Battery" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

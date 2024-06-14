@@ -1,13 +1,12 @@
 import { normalize, resolve as resolvePath } from 'path';
 import { readFile } from 'fs/promises';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-
 import { building } from '$app/environment';
 
-import { BaseLogger } from '$lib/models/BaseLogger';
+import { Logger } from '$lib/server/Logger';
 import servicesService from '$lib/server/services';
 
-const logger = new BaseLogger('MAIN');
+const logger = new Logger('MAIN');
 
 await init();
 

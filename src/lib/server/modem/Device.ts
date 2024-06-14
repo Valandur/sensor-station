@@ -2,10 +2,10 @@ import { parseISO } from 'date-fns';
 import { SerialPort, InterByteTimeoutParser } from 'serialport';
 import { stat } from 'node:fs/promises';
 
-import { BaseLogger } from '$lib/models/BaseLogger';
+import { ModemNetworkType } from '$lib/models/modem';
 
+import { Logger } from '../Logger';
 import { minutesToTz } from './utils';
-import { ModemNetworkType } from '$lib/models/ModemNetworkType';
 
 const COPS_REGEX = /\+COPS: (\d+),(\d+),"(.+)",(\d+)/i;
 const CSQ_REGEX = /\+CSQ: (\d+),(\d+)/i;
@@ -25,14 +25,14 @@ export interface Config {
 
 export class Device {
 	private readonly config: Config;
-	private readonly logger: BaseLogger;
+	private readonly logger: Logger;
 
 	private readonly port: SerialPort;
 	private readonly parser: InterByteTimeoutParser;
 
 	public constructor(config: Config) {
 		this.config = config;
-		this.logger = new BaseLogger(`MODEM/DEVICE`);
+		this.logger = new Logger(`MODEM/DEVICE`);
 
 		this.port = new SerialPort({
 			path: this.config.devicePath,

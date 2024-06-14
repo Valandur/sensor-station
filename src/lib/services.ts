@@ -1,6 +1,7 @@
 import type { SvelteComponent } from 'svelte';
 
 import type { ServiceData } from './models/service';
+import { BATTERY_SERVICE_TYPE } from './models/battery';
 import { CALENDAR_SERVICE_TYPE } from './models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
@@ -15,6 +16,7 @@ import { SWISS_POST_SERVICE_TYPE } from './models/swiss-post';
 import { TUYA_SERVICE_TYPE } from './models/tuya';
 import { WEATHER_SERVICE_TYPE } from './models/weather';
 
+import BatteryService from './components/battery/Service.svelte';
 import CalendarService from './components/calendar/Service.svelte';
 import CarouselService from './components/carousel/Service.svelte';
 import EpicGamesService from './components/epic-games/Service.svelte';
@@ -40,6 +42,7 @@ type ServiceMap = {
 };
 
 export const SERVICES: ServiceMap = {
+	[BATTERY_SERVICE_TYPE]: BatteryService,
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
