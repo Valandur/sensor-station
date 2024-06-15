@@ -6,6 +6,7 @@ import type { ServiceInstance, ServiceType } from '$lib/models/service';
 import { BATTERY_SERVICE_TYPE } from '$lib/models/battery';
 import { CALENDAR_SERVICE_TYPE } from '$lib/models/calendar';
 import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
+import { DHT_SENSOR_SERVICE_TYPE } from '$lib/models/dht-sensor';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 import { HOLIDAY_SERVICE_TYPE } from '$lib/models/holiday';
@@ -23,6 +24,7 @@ import { BaseService } from './BaseService';
 import { BatteryService } from './battery/service';
 import { CalendarService } from './calendar/service';
 import { CarouselService } from './carousel/service';
+import { DhtSensorService } from './dht-sensor/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
 import { HolidayService } from './holidays/service';
@@ -43,6 +45,7 @@ const SERVICES: ServiceMap = {
 	[BATTERY_SERVICE_TYPE]: BatteryService,
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
+	[DHT_SENSOR_SERVICE_TYPE]: DhtSensorService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
 	[HOLIDAY_SERVICE_TYPE]: HolidayService,
