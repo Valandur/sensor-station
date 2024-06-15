@@ -1,4 +1,4 @@
-import type { ServiceConfig, ServiceData } from './service';
+import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
 
 // ---------
 // Service
@@ -27,6 +27,7 @@ export interface WeatherServiceAlertsData extends ServiceData {
 export interface WeatherServiceConfigData extends ServiceData {
 	type: 'config';
 	config: WeatherServiceConfig;
+	modems: ServiceInstance[];
 }
 export type WeatherServiceData =
 	| WeatherServiceDailyData

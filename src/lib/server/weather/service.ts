@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { Client } from '@googlemaps/google-maps-services-js';
 
+import { MODEM_SERVICE_TYPE } from '$lib/models/modem';
 import type { ServiceActionFailure } from '$lib/models/service';
 import { clamp, wrap } from '$lib/counter';
 import {
@@ -20,6 +21,7 @@ import {
 } from '$lib/models/weather';
 
 import { Cache } from '../Cache';
+import { ModemService } from '../modem/service';
 import serviceManager from '../services';
 import {
 	BaseService,
@@ -27,7 +29,6 @@ import {
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
-import { ModemService } from '../modem/service';
 
 interface CacheData {
 	ts: Date;
@@ -98,7 +99,8 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		return {
 			ts: new Date(),
 			type: 'config',
-			config: this.config
+			config: this.config,
+			modems: serviceManager.getInstances(MODEM_SERVICE_TYPE)
 		};
 	}
 

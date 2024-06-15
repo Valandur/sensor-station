@@ -5,6 +5,9 @@
 
 	export let name: string;
 	export let data: WeatherServiceConfigData;
+
+	let useGps = data.config.useGps;
+	let useGeo = data.config.useGeo;
 </script>
 
 <div class="row overflow-auto">
@@ -26,7 +29,7 @@
 						name="useGps"
 						class="form-check-input"
 						id="switchUseGps"
-						checked={data.config.useGps}
+						bind:checked={useGps}
 					/>
 					<label class="form-check-label" for="switchUseGps">Use GPS</label>
 				</div>
@@ -38,12 +41,32 @@
 						name="useGeo"
 						class="form-check-input"
 						id="switchUseGeo"
-						checked={data.config.useGeo}
+						bind:checked={useGeo}
 					/>
 					<label class="form-check-label" for="switchUseGeo">Use GEO</label>
 				</div>
 			</div>
 		</div>
+
+		{#if useGps || useGeo}
+			<div class="row mb-2">
+				<label for="selectModemService" class="col-3 col-form-label">Modem</label>
+				<div class="col">
+					<select
+						id="selectModemService"
+						name="modemService"
+						class="form-select"
+						value={data.config.modemService}
+					>
+						{#each data.modems as srv}
+							<option value={srv.name}>{srv.name}</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+		{:else}
+			<input type="hidden" name="modemService" value="" />
+		{/if}
 
 		<div class="row mb-2">
 			<label for="inputLat" class="col-3 col-form-label">Latitude</label>
