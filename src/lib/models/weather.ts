@@ -35,6 +35,7 @@ export type WeatherServiceData =
 	| WeatherServiceConfigData;
 
 export interface WeatherServiceConfig extends ServiceConfig {
+	modemService: string;
 	useGps: boolean;
 	useGeo: boolean;
 	lat: number;

@@ -63,10 +63,7 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<SbbAlertsServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SBB alerts is disabled`,
-				key: 'sbbAlerts.disabled'
-			});
+			error(400, `SBB alerts is disabled`);
 		}
 
 		return {
@@ -79,12 +76,12 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			return fail(400, { key: 'sbbAlerts.apiKey.invalid', message: 'Invalid api key' });
+			return fail(400, { message: 'Invalid api key' });
 		}
 
 		const wordsStr = form.get('words');
 		if (typeof wordsStr !== 'string') {
-			return fail(400, { key: 'sbbAlerts.words.invalid', message: 'Invalid words' });
+			return fail(400, { message: 'Invalid words' });
 		}
 		const words = wordsStr.split(/[\n\r,]/gi).filter((w) => !!w);
 
@@ -94,17 +91,11 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<SbbAlertsServiceData | null> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SBB alerts is disabled`,
-				key: 'sbbAlerts.disabled'
-			});
+			error(400, `SBB alerts is disabled`);
 		}
 
 		if (!this.config.apiKey || !this.config.words) {
-			error(400, {
-				key: 'sbbAlerts.config.invalid',
-				message: 'Invalid SBB alerts config'
-			});
+			error(400, 'Invalid SBB alerts config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');

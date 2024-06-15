@@ -25,7 +25,7 @@ export interface ModemServiceConfig extends ServiceConfig {
 	pauseTime: number;
 	waitTime: number;
 	cmdTimeout: number;
-	googleKey: string;
+	googleApiKey: string;
 	unwiredToken: string;
 }
 

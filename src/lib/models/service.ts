@@ -21,6 +21,5 @@ export interface ServiceData {
 
 export type ServiceActionFailure = ActionFailure<{
 	success?: boolean;
-	key: string;
 	message: string;
 }>;

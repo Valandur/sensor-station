@@ -42,10 +42,7 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<NetworkServiceData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Network is disabled`,
-				key: 'network.disabled'
-			});
+			error(400, `Network is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');

@@ -41,15 +41,23 @@ export class DhtSensorService extends BaseService<DhtSensorServiceAction, DhtSen
 	}
 
 	protected getActions(): ServiceActions<DhtSensorServiceAction> {
-		throw new Error('Method not implemented.');
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
 	}
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<DhtSensorServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `DHT sensor is disabled`,
-				key: 'dhtSensor.disabled'
-			});
+			error(400, `DHT sensor is disabled`);
 		}
 
 		return {
@@ -62,17 +70,17 @@ export class DhtSensorService extends BaseService<DhtSensorServiceAction, DhtSen
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const devicePath = form.get('devicePath');
 		if (typeof devicePath !== 'string') {
-			return fail(400, { key: 'dhtSensor.devicePath.invalid', message: 'Invalid device path' });
+			return fail(400, { message: 'Invalid device path' });
 		}
 
 		const dhtPin = Number(form.get('dhtPin'));
 		if (!isFinite(dhtPin)) {
-			return fail(400, { key: 'dhtSensor.dhtPin.invalid', message: 'Invalid DHT pin' });
+			return fail(400, { message: 'Invalid DHT pin' });
 		}
 
 		const dhtType = Number(form.get('dhtType'));
 		if (!isFinite(dhtType)) {
-			return fail(400, { key: 'dhtSensor.dhtType.invalid', message: 'Invalid DHT type' });
+			return fail(400, { message: 'Invalid DHT type' });
 		}
 
 		this.config.devicePath = devicePath;
@@ -82,10 +90,7 @@ export class DhtSensorService extends BaseService<DhtSensorServiceAction, DhtSen
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<DhtSensorServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `DHT sensor is disabled`,
-				key: 'dhtSensor.disabled'
-			});
+			error(400, `DHT sensor is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');
@@ -99,10 +104,7 @@ export class DhtSensorService extends BaseService<DhtSensorServiceAction, DhtSen
 			},
 			async () => {
 				if (!(await stat(this.config.devicePath).catch(() => null))) {
-					error(500, {
-						message: `Sensor not ready`,
-						key: 'sensor.notReady'
-					});
+					error(500, `Sensor not ready`);
 				}
 
 				const str = 'node-dht';

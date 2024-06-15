@@ -61,10 +61,7 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<PrusaServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Prusa is disabled`,
-				key: 'prusa.disabled'
-			});
+			error(400, `Prusa is disabled`);
 		}
 
 		return {
@@ -77,21 +74,18 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const apiUrl = form.get('apiUrl');
 		if (typeof apiUrl !== 'string') {
-			return fail(400, { key: 'prusa.apiUrl.invalid', message: 'Invalid API url' });
+			return fail(400, { message: 'Invalid API url' });
 		}
 
 		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			return fail(400, { key: 'prusa.apiKey.invalid', message: 'Invalid API key' });
+			return fail(400, { message: 'Invalid API key' });
 		}
 
 		const statusUrl = `${apiUrl}/api/v1/status`;
 		const res = await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
 		if (res.status !== 200) {
-			return fail(400, {
-				key: 'prusa.priner.statusNot200',
-				message: 'Could not contact printer API'
-			});
+			return fail(400, { message: 'Could not contact printer API' });
 		}
 
 		this.config.apiUrl = apiUrl;
@@ -100,10 +94,7 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<PrusaServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Prusa is disabled`,
-				key: 'prusa.disabled'
-			});
+			error(400, `Prusa is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');

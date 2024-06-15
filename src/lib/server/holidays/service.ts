@@ -57,10 +57,7 @@ export class HolidayService extends BaseService<HolidayServiceAction, HolidaySer
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<HolidayServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Holiday service is disabled`,
-				key: 'holiday.disabled'
-			});
+			error(400, `Holiday service is disabled`);
 		}
 
 		return {
@@ -73,12 +70,12 @@ export class HolidayService extends BaseService<HolidayServiceAction, HolidaySer
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const country = form.get('country');
 		if (typeof country !== 'string') {
-			return fail(400, { key: 'holiday.country.invalid', message: 'Invalid country' });
+			return fail(400, { message: 'Invalid country' });
 		}
 
 		const state = form.get('state');
 		if (typeof state !== 'string') {
-			return fail(400, { key: 'holiday.state.invalid', message: 'Invalid state' });
+			return fail(400, { message: 'Invalid state' });
 		}
 
 		this.config.country = country;
@@ -87,10 +84,7 @@ export class HolidayService extends BaseService<HolidayServiceAction, HolidaySer
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<HolidayServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Holiday service is disabled`,
-				key: 'holiday.disabled'
-			});
+			error(400, `Holiday service is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');

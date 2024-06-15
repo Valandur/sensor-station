@@ -19,14 +19,15 @@ import {
 	type WeatherServiceAlertsData
 } from '$lib/models/weather';
 
-import { getData } from '../modem/data';
 import { Cache } from '../Cache';
+import serviceManager from '../services';
 import {
 	BaseService,
 	type ServiceActions,
 	type ServiceGetDataOptions,
 	type ServiceSetDataOptions
 } from '../BaseService';
+import { ModemService } from '../modem/service';
 
 interface CacheData {
 	ts: Date;
@@ -52,10 +53,11 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 	protected getDefaultConfig(): WeatherServiceConfig {
 		return {
-			lat: 0,
-			lng: 0,
+			modemService: '',
 			useGeo: true,
 			useGps: true,
+			lat: 47.38,
+			lng: 8.64,
 			minDiff: 1000,
 			apiKey: '',
 			itemsPerPage: 7
@@ -82,17 +84,11 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 	private checkSetup(checkConfig = true) {
 		if (!ENABLED) {
-			error(400, {
-				message: `Weather is disabled`,
-				key: 'weather.disabled'
-			});
+			error(400, `Weather is disabled`);
 		}
 
 		if (checkConfig && !this.config.apiKey) {
-			error(400, {
-				key: 'weather.config.invalid',
-				message: 'Invalid weather config'
-			});
+			error(400, 'Invalid weather config');
 		}
 	}
 
@@ -107,42 +103,47 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 	}
 
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const modemServiceName = form.get('modemService');
+		if (typeof modemServiceName !== 'string') {
+			return fail(400, { message: 'Invalid modem service' });
+		}
+
+		const modemService = modemServiceName ? serviceManager.getByName(modemServiceName).name : '';
+
 		const useGps = form.get('useGps') === 'on';
 		const useGeo = form.get('useGeo') === 'on';
 
 		const lat = Number(form.get('lat'));
 		if (!isFinite(lat)) {
-			return fail(400, { key: 'weather.lat.invalid', message: 'Invalid latitude' });
+			return fail(400, { message: 'Invalid latitude' });
 		}
 
 		const lng = Number(form.get('lng'));
 		if (!isFinite(lng)) {
-			return fail(400, { key: 'weather.lng.invalid', message: 'Invalid longitude' });
+			return fail(400, { message: 'Invalid longitude' });
 		}
 
 		const minDiff = Number(form.get('minDiff'));
 		if (!isFinite(minDiff)) {
-			return fail(400, { key: 'weather.minDiff.invalid', message: 'Invalid min diff' });
+			return fail(400, { message: 'Invalid min diff' });
 		}
 
 		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			return fail(400, { key: 'weather.apiKey.invalid', message: 'Invalid api key' });
+			return fail(400, { message: 'Invalid api key' });
 		}
 
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
-			return fail(400, {
-				key: 'srf.itemsPerPage.invalid',
-				message: 'Invalid number of items per page'
-			});
+			return fail(400, { message: 'Invalid number of items per page' });
 		}
 
 		// Save config before testing it
-		this.config.lat = lat;
-		this.config.lng = lng;
+		this.config.modemService = modemService;
 		this.config.useGeo = useGeo;
 		this.config.useGps = useGps;
+		this.config.lat = lat;
+		this.config.lng = lng;
 		this.config.minDiff = minDiff;
 		this.config.apiKey = apiKey;
 		this.config.itemsPerPage = itemsPerPage;
@@ -151,20 +152,16 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
 		const res = await fetch(forecastUrl);
 		if (res.status !== 200) {
-			return fail(400, {
-				key: 'weather.response.statusNot200',
-				message: 'Could not access weather'
-			});
+			return fail(400, { message: 'Could not access weather' });
 		}
 	}
 
-	public async getDaily({ url }: ServiceGetDataOptions): Promise<WeatherServiceDailyData> {
+	public async getDaily(options: ServiceGetDataOptions): Promise<WeatherServiceDailyData> {
 		this.checkSetup();
 
-		const forceUpdate = url.searchParams.has('force');
-		const data = await this.getData(forceUpdate);
+		const data = await this.getData(options);
 
-		let page = Number(url.searchParams.get('page'));
+		let page = Number(options.url.searchParams.get('page'));
 		if (!isFinite(page)) {
 			page = 0;
 		}
@@ -183,13 +180,12 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		};
 	}
 
-	public async getHourly({ url }: ServiceGetDataOptions): Promise<WeatherServiceHourlyData> {
+	public async getHourly(options: ServiceGetDataOptions): Promise<WeatherServiceHourlyData> {
 		this.checkSetup();
 
-		const forceUpdate = url.searchParams.has('force');
-		const data = await this.getData(forceUpdate);
+		const data = await this.getData(options);
 
-		let page = Number(url.searchParams.get('page'));
+		let page = Number(options.url.searchParams.get('page'));
 		if (!isFinite(page)) {
 			page = 0;
 		}
@@ -208,13 +204,12 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		};
 	}
 
-	public async getAlerts({ url }: ServiceGetDataOptions): Promise<WeatherServiceAlertsData> {
+	public async getAlerts(options: ServiceGetDataOptions): Promise<WeatherServiceAlertsData> {
 		this.checkSetup();
 
-		const forceUpdate = url.searchParams.has('force');
-		const data = await this.getData(forceUpdate);
+		const data = await this.getData(options);
 
-		let page = Number(url.searchParams.get('page'));
+		let page = Number(options.url.searchParams.get('page'));
 		if (!isFinite(page)) {
 			page = 0;
 		}
@@ -228,7 +223,9 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		};
 	}
 
-	private async getData(forceUpdate: boolean) {
+	private async getData(options: ServiceGetDataOptions) {
+		const forceUpdate = options.url.searchParams.has('force');
+
 		return this.cache.with(
 			{
 				key: this.config.lat + '-' + this.config.lng,
@@ -242,16 +239,18 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 				let lng = location.lng;
 
 				if (this.config.useGps || this.config.useGeo) {
-					const modemData = await getData().catch(() => null);
+					const modem = serviceManager.getByName<ModemService>(this.config.modemService);
+					const modemData = await modem.getData(options).catch(() => null);
 					if (modemData) {
-						if (this.config.useGps && modemData.gps) {
-							this.logger.debug('Using modem gps location', modemData.gps);
-							lat = modemData.gps.lat;
-							lng = modemData.gps.lng;
-						} else if (this.config.useGeo && modemData.geo) {
-							this.logger.debug('Using modem geo location', modemData.geo);
-							lat = modemData.geo.lat;
-							lng = modemData.geo.lng;
+						const info = modemData.info;
+						if (this.config.useGps && info.gps) {
+							this.logger.debug('Using modem gps location', info.gps);
+							lat = info.gps.lat;
+							lng = info.gps.lng;
+						} else if (this.config.useGeo && info.geo) {
+							this.logger.debug('Using modem geo location', info.geo);
+							lat = info.geo.lat;
+							lng = info.geo.lng;
 						}
 					}
 				}

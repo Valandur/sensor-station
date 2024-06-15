@@ -56,7 +56,6 @@ export class Logger {
 			return error(500, {
 				...extra,
 				message: err instanceof Error ? err.message : JSON.stringify(err),
-				key: `${this.moduleLowerName}.unhandled`,
 				params: { ...extra?.params, error: JSON.parse(JSON.stringify(err)) }
 			});
 		} catch (err: any) {

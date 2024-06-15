@@ -65,10 +65,7 @@ export class SbbDeparturesService extends BaseService<
 
 	public async getConfig({ url }: ServiceGetDataOptions): Promise<SbbDeparturesServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SBB departures is disabled`,
-				key: 'sbbDepartures.disabled'
-			});
+			error(400, `SBB departures is disabled`);
 		}
 
 		return {
@@ -81,20 +78,17 @@ export class SbbDeparturesService extends BaseService<
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const apiKey = form.get('apiKey');
 		if (typeof apiKey !== 'string') {
-			return fail(400, { key: 'sbbDepartures.apiKey.invalid', message: 'Invalid api key' });
+			return fail(400, { message: 'Invalid api key' });
 		}
 
 		const stopPoint = form.get('stopPoint');
 		if (typeof stopPoint !== 'string') {
-			return fail(400, { key: 'sbbDepartures.stopPoint.invalid', message: 'Invalid stop point' });
+			return fail(400, { message: 'Invalid stop point' });
 		}
 
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
-			return fail(400, {
-				key: 'sbbDepartures.itemsPerPage.invalid',
-				message: 'Invalid number of items per page'
-			});
+			return fail(400, { message: 'Invalid number of items per page' });
 		}
 
 		this.config.apiKey = apiKey;
@@ -104,17 +98,11 @@ export class SbbDeparturesService extends BaseService<
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<SbbDeparturesServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SBB departures is disabled`,
-				key: 'sbbDepartures.disabled'
-			});
+			error(400, `SBB departures is disabled`);
 		}
 
 		if (!this.config.apiKey || !this.config.stopPoint) {
-			error(400, {
-				key: 'sbbDepartures.config.invalid',
-				message: 'Invalid SBB departures config'
-			});
+			error(400, 'Invalid SBB departures config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');

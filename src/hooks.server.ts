@@ -25,7 +25,6 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	logger.error(error);
 	return {
 		message: error instanceof Error ? error.message : JSON.stringify(error),
-		key: 'unhandled',
 		params: { route: event.route, error: JSON.parse(JSON.stringify(error)) }
 	};
 };

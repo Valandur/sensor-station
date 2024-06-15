@@ -58,10 +58,7 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<BatteryServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Battery is disabled`,
-				key: 'battery.disabled'
-			});
+			error(400, `Battery is disabled`);
 		}
 
 		return {
@@ -74,12 +71,12 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const busNumber = Number(form.get('busNumber'));
 		if (!isFinite(busNumber)) {
-			return fail(400, { key: 'battery.busNumber.invalid', message: 'Invalid bus number' });
+			return fail(400, { message: 'Invalid bus number' });
 		}
 
 		const i2cAddress = Number(form.get('i2cAddress'));
 		if (!isFinite(i2cAddress)) {
-			return fail(400, { key: 'battery.i2cAddress.invalid', message: 'Invalid i2c address' });
+			return fail(400, { message: 'Invalid i2c address' });
 		}
 
 		this.config.busNumber = busNumber;
@@ -88,10 +85,7 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<BatteryServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Battery is disabled`,
-				key: 'battery.disabled'
-			});
+			error(400, `Battery is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');
@@ -109,10 +103,7 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 				device = new Device(this.config.busNumber, this.config.i2cAddress);
 
 				if (!(await device.checkReady())) {
-					error(500, {
-						message: `Battery not ready`,
-						key: 'battery.notReady'
-					});
+					error(500, `Battery not ready`);
 				}
 
 				await device.open();

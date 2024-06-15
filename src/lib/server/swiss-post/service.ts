@@ -76,10 +76,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 	public async getConfig({ url }: ServiceGetDataOptions): Promise<SwissPostServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Swiss Post is disabled`,
-				key: 'swissPost.disabled'
-			});
+			error(400, `Swiss Post is disabled`);
 		}
 
 		return {
@@ -92,12 +89,12 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const username = form.get('username');
 		if (typeof username !== 'string') {
-			return fail(400, { key: 'swissPost.username.invalid', message: 'Invalid username' });
+			return fail(400, { message: 'Invalid username' });
 		}
 
 		const password = form.get('password');
 		if (typeof password !== 'string') {
-			return fail(400, { key: 'swissPost.password.invalid', message: 'Invalid password' });
+			return fail(400, { message: 'Invalid password' });
 		}
 
 		let url = URL_START;
@@ -107,7 +104,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 		const redir = resPre.url;
 		if (!redir) {
-			return fail(400, { key: 'swissPost.redirectUrl.invalid', message: 'Missing redirect URL' });
+			return fail(400, { message: 'Missing redirect URL' });
 		}
 
 		const params = new URL(redir).searchParams.toString();
@@ -125,7 +122,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 		url = `${URL_LOGIN}?${params}`;
 		let authId = bodyInit.tokens.authId;
 		if (!authId) {
-			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
+			return fail(400, { message: 'Missing auth ID' });
 		}
 
 		const loginData = { username, password };
@@ -143,7 +140,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 		authId = bodyBasic.tokens.authId;
 		if (!authId) {
-			return fail(400, { key: 'swissPost.authId.invalid', message: 'Missing auth ID' });
+			return fail(400, { message: 'Missing auth ID' });
 		}
 
 		this.config.username = username;
@@ -152,17 +149,11 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<SwissPostServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Swiss Post is disabled`,
-				key: 'swissPost.disabled'
-			});
+			error(400, `Swiss Post is disabled`);
 		}
 
 		if (!this.config.username || !this.config.password) {
-			error(400, {
-				key: 'swissPost.config.invalid',
-				message: 'Invalid Swiss Post config'
-			});
+			error(400, 'Invalid Swiss Post config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');
@@ -184,10 +175,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 				const redir = resPre.url;
 				if (!redir) {
-					error(500, {
-						message: 'Missing redirect URL',
-						key: 'post.missingRedirectUrl'
-					});
+					error(500, 'Missing redirect URL');
 				}
 
 				const params = new URL(redir).searchParams.toString();
@@ -241,10 +229,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 				let rawUrl = FORM_REGEX.exec(authBody)?.[1]?.trim();
 				if (!rawUrl) {
-					error(500, {
-						message: 'Could not find auth form',
-						key: 'post.authFormNotFound'
-					});
+					error(500, 'Could not find auth form');
 				}
 
 				url = decode(rawUrl);
@@ -259,10 +244,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 				rawUrl = FORM_REGEX.exec(doneBody)?.[1]?.trim();
 				if (!rawUrl) {
-					error(500, {
-						message: 'Could not find submit form',
-						key: 'post.submitFormNotFound'
-					});
+					error(500, 'Could not find submit form');
 				}
 
 				url = decode(rawUrl);
@@ -325,7 +307,6 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 				if (shipmentsBody.status !== 'DONE') {
 					error(500, {
 						message: 'Shipment query status did not change to DONE',
-						key: 'post.shipmentQueryFailed',
 						params: { status: shipmentsBody.status }
 					});
 				}
@@ -409,10 +390,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 			if (resp.status < 200 || resp.status >= 400) {
 				const body = await resp.json().catch(() => null);
 				const text = body ? null : await resp.text().catch(() => null);
-				error(400, {
-					key: 'Invalid status',
-					message: `Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`
-				});
+				error(400, `Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`);
 			}
 			return resp;
 		} catch (err: unknown) {

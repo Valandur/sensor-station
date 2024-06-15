@@ -63,10 +63,7 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<CalendarServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Calendar is disabled`,
-				key: 'calendar.disabled'
-			});
+			error(400, `Calendar is disabled`);
 		}
 
 		return {
@@ -79,25 +76,22 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const calendarId = form.get('calendarId');
 		if (typeof calendarId !== 'string') {
-			return fail(400, { key: 'calendar.calendarId.invalid', message: 'Invalid calendar id' });
+			return fail(400, { message: 'Invalid calendar id' });
 		}
 
 		const serviceEmail = form.get('serviceEmail');
 		if (typeof serviceEmail !== 'string') {
-			return fail(400, { key: 'calendar.serviceEmail.invalid', message: 'Invalid service email' });
+			return fail(400, { message: 'Invalid service email' });
 		}
 
 		const privateKey = form.get('privateKey');
 		if (typeof privateKey !== 'string') {
-			return fail(400, { key: 'calendar.privateKey.invalid', message: 'Invalid private key' });
+			return fail(400, { message: 'Invalid private key' });
 		}
 
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
-			return fail(400, {
-				key: 'calendar.itemsPerPage.invalid',
-				message: 'Invalid number of items per page'
-			});
+			return fail(400, { message: 'Invalid number of items per page' });
 		}
 
 		this.config.calendarId = calendarId;
@@ -117,26 +111,17 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 		});
 
 		if (res.status !== 200) {
-			return fail(400, {
-				key: 'calendar.response.statusNot200',
-				message: 'Could not access calendar'
-			});
+			return fail(400, { message: 'Could not access calendar' });
 		}
 	}
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<CalendarServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Calendar is disabled`,
-				key: 'service.calendar.disabled'
-			});
+			error(400, `Calendar is disabled`);
 		}
 
 		if (!this.config.calendarId || !this.config.serviceEmail || !this.config.privateKey) {
-			error(400, {
-				key: 'calendar.config.invalid',
-				message: 'Invalid calendar config'
-			});
+			error(400, 'Invalid calendar config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');

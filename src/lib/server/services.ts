@@ -10,6 +10,7 @@ import { DHT_SENSOR_SERVICE_TYPE } from '$lib/models/dht-sensor';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
 import { HOLIDAY_SERVICE_TYPE } from '$lib/models/holiday';
+import { MODEM_SERVICE_TYPE } from '$lib/models/modem';
 import { NETWORK_SERVICE_TYPE } from '$lib/models/network';
 import { PRUSA_SERVICE_TYPE } from '$lib/models/prusa';
 import { SBB_ALERTS_SERVICE_TYPE } from '$lib/models/sbb-alerts';
@@ -28,6 +29,7 @@ import { DhtSensorService } from './dht-sensor/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
 import { HolidayService } from './holidays/service';
+import { ModemService } from './modem/service';
 import { NetworkService } from './network/service';
 import { PrusaService } from './prusa/service';
 import { SbbAlertsService } from './sbb-alerts/service';
@@ -49,6 +51,7 @@ const SERVICES: ServiceMap = {
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
 	[HOLIDAY_SERVICE_TYPE]: HolidayService,
+	[MODEM_SERVICE_TYPE]: ModemService,
 	[NETWORK_SERVICE_TYPE]: NetworkService,
 	[PRUSA_SERVICE_TYPE]: PrusaService,
 	[SBB_ALERTS_SERVICE_TYPE]: SbbAlertsService,
@@ -102,7 +105,7 @@ class ServiceManager {
 
 	public async add(name: string, type: string) {
 		if (this.services.has(name)) {
-			throw fail(400, { key: 'services.duplicate', message: 'Duplicate service name' });
+			throw fail(400, { message: 'Duplicate service name' });
 		}
 
 		const constr = SERVICES[type];
@@ -145,7 +148,7 @@ class ServiceManager {
 	public getByName<SERVICE extends BaseService = BaseService>(name: string): SERVICE {
 		const service = this.services.get(name);
 		if (!service) {
-			error(404, { key: 'services.notFound', message: `Service ${name} not found` });
+			error(404, `Service ${name} not found`);
 		}
 		return service as SERVICE;
 	}

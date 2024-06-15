@@ -54,10 +54,7 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<GalleryServiceConfigData | null> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Gallery is disabled`,
-				key: 'gallery.disabled'
-			});
+			error(400, `Gallery is disabled`);
 		}
 
 		return {
@@ -73,18 +70,18 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			case 'add': {
 				const newDateStr = form.get('newDate');
 				if (typeof newDateStr !== 'string') {
-					return fail(400, { key: 'gallery.newDate.invalid', message: 'Invalid date' });
+					return fail(400, { message: 'Invalid date' });
 				}
 				const newDate = parseISO(newDateStr);
 
 				const newTitle = form.get('newTitle');
 				if (typeof newTitle !== 'string') {
-					return fail(400, { key: 'gallery.newTitle.invalid', message: 'Invalid title' });
+					return fail(400, { message: 'Invalid title' });
 				}
 
 				const newImage = form.get('newImage');
 				if (!newImage || typeof newImage === 'string') {
-					return fail(400, { key: 'gallery.newImage.invalid', message: 'Invalid image' });
+					return fail(400, { message: 'Invalid image' });
 				}
 
 				await this.saveUpload(newDate, newTitle, newImage);
@@ -94,7 +91,7 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			case 'delete': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
+					return fail(400, { message: 'Invalid index' });
 				}
 
 				await this.deleteUpload(index);
@@ -104,18 +101,18 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			case 'save': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
+					return fail(400, { message: 'Invalid index' });
 				}
 
 				const dateStr = form.get('date');
 				if (typeof dateStr !== 'string') {
-					return fail(400, { key: 'gallery.date.invalid', message: 'Invalid date' });
+					return fail(400, { message: 'Invalid date' });
 				}
 				const date = parseISO(dateStr);
 
 				const title = form.get('title');
 				if (typeof title !== 'string') {
-					return fail(400, { key: 'gallery.title.invalid', message: 'Invalid title' });
+					return fail(400, { message: 'Invalid title' });
 				}
 
 				this.config.images[index].ts = date;
@@ -126,17 +123,17 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			case 'move': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, { key: 'gallery.index.invalid', message: 'Invalid index' });
+					return fail(400, { message: 'Invalid index' });
 				}
 
 				const dir = form.get('dir');
 				if (dir !== 'up' && dir !== 'down') {
-					return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
+					return fail(400, { message: 'Invalid direction' });
 				}
 
 				if (dir === 'up') {
 					if (index === 0) {
-						return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
+						return fail(400, { message: 'Invalid direction' });
 					}
 
 					this.config.images = [
@@ -147,7 +144,7 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 					];
 				} else if (dir === 'down') {
 					if (index === this.config.images.length - 1) {
-						return fail(400, { key: 'gallery.dir.invalid', message: 'Invalid direction' });
+						return fail(400, { message: 'Invalid direction' });
 					}
 
 					this.config.images = [
@@ -161,20 +158,14 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			}
 
 			default: {
-				return fail(400, {
-					key: 'gallery.action.invalid',
-					message: `Unknown form action ${formAction}`
-				});
+				return fail(400, { message: `Unknown form action ${formAction}` });
 			}
 		}
 	}
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<GalleryServiceMainData | null> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Gallery is disabled`,
-				key: 'gallery.disabled'
-			});
+			error(400, `Gallery is disabled`);
 		}
 
 		let page = Number(url.searchParams.get('page'));
@@ -234,7 +225,7 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			try {
 				const size = imageSize(data ? data : await readFile(fileName));
 				if (!size.height || !size.width) {
-					throw new Error(`Missing size information: ${JSON.stringify(size)}`);
+					error(500, `Missing size information: ${JSON.stringify(size)}`);
 				}
 
 				return size.orientation && size.orientation >= 5

@@ -51,10 +51,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<CarouselServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Carousel is disabled`,
-				key: 'carousel.disabled'
-			});
+			error(400, `Carousel is disabled`);
 		}
 
 		return {
@@ -72,18 +69,12 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			case 'add': {
 				const serviceName = form.get('service');
 				if (typeof serviceName !== 'string') {
-					return fail(400, {
-						key: 'carousel.serviceName.invalid',
-						message: `Invalid service name ${serviceName}`
-					});
+					return fail(400, { message: `Invalid service name ${serviceName}` });
 				}
 
 				const action = form.get('action');
 				if (typeof action !== 'string') {
-					return fail(400, {
-						key: 'carousel.action.invalid',
-						message: `Invalid action ${action}`
-					});
+					return fail(400, { message: `Invalid action ${action}` });
 				}
 
 				const service = serviceManager.getByName(serviceName);
@@ -94,10 +85,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			case 'delete': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
-					return fail(400, {
-						key: 'carousel.form.index.invalid',
-						message: `Invalid form index ${index}`
-					});
+					return fail(400, { message: `Invalid form index ${index}` });
 				}
 
 				this.config.screens.splice(index, 1);
@@ -105,10 +93,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			}
 
 			default: {
-				return fail(400, {
-					key: 'carousel.form.action.invalid',
-					message: `Unknown form action ${formAction}`
-				});
+				return fail(400, { message: `Unknown form action ${formAction}` });
 			}
 		}
 	}
@@ -118,16 +103,13 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		options: ServiceGetDataOptions
 	): Promise<CarouselServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Carousel is disabled`,
-				key: 'carousel.disabled'
-			});
+			error(400, `Carousel is disabled`);
 		}
 
 		const screens = this.config.screens;
 
 		if (!screens.length) {
-			error(400, { key: 'carousel.noScreen', message: 'No screens found' });
+			error(400, 'No screens found');
 		}
 
 		const dir = options.url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
@@ -156,7 +138,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		}
 
 		if (!screenData) {
-			error(400, { key: 'carousel.noScreenData', message: 'No screen has anything to show' });
+			error(400, 'No screen has anything to show');
 		}
 
 		const getScreenUrl = (index: number, dir: 'next' | 'prev' = 'next') => {

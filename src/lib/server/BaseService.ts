@@ -48,10 +48,7 @@ export abstract class BaseService<
 	): Promise<DATA | null> {
 		const func = this._actions[action]?.get;
 		if (!func) {
-			error(400, {
-				key: 'service.action.invalid',
-				message: `Get action '${action}' not supported on service ${this.name}`
-			});
+			error(400, `Get action '${action}' not supported on service ${this.name}`);
 		}
 
 		return func(options) as Promise<DATA | null>;
@@ -60,10 +57,7 @@ export abstract class BaseService<
 	public set(action: ACTION, options: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const func = this._actions[action]?.set;
 		if (!func) {
-			error(400, {
-				key: 'service.action.invalid',
-				message: `Set action '${action}' not supported on service ${this.name}`
-			});
+			error(400, `Set action '${action}' not supported on service ${this.name}`);
 		}
 
 		return func(options);

@@ -7,6 +7,7 @@ import { CAROUSEL_SERVICE_TYPE } from './models/carousel';
 import { EPIC_GAMES_SERVICE_TYPE } from './models/epic-games';
 import { GALLERY_SERVICE_TYPE } from './models/gallery';
 import { HOLIDAY_SERVICE_TYPE } from './models/holiday';
+import { MODEM_SERVICE_TYPE } from './models/modem';
 import { NETWORK_SERVICE_TYPE } from './models/network';
 import { PRUSA_SERVICE_TYPE } from './models/prusa';
 import { SBB_ALERTS_SERVICE_TYPE } from './models/sbb-alerts';
@@ -22,6 +23,7 @@ import CarouselService from './components/carousel/Service.svelte';
 import EpicGamesService from './components/epic-games/Service.svelte';
 import GalleryService from './components/gallery/Service.svelte';
 import HolidayService from './components/holiday/Service.svelte';
+import ModemService from './components/modem/Service.svelte';
 import NetworkService from './components/network/Service.svelte';
 import PrusaService from './components/prusa/Service.svelte';
 import SbbAlertsService from './components/sbb-alerts/Service.svelte';
@@ -48,6 +50,7 @@ export const SERVICES: ServiceMap = {
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
 	[HOLIDAY_SERVICE_TYPE]: HolidayService,
+	[MODEM_SERVICE_TYPE]: ModemService,
 	[NETWORK_SERVICE_TYPE]: NetworkService,
 	[PRUSA_SERVICE_TYPE]: PrusaService,
 	[SBB_ALERTS_SERVICE_TYPE]: SbbAlertsService,

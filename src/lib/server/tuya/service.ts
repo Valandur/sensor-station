@@ -61,10 +61,7 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<TuyaServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `TUYA is disabled`,
-				key: 'tuya.disabled'
-			});
+			error(400, `TUYA is disabled`);
 		}
 
 		return {
@@ -77,25 +74,22 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const clientId = form.get('clientId');
 		if (typeof clientId !== 'string') {
-			return fail(400, { key: 'tuya.clientId.invalid', message: 'Invalid client id' });
+			return fail(400, { message: 'Invalid client id' });
 		}
 
 		const clientSecret = form.get('clientSecret');
 		if (typeof clientSecret !== 'string') {
-			return fail(400, { key: 'tuya.clientSecret.invalid', message: 'Invalid client secret' });
+			return fail(400, { message: 'Invalid client secret' });
 		}
 
 		const deviceIp = form.get('deviceIp');
 		if (typeof deviceIp !== 'string') {
-			return fail(400, { key: 'tuya.deviceIp.invalid', message: 'Invalid device IP' });
+			return fail(400, { message: 'Invalid device IP' });
 		}
 
 		const protocolVersion = form.get('protocolVersion');
 		if (typeof protocolVersion !== 'string') {
-			return fail(400, {
-				key: 'tuya.protocolVersion.invalid',
-				message: 'Invalid protocol version'
-			});
+			return fail(400, { message: 'Invalid protocol version' });
 		}
 
 		this.config.clientId = clientId;
@@ -106,10 +100,7 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<TuyaServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `TUYA is disabled`,
-				key: 'tuya.disabled'
-			});
+			error(400, `TUYA is disabled`);
 		}
 
 		const device = new TuyAPI({
@@ -149,10 +140,7 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 				this.logger.debug(`Status ${JSON.stringify(status)}`);
 
 				if (typeof status !== 'object') {
-					error(500, {
-						message: 'Could not parse TUYA data',
-						key: 'tuya.status.invalid'
-					});
+					error(500, 'Could not parse TUYA data');
 				}
 
 				const info: any = {};

@@ -1,8 +1,9 @@
 import { env } from '$env/dynamic/private';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { find } from 'geo-tz/now';
 import { Client } from '@googlemaps/google-maps-services-js';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
 	MODEM_SERVICE_TYPE,
 	MODEM_SERVICE_ACTIONS,
@@ -10,10 +11,16 @@ import {
 	type ModemLocation,
 	type ModemServiceAction,
 	type ModemServiceConfig,
-	type ModemServiceMainData
+	type ModemServiceMainData,
+	type ModemServiceConfigData
 } from '$lib/models/modem';
 
-import { BaseService, type ServiceActions, type ServiceGetDataOptions } from '../BaseService';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 import { Cache } from '../Cache';
 import { Device } from './Device';
 import { minutesToTz } from './utils';
@@ -42,21 +49,86 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 			pauseTime: 0,
 			waitTime: 100,
 			cmdTimeout: 1000,
-			googleKey: '',
+			googleApiKey: '',
 			unwiredToken: ''
 		};
 	}
 
 	protected getActions(): ServiceActions<ModemServiceAction> {
-		throw new Error('Method not implemented.');
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			},
+			preview: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig({ url }: ServiceGetDataOptions): Promise<ModemServiceConfigData> {
+		if (!ENABLED) {
+			error(400, `Modem is disabled`);
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const devicePath = form.get('devicePath');
+		if (typeof devicePath !== 'string') {
+			return fail(400, { message: 'Invalid device path' });
+		}
+
+		const baudRate = Number(form.get('baudRate'));
+		if (!isFinite(baudRate)) {
+			return fail(400, { message: 'Invalid baud rate' });
+		}
+
+		const waitTime = Number(form.get('waitTime'));
+		if (!isFinite(waitTime)) {
+			return fail(400, { message: 'Invalid wait time' });
+		}
+
+		const pauseTime = Number(form.get('pauseTime'));
+		if (!isFinite(pauseTime)) {
+			return fail(400, { message: 'Invalid pause time' });
+		}
+
+		const cmdTimeout = Number(form.get('cmdTimeout'));
+		if (!isFinite(cmdTimeout)) {
+			return fail(400, { message: 'Invalid command timeout' });
+		}
+
+		const googleApiKey = form.get('googleApiKey');
+		if (typeof googleApiKey !== 'string') {
+			return fail(400, { message: 'Invalid google API key' });
+		}
+
+		const unwiredToken = form.get('unwiredToken');
+		if (typeof unwiredToken !== 'string') {
+			return fail(400, { message: 'Invalid unwired token' });
+		}
+
+		this.config.devicePath = devicePath;
+		this.config.baudRate = baudRate;
+		this.config.waitTime = waitTime;
+		this.config.pauseTime = pauseTime;
+		this.config.cmdTimeout = cmdTimeout;
+		this.config.googleApiKey = googleApiKey;
+		this.config.unwiredToken = unwiredToken;
 	}
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<ModemServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Modem is disabled`,
-				key: 'modem.disabled'
-			});
+			error(400, `Modem is disabled`);
 		}
 
 		let device: Device | null = null;
@@ -80,10 +152,7 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 				});
 
 				if (!(await device.checkAvailable())) {
-					error(500, {
-						message: `Modem not available`,
-						key: 'modem.notAvailable'
-					});
+					error(500, `Modem not available`);
 				}
 
 				await device.open();
@@ -155,7 +224,7 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 										]
 									},
 									params: {
-										key: this.config.googleKey
+										key: this.config.googleApiKey
 									}
 								});
 								this.logger.debug('Google geo response:', JSON.stringify(googleData));

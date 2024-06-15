@@ -67,10 +67,7 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<EpicGamesServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Epic Games is disabled`,
-				key: 'epicGames.disabled'
-			});
+			error(400, `Epic Games is disabled`);
 		}
 
 		return {
@@ -83,10 +80,7 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
-			return fail(400, {
-				key: 'calendar.itemsPerPage.invalid',
-				message: 'Invalid number of items per page'
-			});
+			return fail(400, { message: 'Invalid number of items per page' });
 		}
 
 		this.config.itemsPerPage = itemsPerPage;
@@ -94,10 +88,7 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<EpicGamesServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `Epic Games is disabled`,
-				key: 'epicGames.disabled'
-			});
+			error(400, `Epic Games is disabled`);
 		}
 
 		const forceUpdate = url.searchParams.has('force');

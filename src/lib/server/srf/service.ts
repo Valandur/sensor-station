@@ -83,10 +83,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 
 	public async getConfig(_: ServiceGetDataOptions): Promise<SrfServiceConfigData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SRF is disabled`,
-				key: 'srf.disabled'
-			});
+			error(400, `SRF is disabled`);
 		}
 
 		return {
@@ -99,24 +96,21 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
 		const feedId = form.get('feedId');
 		if (typeof feedId !== 'string') {
-			return fail(400, { key: 'srf.feed.invalid', message: 'Invalid feed ID' });
+			return fail(400, { message: 'Invalid feed ID' });
 		}
 
 		const simpleDetails = form.get('simpleDetails') === 'on';
 
 		const res = await fetch(`${BASE_URL}${feedId}`);
 		if (res.status === 404) {
-			return fail(400, { key: 'srf.feed.unknown', message: 'Unknown feed ID' });
+			return fail(400, { message: 'Unknown feed ID' });
 		} else if (res.status !== 200) {
-			return fail(400, { key: 'srf.config.invalid', message: 'Invalid srf config' });
+			return fail(400, { message: 'Invalid srf config' });
 		}
 
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
-			return fail(400, {
-				key: 'srf.itemsPerPage.invalid',
-				message: 'Invalid number of items per page'
-			});
+			return fail(400, { message: 'Invalid number of items per page' });
 		}
 
 		this.config.feedId = feedId;
@@ -126,17 +120,11 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 
 	public async getData({ url }: ServiceGetDataOptions): Promise<SrfServiceMainData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SRF is disabled`,
-				key: 'srf.disabled'
-			});
+			error(400, `SRF is disabled`);
 		}
 
 		if (!this.config.feedId) {
-			error(400, {
-				key: 'srf.config.invalid',
-				message: 'Invalid srf config'
-			});
+			error(400, 'Invalid srf config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');
@@ -232,17 +220,11 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 
 	public async getDetails({ url }: ServiceGetDataOptions): Promise<SrfServiceDetailsData> {
 		if (!ENABLED) {
-			error(400, {
-				message: `SRF is disabled`,
-				key: 'srf.disabled'
-			});
+			error(400, `SRF is disabled`);
 		}
 
 		if (!this.config.feedId) {
-			error(400, {
-				key: 'srf.config.invalid',
-				message: 'Invalid srf config'
-			});
+			error(400, 'Invalid srf config');
 		}
 
 		const forceUpdate = url.searchParams.has('force');
@@ -262,19 +244,13 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 			async () => {
 				let feedData = this.cache.getData(this.config.feedId);
 				if (!feedData) {
-					error(400, {
-						key: 'srf.cache.empty',
-						message: 'Cache does not contain aritcle'
-					});
+					error(400, 'Cache does not contain aritcle');
 				}
 
 				let page = '';
 				const article = feedData.articles.find((a) => a.id === articleId);
 				if (!article) {
-					error(400, {
-						message: `Article ${articleId} in feed ${this.config.feedId} not found`,
-						key: 'srf.article.notFound'
-					});
+					error(400, `Article ${articleId} in feed ${this.config.feedId} not found`);
 				}
 
 				const filePath = `${folderPath}/${article.id}/article.html`;
