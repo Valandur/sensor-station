@@ -1,20 +1,39 @@
 import { fail } from '@sveltejs/kit';
 
-import servicesManager from '$lib/server/services';
+import serviceManager from '$lib/server/services';
 
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const types = servicesManager.getTypes().sort((a, b) => a.name.localeCompare(b.name));
-	const services = servicesManager.getInstances().sort((a, b) => a.name.localeCompare(b.name));
+	const main = serviceManager.getMain();
+	const types = serviceManager.getTypes().sort((a, b) => a.name.localeCompare(b.name));
+	const services = serviceManager.getInstances().sort((a, b) => a.name.localeCompare(b.name));
 
 	return {
+		main,
 		types,
 		services
 	};
 };
 
 export const actions: Actions = {
+	save: async ({ request }) => {
+		const data = await request.formData();
+
+		const mainService = data.get('mainService');
+		if (typeof mainService !== 'string') {
+			return fail(400, { message: 'Invalid main service' });
+		}
+
+		serviceManager.getByName(mainService);
+
+		const mainAction = data.get('mainAction');
+		if (typeof mainAction !== 'string') {
+			return fail(400, { message: 'Invalid main action' });
+		}
+
+		await serviceManager.setMain(mainService, mainAction);
+	},
 	add: async ({ request }) => {
 		const data = await request.formData();
 
@@ -29,7 +48,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await servicesManager.add(newName, newType);
+			await serviceManager.add(newName, newType);
 		} catch (err) {
 			if (err && typeof err === 'object' && 'status' in err) {
 				return err;
@@ -45,6 +64,6 @@ export const actions: Actions = {
 			return fail(400, { name: 'invalid' });
 		}
 
-		await servicesManager.remove(name);
+		await serviceManager.remove(name);
 	}
 };

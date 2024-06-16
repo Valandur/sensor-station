@@ -74,6 +74,11 @@ class ServiceManager {
 		return this.main;
 	}
 
+	public async setMain(name: string, action: string) {
+		this.main = { name, action };
+		await this.save();
+	}
+
 	public async load() {
 		if (this.loaded) {
 			return;
@@ -126,7 +131,7 @@ class ServiceManager {
 		const startTime = process.hrtime.bigint();
 
 		const services = [...this.services.values()].map((s) => s.serialize());
-		await writeFile(PATH, JSON.stringify({ services }), 'utf-8');
+		await writeFile(PATH, JSON.stringify({ main: this.main, services }), 'utf-8');
 
 		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
 		this.logger.info('Saved', this.services.size, 'services', diffTime, 'ms');

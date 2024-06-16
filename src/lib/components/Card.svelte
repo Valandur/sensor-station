@@ -1,8 +1,8 @@
 <script lang="ts">
-	export let type: 'theme' | 'warning' = 'theme';
+	export let type: 'theme' | 'primary' | 'warning' = 'theme';
 </script>
 
-<div class="card bg-{type} border-{type} bg-opacity-25">
+<div class="card bg-{type} border-{type} bg-opacity-25 {$$props.class}">
 	{#if $$slots.header}
 		<div class="card-header border-{type} fw-bold small d-flex justify-content-between">
 			<slot name="header" />

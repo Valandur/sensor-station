@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Card from '$lib/components/Card.svelte';
 
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import { SERVICES } from '$lib/services';
@@ -7,8 +8,13 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	$: main = data.main;
 	$: types = data.types;
 	$: services = data.services;
+
+	let mainName = '';
+	let mainAction = '';
+	$: mainActions = services.find((s) => s.name === mainName)?.type.actions ?? [];
 
 	let newName = '';
 	let newType = '';
@@ -16,6 +22,42 @@
 
 <PageLayout title="Services">
 	<div class="row overflow-auto">
+		<div class="col-full">
+			<Card class="mb-2">
+				<svelte:fragment slot="header">General settings</svelte:fragment>
+
+				<form method="POST" action="?/save" class="row" use:enhance>
+					<label for="selectMainService" class="col-auto col-form-label">Main</label>
+					<div class="col">
+						<select
+							id="selectMainService"
+							name="mainService"
+							class="form-select"
+							bind:value={mainName}
+						>
+							<option value="">--- None ---</option>
+							{#each data.services as srv}
+								<option value={srv.name}>{srv.name} [{srv.type.name}]</option>
+							{/each}
+						</select>
+					</div>
+
+					<div class="col">
+						<select name="mainAction" class="form-select" bind:value={mainAction}>
+							<option value="" selected disabled>---</option>
+							{#each mainActions as action}
+								<option value={action}>{action}</option>
+							{/each}
+						</select>
+					</div>
+
+					<div class="col-auto">
+						<button type="submit" class="btn btn-theme">Save</button>
+					</div>
+				</form>
+			</Card>
+		</div>
+
 		<div class="col">
 			<table class="table">
 				<colgroup>
@@ -25,7 +67,7 @@
 				</colgroup>
 
 				<tbody>
-					<tr>
+					<tr class="bg-dark">
 						<td>
 							<input
 								form="formNew"
