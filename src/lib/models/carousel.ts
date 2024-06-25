@@ -19,6 +19,7 @@ export interface CarouselServiceMainData extends ServiceData {
 	nextScreen: string | null;
 	switchInterval: number;
 	updateInterval: number;
+	icons: CarouselIcon[];
 }
 export interface CarouselServiceConfigData extends ServiceData {
 	type: 'config';
@@ -37,7 +38,15 @@ export interface CarouselServiceConfig extends ServiceConfig {
 // Others
 // ---------
 
+export interface CarouselIcon {
+	name: string;
+	type: string;
+	action: string;
+	data: ServiceData;
+}
+
 export interface CarouselScreen {
 	name: string;
 	action: string;
+	icon: string;
 }

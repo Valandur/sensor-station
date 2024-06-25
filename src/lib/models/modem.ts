@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const MODEM_SERVICE_TYPE = 'modem';
-export const MODEM_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const MODEM_SERVICE_ACTIONS = ['preview', 'config', 'icon'] as const;
 
 export type ModemServiceAction = (typeof MODEM_SERVICE_ACTIONS)[number];
 

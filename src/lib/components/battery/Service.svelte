@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { BatteryServiceData } from '$lib/models/battery';
+	import type { BatteryServiceAction, BatteryServiceData } from '$lib/models/battery';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Preview from './Preview.svelte';
+	import Icon from './Icon.svelte';
 
 	export let name: string;
+	export let action: BatteryServiceAction;
 	export let data: BatteryServiceData | null;
 	export let form: Record<string, any> | null;
 	export let isEmbedded: boolean = false;
@@ -15,7 +17,11 @@
 <PageLayout title="Battery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Preview info={data.info} />
+			{#if action === 'icon'}
+				<Icon battery={data.info} />
+			{:else}
+				<Preview info={data.info} />
+			{/if}
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />

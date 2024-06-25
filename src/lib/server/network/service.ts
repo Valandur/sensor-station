@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { networkInterfaces } from 'node:os';
+import { resolve } from 'node:dns/promises';
 import { env } from '$env/dynamic/private';
 
 import {
@@ -17,6 +18,7 @@ import { BaseService, type ServiceActions, type ServiceGetDataOptions } from '..
 
 interface CacheData {
 	ts: Date;
+	connected: boolean;
 	interfaces: NetworkInterface[];
 }
 
@@ -35,6 +37,9 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 	protected getActions(): ServiceActions<NetworkServiceAction> {
 		return {
 			preview: {
+				get: this.getData.bind(this)
+			},
+			icon: {
 				get: this.getData.bind(this)
 			}
 		};
@@ -75,8 +80,12 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 					}
 				}
 
+				const res = await resolve('google.com').catch(() => null);
+				const connected = res !== null;
+
 				return {
 					ts: new Date(),
+					connected,
 					interfaces
 				};
 			}
@@ -85,6 +94,7 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		return {
 			ts: data.ts,
 			type: 'data',
+			connected: data.connected,
 			interfaces: data.interfaces
 		};
 	}

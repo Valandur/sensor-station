@@ -8,12 +8,11 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	$: main = data.main;
 	$: types = data.types;
 	$: services = data.services;
 
-	let mainName = '';
-	let mainAction = '';
+	let mainName = data.main?.name ?? '';
+	let mainAction = data.main?.action ?? '';
 	$: mainActions = services.find((s) => s.name === mainName)?.type.actions ?? [];
 
 	let newName = '';

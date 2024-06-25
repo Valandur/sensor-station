@@ -137,6 +137,10 @@ class ServiceManager {
 		this.logger.info('Saved', this.services.size, 'services', diffTime, 'ms');
 	}
 
+	public getType(type: string): ServiceType {
+		return SERVICES[type];
+	}
+
 	public getTypes(): ServiceType[] {
 		return Object.entries(SERVICES).map(([type, clazz]) => ({
 			name: type,

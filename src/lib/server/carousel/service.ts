@@ -9,7 +9,8 @@ import {
 	type CarouselServiceConfig,
 	type CarouselServiceAction,
 	type CarouselServiceConfigData,
-	type CarouselServiceMainData
+	type CarouselServiceMainData,
+	type CarouselIcon
 } from '$lib/models/carousel';
 
 import serviceManager from '../services';
@@ -58,7 +59,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			ts: new Date(),
 			type: 'config',
 			config: this.config,
-			services: serviceManager.getInstances()
+			services: serviceManager.getInstances().sort((a, b) => a.name.localeCompare(b.name))
 		};
 	}
 
@@ -77,8 +78,13 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 					return fail(400, { message: `Invalid action ${action}` });
 				}
 
+				const icon = form.get('icon');
+				if (typeof icon !== 'string') {
+					return fail(400, { message: `Invalid icon ${icon}` });
+				}
+
 				const service = serviceManager.getByName(serviceName);
-				this.config.screens.push({ name: service.name, action });
+				this.config.screens.push({ name: service.name, action, icon });
 				break;
 			}
 
@@ -112,30 +118,56 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			error(400, 'No screens found');
 		}
 
+		const actionScreens = screens.filter((s) => !!s.action);
+		const iconScreens = screens.filter((s) => !!s.icon);
+
 		const dir = options.url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 
 		let index = Number(options.url.searchParams.get('screen'));
 		if (!isFinite(index)) {
 			index = 0;
 		}
-		index = wrapIndex(screens.length, index);
+		index = wrapIndex(actionScreens.length, index);
 
-		const endIndex = wrapIndex(screens.length, index - 1);
+		const endIndex = wrapIndex(actionScreens.length, dir === 'next' ? index - 1 : index + 1);
 
-		let screen = screens[index];
+		let screen = actionScreens[index];
 		let service = serviceManager.getByName(screen.name);
 		let screenData = await service.get(screen.action, options).catch(() => null);
 		while (screenData === null) {
-			index = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
+			index = wrapIndex(actionScreens.length, dir === 'next' ? index + 1 : index - 1);
 			// Break if we go through all screens and none of them have data to show
 			if (index === endIndex) {
 				break;
 			}
 
-			screen = screens[index];
+			screen = actionScreens[index];
 			service = serviceManager.getByName(screen.name);
 			screenData = await service.get(screen.action, options).catch(() => null);
 		}
+
+		const iconPromises: Promise<CarouselIcon | null>[] = [];
+		for (const screen of iconScreens) {
+			const service = serviceManager.getByName(screen.name);
+			iconPromises.push(
+				service
+					.get(screen.icon, options)
+					.then((data) => {
+						if (!data) {
+							throw new Error();
+						}
+						return {
+							name: screen.name,
+							action: screen.icon,
+							type: service.type,
+							data
+						};
+					})
+					.catch(() => null)
+			);
+		}
+
+		const icons = (await Promise.all(iconPromises)).filter((icon) => !!icon) as CarouselIcon[];
 
 		if (!screenData) {
 			error(400, 'No screen has anything to show');
@@ -158,6 +190,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			screenData,
 			nextScreen,
 			prevScreen,
+			icons,
 			switchInterval: this.config.switchInterval * 1000,
 			updateInterval: this.config.updateInterval * 1000
 		};

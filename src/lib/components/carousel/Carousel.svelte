@@ -18,6 +18,7 @@
 	$: screen = data.screen;
 	$: screenType = data.screenType;
 	$: screenData = data.screenData;
+	$: icons = data.icons;
 	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
 	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
 	$: secondStr = formatInTimeZone($time, $tz, 'ss', { locale: de });
@@ -83,52 +84,19 @@
 
 		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
 			<div class="row icons flex-nowrap justify-content-end">
-				<!--{#if modem?.cellular.operator}
+				{#each icons as icon}
+					{@const comp = SERVICES[icon.type]}
 					<div class="col-auto">
-						<i class="icofont-globe" />
-						{modem.cellular.operator.split(' ', 2)[0]}
+						<svelte:component
+							this={comp}
+							name={icon.name}
+							action={icon.action}
+							data={icon.data}
+							form={null}
+							isEmbedded
+						/>
 					</div>
-				{/if}
-
-				{#if modem?.cellular.signal}
-					<div class="col-auto">
-						<i class="icofont-signal" />
-						{modem.cellular.signal.toFixed(0)}%
-					</div>
-				{/if}
-
-				{#if modem?.gps}
-					<div class="col-auto">
-						<i class="icofont-satellite"></i>
-						{modem.gps.lat.toFixed(2)} | {modem.gps.lng.toFixed(2)}
-					</div>
-				{:else if modem?.geo}
-					<div class="col-auto">
-						<i class="icofont-world"></i>
-						{modem.geo.lat.toFixed(2)} | {modem.geo.lng.toFixed(2)}
-					</div>
-				{/if}
-
-				{#if battery}
-					<div class="col-auto">
-						{#if battery.charge > 70}
-							<i class="icofont-battery-full" />
-						{:else if battery.charge > 40}
-							<i class="icofont-battery-half" />
-						{:else if battery.charge > 10}
-							<i class="icofont-battery-low" />
-						{:else}
-							<i class="icofont-battery-empty" />
-						{/if}
-						{battery.charge}%
-					</div>
-				{/if}
-
-				{#if battery?.state.includes('CHARGING')}
-					<div class="col-auto">
-						<i class="icofont-plugin" />
-					</div>
-				{/if}-->
+				{/each}
 
 				{#if $paused}
 					<div class="col-auto">

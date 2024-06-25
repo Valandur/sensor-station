@@ -60,10 +60,10 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 				get: this.getConfig.bind(this),
 				set: this.setConfig.bind(this)
 			},
-			main: {
+			preview: {
 				get: this.getData.bind(this)
 			},
-			preview: {
+			icon: {
 				get: this.getData.bind(this)
 			}
 		};

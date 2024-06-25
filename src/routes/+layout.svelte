@@ -42,23 +42,8 @@
 	/>
 	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
 		<div class="col-auto">
-			<a class="btn btn-theme" href="/carousel" on:click={() => (showToolbar = false)}>
+			<a class="btn btn-theme" href="/" on:click={() => (showToolbar = false)}>
 				<i class="icofont-home icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/modem" on:click={() => (showToolbar = false)}>
-				<i class="icofont-globe icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/network" on:click={() => (showToolbar = false)}>
-				<i class="icofont-network icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/battery" on:click={() => (showToolbar = false)}>
-				<i class="icofont-battery-half icofont-2x" />
 			</a>
 		</div>
 

@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { ModemServiceData } from '$lib/models/modem';
+	import type { ModemServiceAction, ModemServiceData } from '$lib/models/modem';
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Preview from './Preview.svelte';
+	import Icon from './Icon.svelte';
 
 	export let name: string;
+	export let action: ModemServiceAction;
 	export let data: ModemServiceData | null;
 	export let form: Record<string, any> | null;
 	export let isEmbedded: boolean = false;
@@ -15,7 +17,11 @@
 <PageLayout title="Battery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Preview info={data.info} />
+			{#if action === 'icon'}
+				<Icon modem={data.info} />
+			{:else}
+				<Preview info={data.info} />
+			{/if}
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
