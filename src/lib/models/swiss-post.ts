@@ -11,6 +11,8 @@ export type SwissPostServiceAction = (typeof SWISS_POST_SERVICE_ACTIONS)[number]
 
 export interface SwissPostServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	shipment: Shipment;
 }
 export interface SwissPostServiceConfigData extends ServiceData {

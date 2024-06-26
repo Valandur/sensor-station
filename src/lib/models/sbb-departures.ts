@@ -11,6 +11,8 @@ export type SbbDeparturesServiceAction = (typeof SBB_DEPARTURES_SERVICE_ACTIONS)
 
 export interface SbbDeparturesServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	departures: SbbDeparture[];
 }
 export interface SbbDeparturesServiceConfigData extends ServiceData {

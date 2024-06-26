@@ -1,5 +1,7 @@
 import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import Holidays, { type HolidaysTypes } from 'date-holidays';
+import { isSameDay } from 'date-fns/isSameDay';
 
 import { wrapIndex } from '$lib/counter';
 import type { ServiceActionFailure } from '$lib/models/service';
@@ -14,6 +16,7 @@ import {
 } from '$lib/models/carousel';
 
 import serviceManager from '../services';
+import { Cache } from '../Cache';
 import {
 	BaseService,
 	type ServiceActions,
@@ -23,15 +26,25 @@ import {
 
 const ENABLED = env.CAROUSEL_ENABLED === '1';
 
+interface HolidaysCacheData {
+	ts: Date;
+	holiday: HolidaysTypes.Holiday | null;
+}
+
 export class CarouselService extends BaseService<CarouselServiceAction, CarouselServiceConfig> {
 	public override readonly type = CAROUSEL_SERVICE_TYPE;
 	public static readonly actions = CAROUSEL_SERVICE_ACTIONS;
 
+	private readonly holidaysCache: Cache<HolidaysCacheData> = new Cache(this.logger);
+
 	protected getDefaultConfig(): CarouselServiceConfig {
 		return {
 			screens: [],
+			icons: [],
 			switchInterval: 20,
-			updateInterval: 60
+			updateInterval: 60,
+			country: '',
+			state: ''
 		};
 	}
 
@@ -67,7 +80,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		const formAction = form.get('__formAction');
 
 		switch (formAction) {
-			case 'add': {
+			case 'add_screen': {
 				const serviceName = form.get('service');
 				if (typeof serviceName !== 'string') {
 					return fail(400, { message: `Invalid service name ${serviceName}` });
@@ -78,23 +91,60 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 					return fail(400, { message: `Invalid action ${action}` });
 				}
 
-				const icon = form.get('icon');
-				if (typeof icon !== 'string') {
-					return fail(400, { message: `Invalid icon ${icon}` });
-				}
-
 				const service = serviceManager.getByName(serviceName);
-				this.config.screens.push({ name: service.name, action, icon });
+				this.config.screens.push({ name: service.name, action });
 				break;
 			}
 
-			case 'delete': {
+			case 'delete_screen': {
 				const index = Number(form.get('index'));
 				if (!isFinite(index)) {
 					return fail(400, { message: `Invalid form index ${index}` });
 				}
 
 				this.config.screens.splice(index, 1);
+				break;
+			}
+
+			case 'add_icon': {
+				const serviceName = form.get('service');
+				if (typeof serviceName !== 'string') {
+					return fail(400, { message: `Invalid service name ${serviceName}` });
+				}
+
+				const action = form.get('action');
+				if (typeof action !== 'string') {
+					return fail(400, { message: `Invalid action ${action}` });
+				}
+
+				const service = serviceManager.getByName(serviceName);
+				this.config.icons.push({ name: service.name, action });
+				break;
+			}
+
+			case 'delete_icon': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { message: `Invalid form index ${index}` });
+				}
+
+				this.config.icons.splice(index, 1);
+				break;
+			}
+
+			case 'other': {
+				const country = form.get('country');
+				if (typeof country !== 'string') {
+					return fail(400, { message: 'Invalid country' });
+				}
+
+				const state = form.get('state');
+				if (typeof state !== 'string') {
+					return fail(400, { message: 'Invalid state' });
+				}
+
+				this.config.country = country;
+				this.config.state = state;
 				break;
 			}
 
@@ -113,13 +163,9 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		}
 
 		const screens = this.config.screens;
-
 		if (!screens.length) {
 			error(400, 'No screens found');
 		}
-
-		const actionScreens = screens.filter((s) => !!s.action);
-		const iconScreens = screens.filter((s) => !!s.icon);
 
 		const dir = options.url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 
@@ -127,47 +173,24 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		if (!isFinite(index)) {
 			index = 0;
 		}
-		index = wrapIndex(actionScreens.length, index);
+		index = wrapIndex(screens.length, index);
 
-		const endIndex = wrapIndex(actionScreens.length, dir === 'next' ? index - 1 : index + 1);
+		const endIndex = wrapIndex(screens.length, dir === 'next' ? index - 1 : index + 1);
 
-		let screen = actionScreens[index];
+		let screen = screens[index];
 		let service = serviceManager.getByName(screen.name);
 		let screenData = await service.get(screen.action, options).catch(() => null);
 		while (screenData === null) {
-			index = wrapIndex(actionScreens.length, dir === 'next' ? index + 1 : index - 1);
+			index = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
 			// Break if we go through all screens and none of them have data to show
 			if (index === endIndex) {
 				break;
 			}
 
-			screen = actionScreens[index];
+			screen = screens[index];
 			service = serviceManager.getByName(screen.name);
 			screenData = await service.get(screen.action, options).catch(() => null);
 		}
-
-		const iconPromises: Promise<CarouselIcon | null>[] = [];
-		for (const screen of iconScreens) {
-			const service = serviceManager.getByName(screen.name);
-			iconPromises.push(
-				service
-					.get(screen.icon, options)
-					.then((data) => {
-						if (!data) {
-							throw new Error();
-						}
-						return {
-							name: screen.name,
-							action: screen.icon,
-							type: service.type,
-							data
-						};
-					})
-					.catch(() => null)
-			);
-		}
-
-		const icons = (await Promise.all(iconPromises)).filter((icon) => !!icon) as CarouselIcon[];
 
 		if (!screenData) {
 			error(400, 'No screen has anything to show');
@@ -181,6 +204,52 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		const nextScreen = screens.length > 1 ? getScreenUrl(index + 1, 'next') : null;
 		const prevScreen = screens.length > 1 ? getScreenUrl(index - 1, 'prev') : null;
 
+		const rawIcons = this.config.icons;
+		const iconPromises: Promise<CarouselIcon | null>[] = [];
+		for (const icon of rawIcons) {
+			const service = serviceManager.getByName(icon.name);
+			iconPromises.push(
+				service
+					.get(icon.action, options)
+					.then((data) => {
+						if (!data) {
+							throw new Error();
+						}
+						return {
+							...icon,
+							type: service.type,
+							data
+						};
+					})
+					.catch(() => null)
+			);
+		}
+
+		const icons = (await Promise.all(iconPromises)).filter((icon) => !!icon) as CarouselIcon[];
+
+		const holidayKey = `${this.config.country}-${this.config.state}`;
+		const cachedTs = this.holidaysCache.getTs(holidayKey);
+		const forceUpdate = cachedTs !== null && !isSameDay(new Date(), cachedTs);
+
+		const holidayData = await this.holidaysCache.with(
+			{
+				key: holidayKey,
+				force: forceUpdate,
+				resultCacheTime: 24 * 60 * 60, // cache for 1 day - force updated when the day changes
+				errorCacheTime: this.config.errorCacheTime
+			},
+			async () => {
+				const holidays = new Holidays(this.config.country, this.config.state);
+				const holi = holidays.isHoliday(new Date());
+				const holiday = holi ? holi[0] : null;
+
+				return {
+					ts: new Date(),
+					holiday
+				};
+			}
+		);
+
 		return {
 			ts: new Date(),
 			type: 'data',
@@ -191,6 +260,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			nextScreen,
 			prevScreen,
 			icons,
+			holiday: holidayData.holiday,
 			switchInterval: this.config.switchInterval * 1000,
 			updateInterval: this.config.updateInterval * 1000
 		};

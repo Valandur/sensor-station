@@ -3,7 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { navigating } from '$app/stores';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { de } from 'date-fns/locale';
 
 	import { SERVICES } from '$lib/services';
@@ -19,6 +19,7 @@
 	$: screenType = data.screenType;
 	$: screenData = data.screenData;
 	$: icons = data.icons;
+	$: holiday = data.holiday;
 	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
 	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
 	$: secondStr = formatInTimeZone($time, $tz, 'ss', { locale: de });
@@ -111,10 +112,10 @@
 			</div>
 
 			<div class="row align-items-center flex-nowrap">
-				<!--{#if holiday}
+				{#if holiday}
 					<div class="col-auto text-nowrap m-0">{holiday.name}</div>
 					<div class="col-auto m-0">•</div>
-				{/if}-->
+				{/if}
 				<div class="col-auto fw-bold text-white text-nowrap m-0">{dateSub}</div>
 			</div>
 		</div>

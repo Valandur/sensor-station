@@ -11,6 +11,8 @@ export type SbbAlertsServiceAction = (typeof SBB_ALERTS_SERVICE_ACTIONS)[number]
 
 export interface SbbAlertsServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	alert: SbbAlert;
 }
 export interface SbbAlertsServiceConfigData extends ServiceData {

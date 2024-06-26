@@ -11,6 +11,8 @@ export type CalendarServiceAction = (typeof CALENDAR_SERVICE_ACTIONS)[number];
 
 export interface CalendarServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	events: CalendarEvent[];
 }
 export interface CalendarServiceConfigData extends ServiceData {

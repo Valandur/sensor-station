@@ -6,7 +6,6 @@
 	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import 'perfect-scrollbar/css/perfect-scrollbar.css';
 
-	import { appVariables, generateVariables } from '$lib/stores/appVariables.js';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
 	import '$lib/theme/scss/styles.scss';
 	import '$lib/theme/scss/font.scss';
@@ -28,8 +27,6 @@
 	onMount(async () => {
 		import('bootstrap');
 		document.querySelector('body')?.classList.add('app-init');
-
-		$appVariables = generateVariables();
 	});
 </script>
 

@@ -11,6 +11,8 @@ export type EpicGamesServiceAction = (typeof EPIC_GAMES_SERVICE_ACTIONS)[number]
 
 export interface EpicGamesServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	games: GameItem[];
 }
 export interface EpicGamesServiceConfigData extends ServiceData {

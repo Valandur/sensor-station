@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import News from './News.svelte';
 	import Details from './Details.svelte';
@@ -21,7 +22,9 @@
 >
 	{#if data}
 		{#if data.type === 'data'}
-			<News {name} articles={data.articles} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<News {name} articles={data.articles} />
+			</Pagination>
 		{:else if data.type === 'details'}
 			<Details head={data.head} body={data.body} simple={data.simple} />
 		{:else if data.type === 'config'}

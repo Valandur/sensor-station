@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Events from './Events.svelte';
 
@@ -15,7 +16,9 @@
 <PageLayout title="Calendar" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Events events={data.events} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Events events={data.events} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />

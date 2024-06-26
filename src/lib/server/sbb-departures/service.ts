@@ -187,6 +187,8 @@ export class SbbDeparturesService extends BaseService<
 		return {
 			ts: data.ts,
 			type: 'data',
+			prevPage,
+			nextPage,
 			departures
 		};
 	}

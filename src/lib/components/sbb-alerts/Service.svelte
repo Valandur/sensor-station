@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Alert from './Alert.svelte';
 
@@ -15,7 +16,9 @@
 <PageLayout title="SBB Alerts" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Alert alert={data.alert} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Alert alert={data.alert} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />

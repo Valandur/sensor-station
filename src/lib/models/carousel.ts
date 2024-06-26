@@ -1,3 +1,5 @@
+import type { HolidaysTypes } from 'date-holidays';
+
 import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
 
 // ---------
@@ -12,14 +14,15 @@ export type CarouselServiceAction = (typeof CAROUSEL_SERVICE_ACTIONS)[number];
 export interface CarouselServiceMainData extends ServiceData {
 	type: 'data';
 	index: number;
-	screen: CarouselScreen;
+	screen: CarouselItem;
 	screenData: ServiceData;
 	screenType: string;
 	prevScreen: string | null;
 	nextScreen: string | null;
+	icons: CarouselIcon[];
 	switchInterval: number;
 	updateInterval: number;
-	icons: CarouselIcon[];
+	holiday: HolidaysTypes.Holiday | null;
 }
 export interface CarouselServiceConfigData extends ServiceData {
 	type: 'config';
@@ -29,24 +32,24 @@ export interface CarouselServiceConfigData extends ServiceData {
 export type CarouselServiceData = CarouselServiceMainData | CarouselServiceConfigData;
 
 export interface CarouselServiceConfig extends ServiceConfig {
-	screens: CarouselScreen[];
+	screens: CarouselItem[];
+	icons: CarouselItem[];
 	switchInterval: number;
 	updateInterval: number;
+	country: string;
+	state: string;
 }
 
 // ---------
 // Others
 // ---------
 
-export interface CarouselIcon {
-	name: string;
+export interface CarouselIcon extends CarouselItem {
 	type: string;
-	action: string;
 	data: ServiceData;
 }
 
-export interface CarouselScreen {
+export interface CarouselItem {
 	name: string;
 	action: string;
-	icon: string;
 }

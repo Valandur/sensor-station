@@ -11,7 +11,7 @@ import {
 	type SbbAlert,
 	type SbbAlertsServiceAction,
 	type SbbAlertsServiceConfig,
-	type SbbAlertsServiceData,
+	type SbbAlertsServiceMainData,
 	type SituationElement,
 	type SbbAlertsServiceConfigData,
 	type Text
@@ -89,7 +89,7 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 		this.config.words = words;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<SbbAlertsServiceData | null> {
+	public async getData({ url }: ServiceGetDataOptions): Promise<SbbAlertsServiceMainData | null> {
 		if (!ENABLED) {
 			error(400, `SBB alerts is disabled`);
 		}
@@ -160,6 +160,8 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 		return {
 			ts: data.ts,
 			type: 'data',
+			prevPage,
+			nextPage,
 			alert
 		};
 	}

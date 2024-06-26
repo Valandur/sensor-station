@@ -1,50 +1,63 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { applyAction, enhance } from '$app/forms';
 
 	import type { CarouselServiceConfigData } from '$lib/models/carousel';
+
+	import PerfectScrollbar from '../PerfectScrollbar.svelte';
 
 	export let name: string;
 	export let data: CarouselServiceConfigData;
 
 	$: services = data.services;
 	$: screens = data.config.screens;
+	$: icons = data.config.icons;
 
-	let newName = '';
-	let newAction = '';
-	let newIcon = '';
+	let newScreenName = '';
+	let newScreenAction = '';
+	let newIconName = '';
+	let newIconAction = '';
 
-	$: actions = services.find((s) => s.name === newName)?.type.actions ?? [];
-	$: if (!actions.includes(newAction)) {
-		newAction = '';
+	$: screenActions = services.find((s) => s.name === newScreenName)?.type.actions ?? [];
+	$: if (!screenActions.includes(newScreenAction)) {
+		newScreenAction = '';
 	}
-	$: if (!actions.includes(newIcon)) {
-		newIcon = '';
+
+	$: iconActions = services.find((s) => s.name === newIconName)?.type.actions ?? [];
+	$: if (!iconActions.includes(newIconAction)) {
+		newIconAction = '';
 	}
 </script>
 
-<div class="row overflow-auto">
-	<div class="col">
+<ul class="nav nav-tabs">
+	<li class="nav-item me-1">
+		<a href="#screens" class="nav-link active" data-bs-toggle="tab">Screens</a>
+	</li>
+	<li class="nav-item me-1">
+		<a href="#icons" class="nav-link" data-bs-toggle="tab">Icons</a>
+	</li>
+	<li class="nav-item me-1">
+		<a href="#other" class="nav-link" data-bs-toggle="tab">Other</a>
+	</li>
+</ul>
+
+<PerfectScrollbar class="tab-content flex-1 pt-3">
+	<div class="tab-pane container-fluid fade show active" id="screens">
 		<table class="table">
 			<colgroup>
-				<col width="40%" />
-				<col width="25%" />
-				<col width="25%" />
+				<col width="45%" />
+				<col width="45%" />
 				<col />
 			</colgroup>
-
-			<thead>
-				<tr>
-					<th>Service</th>
-					<th>Action</th>
-					<th>Icon</th>
-					<th></th>
-				</tr>
-			</thead>
 
 			<tbody>
 				<tr class="bg-dark">
 					<td>
-						<select form="formNew" name="service" class="form-select" bind:value={newName}>
+						<select
+							form="formNewScreen"
+							name="service"
+							class="form-select"
+							bind:value={newScreenName}
+						>
 							<option value="" selected disabled>---</option>
 							{#each services as service}
 								<option value={service.name}>{service.name} [{service.type.name}]</option>
@@ -52,29 +65,26 @@
 						</select>
 					</td>
 					<td>
-						<select form="formNew" name="action" class="form-select" bind:value={newAction}>
+						<select
+							form="formNewScreen"
+							name="action"
+							class="form-select"
+							bind:value={newScreenAction}
+						>
 							<option value="">---</option>
-							{#each actions as action}
+							{#each screenActions as action}
 								<option value={action}>{action}</option>
 							{/each}
 						</select>
 					</td>
 					<td>
-						<select form="formNew" name="icon" class="form-select" bind:value={newIcon}>
-							<option value="">---</option>
-							{#each actions as action}
-								<option value={action}>{action}</option>
-							{/each}
-						</select>
-					</td>
-					<td>
-						<form id="formNew" method="POST" use:enhance>
+						<form id="formNewScreen" method="POST" use:enhance>
 							<input type="hidden" name="name" value={name} />
-							<input type="hidden" name="__formAction" value="add" />
+							<input type="hidden" name="__formAction" value="add_screen" />
 							<button
 								type="submit"
 								class="btn btn-theme"
-								disabled={!newName || (!newAction && !newIcon)}
+								disabled={!newScreenName || !newScreenAction}
 							>
 								<i class="icofont-ui-add" />
 							</button>
@@ -91,12 +101,9 @@
 							{screen.action ?? '---'}
 						</td>
 						<td>
-							{screen.icon ?? '---'}
-						</td>
-						<td>
 							<form method="POST" use:enhance>
 								<input type="hidden" name="name" value={name} />
-								<input type="hidden" name="__formAction" value="delete" />
+								<input type="hidden" name="__formAction" value="delete_screen" />
 								<input type="hidden" name="index" value={index} />
 								<div class="btn-group">
 									<button class="btn btn-danger">
@@ -110,4 +117,113 @@
 			</tbody>
 		</table>
 	</div>
-</div>
+
+	<div class="tab-pane container-fluid fade" id="icons">
+		<table class="table">
+			<colgroup>
+				<col width="45%" />
+				<col width="45%" />
+				<col />
+			</colgroup>
+
+			<tbody>
+				<tr class="bg-dark">
+					<td>
+						<select form="formNewIcon" name="service" class="form-select" bind:value={newIconName}>
+							<option value="" selected disabled>---</option>
+							{#each services as service}
+								<option value={service.name}>{service.name} [{service.type.name}]</option>
+							{/each}
+						</select>
+					</td>
+					<td>
+						<select form="formNewIcon" name="action" class="form-select" bind:value={newIconAction}>
+							<option value="">---</option>
+							{#each iconActions as action}
+								<option value={action}>{action}</option>
+							{/each}
+						</select>
+					</td>
+					<td>
+						<form id="formNewIcon" method="POST" use:enhance>
+							<input type="hidden" name="name" value={name} />
+							<input type="hidden" name="__formAction" value="add_icon" />
+							<button type="submit" class="btn btn-theme" disabled={!newIconName || !newIconAction}>
+								<i class="icofont-ui-add" />
+							</button>
+						</form>
+					</td>
+				</tr>
+
+				{#each icons as icon, index}
+					<tr>
+						<td>
+							{icon.name}
+						</td>
+						<td>
+							{icon.action ?? '---'}
+						</td>
+						<td>
+							<form method="POST" use:enhance>
+								<input type="hidden" name="name" value={name} />
+								<input type="hidden" name="__formAction" value="delete_icon" />
+								<input type="hidden" name="index" value={index} />
+								<div class="btn-group">
+									<button class="btn btn-danger">
+										<i class="icofont-ui-delete" />
+									</button>
+								</div>
+							</form>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="tab-pane container-fluid fade" id="other">
+		<form
+			id="formOther"
+			method="POST"
+			style="display: contents;"
+			use:enhance={() =>
+				({ result }) =>
+					applyAction(result)}
+		>
+			<input type="hidden" name="name" value={name} />
+			<input type="hidden" name="__formAction" value="other" />
+
+			<div class="row mb-2">
+				<label for="inputCountry" class="col-3 col-form-label">Country</label>
+				<div class="col">
+					<input
+						id="inputCountry"
+						type="text"
+						name="country"
+						value={data.config.country}
+						class="form-control"
+					/>
+				</div>
+			</div>
+
+			<div class="row mb-2">
+				<label for="inputState" class="col-3 col-form-label">State</label>
+				<div class="col">
+					<input
+						id="inputState"
+						type="text"
+						name="state"
+						value={data.config.state}
+						class="form-control"
+					/>
+				</div>
+			</div>
+
+			<div class="row justify-content-end">
+				<div class="col-auto">
+					<button type="submit" class="btn btn-theme mt-2">Save</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</PerfectScrollbar>

@@ -374,6 +374,8 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 		return {
 			ts: new Date(),
 			type: 'data',
+			prevPage,
+			nextPage,
 			shipment
 		};
 	}

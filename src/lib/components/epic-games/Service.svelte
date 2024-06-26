@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Games from './Games.svelte';
 
@@ -15,7 +16,9 @@
 <PageLayout title="Epic Games" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Games games={data.games} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Games games={data.games} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />

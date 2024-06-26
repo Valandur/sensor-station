@@ -4,6 +4,7 @@
 	import { de } from 'date-fns/locale/de';
 
 	import type { NewsArticle } from '$lib/models/srf';
+	import { pause, resume } from '$lib/stores/screen';
 
 	import EmptyCard from '../EmptyCard.svelte';
 
@@ -14,6 +15,11 @@
 
 	function select(item: NewsArticle | null) {
 		selectedArticle = item;
+		if (item) {
+			pause();
+		} else {
+			resume();
+		}
 	}
 </script>
 

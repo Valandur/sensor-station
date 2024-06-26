@@ -11,6 +11,8 @@ export type SrfServiceAction = (typeof SRF_SERVICE_ACTIONS)[number];
 
 export interface SrfServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	articles: NewsArticle[];
 }
 export interface SrfServiceConfigData extends ServiceData {

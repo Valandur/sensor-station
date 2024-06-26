@@ -189,6 +189,8 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 		return {
 			ts: data.ts,
 			type: 'data',
+			prevPage,
+			nextPage,
 			events
 		};
 	}

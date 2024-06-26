@@ -182,6 +182,8 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 		return {
 			ts: new Date(),
 			type: 'data',
+			prevPage,
+			nextPage,
 			image
 		};
 	}

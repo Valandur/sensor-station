@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Departures from './Departures.svelte';
 
@@ -15,7 +16,9 @@
 <PageLayout title="SBB Departures" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Departures departures={data.departures} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Departures departures={data.departures} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />

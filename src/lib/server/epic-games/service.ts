@@ -179,6 +179,8 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 		return {
 			ts: data.ts,
 			type: 'data',
+			prevPage,
+			nextPage,
 			games
 		};
 	}

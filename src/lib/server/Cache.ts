@@ -34,6 +34,10 @@ export class Cache<T> {
 		return this.getData(DEFAULT_KEY);
 	}
 
+	public getTs(key: string): Date | null {
+		return this.cache.get(key)?.updatedAt || null;
+	}
+
 	public getData(key: string): T | null {
 		return this.cache.get(key)?.data || null;
 	}

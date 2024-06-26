@@ -9,7 +9,6 @@ import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { DHT_SENSOR_SERVICE_TYPE } from '$lib/models/dht-sensor';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
 import { GALLERY_SERVICE_TYPE } from '$lib/models/gallery';
-import { HOLIDAY_SERVICE_TYPE } from '$lib/models/holiday';
 import { MODEM_SERVICE_TYPE } from '$lib/models/modem';
 import { NETWORK_SERVICE_TYPE } from '$lib/models/network';
 import { PRUSA_SERVICE_TYPE } from '$lib/models/prusa';
@@ -28,7 +27,6 @@ import { CarouselService } from './carousel/service';
 import { DhtSensorService } from './dht-sensor/service';
 import { EpicGamesService } from './epic-games/service';
 import { GalleryService } from './gallery/service';
-import { HolidayService } from './holidays/service';
 import { ModemService } from './modem/service';
 import { NetworkService } from './network/service';
 import { PrusaService } from './prusa/service';
@@ -50,7 +48,6 @@ const SERVICES: ServiceMap = {
 	[DHT_SENSOR_SERVICE_TYPE]: DhtSensorService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
 	[GALLERY_SERVICE_TYPE]: GalleryService,
-	[HOLIDAY_SERVICE_TYPE]: HolidayService,
 	[MODEM_SERVICE_TYPE]: ModemService,
 	[NETWORK_SERVICE_TYPE]: NetworkService,
 	[PRUSA_SERVICE_TYPE]: PrusaService,
@@ -97,6 +94,10 @@ class ServiceManager {
 		const services: Map<string, BaseService> = new Map();
 		for (const rawService of json.services) {
 			const constr = SERVICES[rawService.type];
+			if (!constr) {
+				this.logger.warn('Skipping unknown service', rawService.name, 'of type', rawService.type);
+				continue;
+			}
 			const service = new constr(rawService.name, rawService.config);
 			services.set(rawService.name, service);
 		}
@@ -104,7 +105,7 @@ class ServiceManager {
 		this.services = services;
 		this.loaded = true;
 
-		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
+		const diffTime = Number((process.hrtime.bigint() - startTime) / 1000000n);
 		this.logger.info('Loaded', this.services.size, 'services', diffTime, 'ms');
 	}
 

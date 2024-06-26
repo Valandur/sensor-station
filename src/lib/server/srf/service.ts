@@ -214,6 +214,8 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 		return {
 			ts: new Date(),
 			type: 'data',
+			prevPage,
+			nextPage,
 			articles
 		};
 	}

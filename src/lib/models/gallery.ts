@@ -11,6 +11,8 @@ export type GalleryServiceAction = (typeof GALLERY_SERVICE_ACTIONS)[number];
 
 export interface GalleryServiceMainData extends ServiceData {
 	type: 'data';
+	prevPage: number;
+	nextPage: number;
 	image: GalleryImage;
 }
 export interface GalleryServiceConfigData extends ServiceData {

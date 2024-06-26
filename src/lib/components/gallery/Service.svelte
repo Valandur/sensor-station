@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Gallery from './Gallery.svelte';
 
@@ -15,7 +16,9 @@
 <PageLayout title="Gallery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Gallery image={data.image} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Gallery image={data.image} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form?.message}
 				<ErrorCard message={form.message} />
