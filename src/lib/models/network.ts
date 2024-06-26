@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const NETWORK_SERVICE_TYPE = 'network';
-export const NETWORK_SERVICE_ACTIONS = ['preview', 'icon'] as const;
+export const NETWORK_SERVICE_ACTIONS = ['main', 'icon'] as const;
 
 export type NetworkServiceAction = (typeof NETWORK_SERVICE_ACTIONS)[number];
 

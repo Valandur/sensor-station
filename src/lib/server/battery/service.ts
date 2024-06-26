@@ -47,9 +47,6 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 				get: this.getConfig.bind(this),
 				set: this.setConfig.bind(this)
 			},
-			preview: {
-				get: this.getData.bind(this)
-			},
 			icon: {
 				get: this.getData.bind(this)
 			}

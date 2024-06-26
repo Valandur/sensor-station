@@ -67,9 +67,6 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

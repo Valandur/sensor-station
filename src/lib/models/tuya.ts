@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const TUYA_SERVICE_TYPE = 'tuya';
-export const TUYA_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const TUYA_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type TuyaServiceAction = (typeof TUYA_SERVICE_ACTIONS)[number];
 

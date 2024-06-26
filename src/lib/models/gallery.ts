@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const GALLERY_SERVICE_TYPE = 'gallery';
-export const GALLERY_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const GALLERY_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type GalleryServiceAction = (typeof GALLERY_SERVICE_ACTIONS)[number];
 

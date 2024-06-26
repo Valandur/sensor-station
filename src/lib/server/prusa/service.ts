@@ -52,9 +52,6 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

@@ -56,9 +56,6 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			},
 			main: {
 				get: this.getData.bind(this, 'main')
-			},
-			preview: {
-				get: this.getData.bind(this, 'preview')
 			}
 		};
 	}

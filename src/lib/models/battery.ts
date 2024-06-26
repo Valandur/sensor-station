@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const BATTERY_SERVICE_TYPE = 'battery';
-export const BATTERY_SERVICE_ACTIONS = ['preview', 'config', 'icon'] as const;
+export const BATTERY_SERVICE_ACTIONS = ['config', 'icon'] as const;
 
 export type BatteryServiceAction = (typeof BATTERY_SERVICE_ACTIONS)[number];
 

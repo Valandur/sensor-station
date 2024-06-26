@@ -7,7 +7,7 @@ import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
 // ---------
 
 export const CAROUSEL_SERVICE_TYPE = 'carousel';
-export const CAROUSEL_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const CAROUSEL_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type CarouselServiceAction = (typeof CAROUSEL_SERVICE_ACTIONS)[number];
 

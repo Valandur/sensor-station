@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const CALENDAR_SERVICE_TYPE = 'calendar';
-export const CALENDAR_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const CALENDAR_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type CalendarServiceAction = (typeof CALENDAR_SERVICE_ACTIONS)[number];
 

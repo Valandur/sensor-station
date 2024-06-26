@@ -54,9 +54,6 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

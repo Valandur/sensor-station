@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const PRUSA_SERVICE_TYPE = 'prusa';
-export const PRUSA_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const PRUSA_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type PrusaServiceAction = (typeof PRUSA_SERVICE_ACTIONS)[number];
 

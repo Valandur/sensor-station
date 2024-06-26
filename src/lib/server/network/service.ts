@@ -36,7 +36,7 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 
 	protected getActions(): ServiceActions<NetworkServiceAction> {
 		return {
-			preview: {
+			main: {
 				get: this.getData.bind(this)
 			},
 			icon: {

@@ -4,7 +4,7 @@
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
-	import Preview from './Preview.svelte';
+	import Modem from './Modem.svelte';
 	import Icon from './Icon.svelte';
 
 	export let name: string;
@@ -20,7 +20,7 @@
 			{#if action === 'icon'}
 				<Icon modem={data.info} />
 			{:else}
-				<Preview info={data.info} />
+				<Modem info={data.info} />
 			{/if}
 		{:else if data.type === 'config'}
 			{#if form?.message}

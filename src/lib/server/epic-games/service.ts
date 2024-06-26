@@ -58,9 +58,6 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

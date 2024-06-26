@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const SBB_DEPARTURES_SERVICE_TYPE = 'sbb-departures';
-export const SBB_DEPARTURES_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const SBB_DEPARTURES_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type SbbDeparturesServiceAction = (typeof SBB_DEPARTURES_SERVICE_ACTIONS)[number];
 

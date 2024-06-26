@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const SWISS_POST_SERVICE_TYPE = 'swiss-post';
-export const SWISS_POST_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const SWISS_POST_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type SwissPostServiceAction = (typeof SWISS_POST_SERVICE_ACTIONS)[number];
 

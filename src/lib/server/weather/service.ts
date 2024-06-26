@@ -216,6 +216,9 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 			page = 0;
 		}
 		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
+		if (!alert) {
+			error(404, 'No weather alerts');
+		}
 
 		return {
 			ts: data.ts,

@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const EPIC_GAMES_SERVICE_TYPE = 'epic-games';
-export const EPIC_GAMES_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const EPIC_GAMES_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type EpicGamesServiceAction = (typeof EPIC_GAMES_SERVICE_ACTIONS)[number];
 

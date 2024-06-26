@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const SBB_ALERTS_SERVICE_TYPE = 'sbb-alerts';
-export const SBB_ALERTS_SERVICE_ACTIONS = ['main', 'preview', 'config'] as const;
+export const SBB_ALERTS_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type SbbAlertsServiceAction = (typeof SBB_ALERTS_SERVICE_ACTIONS)[number];
 

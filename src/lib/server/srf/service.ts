@@ -74,9 +74,6 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 			},
 			details: {
 				get: this.getDetails.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

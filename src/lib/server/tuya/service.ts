@@ -52,9 +52,6 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

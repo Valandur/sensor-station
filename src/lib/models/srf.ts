@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const SRF_SERVICE_TYPE = 'srf';
-export const SRF_SERVICE_ACTIONS = ['main', 'details', 'preview', 'config'] as const;
+export const SRF_SERVICE_ACTIONS = ['main', 'details', 'config'] as const;
 
 export type SrfServiceAction = (typeof SRF_SERVICE_ACTIONS)[number];
 

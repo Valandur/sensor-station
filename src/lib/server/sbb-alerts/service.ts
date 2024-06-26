@@ -54,9 +54,6 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}

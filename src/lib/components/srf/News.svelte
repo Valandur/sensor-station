@@ -32,6 +32,8 @@
 	</div>
 {/if}
 
+<div class="row flex-1"></div>
+
 {#if articles.length > 0}
 	{#each articles as item}
 		<div role="presentation" class="row mb-1 flex-1" on:click={() => select(item)}>

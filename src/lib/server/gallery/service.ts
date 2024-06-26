@@ -45,9 +45,6 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			},
 			main: {
 				get: this.getData.bind(this)
-			},
-			preview: {
-				get: this.getData.bind(this)
 			}
 		};
 	}
