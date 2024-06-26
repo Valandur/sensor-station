@@ -3,8 +3,6 @@
 
 	import type { CarouselServiceConfigData } from '$lib/models/carousel';
 
-	import PerfectScrollbar from '../PerfectScrollbar.svelte';
-
 	export let name: string;
 	export let data: CarouselServiceConfigData;
 
@@ -40,7 +38,7 @@
 	</li>
 </ul>
 
-<PerfectScrollbar class="tab-content flex-1 pt-3">
+<div class="tab-content flex-1 pt-3">
 	<div class="tab-pane container-fluid fade show active" id="screens">
 		<table class="table">
 			<colgroup>
@@ -226,4 +224,4 @@
 			</div>
 		</form>
 	</div>
-</PerfectScrollbar>
+</div>

@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 
 	import PageLayout from '$lib/components/PageLayout.svelte';
-	import PerfectScrollbar from '$lib/components/PerfectScrollbar.svelte';
 	import { SERVICES } from '$lib/services';
 
 	import type { PageData } from './$types';
@@ -29,7 +28,7 @@
 		</li>
 	</ul>
 
-	<PerfectScrollbar class="tab-content flex-1 pt-3 px-1">
+	<div class="tab-content flex-1 pt-3">
 		<div class="tab-pane container-fluid fade show active" id="services">
 			<table class="table">
 				<colgroup>
@@ -134,5 +133,5 @@
 				</div>
 			</form>
 		</div>
-	</PerfectScrollbar>
+	</div>
 </PageLayout>
