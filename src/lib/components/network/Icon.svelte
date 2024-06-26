@@ -3,7 +3,7 @@
 </script>
 
 {#if connected}
-	<i class="icofont-link"></i>
+	<i class="fa-solid fa-link"></i>
 {:else}
-	<i class="icofont-link-broken"></i>
+	<i class="fa-solid fa-link-slash"></i>
 {/if}

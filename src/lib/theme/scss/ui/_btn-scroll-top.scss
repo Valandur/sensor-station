@@ -3,7 +3,7 @@
 	bottom: rem(30px);
 	width: rem(40px);
 	height: rem(40px);
-	background: rgba($gray-800, 0.75);
+	background: rgba($gray-800, .75);
 	color: $white;
 	text-align: center;
 	text-decoration: none;
@@ -13,7 +13,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-
+	
 	@if $enable-rtl {
 		left: rem(30px);
 	} @else {
@@ -22,17 +22,17 @@
 	@include media-breakpoint-down(md) {
 		bottom: rem(20px);
 		z-index: $app-header-zindex;
-
+		
 		@if $enable-rtl {
 			left: rem(20px);
 		} @else {
 			right: rem(20px);
 		}
 	}
-
+	
 	&:hover {
-		background: var(--bs-theme);
-		color: $white;
+		background: var(--#{$prefix}theme);
+		color: var(--#{$prefix}theme-color);
 		text-decoration: none;
 	}
 }

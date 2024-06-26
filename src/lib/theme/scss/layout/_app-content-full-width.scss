@@ -8,7 +8,7 @@
 		} @else {
 			margin-left: $app-content-padding-x;
 		}
-
+		
 		@include media-breakpoint-down(md) {
 			@if ($enable-rtl) {
 				margin-right: $app-content-sm-padding-x;

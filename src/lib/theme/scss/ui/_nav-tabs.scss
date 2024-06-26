@@ -6,18 +6,18 @@
 					border: none;
 					border-bottom: 3px solid transparent;
 					padding: $nav-link-padding-x 0;
-					color: rgba($white, 0.5);
-
+					color: var(--#{$prefix}inverse);
+					
 					&:hover,
 					&.active {
-						color: $white;
-						border-bottom-color: var(--bs-theme);
+						color: $nav-tabs-link-active-color;
+						border-bottom-color: var(--#{$prefix}theme);
 					}
 				}
 				&.show {
 					& > .nav-link {
-						color: $white;
-						border-bottom-color: var(--bs-theme);
+						color: $nav-tabs-link-active-color;
+						border-bottom-color: var(--#{$prefix}theme);
 					}
 				}
 			}

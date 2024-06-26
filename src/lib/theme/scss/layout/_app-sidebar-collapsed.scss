@@ -1,68 +1,41 @@
 @keyframes appSidebarCollapse {
 	@if ($enable-rtl) {
-		from {
-			margin-right: 0;
-			opacity: 1;
-		}
-		to {
-			margin-right: -$app-sidebar-width;
-			opacity: 0;
-		}
+		from { margin-right: 0; opacity: 1; }
+		to { margin-right: -$app-sidebar-width; opacity: 0 }
 	} @else {
-		from {
-			margin-left: 0;
-			opacity: 1;
-		}
-		to {
-			margin-left: -$app-sidebar-width;
-			opacity: 0;
-		}
+		from { margin-left: 0; opacity: 1; }
+		to { margin-left: -$app-sidebar-width; opacity: 0 }
 	}
 }
 @keyframes appContentCollapse {
 	@if ($enable-rtl) {
-		from {
-			margin-right: $app-sidebar-width;
-		}
-		to {
-			margin-right: 0;
-		}
+		from { margin-right: $app-sidebar-width; }
+		to { margin-right: 0; }
 	} @else {
-		from {
-			margin-left: $app-sidebar-width;
-		}
-		to {
-			margin-left: 0;
-		}
+		from { margin-left: $app-sidebar-width; }
+		to { margin-left: 0; }
 	}
 }
 @keyframes appFooterCollapse {
 	@if ($enable-rtl) {
-		from {
-			margin-right: $app-sidebar-width;
-		}
-		to {
-			margin-right: $app-content-padding-x;
-		}
+		from { margin-right: $app-sidebar-width; }
+		to { margin-right: $app-content-padding-x; }
 	} @else {
-		from {
-			margin-left: $app-sidebar-width;
-		}
-		to {
-			margin-left: $app-content-padding-x;
-		}
+		from { margin-left: $app-sidebar-width; }
+		to { margin-left: $app-content-padding-x; }
 	}
 }
+
 
 .app-sidebar-collapsed {
 	@include media-breakpoint-up(md) {
 		& .app-sidebar {
 			opacity: 0;
-
+			
 			.app-init & {
 				animation: appSidebarCollapse 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
 			}
-
+			
 			@if ($enable-rtl) {
 				margin-right: -$app-sidebar-width;
 			} @else {
@@ -71,7 +44,7 @@
 		}
 		& .app-content {
 			animation: appContentCollapse 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
-
+			
 			@if ($enable-rtl) {
 				margin-right: 0;
 			} @else {
@@ -80,7 +53,7 @@
 		}
 		& .app-footer {
 			animation: appFooterCollapse 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
-
+			
 			@if ($enable-rtl) {
 				margin-right: $app-content-padding-x;
 			} @else {
