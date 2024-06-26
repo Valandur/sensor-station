@@ -22,6 +22,8 @@ export interface WeatherServiceHourlyData extends ServiceData {
 export interface WeatherServiceAlertsData extends ServiceData {
 	type: 'alerts';
 	location: WeatherLocation;
+	prevPage: number;
+	nextPage: number;
 	alert: WeatherAlert;
 }
 export interface WeatherServiceConfigData extends ServiceData {

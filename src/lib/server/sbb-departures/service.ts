@@ -38,7 +38,7 @@ export class SbbDeparturesService extends BaseService<
 	public override readonly type = SBB_DEPARTURES_SERVICE_TYPE;
 	public static readonly actions = SBB_DEPARTURES_SERVICE_ACTIONS;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): SbbDeparturesServiceConfig {
 		return {
@@ -174,6 +174,7 @@ export class SbbDeparturesService extends BaseService<
 		if (!isFinite(page)) {
 			page = 0;
 		}
+
 		const [departures, prevPage, nextPage] = clamp(
 			data.departures.length,
 			page,

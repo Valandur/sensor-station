@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import Pagination from '../Pagination.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Daily from './Daily.svelte';
 	import Hourly from './Hourly.svelte';
@@ -21,7 +22,9 @@
 		{:else if data.type === 'daily'}
 			<Daily location={data.location} daily={data.daily} />
 		{:else if data.type === 'alerts'}
-			<Alerts location={data.location} alert={data.alert} />
+			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
+				<Alerts location={data.location} alert={data.alert} />
+			</Pagination>
 		{:else if data.type === 'config'}
 			{#if form}
 				{#if form.success}

@@ -31,6 +31,8 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 	public static readonly actions = GALLERY_SERVICE_ACTIONS;
 	public override readonly type = GALLERY_SERVICE_TYPE;
 
+	protected lastPage = 0;
+
 	protected getDefaultConfig(): GalleryServiceConfig {
 		return {
 			images: []
@@ -165,10 +167,15 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 			error(400, `Gallery is disabled`);
 		}
 
-		let page = Number(url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [[image], prevPage, nextPage] = wrap(
 			this.config.images.length,
 			page,

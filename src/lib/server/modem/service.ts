@@ -39,8 +39,8 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 	public static readonly actions = MODEM_SERVICE_ACTIONS;
 	public override readonly type = MODEM_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
-	private readonly client = new Client({});
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly client = new Client({});
 
 	protected getDefaultConfig(): ModemServiceConfig {
 		return {

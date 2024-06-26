@@ -30,7 +30,7 @@ export class DhtSensorService extends BaseService<DhtSensorServiceAction, DhtSen
 	public static readonly actions = DHT_SENSOR_SERVICE_ACTIONS;
 	public override readonly type = DHT_SENSOR_SERVICE_TYPE;
 
-	private readonly cache = new Cache<CacheData>(this.logger);
+	protected readonly cache = new Cache<CacheData>(this.logger);
 
 	protected getDefaultConfig(): DhtSensorServiceConfig {
 		return {

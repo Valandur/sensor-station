@@ -32,7 +32,7 @@ export class BatteryService extends BaseService<BatteryServiceAction, BatterySer
 	public static readonly actions = BATTERY_SERVICE_ACTIONS;
 	public override readonly type = BATTERY_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): BatteryServiceConfig {
 		return {

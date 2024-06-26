@@ -37,7 +37,8 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 	public override readonly type = SBB_ALERTS_SERVICE_TYPE;
 	public static readonly actions = SBB_ALERTS_SERVICE_ACTIONS;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected lastPage: number = 0;
 
 	protected getDefaultConfig(): SbbAlertsServiceConfig {
 		return {
@@ -148,10 +149,15 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 			}
 		);
 
-		let page = Number(url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
 
 		return {

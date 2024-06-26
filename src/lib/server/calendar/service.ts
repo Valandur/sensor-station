@@ -35,7 +35,7 @@ export class CalendarService extends BaseService<CalendarServiceAction, Calendar
 	public static readonly actions = CALENDAR_SERVICE_ACTIONS;
 	public override readonly type = CALENDAR_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): CalendarServiceConfig {
 		return {

@@ -47,10 +47,11 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 	public override readonly type = SWISS_POST_SERVICE_TYPE;
 	public static readonly actions = SWISS_POST_SERVICE_ACTIONS;
 
-	private hasTexts = false;
-	private shipmentTexts: RecursiveMap = new Map();
-	private fetchCookie = makeFetchCookie(fetch);
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected hasTexts = false;
+	protected shipmentTexts: RecursiveMap = new Map();
+	protected fetchCookie = makeFetchCookie(fetch);
+	protected lastPage: number = 0;
 
 	protected getDefaultConfig(): SwissPostServiceConfig {
 		return {
@@ -362,10 +363,15 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 			}
 		);
 
-		let page = Number(url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [[shipment], prevPage, nextPage] = wrap(data.shipments.length, page, 1, data.shipments);
 
 		return {

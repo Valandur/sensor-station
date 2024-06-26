@@ -28,7 +28,7 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 	public override readonly type = NETWORK_SERVICE_TYPE;
 	public static readonly actions = NETWORK_SERVICE_ACTIONS;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): NetworkServiceConfig {
 		return {};

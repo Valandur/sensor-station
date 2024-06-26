@@ -33,7 +33,7 @@ export class TuyaService extends BaseService<TuyaServiceAction, TuyaServiceConfi
 	public static readonly actions = TUYA_SERVICE_ACTIONS;
 	public override readonly type = TUYA_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): TuyaServiceConfig {
 		return {

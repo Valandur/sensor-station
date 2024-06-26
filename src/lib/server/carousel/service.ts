@@ -27,7 +27,6 @@ import {
 const ENABLED = env.CAROUSEL_ENABLED === '1';
 
 interface HolidaysCacheData {
-	ts: Date;
 	holiday: HolidaysTypes.Holiday | null;
 }
 
@@ -35,7 +34,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 	public override readonly type = CAROUSEL_SERVICE_TYPE;
 	public static readonly actions = CAROUSEL_SERVICE_ACTIONS;
 
-	private readonly holidaysCache: Cache<HolidaysCacheData> = new Cache(this.logger);
+	protected readonly holidaysCache: Cache<HolidaysCacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): CarouselServiceConfig {
 		return {
@@ -198,8 +197,8 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			return `/services/${this.name}/${action}?screen=${idx}&dir=${dir}`;
 		};
 
-		const nextScreen = screens.length > 1 ? getScreenUrl(index + 1, 'next') : null;
-		const prevScreen = screens.length > 1 ? getScreenUrl(index - 1, 'prev') : null;
+		const nextScreen = getScreenUrl(index + 1, 'next');
+		const prevScreen = getScreenUrl(index - 1, 'prev');
 
 		const rawIcons = this.config.icons;
 		const iconPromises: Promise<CarouselIcon | null>[] = [];
@@ -241,7 +240,6 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 				const holiday = holi ? holi[0] : null;
 
 				return {
-					ts: new Date(),
 					holiday
 				};
 			}

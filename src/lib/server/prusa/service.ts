@@ -35,7 +35,7 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 	public static readonly actions = PRUSA_SERVICE_ACTIONS;
 	public override readonly type = PRUSA_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
 	protected getDefaultConfig(): PrusaServiceConfig {
 		return {

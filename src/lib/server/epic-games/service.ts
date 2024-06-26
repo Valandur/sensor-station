@@ -42,7 +42,8 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 	public static readonly actions = EPIC_GAMES_SERVICE_ACTIONS;
 	public override readonly type = EPIC_GAMES_SERVICE_TYPE;
 
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected lastPage = 0;
 
 	protected getDefaultConfig(): EpicGamesServiceConfig {
 		return {
@@ -162,10 +163,15 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 			}
 		);
 
-		let page = Number(url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [games, prevPage, nextPage] = clamp(
 			data.games.length,
 			page,

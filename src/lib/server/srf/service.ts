@@ -54,6 +54,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 
 	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 	protected readonly detailsCache: Cache<CacheDetailsData> = new Cache(this.logger);
+	protected lastPage = 0;
 
 	protected getDefaultConfig(): SrfServiceConfig {
 		return {
@@ -197,10 +198,15 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 			}
 		);
 
-		let page = Number(url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [articles, prevPage, nextPage] = wrap(
 			data.articles.length,
 			page,

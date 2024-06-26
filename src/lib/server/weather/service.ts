@@ -49,8 +49,9 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 	public static readonly actions = WEATHER_SERVICE_ACTIONS;
 	public override readonly type = WEATHER_SERVICE_TYPE;
 
-	private readonly client = new Client({});
-	private readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected readonly client = new Client({});
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected lastPage: number = 0;
 
 	protected getDefaultConfig(): WeatherServiceConfig {
 		return {
@@ -163,16 +164,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 		const data = await this.getData(options);
 
-		let page = Number(options.url.searchParams.get('page'));
-		if (!isFinite(page)) {
-			page = 0;
-		}
-		const [daily, prevPage, nextPage] = clamp(
-			data.daily.length,
-			page,
-			this.config.itemsPerPage,
-			data.daily
-		);
+		const [daily] = clamp(data.daily.length, 0, this.config.itemsPerPage, data.daily);
 
 		return {
 			ts: data.ts,
@@ -187,16 +179,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 		const data = await this.getData(options);
 
-		let page = Number(options.url.searchParams.get('page'));
-		if (!isFinite(page)) {
-			page = 0;
-		}
-		const [hourly, prevPage, nextPage] = clamp(
-			data.hourly.length,
-			page,
-			this.config.itemsPerPage,
-			data.hourly
-		);
+		const [hourly] = clamp(data.hourly.length, 0, this.config.itemsPerPage, data.hourly);
 
 		return {
 			ts: data.ts,
@@ -211,10 +194,15 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 		const data = await this.getData(options);
 
-		let page = Number(options.url.searchParams.get('page'));
-		if (!isFinite(page)) {
+		const pageStr = options.url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
 			page = 0;
 		}
+		this.lastPage = page;
+
 		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
 		if (!alert) {
 			error(404, 'No weather alerts');
@@ -224,6 +212,8 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 			ts: data.ts,
 			type: 'alerts',
 			location: data.location,
+			prevPage,
+			nextPage,
 			alert
 		};
 	}
