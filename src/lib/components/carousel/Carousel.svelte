@@ -27,7 +27,7 @@
 
 	let timer: ReturnType<typeof setInterval> | null = null;
 
-	onMount(() => {
+	$: {
 		reset();
 		if (timer) {
 			clearInterval(timer);
@@ -39,7 +39,8 @@
 		} else if ($paused) {
 			timer = setInterval(() => invalidate('carousel'), data.updateInterval);
 		}
-	});
+	}
+
 	beforeNavigate((nav) => {
 		reset(false);
 		if (timer) {
@@ -68,11 +69,11 @@
 	}
 </script>
 
-<div class="container-fluid vh-100 d-flex flex-column" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
-	<div class="row flex-nowrap mb-2 p-1">
+<div style="display: contents;" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
+	<div class="row flex-nowrap mb-2">
 		<div
 			role="presentation"
-			class="col-auto d-flex flex-row align-items-end mt-1 p-0"
+			class="col-auto d-flex flex-row align-items-end"
 			on:click={togglePause}
 		>
 			<div class="time-main">{timeStr}</div>
@@ -82,7 +83,7 @@
 			</div>
 		</div>
 
-		<div class="col d-flex flex-column justify-content-end align-items-end p-0">
+		<div class="col d-flex flex-column justify-content-end align-items-end">
 			<div class="row icons flex-nowrap justify-content-end">
 				{#each icons as icon}
 					{@const comp = SERVICES[icon.type]}
@@ -119,9 +120,9 @@
 		</div>
 	</div>
 
-	<div class="row flex-fill position-relative">
+	<div class="row flex-1 position-relative">
 		{#key index}
-			<div class="h-100 w-100 m-0 p-1 position-absolute overflow-hidden" transition:fade>
+			<div class="w-100 h-100 d-flex flex-column position-absolute overflow-hidden" transition:fade>
 				{#if screen}
 					{@const comp = SERVICES[screenType]}
 					<svelte:component

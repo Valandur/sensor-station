@@ -11,7 +11,7 @@
 	{/if}
 </svelte:head>
 
-<div class="main">
+<div class="main overflow-scroll">
 	{@html body}
 </div>
 

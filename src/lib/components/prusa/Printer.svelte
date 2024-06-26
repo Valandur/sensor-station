@@ -17,64 +17,64 @@
 	};
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end">
-	{#if job}
-		<div class="row">
-			<div class="col">
-				<Card>
-					<svelte:fragment slot="header">
-						<div>
-							{printer.state} - #{job.id}
-						</div>
-						<div>
-							<i class="icofont-speed-meter"></i>
-							{printer.speed}%
-						</div>
-					</svelte:fragment>
+<div class="row flex-1"></div>
 
-					<p class="display-6">
-						Fertig in {getETA()}
-					</p>
-
-					<div class="progress mb-4" style:height="4em">
-						<div
-							class="progress-bar display-6"
-							role="progressbar"
-							aria-valuenow={job.progress}
-							aria-valuemin="0"
-							aria-valuemax="100"
-							style:width="{job.progress}%"
-						>
-							{job.progress}%
-						</div>
+{#if job}
+	<div class="row">
+		<div class="col">
+			<Card>
+				<svelte:fragment slot="header">
+					<div>
+						{printer.state} - #{job.id}
 					</div>
+					<div>
+						<i class="icofont-speed-meter"></i>
+						{printer.speed}%
+					</div>
+				</svelte:fragment>
 
-					<table class="table table-sm">
-						<colgroup>
-							<col style:width="25%" />
-							<col style:width="25%" />
-							<col style:width="25%" />
-							<col style:width="25%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td>Nozzle</td>
-								<td class="fw-bold">{printer.temp_nozzle}°C</td>
-								<td>{'->'}</td>
-								<td>{printer.target_nozzle}°C</td>
-							</tr>
-							<tr>
-								<td>Bed</td>
-								<td class="fw-bold">{printer.temp_bed}°C</td>
-								<td>{'->'}</td>
-								<td>{printer.target_bed}°C</td>
-							</tr>
-						</tbody>
-					</table>
-				</Card>
-			</div>
+				<p class="display-6">
+					Fertig in {getETA()}
+				</p>
+
+				<div class="progress mb-4" style:height="4em">
+					<div
+						class="progress-bar display-6"
+						role="progressbar"
+						aria-valuenow={job.progress}
+						aria-valuemin="0"
+						aria-valuemax="100"
+						style:width="{job.progress}%"
+					>
+						{job.progress}%
+					</div>
+				</div>
+
+				<table class="table table-sm">
+					<colgroup>
+						<col style:width="25%" />
+						<col style:width="25%" />
+						<col style:width="25%" />
+						<col style:width="25%" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td>Nozzle</td>
+							<td class="fw-bold">{printer.temp_nozzle}°C</td>
+							<td>{'->'}</td>
+							<td>{printer.target_nozzle}°C</td>
+						</tr>
+						<tr>
+							<td>Bed</td>
+							<td class="fw-bold">{printer.temp_bed}°C</td>
+							<td>{'->'}</td>
+							<td>{printer.target_bed}°C</td>
+						</tr>
+					</tbody>
+				</table>
+			</Card>
 		</div>
-	{:else}
-		<EmptyCard>Aktuell ist kein Druckauftrag in Bearbeitung</EmptyCard>
-	{/if}
-</div>
+	</div>
+{:else}
+	<EmptyCard>Aktuell ist kein Druckauftrag in Bearbeitung</EmptyCard>
+{/if}

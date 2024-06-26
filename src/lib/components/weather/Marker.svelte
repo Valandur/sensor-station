@@ -4,7 +4,7 @@
 	export let location: WeatherLocation;
 </script>
 
-<div class="row d-flex flex-row justify-content-end">
+<div class="row justify-content-end">
 	<div class="col-auto text-muted">
 		<i class="icofont-location-pin" />
 		{#if location.place}

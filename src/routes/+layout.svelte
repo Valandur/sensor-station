@@ -2,15 +2,16 @@
 	import { dev } from '$app/environment';
 	import { fade, slide } from 'svelte/transition';
 	import { onMount } from 'svelte';
+	import 'bootstrap-icons/font/bootstrap-icons.min.css';
+	import '@fortawesome/fontawesome-free/css/all.min.css';
+	import 'perfect-scrollbar/css/perfect-scrollbar.css';
 
+	import { appVariables, generateVariables } from '$lib/stores/appVariables.js';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
-
 	import '$lib/theme/scss/styles.scss';
 	import '$lib/theme/scss/font.scss';
 
 	let showToolbar = false;
-
-	onMount(() => document.body.classList.add('app-init'));
 
 	function onSwipe(e: SwipeEvent) {
 		if (e.detail.dir === 'down' && e.detail.y.start < 100) {
@@ -23,11 +24,20 @@
 	function reload() {
 		window.location.reload();
 	}
+
+	onMount(async () => {
+		import('bootstrap');
+		document.querySelector('body')?.classList.add('app-init');
+
+		$appVariables = generateVariables();
+	});
 </script>
 
 <svelte:body use:swipe={{ y: 100 }} on:swipe={onSwipe} />
 
-<slot />
+<div id="content" class="app-content p-1 d-flex flex-column">
+	<slot />
+</div>
 
 {#if dev}
 	<div class="dev-note z-2">DEV</div>
@@ -70,10 +80,10 @@
 {/if}
 
 <style>
-	:global(html),
+	/*:global(html),
 	:global(body) {
 		font-size: 30px;
-	}
+	}*/
 
 	.dev-note {
 		position: fixed;

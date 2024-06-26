@@ -3,6 +3,7 @@
 	import Card from '$lib/components/Card.svelte';
 
 	import PageLayout from '$lib/components/PageLayout.svelte';
+	import PerfectScrollbar from '$lib/components/PerfectScrollbar.svelte';
 	import { SERVICES } from '$lib/services';
 
 	import type { PageData } from './$types';
@@ -20,7 +21,7 @@
 </script>
 
 <PageLayout title="Services">
-	<div class="row overflow-auto">
+	<div class="row">
 		<div class="col-full">
 			<Card class="mb-2">
 				<svelte:fragment slot="header">General settings</svelte:fragment>
@@ -56,7 +57,9 @@
 				</form>
 			</Card>
 		</div>
+	</div>
 
+	<PerfectScrollbar class="row flex-1">
 		<div class="col">
 			<table class="table">
 				<colgroup>
@@ -129,5 +132,5 @@
 				</tbody>
 			</table>
 		</div>
-	</div>
+	</PerfectScrollbar>
 </PageLayout>

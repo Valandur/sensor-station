@@ -107,7 +107,7 @@
 
 @for $i from 2 through 9 {
 	.bg-cover-#{$i}:after {
-		background-image: url('images/cover-#{$i}.jpg');
+		background-image: url('/img/cover/cover-#{$i}.jpg');
 	}
 	.bg-cover-none:after {
 		background-color: var(--#{$prefix}body-bg);
@@ -115,7 +115,7 @@
 	@if $enable-dark-mode {
 		@include color-mode(dark, true) {
 			&.bg-cover-#{$i}:after {
-				background-image: url('images/cover-#{$i}-dark.jpg');
+				background-image: url('/img/cover/cover-#{$i}-dark.jpg');
 			}
 		}
 	}

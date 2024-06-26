@@ -1,5 +1,5 @@
 /*!
- * HUD v2.4.0 (https://seantheme.com/hud/)
+ * HUD SVELTE v2.4.0 (https://seantheme.com/hud-svelte/)
  * Copyright 2024 SeanTheme
  */
 
@@ -16,4 +16,8 @@
 @import '_app.scss';
 @import '_layout.scss';
 @import '_ui.scss';
+@import '_plugins.scss';
+@import '_pages.scss';
+@import '_widgets.scss';
 @import '_rtl.scss';
+

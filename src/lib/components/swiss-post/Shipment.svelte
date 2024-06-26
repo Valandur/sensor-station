@@ -20,51 +20,51 @@
 	}
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end">
-	{#if shipment}
-		<div class="row">
-			<div class="col">
-				<Card>
-					<svelte:fragment slot="header">
+<div class="row flex-1"></div>
+
+{#if shipment}
+	<div class="row">
+		<div class="col">
+			<Card>
+				<svelte:fragment slot="header">
+					<div>
+						{shipment.number}
+					</div>
+					{#if shipment.arrival}
 						<div>
-							{shipment.number}
+							<i class="icofont-calendar" />
+							{formatInTimeZone(parseISO(shipment.arrival), $tz, 'dd.MM.yy', { locale: de })}
 						</div>
-						{#if shipment.arrival}
-							<div>
-								<i class="icofont-calendar" />
-								{formatInTimeZone(parseISO(shipment.arrival), $tz, 'dd.MM.yy', { locale: de })}
-							</div>
-						{/if}
-					</svelte:fragment>
-
-					<svelte:fragment slot="title">
-						{shipment.sender ?? shipment.type}
-					</svelte:fragment>
-
-					<svelte:fragment slot="subTitle">
-						{shipment.sender ? shipment.type : ''}
-					</svelte:fragment>
-
-					{#if shipment.dims}
-						<i class="icofont-drag3" />
-						{formatDims(shipment.dims)}
-						<br />
 					{/if}
+				</svelte:fragment>
 
-					{#if shipment.weight}
-						<i class="icofont-measure" />
-						{formatWeight(shipment.weight)}
-						<br />
-					{/if}
+				<svelte:fragment slot="title">
+					{shipment.sender ?? shipment.type}
+				</svelte:fragment>
 
-					{#if shipment.status}
-						<i class="icofont-bullhorn" />
-						{shipment.status}
-					{/if}
-				</Card>
-			</div>
+				<svelte:fragment slot="subTitle">
+					{shipment.sender ? shipment.type : ''}
+				</svelte:fragment>
+
+				{#if shipment.dims}
+					<i class="icofont-drag3" />
+					{formatDims(shipment.dims)}
+					<br />
+				{/if}
+
+				{#if shipment.weight}
+					<i class="icofont-measure" />
+					{formatWeight(shipment.weight)}
+					<br />
+				{/if}
+
+				{#if shipment.status}
+					<i class="icofont-bullhorn" />
+					{shipment.status}
+				{/if}
+			</Card>
 		</div>
-	{:else}
-		<EmptyCard>Keine Sendungen der Post unterwegs</EmptyCard>
-	{/if}
-</div>
+	</div>
+{:else}
+	<EmptyCard>Keine Sendungen der Post unterwegs</EmptyCard>
+{/if}

@@ -13,43 +13,43 @@
 	export let alert: WeatherAlert;
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-between">
-	<Marker {location} />
+<Marker {location} />
 
-	{#if alert}
-		<div class="row mh-100 overflow-hidden">
-			<div class="col mh-100">
-				<Card type="warning">
-					<svelte:fragment slot="header">
-						<div>
-							{alert.tags}
-						</div>
-						<div>
-							<i class="icofont-calendar" />
-							{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
-							{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
-						</div>
-					</svelte:fragment>
+<div class="row flex-1"></div>
 
-					<svelte:fragment slot="title">
-						{alert.event}
-					</svelte:fragment>
-
-					<svelte:fragment slot="subTitle">
-						{alert.sender}
-					</svelte:fragment>
-
-					<div class="overflow-scroll">
-						<ul class="m-0 p-0 ms-3">
-							{#each alert.content.split('\n') as line}
-								<li>{line.substring(2)}</li>
-							{/each}
-						</ul>
+{#if alert}
+	<div class="row mh-100 overflow-hidden">
+		<div class="col mh-100">
+			<Card type="warning">
+				<svelte:fragment slot="header">
+					<div>
+						{alert.tags}
 					</div>
-				</Card>
-			</div>
+					<div>
+						<i class="icofont-calendar" />
+						{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
+						{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
+					</div>
+				</svelte:fragment>
+
+				<svelte:fragment slot="title">
+					{alert.event}
+				</svelte:fragment>
+
+				<svelte:fragment slot="subTitle">
+					{alert.sender}
+				</svelte:fragment>
+
+				<div class="overflow-scroll">
+					<ul class="m-0 p-0 ms-3">
+						{#each alert.content.split('\n') as line}
+							<li>{line.substring(2)}</li>
+						{/each}
+					</ul>
+				</div>
+			</Card>
 		</div>
-	{:else}
-		<EmptyCard>Aktuell sind keine Wetter-Warnungen vorhanden</EmptyCard>
-	{/if}
-</div>
+	</div>
+{:else}
+	<EmptyCard>Aktuell sind keine Wetter-Warnungen vorhanden</EmptyCard>
+{/if}

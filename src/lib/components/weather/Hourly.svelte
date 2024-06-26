@@ -11,18 +11,18 @@
 	export let hourly: WeatherForecast[];
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-between">
-	<Marker {location} />
+<Marker {location} />
 
-	<div class="row flex-nowrap">
-		{#each hourly as forecast}
-			<div class="col d-flex flex-column justify-content-between align-items-center">
-				<div class="text">{formatInTimeZone(forecast.ts, $tz, "HH''", { locale: de })}</div>
-				<img src={forecast.img} alt="Weather icon" />
-				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
-			</div>
-		{/each}
-	</div>
+<div class="row flex-1"></div>
+
+<div class="row flex-nowrap">
+	{#each hourly as forecast}
+		<div class="col d-flex flex-column justify-content-between align-items-center">
+			<div class="text">{formatInTimeZone(forecast.ts, $tz, "HH''", { locale: de })}</div>
+			<img src={forecast.img} alt="Weather icon" />
+			<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
+		</div>
+	{/each}
 </div>
 
 <style>

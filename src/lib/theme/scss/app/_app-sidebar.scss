@@ -27,11 +27,11 @@
 		}
 	}
 	
-	& .slimScrollDiv {
+	& .ps {
 		width: 100% !important;
 		
-		& .slimScrollBar,
-		& .slimScrollRail {
+		& .ps__rail-x,
+		& .ps__rail-y {
 			display: none !important;
 		}
 	}

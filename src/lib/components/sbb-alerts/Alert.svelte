@@ -19,34 +19,34 @@
 			.trim() || '';
 </script>
 
-<div class="h-100 d-flex flex-column justify-content-end">
-	{#if alert}
-		<div class="row">
-			<div class="col">
-				<Card type="warning">
-					<svelte:fragment slot="header">
-						<div>
-							{reason}
-						</div>
-						<div>
-							<i class="icofont-clock-time" />
-							{duration}
-						</div>
-					</svelte:fragment>
+<div class="row flex-1"></div>
 
-					<svelte:fragment slot="title">
-						{summary}
-					</svelte:fragment>
+{#if alert}
+	<div class="row">
+		<div class="col">
+			<Card type="warning">
+				<svelte:fragment slot="header">
+					<div>
+						{reason}
+					</div>
+					<div>
+						<i class="icofont-clock-time" />
+						{duration}
+					</div>
+				</svelte:fragment>
 
-					<svelte:fragment slot="subTitle">
-						{description}
-					</svelte:fragment>
+				<svelte:fragment slot="title">
+					{summary}
+				</svelte:fragment>
 
-					{alert.consequence}
-				</Card>
-			</div>
+				<svelte:fragment slot="subTitle">
+					{description}
+				</svelte:fragment>
+
+				{alert.consequence}
+			</Card>
 		</div>
-	{:else}
-		<EmptyCard>Keine Einschränkungen im Betrieb der SBB</EmptyCard>
-	{/if}
-</div>
+	</div>
+{:else}
+	<EmptyCard>Keine Einschränkungen im Betrieb der SBB</EmptyCard>
+{/if}
