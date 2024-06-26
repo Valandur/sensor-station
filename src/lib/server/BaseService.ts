@@ -7,6 +7,7 @@ import { Logger } from './Logger';
 export interface ServiceGetDataOptions {
 	url: URL;
 	cookies: Cookies;
+	embedded: boolean;
 }
 
 export interface ServiceSetDataOptions extends ServiceGetDataOptions {

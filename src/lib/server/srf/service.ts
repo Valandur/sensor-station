@@ -116,7 +116,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 		this.config.itemsPerPage = itemsPerPage;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<SrfServiceMainData> {
+	public async getData({ url, embedded }: ServiceGetDataOptions): Promise<SrfServiceMainData> {
 		if (!ENABLED) {
 			error(400, `SRF is disabled`);
 		}
@@ -200,7 +200,7 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

@@ -87,7 +87,10 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 		this.config.words = words;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<SbbAlertsServiceMainData | null> {
+	public async getData({
+		url,
+		embedded
+	}: ServiceGetDataOptions): Promise<SbbAlertsServiceMainData | null> {
 		if (!ENABLED) {
 			error(400, `SBB alerts is disabled`);
 		}
@@ -151,7 +154,7 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

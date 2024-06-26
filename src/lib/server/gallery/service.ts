@@ -162,14 +162,17 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 		}
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<GalleryServiceMainData | null> {
+	public async getData({
+		url,
+		embedded
+	}: ServiceGetDataOptions): Promise<GalleryServiceMainData | null> {
 		if (!ENABLED) {
 			error(400, `Gallery is disabled`);
 		}
 
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

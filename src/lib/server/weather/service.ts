@@ -196,7 +196,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 		const pageStr = options.url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && options?.embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

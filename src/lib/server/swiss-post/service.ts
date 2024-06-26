@@ -145,7 +145,10 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 		this.config.password = password;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<SwissPostServiceMainData> {
+	public async getData({
+		url,
+		embedded
+	}: ServiceGetDataOptions): Promise<SwissPostServiceMainData> {
 		if (!ENABLED) {
 			error(400, `Swiss Post is disabled`);
 		}
@@ -365,7 +368,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

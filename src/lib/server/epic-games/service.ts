@@ -84,7 +84,10 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 		this.config.itemsPerPage = itemsPerPage;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<EpicGamesServiceMainData> {
+	public async getData({
+		url,
+		embedded
+	}: ServiceGetDataOptions): Promise<EpicGamesServiceMainData> {
 		if (!ENABLED) {
 			error(400, `Epic Games is disabled`);
 		}
@@ -165,7 +168,7 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
-		if (pageStr === null) {
+		if (pageStr === null && embedded) {
 			page = this.lastPage + 1;
 		} else if (!isFinite(page)) {
 			page = 0;

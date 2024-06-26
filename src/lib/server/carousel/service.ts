@@ -152,7 +152,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 	public async getData(
 		action: string,
-		options: ServiceGetDataOptions
+		{ url, cookies }: ServiceGetDataOptions
 	): Promise<CarouselServiceMainData> {
 		if (!ENABLED) {
 			error(400, `Carousel is disabled`);
@@ -163,19 +163,19 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			error(400, 'No screens found');
 		}
 
-		const dir = options.url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
-
-		let index = Number(options.url.searchParams.get('screen'));
+		let index = Number(url.searchParams.get('screen'));
 		if (!isFinite(index)) {
 			index = 0;
 		}
 		index = wrapIndex(screens.length, index);
 
+		const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
 		const endIndex = wrapIndex(screens.length, dir === 'next' ? index - 1 : index + 1);
+		const screenOptions = { url, cookies, embedded: true };
 
 		let screen = screens[index];
 		let service = serviceManager.getByName(screen.name);
-		let screenData = await service.get(screen.action, options).catch(() => null);
+		let screenData = await service.get(screen.action, screenOptions).catch(() => null);
 		while (screenData === null) {
 			index = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
 			// Break if we go through all screens and none of them have data to show
@@ -185,7 +185,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 			screen = screens[index];
 			service = serviceManager.getByName(screen.name);
-			screenData = await service.get(screen.action, options).catch(() => null);
+			screenData = await service.get(screen.action, screenOptions).catch(() => null);
 		}
 
 		if (!screenData) {
@@ -206,7 +206,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 			const service = serviceManager.getByName(icon.name);
 			iconPromises.push(
 				service
-					.get(icon.action, options)
+					.get(icon.action, screenOptions)
 					.then((data) => {
 						if (!data) {
 							throw new Error();
