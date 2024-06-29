@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:dns/promises';
 import { env } from '$env/dynamic/private';
+import { exec } from 'node:child_process';
 import wifi from 'node-wifi';
 
 import type { ServiceActionFailure } from '$lib/models/service';
@@ -84,6 +85,9 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		const formAction = form.get('action');
 		switch (formAction) {
 			case 'scan': {
+				await new Promise<void>((resolve, reject) =>
+					exec('nmcli device wifi rescan', (err) => (err ? reject(err) : resolve()))
+				);
 				const connections = await wifi.getCurrentConnections();
 				const networks = await wifi.scan();
 				return {
