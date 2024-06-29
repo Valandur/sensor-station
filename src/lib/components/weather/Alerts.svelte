@@ -18,7 +18,7 @@
 <div class="row flex-1"></div>
 
 {#if alert}
-	<div class="row mh-100 overflow-hidden">
+	<div class="row mh-100 overflow-auto">
 		<div class="col mh-100">
 			<Card type="warning">
 				<svelte:fragment slot="header">
@@ -40,13 +40,11 @@
 					{alert.sender}
 				</svelte:fragment>
 
-				<div class="overflow-scroll">
-					<ul class="m-0 p-0 ms-3">
-						{#each alert.content.split('\n') as line}
-							<li>{line.substring(2)}</li>
-						{/each}
-					</ul>
-				</div>
+				<ul class="m-0 p-0 ms-3">
+					{#each alert.content.split('\n') as line}
+						<li>{line.substring(2)}</li>
+					{/each}
+				</ul>
 			</Card>
 		</div>
 	</div>
