@@ -48,40 +48,33 @@
 		on:click={() => (showToolbar = false)}
 	/>
 	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
-		<div class="col-auto">
-			<a class="btn btn-theme" href="/" on:click={() => (showToolbar = false)}>
-				<i class="icofont-home icofont-2x" />
-			</a>
-		</div>
+		<a class="col-auto btn btn-theme p-3" href="/" on:click={() => (showToolbar = false)}>
+			<i class="fa-solid fa-house fa-2xl"></i>
+		</a>
 
 		<div class="col" />
 
-		<div class="col-auto">
-			<a class="btn btn-theme" href="/services" on:click={() => (showToolbar = false)}>
-				<i class="icofont-gears icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<button class="btn btn-warning" on:click={reload}>
-				<i class="icofont-refresh icofont-2x" />
+		<a
+			class="col-auto btn btn-theme p-3 ms-2"
+			href="/services"
+			on:click={() => (showToolbar = false)}
+		>
+			<i class="fa-solid fa-gears fa-2xl"></i>
+		</a>
+
+		<button class="col-auto btn btn-warning p-3 ms-2" on:click={reload}>
+			<i class="fa-solid fa-rotate fa-2xl"></i>
+		</button>
+
+		<form method="POST" action="/?/restart" class="col-auto p-0 ms-2">
+			<button type="submit" class="btn btn-danger p-3">
+				<i class="fa-solid fa-power-off fa-2xl"></i>
 			</button>
-		</div>
-		<div class="col-auto">
-			<form method="POST" action="/?/restart">
-				<button type="submit" class="btn btn-danger">
-					<i class="icofont-power icofont-2x" />
-				</button>
-			</form>
-		</div>
+		</form>
 	</div>
 {/if}
 
 <style>
-	/*:global(html),
-	:global(body) {
-		font-size: 30px;
-	}*/
-
 	.dev-note {
 		position: fixed;
 		top: 4px;

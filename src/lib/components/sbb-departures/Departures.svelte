@@ -23,11 +23,11 @@
 			</div>
 			<div class="col-1">
 				{#if departure.type === 'rail'}
-					<i class="icofont-train-line"></i>
+					<i class="fa-solid fa-train"></i>
 				{:else if departure.type === 'tram'}
-					<i class="icofont-tram"></i>
+					<i class="fa-solid fa-train-tram"></i>
 				{:else if departure.type === 'bus'}
-					<i class="icofont-bus"></i>
+					<i class="fa-solid fa-bus"></i>
 				{:else}
 					{departure.type}
 				{/if}

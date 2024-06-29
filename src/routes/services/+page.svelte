@@ -60,7 +60,7 @@
 						<td>
 							<form id="formNew" method="POST" action="?/add" use:enhance>
 								<button type="submit" class="btn btn-theme" disabled={!newName || !newType}>
-									<i class="icofont-ui-add" />
+									<i class="fa-solid fa-plus"></i>
 								</button>
 							</form>
 						</td>
@@ -81,17 +81,17 @@
 										{#if !!SERVICES[service.type.name]}
 											{#if service.type.actions.includes('main')}
 												<a href="/services/{service.name}/main" class="btn btn-primary">
-													<i class="icofont-eye-alt"></i>
+													<i class="fa-solid fa-eye"></i>
 												</a>
 											{/if}
 											{#if service.type.actions.includes('config')}
 												<a href="/services/{service.name}/config" class="btn btn-theme">
-													<i class="icofont-gear"></i>
+													<i class="fa-solid fa-gear"></i>
 												</a>
 											{/if}
 										{/if}
 										<button class="btn btn-danger">
-											<i class="icofont-ui-delete" />
+											<i class="fa-solid fa-trash"></i>
 										</button>
 									</div>
 								</form>

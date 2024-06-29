@@ -28,7 +28,7 @@
 						{printer.state} - #{job.id}
 					</div>
 					<div>
-						<i class="icofont-speed-meter"></i>
+						<i class="fa-solid fa-gauge-high"></i>
 						{printer.speed}%
 					</div>
 				</svelte:fragment>

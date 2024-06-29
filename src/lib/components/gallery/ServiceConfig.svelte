@@ -45,8 +45,8 @@
 			<tr>
 				<td>
 					{#if !newImg}
-						<button class="btn btn-sm" on:click={() => fileInput.click()}>
-							<i class="icofont-image icofont-2x" />
+						<button class="btn btn-sm w-100" on:click={() => fileInput.click()}>
+							<i class="fa-solid fa-image fa-xl"></i>
 						</button>
 					{:else}
 						<button class="btn btn-sm m-0 p-0" on:click={clear}>
@@ -91,7 +91,7 @@
 							class:btn-outline-secondary={!newImg || !newDate || !newTitle}
 							disabled={!newImg || !newDate || !newTitle}
 						>
-							<i class="icofont-ui-add" />
+							<i class="fa-solid fa-plus"></i>
 						</button>
 					</form>
 				</td>
@@ -139,7 +139,7 @@
 								<input type="hidden" name="action" value="save" />
 								<input type="hidden" name="index" value={i} />
 								<button class="btn btn-sm btn-outline-success">
-									<i class="icofont-save" />
+									<i class="fa-solid fa-floppy-disk"></i>
 								</button>
 							</form>
 							<form method="POST" use:enhance>
@@ -153,7 +153,7 @@
 									class:btn-outline-secondary={i === 0}
 									disabled={i === 0}
 								>
-									<i class="icofont-caret-up" />
+									<i class="fa-solid fa-caret-up"></i>
 								</button>
 							</form>
 							<form method="POST" use:enhance>
@@ -167,7 +167,7 @@
 									class:btn-outline-secondary={i === images.length - 1}
 									disabled={i === images.length - 1}
 								>
-									<i class="icofont-caret-down" />
+									<i class="fa-solid fa-caret-down"></i>
 								</button>
 							</form>
 							<form method="POST" use:enhance>
@@ -175,7 +175,7 @@
 								<input type="hidden" name="action" value="delete" />
 								<input type="hidden" name="index" value={i} />
 								<button class="btn btn-sm btn-outline-danger">
-									<i class="icofont-ui-delete" />
+									<i class="fa-solid fa-trash"></i>
 								</button>
 							</form>
 						</div>

@@ -10,10 +10,8 @@
 	$: params = $page.error?.params;
 </script>
 
-<div class="container-fluid h-100 overflow-auto py-1">
-	{#if !embedded}
-		<PageTitle showReload closeUrl="/services">Server Error</PageTitle>
-	{/if}
+{#if !embedded}
+	<PageTitle showReload closeUrl="/services">Server Error</PageTitle>
+{/if}
 
-	<ErrorCard {title} {message} {params} />
-</div>
+<ErrorCard {title} {message} {params} />

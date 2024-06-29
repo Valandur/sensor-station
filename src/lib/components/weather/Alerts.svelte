@@ -26,7 +26,7 @@
 						{alert.tags}
 					</div>
 					<div>
-						<i class="icofont-calendar" />
+						<i class="fa-solid fa-calendar"></i>
 						{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
 						{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
 					</div>

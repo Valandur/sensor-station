@@ -27,7 +27,7 @@
 	<div class="details" transition:fade={{ duration: 500 }}>
 		<iframe title="Story" src={`/services/${name}/details?article=${selectedArticle.id}`} />
 		<button class="btn btn-sm btn-danger" on:click={() => select(null)}>
-			<i class="icofont-ui-close" />
+			<i class="fa-solid fa-xmark"></i>
 		</button>
 	</div>
 {/if}

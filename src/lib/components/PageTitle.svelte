@@ -17,11 +17,11 @@
 	<div class="col-auto">
 		{#if showReload}
 			<button class="btn btn-sm btn-theme" on:click={reload}>
-				<i class="icofont-refresh" />
+				<i class="fa-solid fa-rotate fa-lg"></i>
 			</button>
 		{/if}
 		<a class="btn btn-sm btn-danger" href={closeUrl}>
-			<i class="icofont-ui-close" />
+			<i class="fa-solid fa-xmark fa-xl"></i>
 		</a>
 	</div>
 </div>

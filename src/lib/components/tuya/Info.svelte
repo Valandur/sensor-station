@@ -14,14 +14,14 @@
 			<svelte:fragment slot="header">
 				<div>PIXI Smart Fountain</div>
 				<div>
-					<i class="icofont-power" />
+					<i class="fa-solid fa-power-off"></i>
 					{info.on ? 'ON' : 'OFF'}
 				</div>
 			</svelte:fragment>
 
 			<div class="row">
 				<div class="col-3">
-					<i class="icofont-filter"></i>
+					<i class="fa-solid fa-filter"></i>
 				</div>
 
 				<div class="col">
@@ -42,7 +42,7 @@
 
 			<div class="row">
 				<div class="col-1">
-					<i class="icofont-flash-light" />
+					<i class="fa-regular fa-lightbulb"></i>
 				</div>
 
 				<div class="col-2">
@@ -67,7 +67,7 @@
 
 			<div class="row">
 				<div class="col-1">
-					<i class="icofont-water-drop" />
+					<i class="fa-solid fa-droplet"></i>
 				</div>
 
 				<div class="col-2">

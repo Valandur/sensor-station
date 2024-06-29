@@ -84,7 +84,7 @@
 								class="btn btn-theme"
 								disabled={!newScreenName || !newScreenAction}
 							>
-								<i class="icofont-ui-add" />
+								<i class="fa-solid fa-plus"></i>
 							</button>
 						</form>
 					</td>
@@ -105,7 +105,7 @@
 								<input type="hidden" name="index" value={index} />
 								<div class="btn-group">
 									<button class="btn btn-danger">
-										<i class="icofont-ui-delete" />
+										<i class="fa-solid fa-trash"></i>
 									</button>
 								</div>
 							</form>
@@ -147,7 +147,7 @@
 							<input type="hidden" name="name" value={name} />
 							<input type="hidden" name="__formAction" value="add_icon" />
 							<button type="submit" class="btn btn-theme" disabled={!newIconName || !newIconAction}>
-								<i class="icofont-ui-add" />
+								<i class="fa-solid fa-plus"></i>
 							</button>
 						</form>
 					</td>
@@ -168,7 +168,7 @@
 								<input type="hidden" name="index" value={index} />
 								<div class="btn-group">
 									<button class="btn btn-danger">
-										<i class="icofont-ui-delete" />
+										<i class="fa-solid fa-trash"></i>
 									</button>
 								</div>
 							</form>

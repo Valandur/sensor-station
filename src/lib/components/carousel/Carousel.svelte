@@ -102,7 +102,7 @@
 
 				{#if $paused}
 					<div class="col-auto">
-						<i class="icofont-ui-pause" />
+						<i class="fa-solid fa-pause"></i>
 					</div>
 				{/if}
 			</div>
@@ -150,7 +150,7 @@
 
 {#if $navigating}
 	<div class="loading">
-		<i class="icofont-spinner" />
+		<i class="fa-solid fa-spinner"></i>
 	</div>
 {/if}
 

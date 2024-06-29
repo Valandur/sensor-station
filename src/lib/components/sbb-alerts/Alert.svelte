@@ -30,7 +30,6 @@
 						{reason}
 					</div>
 					<div>
-						<i class="icofont-clock-time" />
 						{duration}
 					</div>
 				</svelte:fragment>

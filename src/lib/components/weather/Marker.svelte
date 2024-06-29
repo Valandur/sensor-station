@@ -6,7 +6,7 @@
 
 <div class="row justify-content-end">
 	<div class="col-auto text-muted">
-		<i class="icofont-location-pin" />
+		<i class="fa-solid fa-map-location-dot"></i>
 		{#if location.place}
 			{location.place}
 		{:else}

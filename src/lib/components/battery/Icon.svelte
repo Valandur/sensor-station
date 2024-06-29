@@ -6,14 +6,16 @@
 
 {#if battery}
 	<div class="col-auto">
-		{#if battery.charge > 70}
-			<i class="icofont-battery-full" />
-		{:else if battery.charge > 40}
-			<i class="icofont-battery-half" />
-		{:else if battery.charge > 10}
-			<i class="icofont-battery-low" />
+		{#if battery.charge > 95}
+			<i class="fa-solid fa-battery-full"></i>
+		{:else if battery.charge > 70}
+			<i class="fa-solid fa-battery-three-quarters"></i>
+		{:else if battery.charge > 45}
+			<i class="fa-solid fa-battery-half"></i>
+		{:else if battery.charge > 20}
+			<i class="fa-solid fa-battery-quarter"></i>
 		{:else}
-			<i class="icofont-battery-empty" />
+			<i class="fa-solid fa-battery-empty"></i>
 		{/if}
 		{battery.charge}%
 	</div>
@@ -21,6 +23,6 @@
 
 {#if battery?.state.includes('CHARGING')}
 	<div class="col-auto">
-		<i class="icofont-plugin" />
+		<i class="fa-solid fa-plug"></i>
 	</div>
 {/if}

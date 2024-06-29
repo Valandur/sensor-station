@@ -39,17 +39,17 @@
 					<td>Button</td>
 					<td>
 						{#if info.isButton}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 					<td>Fault</td>
 					<td>
 						{#if info.isFault}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 				</tr>
@@ -57,17 +57,17 @@
 					<td>Profile Invalid</td>
 					<td>
 						{#if fault.batteryProfileInvalid}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 					<td>Button Off</td>
 					<td>
 						{#if fault.buttonPowerOff}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 				</tr>
@@ -77,9 +77,9 @@
 					<td>Forced Off</td>
 					<td>
 						{#if fault.forcedPowerOff}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 				</tr>
@@ -87,17 +87,17 @@
 					<td>Sys Off</td>
 					<td>
 						{#if fault.forcedSysPowerOff}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 					<td>Watchdog</td>
 					<td>
 						{#if fault.watchdogReset}
-							<i class="icofont-check" />
+							<i class="fa-solid fa-check"></i>
 						{:else}
-							<i class="icofont-close" />
+							<i class="fa-solid fa-xmark"></i>
 						{/if}
 					</td>
 				</tr>
