@@ -1,5 +1,5 @@
 import { error, type HttpError, isHttpError } from '@sveltejs/kit';
-import { format } from 'date-fns';
+import { format } from 'date-fns/format';
 import { inspect } from 'node:util';
 import chalk from 'chalk';
 

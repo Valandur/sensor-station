@@ -1,8 +1,11 @@
 import { redirect, type Actions } from '@sveltejs/kit';
 import { exec } from 'node:child_process';
+import { format } from 'date-fns/format';
+import chalk from 'chalk';
+
+import serviceManager from '$lib/server/services';
 
 import type { PageServerLoad } from './$types';
-import serviceManager from '$lib/server/services';
 
 export const load: PageServerLoad = async () => {
 	const main = serviceManager.getMain();
@@ -15,6 +18,10 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	restart: async () => {
-		exec('sudo /sbin/shutdown -r now', (msg) => console.log(msg));
+		exec('sudo /sbin/shutdown -r now', (msg) =>
+			console.log(
+				`${chalk.grey(format(new Date(), 'HH:mm:ss'))} [${chalk.gray('WARN')}] [${chalk.green('MAIN')}] ${msg}`
+			)
+		);
 	}
 };

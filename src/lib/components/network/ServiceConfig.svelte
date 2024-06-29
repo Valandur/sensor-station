@@ -7,11 +7,9 @@
 	export let form: Record<string, any> | null;
 	export let data: NetworkServiceConfigData;
 
-	let selectedSSID = '';
+	let selectedSSID = 'asdf';
 	$: connections = data.connections;
 	$: networks = form?.networks ?? [];
-
-	$: console.log(networks);
 </script>
 
 <div class="row overflow-auto">
@@ -104,37 +102,30 @@
 	</div>
 </div>
 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalWifi">
-	Launch demo modal
-</button>
-
-<div class="modal fade" id="modalWifi" tabindex="-1">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title">Connect to Wifi</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-			<div class="modal-body">
-				<form
-					method="POST"
-					use:enhance={() =>
-						({ result }) =>
-							applyAction(result)}
-				>
+<form
+	method="POST"
+	use:enhance={() =>
+		({ result }) =>
+			applyAction(result)}
+>
+	<div class="modal fade" id="modalWifi" tabindex="-1">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Connect to {selectedSSID}</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
 					<input type="hidden" name="name" value={name} />
 					<input type="hidden" name="action" value="connect" />
 					<input type="hidden" name="ssid" value={selectedSSID} />
 					<input type="password" name="password" placeholder="Password" />
-					<button type="submit" class="btn btn-primary">
-						<i class="fa-solid fa-link"></i>
-					</button>
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-theme">Connect</button>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-theme" data-bs-dismiss="modal">Connect</button>
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
+</form>

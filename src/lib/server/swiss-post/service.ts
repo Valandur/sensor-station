@@ -349,7 +349,6 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 						}
 					}
 
-					console.log(inner.status, this.getText(inner.status));
 					const shipment: Shipment = {
 						id: inner.identity,
 						number: inner.formattedShipmentNumber ?? '-- unbekannt --',
