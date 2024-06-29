@@ -103,14 +103,14 @@ const options = {
   root: Root,
   service_worker: false,
   templates: {
-    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" data-bs-theme="dark">\n\n<head>\n	<meta charset="utf-8" />\n	<link rel="icon" href="' + assets2 + '/favicon.png" />\n	<link rel="stylesheet" type="text/css" href="' + assets2 + '/icofont.min.css" />\n	<meta name="viewport"\n		content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />\n	' + head + '\n</head>\n\n<body data-sveltekit-preload-data="hover">\n	<div id="app" class="app app-content-full-height app-content-full-width app-without-sidebar app-without-header">\n		' + body + "\n	</div>\n</body>\n\n</html>\n",
-    error: ({ status, message }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>Error - ' + status + " - " + message + "</title>\n		<style>\n			html,\n			body {\n				padding: 0;\n				margin: 0;\n			}\n\n			body {\n				padding: 0 2rem;\n				font-size: 30px;\n			}\n\n			.error {\n				color: red;\n			}\n		</style>\n	</head>\n	<body>\n		<h1>Error " + status + '</h1>\n\n		<a href="/">Home</a>\n\n		<p class="error">' + message + "</p>\n	</body>\n</html>\n"
+    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" data-bs-theme="dark">\n\n<head>\n	<meta charset="utf-8" />\n	<link rel="icon" href="' + assets2 + '/favicon.png" />\n	<meta name="viewport"\n		content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />\n	' + head + '\n</head>\n\n<body data-sveltekit-preload-data="hover">\n	<div id="app"\n		class="app app-content-full-height app-content-full-width app-without-sidebar app-without-header overflow-hidden">\n		' + body + "\n	</div>\n</body>\n\n</html>\n",
+    error: ({ status, message }) => '<!DOCTYPE html>\n<html lang="en">\n\n<head>\n	<meta charset="utf-8" />\n	<title>Error - ' + status + " - " + message + "</title>\n	<style>\n		html,\n		body {\n			padding: 0;\n			margin: 0;\n		}\n\n		body {\n			padding: 0 2rem;\n			font-size: 30px;\n		}\n\n		.error {\n			color: red;\n		}\n	</style>\n</head>\n\n<body>\n	<h1>Error " + status + '</h1>\n\n	<a href="/">Home</a>\n\n	<p class="error">' + message + "</p>\n</body>\n\n</html>\n"
   },
-  version_hash: "miroib"
+  version_hash: "1rdwi4z"
 };
 async function get_hooks() {
   return {
-    ...await import('./chunks/hooks.server-CnrACXCy.js')
+    ...await import('./chunks/hooks.server-CXTf45wN.js')
   };
 }
 
