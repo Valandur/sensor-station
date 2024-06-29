@@ -86,8 +86,8 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		switch (formAction) {
 			case 'scan': {
 				await new Promise<void>((resolve, reject) =>
-					exec('nmcli device wifi rescan', (err) => (err ? reject(err) : resolve()))
-				);
+					exec('sudo nmcli device wifi rescan', (err) => (err ? reject(err) : resolve()))
+				).catch(() => null);
 				const connections = await wifi.getCurrentConnections();
 				const networks = await wifi.scan();
 				return {
