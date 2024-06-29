@@ -38,6 +38,13 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 
 	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 
+	public override async init(): Promise<void> {
+		wifi.init({
+			debug: true,
+			iface: null
+		});
+	}
+
 	protected getDefaultConfig(): NetworkServiceConfig {
 		return {};
 	}
@@ -62,11 +69,6 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 			error(400, `Network is disabled`);
 		}
 
-		wifi.init({
-			debug: true,
-			iface: null
-		});
-
 		const connections = await wifi.getCurrentConnections();
 
 		return {
@@ -82,8 +84,11 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		const formAction = form.get('action');
 		switch (formAction) {
 			case 'scan': {
+				const connections = await wifi.getCurrentConnections();
 				const networks = await wifi.scan();
-				return { networks };
+				return {
+					networks: networks.filter((n) => !connections.some((c) => c.ssid === n.ssid))
+				};
 			}
 		}
 	}
