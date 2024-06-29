@@ -73,7 +73,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 	}
 
 	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
-		const formAction = form.get('__formAction');
+		const formAction = form.get('action');
 
 		switch (formAction) {
 			case 'add_screen': {
@@ -89,6 +89,43 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 				const service = serviceManager.getByName(serviceName);
 				this.config.screens.push({ name: service.name, action });
+				break;
+			}
+
+			case 'move_screen': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { message: 'Invalid index' });
+				}
+
+				const dir = form.get('dir');
+				if (dir !== 'up' && dir !== 'down') {
+					return fail(400, { message: 'Invalid direction' });
+				}
+
+				if (dir === 'up') {
+					if (index === 0) {
+						return fail(400, { message: 'Invalid direction' });
+					}
+
+					this.config.screens = [
+						...this.config.screens.slice(0, index - 1),
+						this.config.screens[index],
+						this.config.screens[index - 1],
+						...this.config.screens.slice(index + 1)
+					];
+				} else if (dir === 'down') {
+					if (index === this.config.screens.length - 1) {
+						return fail(400, { message: 'Invalid direction' });
+					}
+
+					this.config.screens = [
+						...this.config.screens.slice(0, index),
+						this.config.screens[index + 1],
+						this.config.screens[index],
+						...this.config.screens.slice(index + 2)
+					];
+				}
 				break;
 			}
 
@@ -115,6 +152,43 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 				const service = serviceManager.getByName(serviceName);
 				this.config.icons.push({ name: service.name, action });
+				break;
+			}
+
+			case 'move_icon': {
+				const index = Number(form.get('index'));
+				if (!isFinite(index)) {
+					return fail(400, { message: 'Invalid index' });
+				}
+
+				const dir = form.get('dir');
+				if (dir !== 'up' && dir !== 'down') {
+					return fail(400, { message: 'Invalid direction' });
+				}
+
+				if (dir === 'up') {
+					if (index === 0) {
+						return fail(400, { message: 'Invalid direction' });
+					}
+
+					this.config.icons = [
+						...this.config.icons.slice(0, index - 1),
+						this.config.icons[index],
+						this.config.icons[index - 1],
+						...this.config.icons.slice(index + 1)
+					];
+				} else if (dir === 'down') {
+					if (index === this.config.icons.length - 1) {
+						return fail(400, { message: 'Invalid direction' });
+					}
+
+					this.config.icons = [
+						...this.config.icons.slice(0, index),
+						this.config.icons[index + 1],
+						this.config.icons[index],
+						...this.config.icons.slice(index + 2)
+					];
+				}
 				break;
 			}
 

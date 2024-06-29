@@ -78,7 +78,7 @@
 					<td>
 						<form id="formNewScreen" method="POST" use:enhance>
 							<input type="hidden" name="name" value={name} />
-							<input type="hidden" name="__formAction" value="add_screen" />
+							<input type="hidden" name="action" value="add_screen" />
 							<button
 								type="submit"
 								class="btn btn-theme"
@@ -99,16 +99,44 @@
 							{screen.action ?? '---'}
 						</td>
 						<td>
-							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
-								<input type="hidden" name="__formAction" value="delete_screen" />
-								<input type="hidden" name="index" value={index} />
-								<div class="btn-group">
+							<div class="btn-group">
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="move_screen" />
+									<input type="hidden" name="dir" value="up" />
+									<input type="hidden" name="index" value={index} />
+									<button
+										class="btn me-2"
+										class:btn-primary={index > 0}
+										class:btn-secondary={index === 0}
+										disabled={index === 0}
+									>
+										<i class="fa-solid fa-caret-up"></i>
+									</button>
+								</form>
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="move_screen" />
+									<input type="hidden" name="dir" value="down" />
+									<input type="hidden" name="index" value={index} />
+									<button
+										class="btn me-2"
+										class:btn-primary={index < screens.length - 1}
+										class:btn-secondary={index === screens.length - 1}
+										disabled={index === screens.length - 1}
+									>
+										<i class="fa-solid fa-caret-down"></i>
+									</button>
+								</form>
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="delete_screen" />
+									<input type="hidden" name="index" value={index} />
 									<button class="btn btn-danger">
 										<i class="fa-solid fa-trash"></i>
 									</button>
-								</div>
-							</form>
+								</form>
+							</div>
 						</td>
 					</tr>
 				{/each}
@@ -145,7 +173,7 @@
 					<td>
 						<form id="formNewIcon" method="POST" use:enhance>
 							<input type="hidden" name="name" value={name} />
-							<input type="hidden" name="__formAction" value="add_icon" />
+							<input type="hidden" name="action" value="add_icon" />
 							<button type="submit" class="btn btn-theme" disabled={!newIconName || !newIconAction}>
 								<i class="fa-solid fa-plus"></i>
 							</button>
@@ -162,16 +190,44 @@
 							{icon.action ?? '---'}
 						</td>
 						<td>
-							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
-								<input type="hidden" name="__formAction" value="delete_icon" />
-								<input type="hidden" name="index" value={index} />
-								<div class="btn-group">
+							<div class="btn-group">
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="move_icon" />
+									<input type="hidden" name="dir" value="up" />
+									<input type="hidden" name="index" value={index} />
+									<button
+										class="btn me-2"
+										class:btn-primary={index > 0}
+										class:btn-secondary={index === 0}
+										disabled={index === 0}
+									>
+										<i class="fa-solid fa-caret-up"></i>
+									</button>
+								</form>
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="move_icon" />
+									<input type="hidden" name="dir" value="down" />
+									<input type="hidden" name="index" value={index} />
+									<button
+										class="btn me-2"
+										class:btn-primary={index < icons.length - 1}
+										class:btn-secondary={index === icons.length - 1}
+										disabled={index === icons.length - 1}
+									>
+										<i class="fa-solid fa-caret-down"></i>
+									</button>
+								</form>
+								<form method="POST" use:enhance>
+									<input type="hidden" name="name" value={name} />
+									<input type="hidden" name="action" value="delete_icon" />
+									<input type="hidden" name="index" value={index} />
 									<button class="btn btn-danger">
 										<i class="fa-solid fa-trash"></i>
 									</button>
-								</div>
-							</form>
+								</form>
+							</div>
 						</td>
 					</tr>
 				{/each}
@@ -189,7 +245,7 @@
 					applyAction(result)}
 		>
 			<input type="hidden" name="name" value={name} />
-			<input type="hidden" name="__formAction" value="other" />
+			<input type="hidden" name="action" value="other" />
 
 			<div class="row mb-2">
 				<label for="inputCountry" class="col-3 col-form-label">Country</label>
