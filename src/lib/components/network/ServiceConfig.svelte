@@ -7,7 +7,7 @@
 	export let form: Record<string, any> | null;
 	export let data: NetworkServiceConfigData;
 
-	let selectedSSID = 'asdf';
+	let selectedSSID = '';
 	$: connections = data.connections;
 	$: networks = form?.networks ?? [];
 </script>
