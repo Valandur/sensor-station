@@ -91,7 +91,9 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 				const connections = await wifi.getCurrentConnections();
 				const networks = await wifi.scan();
 				return {
-					networks: networks.filter((n) => !connections.some((c) => c.ssid === n.ssid))
+					networks: networks
+						.filter((n) => !connections.some((c) => c.ssid === n.ssid))
+						.sort((a, b) => a.ssid.localeCompare(b.ssid))
 				};
 			}
 		}

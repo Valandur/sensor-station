@@ -36,14 +36,17 @@
 
 		<table class="table table-sm">
 			<colgroup>
-				<col width="50%" />
-				<col width="25%" />
-				<col width="25%" />
+				<col width="100%" />
+				<col />
+				<col />
+				<col />
 				<col />
 			</colgroup>
 			<thead>
 				<tr>
 					<th>SSID</th>
+					<th>Type</th>
+					<th>Channel</th>
 					<th>Security</th>
 					<th>Quality</th>
 					<th></th>
@@ -53,6 +56,8 @@
 				{#each connections as connection}
 					<tr class="table-active">
 						<td>{connection.ssid}</td>
+						<td>{(connection.frequency / 1000).toFixed(1)}</td>
+						<td>{connection.channel}</td>
 						<td>{connection.security}</td>
 						<td>{connection.quality}</td>
 						<td>
@@ -76,6 +81,8 @@
 				{#each networks as network}
 					<tr>
 						<td>{network.ssid}</td>
+						<td>{(network.frequency / 1000).toFixed(1)}</td>
+						<td>{network.channel}</td>
 						<td>{network.security}</td>
 						<td>{network.quality}</td>
 						<td>
