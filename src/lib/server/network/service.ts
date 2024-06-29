@@ -108,7 +108,11 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 					return fail(400, { message: 'Invalid password' });
 				}
 
-				await wifi.connect({ ssid, password });
+				try {
+					await wifi.connect({ ssid, password });
+				} catch (err: any) {
+					return fail(400, { message: err.message });
+				}
 				break;
 			}
 
@@ -118,7 +122,11 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 					return fail(400, { message: 'Invalid SSID' });
 				}
 
-				await wifi.deleteConnection({ ssid });
+				try {
+					await wifi.deleteConnection({ ssid });
+				} catch (err: any) {
+					return fail(400, { message: err.message });
+				}
 				break;
 			}
 		}
