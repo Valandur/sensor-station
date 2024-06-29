@@ -45,10 +45,10 @@
 			<thead>
 				<tr>
 					<th>SSID</th>
-					<th>Type</th>
-					<th>Channel</th>
-					<th>Security</th>
-					<th>Quality</th>
+					<th>GHz</th>
+					<th>Cha.</th>
+					<th>Sec.</th>
+					<th>Qty</th>
 					<th></th>
 				</tr>
 			</thead>
