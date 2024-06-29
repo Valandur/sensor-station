@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:dns/promises';
 import { env } from '$env/dynamic/private';
@@ -95,6 +95,31 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 						.filter((n) => !connections.some((c) => c.ssid === n.ssid))
 						.sort((a, b) => a.ssid.localeCompare(b.ssid))
 				};
+			}
+
+			case 'connect': {
+				const ssid = form.get('ssid');
+				if (typeof ssid !== 'string') {
+					return fail(400, { message: 'Invalid SSID' });
+				}
+
+				const password = form.get('password');
+				if (typeof password !== 'string') {
+					return fail(400, { message: 'Invalid password' });
+				}
+
+				await wifi.connect({ ssid, password });
+				break;
+			}
+
+			case 'disconnect': {
+				const ssid = form.get('ssid');
+				if (typeof ssid !== 'string') {
+					return fail(400, { message: 'Invalid SSID' });
+				}
+
+				await wifi.deleteConnection({ ssid });
+				break;
 			}
 		}
 	}
