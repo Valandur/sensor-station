@@ -99,6 +99,7 @@ class ServiceManager {
 				continue;
 			}
 			const service = new constr(rawService.name, rawService.config);
+			await service.init();
 			services.set(rawService.name, service);
 		}
 

@@ -11,6 +11,8 @@
 
 	export let shipment: Shipment;
 
+	$: event = shipment.events[0];
+
 	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {
 		return `${Math.round(x / 10)} x ${Math.round(y / 10)} x ${Math.round(z / 10)} cm`;
 	}
@@ -28,11 +30,12 @@
 			<Card>
 				<svelte:fragment slot="header">
 					<div>
+						<i class="fa-solid fa-hashtag"></i>
 						{shipment.number}
 					</div>
 					{#if shipment.arrival}
 						<div>
-							<i class="icofont-calendar" />
+							<i class="fa-solid fa-calendar"></i>
 							{formatInTimeZone(parseISO(shipment.arrival), $tz, 'dd.MM.yy', { locale: de })}
 						</div>
 					{/if}
@@ -46,22 +49,33 @@
 					{shipment.sender ? shipment.type : ''}
 				</svelte:fragment>
 
-				{#if shipment.dims}
-					<i class="icofont-drag3" />
-					{formatDims(shipment.dims)}
-					<br />
-				{/if}
+				<div class="row">
+					<div class="col">
+						{#if shipment.dims}
+							<i class="fa-solid fa-ruler-combined"></i>
+							{formatDims(shipment.dims)}
+							<br />
+						{/if}
 
-				{#if shipment.weight}
-					<i class="icofont-measure" />
-					{formatWeight(shipment.weight)}
-					<br />
-				{/if}
+						{#if shipment.weight}
+							<i class="fa-solid fa-scale-balanced"></i>
+							{formatWeight(shipment.weight)}
+							<br />
+						{/if}
 
-				{#if shipment.status}
-					<i class="icofont-bullhorn" />
-					{shipment.status}
-				{/if}
+						{#if shipment.status}
+							<i class="fa-solid fa-truck-fast"></i>
+							{shipment.status}
+						{/if}
+					</div>
+
+					<div class="col">
+						{#if event}
+							<div>{formatInTimeZone(event.ts, $tz, 'dd.MM.yy - HH:mm:ss', { locale: de })}</div>
+							<div>{event.event}</div>
+						{/if}
+					</div>
+				</div>
 			</Card>
 		</div>
 	</div>

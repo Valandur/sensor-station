@@ -2,6 +2,10 @@ import { decode } from 'html-entities';
 import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import makeFetchCookie from 'fetch-cookie';
+import { parseISO } from 'date-fns/parseISO';
+import { CookieJar } from 'tough-cookie';
+import { mkdir, readFile, rm, writeFile } from 'fs/promises';
+import { dirname } from 'path';
 
 import type { ServiceActionFailure } from '$lib/models/service';
 import { wrap } from '$lib/counter';
@@ -13,7 +17,10 @@ import {
 	type SwissPostServiceConfigData,
 	type SwissPostServiceMainData,
 	type Shipment,
-	type RecursiveMap
+	type RecursiveMap,
+	type RawShipmentEvent,
+	type RawShipment,
+	GLOBAL_STATUS
 } from '$lib/models/swiss-post';
 
 import { Cache } from '../Cache';
@@ -50,8 +57,21 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
 	protected hasTexts = false;
 	protected shipmentTexts: RecursiveMap = new Map();
-	protected fetchCookie = makeFetchCookie(fetch);
+	protected cookieJar = new CookieJar();
+	protected fetchWithCookies = makeFetchCookie(fetch, this.cookieJar);
+	protected cookieJarFileName = `data/swiss-post/${Buffer.from(this.config.username, 'utf-8').toString('base64')}.json`;
 	protected lastPage: number = 0;
+
+	public override async init(): Promise<void> {
+		await this.updateTexts();
+
+		const cookieJarStr = await readFile(this.cookieJarFileName, 'utf-8').catch(() => null);
+		if (cookieJarStr) {
+			this.cookieJar = await CookieJar.deserialize(cookieJarStr);
+			this.fetchWithCookies = makeFetchCookie(fetch, this.cookieJar);
+			this.logger.debug('Loaded cookie jar from file');
+		}
+	}
 
 	protected getDefaultConfig(): SwissPostServiceConfig {
 		return {
@@ -167,127 +187,125 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 				errorCacheTime: this.config.errorCacheTime
 			},
 			async () => {
-				await this.updateTexts();
+				let resUser = await this.request('user', URL_USER, {
+					headers: { Accept: 'application/json' }
+				});
+				let userBody = await resUser.json();
 
 				let url = URL_START;
-				const resPre = await this.request('pre', url, {
-					headers: { Accept: 'text/html' }
-				});
+				if (userBody?.securityLevel !== 'AUTHENTICATED') {
+					this.logger.debug('Saved credentials are not valid, reauthenticating');
+					await rm(this.cookieJarFileName, { force: true });
 
-				const redir = resPre.url;
-				if (!redir) {
-					error(500, 'Missing redirect URL');
-				}
+					const resPre = await this.request('pre', url, {
+						headers: { Accept: 'text/html' }
+					});
 
-				const params = new URL(redir).searchParams.toString();
-				url = `${URL_INIT}?${params}`;
-
-				const resInit = await this.request('init', url, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({})
-				});
-				const bodyInit = await resInit.json();
-
-				this.logger.debug('next_action', bodyInit.nextAction?.type);
-
-				url = `${URL_LOGIN}?${params}`;
-				let authId = bodyInit.tokens.authId;
-				const loginData = { username: this.config.username, password: this.config.password };
-
-				const resBasic = await this.request('basic', url, {
-					method: 'POST',
-					headers: {
-						Accept: 'application/json',
-						'Content-Type': 'application/json',
-						authId: authId
-					},
-					body: JSON.stringify(loginData)
-				});
-				const bodyBasic = await resBasic.json();
-
-				authId = bodyBasic.tokens.authId;
-				url = `${URL_ANOMALY}?${params}`;
-
-				const resAnomaly = await this.request('anomaly', url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						authId: authId
-					},
-					body: JSON.stringify({})
-				});
-				const anomalyBody = await resAnomaly.json();
-
-				url = decodeURI(anomalyBody.nextAction.successUrl.trim());
-
-				const resAuth = await this.request('auth', url, {
-					headers: {
-						Accept: 'text/html'
+					const redir = resPre.url;
+					if (!redir) {
+						error(500, 'Missing redirect URL');
 					}
-				});
-				const authBody = await resAuth.text();
 
-				let rawUrl = FORM_REGEX.exec(authBody)?.[1]?.trim();
-				if (!rawUrl) {
-					error(500, 'Could not find auth form');
-				}
+					const params = new URL(redir).searchParams.toString();
+					url = `${URL_INIT}?${params}`;
 
-				url = decode(rawUrl);
+					const resInit = await this.request('init', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({})
+					});
+					const bodyInit = await resInit.json();
 
-				const resDone = await this.request('done', url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded'
+					this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+					url = `${URL_LOGIN}?${params}`;
+					let authId = bodyInit.tokens.authId;
+					const loginData = { username: this.config.username, password: this.config.password };
+
+					const resBasic = await this.request('basic', url, {
+						method: 'POST',
+						headers: {
+							Accept: 'application/json',
+							'Content-Type': 'application/json',
+							authId: authId
+						},
+						body: JSON.stringify(loginData)
+					});
+					const bodyBasic = await resBasic.json();
+
+					authId = bodyBasic.tokens.authId;
+					url = `${URL_ANOMALY}?${params}`;
+
+					const resAnomaly = await this.request('anomaly', url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							authId: authId
+						},
+						body: JSON.stringify({})
+					});
+					const anomalyBody = await resAnomaly.json();
+
+					url = decodeURI(anomalyBody.nextAction.successUrl.trim());
+
+					const resAuth = await this.request('auth', url, {
+						headers: { Accept: 'text/html' }
+					});
+					const authBody = await resAuth.text();
+
+					let rawUrl = FORM_REGEX.exec(authBody)?.[1]?.trim();
+					if (!rawUrl) {
+						error(500, 'Could not find auth form');
 					}
-				});
-				const doneBody = await resDone.text();
 
-				rawUrl = FORM_REGEX.exec(doneBody)?.[1]?.trim();
-				if (!rawUrl) {
-					error(500, 'Could not find submit form');
-				}
+					url = decode(rawUrl);
 
-				url = decode(rawUrl);
-				let matches = INPUT_REGEX.exec(doneBody);
-				const data = new URLSearchParams();
-				while (matches !== null) {
-					const key = matches[1];
-					const value = matches[2];
-					data.append(key, value);
-					matches = INPUT_REGEX.exec(doneBody);
-				}
+					const resDone = await this.request('done', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+					});
+					const doneBody = await resDone.text();
 
-				await this.request('post', url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded'
-					},
-					body: data
-				});
-
-				const resUser = await this.request('user', URL_USER, {
-					headers: {
-						Accept: 'application/json'
+					rawUrl = FORM_REGEX.exec(doneBody)?.[1]?.trim();
+					if (!rawUrl) {
+						error(500, 'Could not find submit form');
 					}
-				});
-				const userBody = await resUser.json();
+
+					url = decode(rawUrl);
+					let matches = INPUT_REGEX.exec(doneBody);
+					const data = new URLSearchParams();
+					while (matches !== null) {
+						const key = matches[1];
+						const value = matches[2];
+						data.append(key, value);
+						matches = INPUT_REGEX.exec(doneBody);
+					}
+
+					await this.request('post', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: data
+					});
+
+					resUser = await this.request('user', URL_USER, {
+						headers: {
+							Accept: 'application/json'
+						}
+					});
+					userBody = await resUser.json();
+				}
 
 				url = `${URL_SHIPMENTS}/user/${userBody.userIdentifier}`;
 
 				const resShipmentReq = await this.request('shipments-req', url, {
-					headers: {
-						Accept: 'application/json'
-					}
+					headers: { Accept: 'application/json' }
 				});
 				const shipmentReqBody = await resShipmentReq.json();
 
 				url = `${URL_SHIPMENTS}/result/${shipmentReqBody}`;
 
 				const resShipments = await this.request('shipments', url, {
-					headers: {
-						Accept: 'application/json'
-					}
+					headers: { Accept: 'application/json' }
 				});
 				let shipmentsBody = await resShipments.json();
 
@@ -298,9 +316,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 					}
 					await new Promise<void>((res) => setTimeout(res, 1000));
 					const resShipments = await this.request('shipments', url, {
-						headers: {
-							Accept: 'application/json'
-						}
+						headers: { Accept: 'application/json' }
 					});
 					shipmentsBody = await resShipments.json();
 				}
@@ -312,52 +328,62 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 					});
 				}
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const rawShipments: any[] = shipmentsBody.shipments;
-				const shipments: Shipment[] = rawShipments
-					.filter((s) => s.shipment.globalStatus !== 'DELIVERED')
-					.map(({ shipment }) => {
-						const phys = shipment.physicalProperties;
-						let type = this.getText(shipment.product) || shipment.product;
-						if (shipment.internationalProduct) {
-							const newType = this.getText(shipment.internationalProduct);
-							if (newType) {
-								type = newType;
-							}
-						}
+				const shipments: Shipment[] = [];
+				const rawShipments: RawShipment[] = shipmentsBody.shipments;
+				for (const rawShipment of rawShipments) {
+					const inner = rawShipment.shipment;
 
-						return {
-							id: shipment.identity,
-							number: shipment.formattedShipmentNumber ?? '-- unbekannt --',
-							type: type,
-							arrival: shipment.calculatedDeliveryDate ?? null,
-							status: null,
-							sender: shipment.debitorDescription ?? null,
-							dims: phys.dimension1
-								? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
-								: null,
-							weight: phys.weight ?? null
-						};
-					});
-
-				for (const shipment of shipments) {
-					const eventsRes = await this.request(
-						`events-${shipment.number}`,
-						URL_EVENTS.replace('$id', shipment.id),
-						{
-							headers: {
-								Accept: 'application/json'
-							}
-						}
-					);
-					const eventsBody = await eventsRes.json();
-					const event = eventsBody[0];
-					if (!event) {
+					if (
+						inner.globalStatus === 'DELIVERED' &&
+						inner.formattedShipmentNumber !== '99.60.020753.92050439'
+					) {
 						continue;
 					}
 
-					shipment.status = this.getText(event.eventCode) || event.eventCode;
+					const phys = inner.physicalProperties;
+					let type = this.getText(inner.product) || inner.product;
+					if (inner.internationalProduct) {
+						const newType = this.getText(inner.internationalProduct);
+						if (newType) {
+							type = newType;
+						}
+					}
+
+					console.log(inner.status, this.getText(inner.status));
+					const shipment: Shipment = {
+						id: inner.identity,
+						number: inner.formattedShipmentNumber ?? '-- unbekannt --',
+						type: type,
+						arrival: inner.calculatedDeliveryDate ?? null,
+						status: GLOBAL_STATUS[inner.globalStatus],
+						sender: inner.debitorDescription ?? null,
+						dims: phys.dimension1
+							? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
+							: null,
+						weight: phys.weight ?? null,
+						events: []
+					};
+					shipments.push(shipment);
+
+					const eventsRes = await this.request(
+						`events-${shipment.number}`,
+						URL_EVENTS.replace('$id', shipment.id),
+						{ headers: { Accept: 'application/json' } }
+					);
+					const eventsBody: RawShipmentEvent[] = await eventsRes.json();
+					const events = eventsBody
+						.sort((a, b) => parseISO(b.timestamp).getTime() - parseISO(a.timestamp).getTime())
+						.map((e) => ({
+							ts: parseISO(e.timestamp),
+							event: this.getText(e.eventCode) || e.eventCode
+						}));
+					shipment.events = events;
 				}
+
+				// Cache cookies to disk
+				const jar = await this.cookieJar.serialize();
+				await mkdir(dirname(this.cookieJarFileName), { recursive: true });
+				await writeFile(this.cookieJarFileName, JSON.stringify(jar), 'utf-8');
 
 				return {
 					ts: new Date(),
@@ -389,7 +415,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 	private async request(name: string, url: string, init: RequestInit) {
 		this.logger.debug(name, init.method ?? 'GET', url);
 		try {
-			const resp = await this.fetchCookie(url, {
+			const resp = await this.fetchWithCookies(url, {
 				...init,
 				redirect: 'follow',
 				credentials: 'include'

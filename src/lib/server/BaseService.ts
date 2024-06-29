@@ -40,6 +40,8 @@ export abstract class BaseService<
 		this._actions = this.getActions();
 	}
 
+	public async init(): Promise<void> {}
+
 	protected abstract getDefaultConfig(): CONFIG;
 	protected abstract getActions(): ServiceActions<ACTION>;
 
