@@ -9,6 +9,8 @@
 
 	$: connections = data.connections;
 	$: networks = form?.networks ?? [];
+
+	$: console.log(networks);
 </script>
 
 <div class="row overflow-auto">
