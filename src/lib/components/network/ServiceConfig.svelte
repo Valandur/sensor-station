@@ -49,7 +49,7 @@
 			</thead>
 			<tbody>
 				{#each connections as connection}
-					<tr>
+					<tr class="table-active">
 						<td>{connection.ssid}</td>
 						<td>{connection.security}</td>
 						<td>{connection.quality}</td>
@@ -70,6 +70,7 @@
 						</td>
 					</tr>
 				{/each}
+
 				{#each networks as network}
 					<tr>
 						<td>{network.ssid}</td>
