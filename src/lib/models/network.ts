@@ -1,3 +1,5 @@
+import type { WiFiNetwork } from 'node-wifi';
+
 import type { ServiceConfig, ServiceData } from './service';
 
 // ---------
@@ -5,15 +7,20 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const NETWORK_SERVICE_TYPE = 'network';
-export const NETWORK_SERVICE_ACTIONS = ['main', 'icon'] as const;
+export const NETWORK_SERVICE_ACTIONS = ['main', 'config', 'icon'] as const;
 
 export type NetworkServiceAction = (typeof NETWORK_SERVICE_ACTIONS)[number];
 
-export interface NetworkServiceData extends ServiceData {
+export interface NetworkServiceMainData extends ServiceData {
 	type: 'data';
 	connected: boolean;
 	interfaces: NetworkInterface[];
 }
+export interface NetworkServiceConfigData extends ServiceData {
+	type: 'config';
+	connections: WiFiNetwork[];
+}
+export type NetworkServiceData = NetworkServiceConfigData | NetworkServiceMainData;
 
 export interface NetworkServiceConfig extends ServiceConfig {}
 

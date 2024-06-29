@@ -35,7 +35,6 @@ export const actions: Actions = {
 			const result = await service.set(action, { url, cookies, form, embedded: false });
 			await serviceManager.save();
 			if (result) {
-				result.data.success = false;
 				return result;
 			} else {
 				return { success: true };

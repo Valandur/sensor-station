@@ -17,7 +17,9 @@ export interface ServiceSetDataOptions extends ServiceGetDataOptions {
 export type ServiceActions<ACTION extends string> = {
 	[KEY in ACTION]: {
 		get?: (options: ServiceGetDataOptions) => Promise<ServiceData | null>;
-		set?: (options: ServiceSetDataOptions) => Promise<void | ServiceActionFailure>;
+		set?: (
+			options: ServiceSetDataOptions
+		) => Promise<void | Record<string, unknown> | ServiceActionFailure>;
 	};
 };
 
@@ -57,7 +59,10 @@ export abstract class BaseService<
 		return func(options) as Promise<DATA | null>;
 	}
 
-	public set(action: ACTION, options: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+	public set(
+		action: ACTION,
+		options: ServiceSetDataOptions
+	): Promise<void | Record<string, unknown> | ServiceActionFailure> {
 		const func = this._actions[action]?.set;
 		if (!func) {
 			error(400, `Set action '${action}' not supported on service ${this.name}`);

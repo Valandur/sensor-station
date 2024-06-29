@@ -35,9 +35,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Swiss Post" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="Weather" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Swiss Post" message="Missing data" params={{ name }} />
+		<ErrorCard title="Weather" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

@@ -5,10 +5,12 @@
 	import PageLayout from '../PageLayout.svelte';
 	import Icon from './Icon.svelte';
 	import Interfaces from './Interfaces.svelte';
+	import ServiceConfig from './ServiceConfig.svelte';
 
 	export let name: string;
 	export let action: NetworkServiceAction;
 	export let data: NetworkServiceData | null;
+	export let form: Record<string, any> | null;
 	export let isEmbedded: boolean = false;
 </script>
 
@@ -20,10 +22,17 @@
 			{:else}
 				<Interfaces interfaces={data.interfaces} />
 			{/if}
+		{:else if data.type === 'config'}
+			{#if form?.message}
+				<ErrorCard message={form.message} />
+			{:else if form?.success}
+				<div class="alert alert-success m-0">Config saved!</div>
+			{/if}
+			<ServiceConfig {name} {form} {data} />
 		{:else}
-			<ErrorCard title="Gallery" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="Network" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Gallery" message="Missing data" params={{ name }} />
+		<ErrorCard title="Network" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>

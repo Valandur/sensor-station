@@ -2,7 +2,9 @@ import { error } from '@sveltejs/kit';
 import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:dns/promises';
 import { env } from '$env/dynamic/private';
+import wifi from 'node-wifi';
 
+import type { ServiceActionFailure } from '$lib/models/service';
 import {
 	NETWORK_SERVICE_TYPE,
 	NETWORK_SERVICE_ACTIONS,
@@ -10,11 +12,17 @@ import {
 	type NetworkInterface,
 	type NetworkServiceAction,
 	type NetworkServiceConfig,
-	type NetworkServiceData
+	type NetworkServiceMainData,
+	type NetworkServiceConfigData
 } from '$lib/models/network';
 
 import { Cache } from '../Cache';
-import { BaseService, type ServiceActions, type ServiceGetDataOptions } from '../BaseService';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
 
 interface CacheData {
 	ts: Date;
@@ -36,6 +44,10 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 
 	protected getActions(): ServiceActions<NetworkServiceAction> {
 		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
 			main: {
 				get: this.getData.bind(this)
 			},
@@ -45,7 +57,38 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		};
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<NetworkServiceData> {
+	public async getConfig({ url }: ServiceGetDataOptions): Promise<NetworkServiceConfigData> {
+		if (!ENABLED) {
+			error(400, `Network is disabled`);
+		}
+
+		wifi.init({
+			debug: true,
+			iface: null
+		});
+
+		const connections = await wifi.getCurrentConnections();
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			connections
+		};
+	}
+
+	public async setConfig({
+		form
+	}: ServiceSetDataOptions): Promise<void | Record<string, unknown> | ServiceActionFailure> {
+		const formAction = form.get('action');
+		switch (formAction) {
+			case 'scan': {
+				const networks = await wifi.scan();
+				return { networks };
+			}
+		}
+	}
+
+	public async getData({ url }: ServiceGetDataOptions): Promise<NetworkServiceMainData> {
 		if (!ENABLED) {
 			error(400, `Network is disabled`);
 		}

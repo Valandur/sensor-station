@@ -14,7 +14,7 @@
 	export let isEmbedded: boolean = false;
 </script>
 
-<PageLayout title="Battery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
+<PageLayout title="Modem" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
 			{#if action === 'icon'}
@@ -30,9 +30,9 @@
 			{/if}
 			<ServiceConfig {name} {data} />
 		{:else}
-			<ErrorCard title="Battery" message="Unknown action" params={{ name, data }} />
+			<ErrorCard title="Modem" message="Unknown action" params={{ name, data }} />
 		{/if}
 	{:else}
-		<ErrorCard title="Battery" message="Missing data" params={{ name }} />
+		<ErrorCard title="Modem" message="Missing data" params={{ name }} />
 	{/if}
 </PageLayout>
