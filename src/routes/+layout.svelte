@@ -75,6 +75,11 @@
 {/if}
 
 <style>
+	:global(html),
+	:global(body) {
+		font-size: 32px;
+	}
+
 	.dev-note {
 		position: fixed;
 		top: 4px;
