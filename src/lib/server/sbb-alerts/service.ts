@@ -152,6 +152,10 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 			}
 		);
 
+		if (data.alerts.length === 0 && embedded) {
+			error(404, 'No alerts found');
+		}
+
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
 		if (pageStr === null && embedded) {

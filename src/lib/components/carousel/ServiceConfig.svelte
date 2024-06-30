@@ -65,7 +65,7 @@
 					<td>
 						<select
 							form="formNewScreen"
-							name="action"
+							name="screenAction"
 							class="form-select"
 							bind:value={newScreenAction}
 						>

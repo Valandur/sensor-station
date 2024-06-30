@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import Holidays, { type HolidaysTypes } from 'date-holidays';
 import { isSameDay } from 'date-fns/isSameDay';
@@ -35,6 +35,7 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 	public static readonly actions = CAROUSEL_SERVICE_ACTIONS;
 
 	protected readonly holidaysCache: Cache<HolidaysCacheData> = new Cache(this.logger);
+	protected lastIndex: number | null = null;
 
 	protected getDefaultConfig(): CarouselServiceConfig {
 		return {
@@ -82,9 +83,9 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 					return fail(400, { message: `Invalid service name ${serviceName}` });
 				}
 
-				const action = form.get('action');
+				const action = form.get('screenAction');
 				if (typeof action !== 'string') {
-					return fail(400, { message: `Invalid action ${action}` });
+					return fail(400, { message: `Invalid screen action ${action}` });
 				}
 
 				const service = serviceManager.getByName(serviceName);
@@ -244,35 +245,29 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 		index = wrapIndex(screens.length, index);
 
 		const dir = url.searchParams.get('dir') === 'prev' ? 'prev' : 'next';
-		const endIndex = wrapIndex(screens.length, dir === 'next' ? index - 1 : index + 1);
 		const screenOptions = { url, cookies, embedded: true };
+
+		const baseUrl = `/services/${this.name}/${action}`;
 
 		let screen = screens[index];
 		let service = serviceManager.getByName(screen.name);
 		let screenData = await service.get(screen.action, screenOptions).catch(() => null);
-		while (screenData === null) {
-			index = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
-			// Break if we go through all screens and none of them have data to show
-			if (index === endIndex) {
-				break;
+
+		if (screenData === null) {
+			if (this.lastIndex === index) {
+				this.lastIndex = null;
+				error(400, 'No screen has anything to show');
+			} else if (this.lastIndex === null) {
+				this.lastIndex = index;
 			}
 
-			screen = screens[index];
-			service = serviceManager.getByName(screen.name);
-			screenData = await service.get(screen.action, screenOptions).catch(() => null);
+			const nextIndex = wrapIndex(screens.length, dir === 'next' ? index + 1 : index - 1);
+			redirect(302, `${baseUrl}?screen=${nextIndex}&dir=${dir}`);
 		}
 
-		if (!screenData) {
-			error(400, 'No screen has anything to show');
-		}
-
-		const getScreenUrl = (index: number, dir: 'next' | 'prev' = 'next') => {
-			const idx = wrapIndex(screens.length, index);
-			return `/services/${this.name}/${action}?screen=${idx}&dir=${dir}`;
-		};
-
-		const nextScreen = getScreenUrl(index + 1, 'next');
-		const prevScreen = getScreenUrl(index - 1, 'prev');
+		this.lastIndex = index;
+		const nextScreen = `${baseUrl}?screen=${wrapIndex(screens.length, index + 1)}&dir=next`;
+		const prevScreen = `${baseUrl}?screen=${wrapIndex(screens.length, index - 1)}&dir=prev`;
 
 		const rawIcons = this.config.icons;
 		const iconPromises: Promise<CarouselIcon | null>[] = [];

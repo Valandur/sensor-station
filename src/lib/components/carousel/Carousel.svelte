@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { beforeNavigate, goto, invalidate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, goto, invalidate } from '$app/navigation';
 	import { fade } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
-	import { navigating } from '$app/stores';
-	import { onDestroy } from 'svelte';
+	import { navigating, page } from '$app/stores';
+	import { onDestroy, onMount } from 'svelte';
 	import { de } from 'date-fns/locale';
 
 	import { SERVICES } from '$lib/services';
@@ -42,11 +42,19 @@
 		}
 	}
 
-	beforeNavigate((nav) => {
+	beforeNavigate(() => {
 		reset(false);
 		if (timer) {
 			clearInterval(timer);
 			timer = null;
+		}
+	});
+	afterNavigate(() => {
+		const urlIndex = Number($page.url.searchParams.get('screen'));
+		if (index !== urlIndex) {
+			const url = new URL($page.url);
+			url.searchParams.set('screen', `${index}`);
+			goto(url, { replaceState: true, keepFocus: true, noScroll: true, invalidateAll: false });
 		}
 	});
 	onDestroy(() => {

@@ -89,7 +89,7 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 		this.config.apiKey = apiKey;
 	}
 
-	public async getData({ url }: ServiceGetDataOptions): Promise<PrusaServiceMainData> {
+	public async getData({ url, embedded }: ServiceGetDataOptions): Promise<PrusaServiceMainData> {
 		if (!ENABLED) {
 			error(400, `Prusa is disabled`);
 		}
@@ -114,6 +114,10 @@ export class PrusaService extends BaseService<PrusaServiceAction, PrusaServiceCo
 				};
 			}
 		);
+
+		if (!data.job && embedded) {
+			error(404, 'No current print job');
+		}
 
 		return {
 			ts: data.ts,

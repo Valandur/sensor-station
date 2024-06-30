@@ -79,8 +79,29 @@
 									<input type="hidden" name="name" value={service.name} />
 									<div class="btn-group">
 										{#if !!SERVICES[service.type.name]}
-											{#if service.type.actions.includes('main')}
-												<a href="/services/{service.name}/main" class="btn btn-primary">
+											{@const actions = service.type.actions.filter((a) => a !== 'config')}
+											{#if actions.length > 1}
+												<div class="dropdown">
+													<button
+														class="btn btn-primary"
+														type="button"
+														data-bs-toggle="dropdown"
+														aria-expanded="false"
+													>
+														<i class="fa-solid fa-eye"></i>
+													</button>
+													<ul class="dropdown-menu">
+														{#each actions as action}
+															<li>
+																<a class="dropdown-item" href="/services/{service.name}/{action}">
+																	{action}
+																</a>
+															</li>
+														{/each}
+													</ul>
+												</div>
+											{:else if actions.length > 0}
+												<a href="/services/{service.name}/{actions[0]}" class="btn btn-primary">
 													<i class="fa-solid fa-eye"></i>
 												</a>
 											{/if}

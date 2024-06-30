@@ -123,6 +123,19 @@
 		</div>
 
 		<div class="row mb-2">
+			<label for="inputGoogleKey" class="col-3 col-form-label">Google key</label>
+			<div class="col">
+				<input
+					id="inputGoogleKey"
+					type="password"
+					name="googleKey"
+					value={data.config.googleKey}
+					class="form-control"
+				/>
+			</div>
+		</div>
+
+		<div class="row mb-2">
 			<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
 			<div class="col">
 				<input

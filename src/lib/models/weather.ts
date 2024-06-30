@@ -45,6 +45,7 @@ export interface WeatherServiceConfig extends ServiceConfig {
 	lng: number;
 	minDiff: number;
 	apiKey: string;
+	googleKey: string;
 	itemsPerPage: number;
 }
 

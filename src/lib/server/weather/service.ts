@@ -62,6 +62,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 			lng: 8.64,
 			minDiff: 1000,
 			apiKey: '',
+			googleKey: '',
 			itemsPerPage: 7
 		};
 	}
@@ -136,6 +137,11 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 			return fail(400, { message: 'Invalid api key' });
 		}
 
+		const googleKey = form.get('googleKey');
+		if (typeof googleKey !== 'string') {
+			return fail(400, { message: 'Invalid google key' });
+		}
+
 		const itemsPerPage = Number(form.get('itemsPerPage'));
 		if (!isFinite(itemsPerPage)) {
 			return fail(400, { message: 'Invalid number of items per page' });
@@ -149,6 +155,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		this.config.lng = lng;
 		this.config.minDiff = minDiff;
 		this.config.apiKey = apiKey;
+		this.config.googleKey = googleKey;
 		this.config.itemsPerPage = itemsPerPage;
 
 		// Test using supplied base cooridnates
@@ -204,7 +211,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		this.lastPage = page;
 
 		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
-		if (!alert) {
+		if (!alert && options.embedded) {
 			error(404, 'No weather alerts');
 		}
 
@@ -276,7 +283,7 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 						this.logger.debug('Could not find place, trying google geocode...');
 						const { data: geoData } = await this.client.reverseGeocode({
 							params: {
-								key: GOOGLE_KEY,
+								key: this.config.googleKey,
 								latlng: { lat: newLat, lng: newLng }
 							}
 						});

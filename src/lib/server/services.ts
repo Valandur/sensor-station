@@ -117,6 +117,7 @@ class ServiceManager {
 
 		const constr = SERVICES[type];
 		const service = new constr(name);
+		await service.init();
 		this.services.set(name, service);
 
 		await this.save();

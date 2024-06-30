@@ -391,6 +391,10 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 			}
 		);
 
+		if (data.shipments.length === 0 && embedded) {
+			error(404, 'No shipments found');
+		}
+
 		const pageStr = url.searchParams.get('page');
 		let page = Number(pageStr);
 		if (pageStr === null && embedded) {
