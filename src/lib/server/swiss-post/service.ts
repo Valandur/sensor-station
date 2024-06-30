@@ -333,10 +333,7 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 				for (const rawShipment of rawShipments) {
 					const inner = rawShipment.shipment;
 
-					if (
-						inner.globalStatus === 'DELIVERED' &&
-						inner.formattedShipmentNumber !== '99.60.020753.92050439'
-					) {
+					if (inner.globalStatus === 'DELIVERED') {
 						continue;
 					}
 

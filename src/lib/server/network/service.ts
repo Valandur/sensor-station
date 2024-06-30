@@ -83,6 +83,7 @@ export class NetworkService extends BaseService<NetworkServiceAction, NetworkSer
 		form
 	}: ServiceSetDataOptions): Promise<void | Record<string, unknown> | ServiceActionFailure> {
 		const formAction = form.get('action');
+
 		switch (formAction) {
 			case 'scan': {
 				await new Promise<void>((resolve, reject) =>
