@@ -4,6 +4,7 @@
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import Pagination from '../Pagination.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Daily from './Daily.svelte';
 	import Hourly from './Hourly.svelte';
@@ -26,13 +27,7 @@
 				<Alerts location={data.location} alert={data.alert} />
 			</Pagination>
 		{:else if data.type === 'config'}
-			{#if form}
-				{#if form.success}
-					<div class="alert alert-success m-0">Config saved!</div>
-				{:else}
-					<ErrorCard message={form.message} />
-				{/if}
-			{/if}
+			<FormFeedback {form} />
 			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Weather" message="Unknown action" params={{ name, data }} />

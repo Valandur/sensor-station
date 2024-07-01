@@ -4,6 +4,7 @@
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import Pagination from '../Pagination.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Gallery from './Gallery.svelte';
 
@@ -20,9 +21,7 @@
 				<Gallery image={data.image} />
 			</Pagination>
 		{:else if data.type === 'config'}
-			{#if form?.message}
-				<ErrorCard message={form.message} />
-			{/if}
+			<FormFeedback {form} showSuccess={false} />
 			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Gallery" message="Unknown action" params={{ name, data }} />

@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import Icon from './Icon.svelte';
 	import Interfaces from './Interfaces.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
@@ -23,11 +24,7 @@
 				<Interfaces interfaces={data.interfaces} />
 			{/if}
 		{:else if data.type === 'config'}
-			{#if form?.message}
-				<ErrorCard message={form.message} />
-			{:else if form?.success}
-				<div class="alert alert-success m-0">Config saved!</div>
-			{/if}
+			<FormFeedback {form} />
 			<ServiceConfig {name} {form} {data} />
 		{:else}
 			<ErrorCard title="Network" message="Unknown action" params={{ name, data }} />

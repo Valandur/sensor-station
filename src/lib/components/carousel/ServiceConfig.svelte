@@ -248,7 +248,7 @@
 			<input type="hidden" name="action" value="other" />
 
 			<div class="row mb-2">
-				<label for="inputCountry" class="col-3 col-form-label">Country</label>
+				<label for="inputCountry" class="col-4 col-form-label">Country</label>
 				<div class="col">
 					<input
 						id="inputCountry"
@@ -261,7 +261,7 @@
 			</div>
 
 			<div class="row mb-2">
-				<label for="inputState" class="col-3 col-form-label">State</label>
+				<label for="inputState" class="col-4 col-form-label">State</label>
 				<div class="col">
 					<input
 						id="inputState"

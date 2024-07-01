@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Carousel from './Carousel.svelte';
 
@@ -23,9 +24,7 @@
 		{#if data.type === 'data'}
 			<Carousel {data} />
 		{:else if data.type === 'config'}
-			{#if form?.message}
-				<ErrorCard message={form.message} />
-			{/if}
+			<FormFeedback {form} showSuccess={false} />
 			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Carousel" message="Unknown action" params={{ name, data }} />

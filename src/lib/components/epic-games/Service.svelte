@@ -4,6 +4,7 @@
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
 	import Pagination from '../Pagination.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Games from './Games.svelte';
 
@@ -20,11 +21,7 @@
 				<Games games={data.games} />
 			</Pagination>
 		{:else if data.type === 'config'}
-			{#if form?.message}
-				<ErrorCard message={form.message} />
-			{:else if form?.success}
-				<div class="alert alert-success m-0">Config saved!</div>
-			{/if}
+			<FormFeedback {form} />
 			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Epic Games" message="Unknown action" params={{ name, data }} />

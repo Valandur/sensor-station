@@ -18,13 +18,7 @@
 
 		<div class="row">
 			<h2 class="col">WIFIs</h2>
-			<form
-				method="POST"
-				class="col-auto"
-				use:enhance={() =>
-					({ result }) =>
-						applyAction(result)}
-			>
+			<form method="POST" class="col-auto" use:enhance>
 				<input type="hidden" name="name" value={name} />
 				<input type="hidden" name="action" value="scan" />
 				<button type="submit" class="btn btn-primary">
@@ -60,12 +54,7 @@
 						<td>{connection.security}</td>
 						<td>{connection.quality}</td>
 						<td>
-							<form
-								method="POST"
-								use:enhance={() =>
-									({ result }) =>
-										applyAction(result)}
-							>
+							<form method="POST" use:enhance>
 								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="disconnect" />
 								<input type="hidden" name="ssid" value={connection.ssid} />
@@ -102,12 +91,7 @@
 	</div>
 </div>
 
-<form
-	method="POST"
-	use:enhance={() =>
-		({ result }) =>
-			applyAction(result)}
->
+<form method="POST" use:enhance>
 	<div class="modal fade" id="modalWifi" tabindex="-1">
 		<div class="modal-dialog modal-xl">
 			<div class="modal-content">

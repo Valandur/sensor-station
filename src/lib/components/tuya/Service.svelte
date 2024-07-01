@@ -3,6 +3,7 @@
 
 	import ErrorCard from '../ErrorCard.svelte';
 	import PageLayout from '../PageLayout.svelte';
+	import FormFeedback from '../FormFeedback.svelte';
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Info from './Info.svelte';
 
@@ -17,11 +18,7 @@
 		{#if data.type === 'data'}
 			<Info info={data.info} />
 		{:else if data.type === 'config'}
-			{#if form?.message}
-				<ErrorCard message={form.message} />
-			{:else if form?.success}
-				<div class="alert alert-success m-0">Config saved!</div>
-			{/if}
+			<FormFeedback {form} />
 			<ServiceConfig {name} {data} />
 		{:else}
 			<ErrorCard title="Tuya" message="Unknown action" params={{ name, data }} />
