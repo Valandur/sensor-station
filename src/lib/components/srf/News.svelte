@@ -32,22 +32,22 @@
 	</div>
 {/if}
 
-<div class="row flex-1"></div>
+<div class="mb-2"></div>
 
 {#if articles.length > 0}
 	{#each articles as item}
-		<div role="presentation" class="row mb-1 flex-1" on:click={() => select(item)}>
+		<div role="presentation" class="row mt-1 flex-1" on:click={() => select(item)}>
 			<div class="col-3 me-1 image">
 				<img
 					alt="Thumbnail"
 					src={'/' + item.image}
-					class="mh-100 mw-100"
-					style="object-fit: contain"
+					class="h-100 w-100"
+					style="object-fit: cover; background-color: red;"
 				/>
 			</div>
 			<div class="col abstract d-flex flex-column justify-content-around">
 				<div class="fs-4">{item.title}</div>
-				<div class="fs-6 text-muted">
+				<div class="fs-6 text-secondary">
 					{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
 				</div>
 			</div>
@@ -59,8 +59,8 @@
 
 <style lang="scss">
 	.abstract {
-		font-size: 1.4em;
-		line-height: 1em;
+		font-size: 1em;
+		line-height: 1.1em;
 	}
 
 	iframe {

@@ -249,9 +249,9 @@ export class CarouselService extends BaseService<CarouselServiceAction, Carousel
 
 		const baseUrl = `/services/${this.name}/${action}`;
 
-		let screen = screens[index];
-		let service = serviceManager.getByName(screen.name);
-		let screenData = await service.get(screen.action, screenOptions).catch(() => null);
+		const screen = screens[index];
+		const service = serviceManager.getByName(screen.name);
+		const screenData = await service.get(screen.action, screenOptions).catch(() => null);
 
 		if (screenData === null) {
 			if (this.lastIndex === index) {
