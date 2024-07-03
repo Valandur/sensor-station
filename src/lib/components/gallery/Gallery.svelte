@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { de } from 'date-fns/locale';
+	import { formatInTimeZone } from 'date-fns-tz';
 
 	import type { GalleryImage } from '$lib/models/gallery';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import { formatInTimeZone } from 'date-fns-tz';
 	import { tz } from '$lib/stores/tz';
 
 	export let image: GalleryImage;
@@ -14,7 +14,7 @@
 {#if image}
 	{#if image.ratio > 1}
 		<div class="row h-100">
-			<div class="col h-100 d-flex flex-column justify-content-end">
+			<div class="col h-100 d-flex flex-column align-items-start justify-content-end">
 				{#if isVideo}
 					<video
 						src={'/' + image.img}
