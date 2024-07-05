@@ -1040,6 +1040,8 @@ function get_raw_body(req, body_size_limit) {
  * }} options
  * @returns {Promise<Request>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
@@ -1058,6 +1060,8 @@ async function getRequest({ request, base, bodySizeLimit }) {
  * @param {Response} response
  * @returns {Promise<void>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
@@ -1152,7 +1156,21 @@ const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
-const body_size_limit = Number(env('BODY_SIZE_LIMIT', '524288'));
+
+/**
+ * @param {string} bytes
+ */
+function parse_body_size_limit(bytes) {
+	const multiplier =
+		{
+			K: 1024,
+			M: 1024 * 1024,
+			G: 1024 * 1024 * 1024
+		}[bytes[bytes.length - 1]?.toUpperCase()] ?? 1;
+	return Number(multiplier != 1 ? bytes.substring(0, bytes.length - 1) : bytes) * multiplier;
+}
+
+const body_size_limit = parse_body_size_limit(env('BODY_SIZE_LIMIT', '512K'));
 
 if (isNaN(body_size_limit)) {
 	throw new Error(

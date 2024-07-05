@@ -9,7 +9,7 @@
 	{#if form.success}
 		<div class="alert alert-success alert-dismissable fade show p-2">
 			<div class="row">
-				<div class="col">Config saved!</div>
+				<div class="col">Success!</div>
 
 				<div class="col-auto d-flex flex-column">
 					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>

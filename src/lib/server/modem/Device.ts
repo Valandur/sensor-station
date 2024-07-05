@@ -91,6 +91,10 @@ export class Device {
 		};
 	}
 
+	public async execute(cmd: string): Promise<string> {
+		return await this.send(cmd);
+	}
+
 	private async getCellularOperator(): Promise<string | null> {
 		const copsResp = await this.send('AT+COPS?');
 		const copsMatch = COPS_REGEX.exec(copsResp);

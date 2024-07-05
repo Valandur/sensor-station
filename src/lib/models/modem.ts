@@ -5,7 +5,7 @@ import type { ServiceConfig, ServiceData } from './service';
 // ---------
 
 export const MODEM_SERVICE_TYPE = 'modem';
-export const MODEM_SERVICE_ACTIONS = ['main', 'icon', 'config'] as const;
+export const MODEM_SERVICE_ACTIONS = ['main', 'debug', 'icon', 'config'] as const;
 
 export type ModemServiceAction = (typeof MODEM_SERVICE_ACTIONS)[number];
 
@@ -17,7 +17,15 @@ export interface ModemServiceConfigData extends ServiceData {
 	type: 'config';
 	config: ModemServiceConfig;
 }
-export type ModemServiceData = ModemServiceMainData | ModemServiceConfigData;
+export interface ModemServiceDebugData extends ServiceData {
+	type: 'debug';
+	command: string;
+	response: string;
+}
+export type ModemServiceData =
+	| ModemServiceMainData
+	| ModemServiceConfigData
+	| ModemServiceDebugData;
 
 export interface ModemServiceConfig extends ServiceConfig {
 	devicePath: string;

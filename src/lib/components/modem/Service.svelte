@@ -28,6 +28,7 @@
 			<FormFeedback {form} />
 			<ServiceConfig {data} />
 		{:else if data.type === 'debug'}
+			<FormFeedback {form} />
 			<Debug {data} />
 		{:else}
 			<ErrorCard title="Modem" message="Unknown action" params={{ name, data }} />

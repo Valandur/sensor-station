@@ -12,7 +12,8 @@ import {
 	type ModemServiceAction,
 	type ModemServiceConfig,
 	type ModemServiceMainData,
-	type ModemServiceConfigData
+	type ModemServiceConfigData,
+	type ModemServiceDebugData
 } from '$lib/models/modem';
 
 import {
@@ -65,6 +66,10 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 			},
 			icon: {
 				get: this.getData.bind(this)
+			},
+			debug: {
+				get: this.getDebug.bind(this),
+				set: this.setDebug.bind(this)
 			}
 		};
 	}
@@ -280,6 +285,49 @@ export class ModemService extends BaseService<ModemServiceAction, ModemServiceCo
 			type: 'data',
 			info: data.info
 		};
+	}
+
+	public async getDebug({ url }: ServiceGetDataOptions): Promise<ModemServiceDebugData> {
+		return {
+			ts: new Date(),
+			type: 'debug',
+			command: '',
+			response: ''
+		};
+	}
+
+	public async setDebug({
+		form
+	}: ServiceSetDataOptions): Promise<void | ServiceActionFailure | Record<string, unknown>> {
+		const cmd = form.get('cmd');
+		if (typeof cmd !== 'string' || !cmd) {
+			return fail(400, { message: 'Invalid command' });
+		}
+
+		let device: Device | null = null;
+		try {
+			device = new Device({
+				devicePath: this.config.devicePath,
+				baudRate: this.config.baudRate,
+				pauseMs: this.config.pauseTime,
+				waitMs: this.config.waitTime,
+				timeoutMs: this.config.cmdTimeout
+			});
+
+			if (!(await device.checkAvailable())) {
+				return fail(500, { message: `Modem not available` });
+			}
+
+			await device.open();
+
+			const response = await device.execute(cmd);
+
+			return {
+				response
+			};
+		} finally {
+			device?.close();
+		}
 	}
 
 	private getTimezone(lat: number, lng: number) {
