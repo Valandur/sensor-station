@@ -1,31 +1,32 @@
 <script lang="ts">
-	import type { ModemInfo } from '$lib/models/modem';
+	import type { ModemServiceMainData } from '$lib/models/modem';
 
-	export let modem: ModemInfo | undefined;
+	export let data: ModemServiceMainData;
+	$: info = data.info;
 </script>
 
-{#if modem?.cellular.operator}
+{#if info?.cellular.operator}
 	<div class="col-auto">
 		<i class="fa-solid fa-globe"></i>
-		{modem.cellular.operator.split(' ', 2)[0]}
+		{info.cellular.operator.split(' ', 2)[0]}
 	</div>
 {/if}
 
-{#if modem?.cellular.signal}
+{#if info?.cellular.signal}
 	<div class="col-auto">
 		<i class="fa-solid fa-signal"></i>
-		{modem.cellular.signal.toFixed(0)}%
+		{info.cellular.signal.toFixed(0)}%
 	</div>
 {/if}
 
-{#if modem?.gps}
+{#if info?.gps}
 	<div class="col-auto">
 		<i class="fa-solid fa-satellite"></i>
-		{modem.gps.lat.toFixed(2)} | {modem.gps.lng.toFixed(2)}
+		{info.gps.lat.toFixed(2)} | {info.gps.lng.toFixed(2)}
 	</div>
-{:else if modem?.geo}
+{:else if info?.geo}
 	<div class="col-auto">
 		<i class="fa-solid fa-earth-europe"></i>
-		{modem.geo.lat.toFixed(2)} | {modem.geo.lng.toFixed(2)}
+		{info.geo.lat.toFixed(2)} | {info.geo.lng.toFixed(2)}
 	</div>
 {/if}

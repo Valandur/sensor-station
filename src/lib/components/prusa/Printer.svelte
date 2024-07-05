@@ -3,13 +3,14 @@
 	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 	import { add } from 'date-fns/add';
 
-	import type { JobInfo, PrinterInfo, StorageInfo } from '$lib/models/prusa';
+	import type { PrusaServiceMainData } from '$lib/models/prusa';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import Card from '../Card.svelte';
 
-	export let job: JobInfo;
-	export let printer: PrinterInfo;
+	export let data: PrusaServiceMainData;
+	$: job = data.job;
+	$: printer = data.printer;
 
 	$: getETA = () => {
 		const eta = add(new Date(), { seconds: job.time_remaining });

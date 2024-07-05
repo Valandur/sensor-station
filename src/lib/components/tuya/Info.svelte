@@ -1,9 +1,10 @@
 <script lang="ts">
-	import type { TuyaInfo } from '$lib/models/tuya';
+	import type { TuyaInfo, TuyaServiceMainData } from '$lib/models/tuya';
 
 	import Card from '../Card.svelte';
 
-	export let info: TuyaInfo;
+	export let data: TuyaServiceMainData;
+	$: info = data.info;
 </script>
 
 <div class="row flex-1"></div>

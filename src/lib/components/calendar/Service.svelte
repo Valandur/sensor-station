@@ -18,11 +18,11 @@
 	{#if data}
 		{#if data.type === 'data'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Events events={data.events} />
+				<Events {data} />
 			</Pagination>
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Calendar" message="Unknown action" params={{ name, data }} />
 		{/if}

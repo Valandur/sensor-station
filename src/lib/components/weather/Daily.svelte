@@ -3,12 +3,13 @@
 	import { de } from 'date-fns/locale';
 
 	import { tz } from '$lib/stores/tz';
-	import type { WeatherForecast, WeatherLocation } from '$lib/models/weather';
+	import type { WeatherServiceDailyData } from '$lib/models/weather';
 
 	import Marker from './Marker.svelte';
 
-	export let location: WeatherLocation;
-	export let daily: WeatherForecast[];
+	export let data: WeatherServiceDailyData;
+	$: location = data.location;
+	$: daily = data.daily;
 </script>
 
 <Marker {location} />

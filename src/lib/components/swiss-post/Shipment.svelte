@@ -4,13 +4,13 @@
 	import { parseISO } from 'date-fns/parseISO';
 
 	import { tz } from '$lib/stores/tz';
-	import type { Shipment } from '$lib/models/swiss-post';
+	import type { Shipment, SwissPostServiceMainData } from '$lib/models/swiss-post';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 
 	import Card from '../Card.svelte';
 
-	export let shipment: Shipment;
-
+	export let data: SwissPostServiceMainData;
+	$: shipment = data.shipment;
 	$: event = shipment.events[0];
 
 	function formatDims({ x, y, z }: { x: number; y: number; z: number }) {

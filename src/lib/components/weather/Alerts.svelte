@@ -4,13 +4,14 @@
 
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 	import Card from '$lib/components/Card.svelte';
-	import type { WeatherAlert, WeatherLocation } from '$lib/models/weather';
+	import type { WeatherServiceAlertsData } from '$lib/models/weather';
 	import { tz } from '$lib/stores/tz';
 
 	import Marker from './Marker.svelte';
 
-	export let location: WeatherLocation;
-	export let alert: WeatherAlert;
+	export let data: WeatherServiceAlertsData;
+	$: location = data.location;
+	$: alert = data.alert;
 </script>
 
 <Marker {location} />

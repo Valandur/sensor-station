@@ -7,6 +7,7 @@
 	import ServiceConfig from './ServiceConfig.svelte';
 	import Modem from './Modem.svelte';
 	import Icon from './Icon.svelte';
+	import Debug from './Debug.svelte';
 
 	export let name: string;
 	export let action: ModemServiceAction;
@@ -19,13 +20,15 @@
 	{#if data}
 		{#if data.type === 'data'}
 			{#if action === 'icon'}
-				<Icon modem={data.info} />
+				<Icon {data} />
 			{:else}
-				<Modem info={data.info} />
+				<Modem {data} />
 			{/if}
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
+		{:else if data.type === 'debug'}
+			<Debug {data} />
 		{:else}
 			<ErrorCard title="Modem" message="Unknown action" params={{ name, data }} />
 		{/if}

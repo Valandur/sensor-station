@@ -4,11 +4,12 @@
 
 	import { tz } from '$lib/stores/tz';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import type { GameItem } from '$lib/models/epic-games';
+	import type { EpicGamesServiceMainData } from '$lib/models/epic-games';
 
 	import Card from '../Card.svelte';
 
-	export let games: GameItem[];
+	export let data: EpicGamesServiceMainData;
+	$: games = data.games;
 </script>
 
 <div class="row flex-1"></div>

@@ -18,11 +18,11 @@
 	{#if data}
 		{#if data.type === 'data'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Gallery image={data.image} />
+				<Gallery {data} />
 			</Pagination>
 		{:else if data.type === 'config'}
 			<FormFeedback {form} showSuccess={false} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Gallery" message="Unknown action" params={{ name, data }} />
 		{/if}

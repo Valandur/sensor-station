@@ -4,10 +4,11 @@
 	import { isSameDay } from 'date-fns/isSameDay';
 
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import type { CalendarEvent } from '$lib/models/calendar';
+	import type { CalendarServiceMainData } from '$lib/models/calendar';
 	import { tz } from '$lib/stores/tz';
 
-	export let events: CalendarEvent[];
+	export let data: CalendarServiceMainData;
+	$: events = data.events;
 	$: formattedEvents = events?.map((event) => ({ ...event, isSameDay: false, isOdd: false }));
 	$: formattedEvents?.forEach((event, i, arr) => {
 		event.isSameDay = i > 0 && isSameDay(arr[i].tsStart, arr[i - 1].tsStart);

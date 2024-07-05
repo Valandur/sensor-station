@@ -3,13 +3,14 @@
 	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 	import { de } from 'date-fns/locale/de';
 
-	import type { NewsArticle } from '$lib/models/srf';
+	import type { NewsArticle, SrfServiceMainData } from '$lib/models/srf';
 	import { pause, resume } from '$lib/stores/screen';
 
 	import EmptyCard from '../EmptyCard.svelte';
 
 	export let name: string;
-	export let articles: NewsArticle[];
+	export let data: SrfServiceMainData;
+	$: articles = data.articles;
 
 	let selectedArticle: NewsArticle | null = null;
 

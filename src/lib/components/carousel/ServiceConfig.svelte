@@ -3,7 +3,6 @@
 
 	import type { CarouselServiceConfigData } from '$lib/models/carousel';
 
-	export let name: string;
 	export let data: CarouselServiceConfigData;
 
 	$: services = data.services;
@@ -77,7 +76,6 @@
 					</td>
 					<td>
 						<form id="formNewScreen" method="POST" use:enhance>
-							<input type="hidden" name="name" value={name} />
 							<input type="hidden" name="action" value="add_screen" />
 							<button
 								type="submit"
@@ -101,7 +99,6 @@
 						<td>
 							<div class="btn-group">
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="move_screen" />
 									<input type="hidden" name="dir" value="up" />
 									<input type="hidden" name="index" value={index} />
@@ -115,7 +112,6 @@
 									</button>
 								</form>
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="move_screen" />
 									<input type="hidden" name="dir" value="down" />
 									<input type="hidden" name="index" value={index} />
@@ -129,7 +125,6 @@
 									</button>
 								</form>
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="delete_screen" />
 									<input type="hidden" name="index" value={index} />
 									<button class="btn btn-danger">
@@ -172,7 +167,6 @@
 					</td>
 					<td>
 						<form id="formNewIcon" method="POST" use:enhance>
-							<input type="hidden" name="name" value={name} />
 							<input type="hidden" name="action" value="add_icon" />
 							<button type="submit" class="btn btn-theme" disabled={!newIconName || !newIconAction}>
 								<i class="fa-solid fa-plus"></i>
@@ -192,7 +186,6 @@
 						<td>
 							<div class="btn-group">
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="move_icon" />
 									<input type="hidden" name="dir" value="up" />
 									<input type="hidden" name="index" value={index} />
@@ -206,7 +199,6 @@
 									</button>
 								</form>
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="move_icon" />
 									<input type="hidden" name="dir" value="down" />
 									<input type="hidden" name="index" value={index} />
@@ -220,7 +212,6 @@
 									</button>
 								</form>
 								<form method="POST" use:enhance>
-									<input type="hidden" name="name" value={name} />
 									<input type="hidden" name="action" value="delete_icon" />
 									<input type="hidden" name="index" value={index} />
 									<button class="btn btn-danger">
@@ -244,7 +235,6 @@
 				({ result }) =>
 					applyAction(result)}
 		>
-			<input type="hidden" name="name" value={name} />
 			<input type="hidden" name="action" value="other" />
 
 			<div class="row mb-2">

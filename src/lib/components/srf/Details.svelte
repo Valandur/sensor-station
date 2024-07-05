@@ -1,7 +1,10 @@
 <script lang="ts">
-	export let simple: boolean;
-	export let head: string;
-	export let body: string;
+	import type { SrfServiceDetailsData } from '$lib/models/srf';
+
+	export let data: SrfServiceDetailsData;
+	$: simple = data.simple;
+	$: head = data.head;
+	$: body = data.body;
 </script>
 
 <svelte:head>

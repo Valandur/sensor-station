@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { applyAction, enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 
 	import type { NetworkServiceConfigData } from '$lib/models/network';
 
-	export let name: string;
 	export let form: Record<string, any> | null;
 	export let data: NetworkServiceConfigData;
 
@@ -14,12 +13,9 @@
 
 <div class="row overflow-auto">
 	<div class="col mt-2">
-		<input type="hidden" name="name" value={name} />
-
 		<div class="row">
 			<h2 class="col">WIFIs</h2>
 			<form method="POST" class="col-auto" use:enhance>
-				<input type="hidden" name="name" value={name} />
 				<input type="hidden" name="action" value="scan" />
 				<button type="submit" class="btn btn-primary">
 					<i class="fa-solid fa-magnifying-glass"></i>
@@ -55,7 +51,6 @@
 						<td>{connection.quality}</td>
 						<td>
 							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="disconnect" />
 								<input type="hidden" name="ssid" value={connection.ssid} />
 								<button type="submit" class="btn btn-primary">
@@ -100,7 +95,6 @@
 					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 				</div>
 				<div class="modal-body">
-					<input type="hidden" name="name" value={name} />
 					<input type="hidden" name="action" value="connect" />
 					<input type="hidden" name="ssid" value={selectedSSID} />
 					<input type="password" name="password" placeholder="Password" />

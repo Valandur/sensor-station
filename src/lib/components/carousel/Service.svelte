@@ -25,7 +25,7 @@
 			<Carousel {data} />
 		{:else if data.type === 'config'}
 			<FormFeedback {form} showSuccess={false} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Carousel" message="Unknown action" params={{ name, data }} />
 		{/if}

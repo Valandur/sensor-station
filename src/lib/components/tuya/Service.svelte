@@ -16,10 +16,10 @@
 <PageLayout title="Tuya" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Info info={data.info} />
+			<Info {data} />
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Tuya" message="Unknown action" params={{ name, data }} />
 		{/if}

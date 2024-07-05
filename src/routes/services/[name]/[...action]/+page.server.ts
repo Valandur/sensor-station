@@ -23,11 +23,7 @@ export const actions: Actions = {
 	default: async ({ params, request, url, cookies }) => {
 		const form = await request.formData();
 
-		const name = form.get('name');
-		if (typeof name !== 'string') {
-			return fail(400, { name, error: true, message: 'Invalid service name' });
-		}
-
+		const name = params.name;
 		const action = params.action;
 		const service = serviceManager.getByName(name);
 

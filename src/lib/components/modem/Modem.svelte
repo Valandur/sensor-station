@@ -2,10 +2,10 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
-	import type { ModemInfo } from '$lib/models/modem';
+	import type { ModemServiceMainData } from '$lib/models/modem';
 
-	export let info: ModemInfo;
-
+	export let data: ModemServiceMainData;
+	$: info = data.info;
 	$: cell = info.cellular;
 </script>
 

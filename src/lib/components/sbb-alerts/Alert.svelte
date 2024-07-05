@@ -2,13 +2,13 @@
 	import { de } from 'date-fns/locale/de';
 	import { format } from 'date-fns/format';
 
-	import type { SbbAlert } from '$lib/models/sbb-alerts';
+	import type { SbbAlertsServiceMainData } from '$lib/models/sbb-alerts';
 
 	import Card from '../Card.svelte';
 	import EmptyCard from '../EmptyCard.svelte';
 
-	export let alert: SbbAlert;
-
+	export let data: SbbAlertsServiceMainData;
+	$: alert = data.alert;
 	$: summary = alert?.summary?.replace('Einschränkung', '').trim() || '';
 	$: description = alert?.description?.replace('Linien', '').trim() || '';
 	$: reason = alert?.reason?.replace('Grund:', '').trim() || '';

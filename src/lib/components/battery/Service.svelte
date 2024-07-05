@@ -19,13 +19,13 @@
 	{#if data}
 		{#if data.type === 'data'}
 			{#if action === 'icon'}
-				<Icon battery={data.info} />
+				<Icon {data} />
 			{:else}
-				<Battery info={data.info} />
+				<Battery {data} />
 			{/if}
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Battery" message="Unknown action" params={{ name, data }} />
 		{/if}

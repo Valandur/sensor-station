@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { BatteryInfo } from '$lib/models/battery';
+	import type { BatteryInfo, BatteryServiceMainData } from '$lib/models/battery';
 
-	export let info: BatteryInfo;
-
+	export let data: BatteryServiceMainData;
+	$: info = data.info;
 	$: fault = info.fault;
 	$: powerIn = info.powerIn;
 	$: powerIn5vIo = info.powerIn5vIo;

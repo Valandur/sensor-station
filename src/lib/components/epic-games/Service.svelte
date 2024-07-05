@@ -18,11 +18,11 @@
 	{#if data}
 		{#if data.type === 'data'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Games games={data.games} />
+				<Games {data} />
 			</Pagination>
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Epic Games" message="Unknown action" params={{ name, data }} />
 		{/if}

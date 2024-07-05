@@ -16,10 +16,10 @@
 <PageLayout title="Prusa" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Printer job={data.job} printer={data.printer} />
+			<Printer {data} />
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Prusa" message="Unknown action" params={{ name, data }} />
 		{/if}

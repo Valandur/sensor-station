@@ -18,11 +18,11 @@
 	{#if data}
 		{#if data.type === 'data'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Departures departures={data.departures} />
+				<Departures {data} />
 			</Pagination>
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="SBB Departures" message="Unknown action" params={{ name, data }} />
 		{/if}

@@ -1,5 +1,8 @@
 <script lang="ts">
-	export let connected: boolean;
+	import type { NetworkServiceMainData } from '$lib/models/network';
+
+	export let data: NetworkServiceMainData;
+	$: connected = data.connected;
 </script>
 
 {#if connected}

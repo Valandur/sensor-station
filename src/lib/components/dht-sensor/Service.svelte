@@ -16,10 +16,10 @@
 <PageLayout title="DHT sensor" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'data'}
-			<Measurement measurement={data.measurement} />
+			<Measurement {data} />
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="DHT sensor" message="Unknown action" params={{ name, data }} />
 		{/if}

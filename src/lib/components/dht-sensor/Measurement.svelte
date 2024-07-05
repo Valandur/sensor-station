@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { Measurement } from '$lib/models/dht-sensor';
+	import type { DhtSensorServiceMainData } from '$lib/models/dht-sensor';
 
-	export let measurement: Measurement;
+	export let data: DhtSensorServiceMainData;
+	$: measurement = data.measurement;
 </script>
 
 <div>{measurement.temp}°C</div>

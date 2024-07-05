@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { BatteryInfo } from '$lib/models/battery';
+	import type { BatteryServiceMainData } from '$lib/models/battery';
 
-	export let battery: BatteryInfo | undefined;
+	export let data: BatteryServiceMainData;
+	$: battery = data.info;
 </script>
 
 {#if battery}

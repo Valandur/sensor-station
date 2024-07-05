@@ -2,12 +2,12 @@
 	import { de } from 'date-fns/locale';
 	import { formatInTimeZone } from 'date-fns-tz';
 
-	import type { GalleryImage } from '$lib/models/gallery';
+	import type { GalleryServiceMainData } from '$lib/models/gallery';
 	import EmptyCard from '$lib/components/EmptyCard.svelte';
 	import { tz } from '$lib/stores/tz';
 
-	export let image: GalleryImage;
-
+	export let data: GalleryServiceMainData;
+	$: image = data.image;
 	$: isVideo = image && image.img.endsWith('.mp4');
 </script>
 

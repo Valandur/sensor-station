@@ -5,7 +5,6 @@
 
 	import CacheTime from '../CacheTime.svelte';
 
-	export let name: string;
 	export let data: SbbAlertsServiceConfigData;
 </script>
 
@@ -26,8 +25,6 @@
 		({ result }) =>
 			applyAction(result)}
 >
-	<input type="hidden" name="name" value={name} />
-
 	<div class="tab-pane container-fluid fade show active" id="general">
 		<div class="row mb-2">
 			<label for="inputApiKey" class="col-3 col-form-label">API Key</label>

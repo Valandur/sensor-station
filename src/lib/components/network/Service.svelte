@@ -19,13 +19,13 @@
 	{#if data}
 		{#if data.type === 'data'}
 			{#if action === 'icon'}
-				<Icon connected={data.connected} />
+				<Icon {data} />
 			{:else}
-				<Interfaces interfaces={data.interfaces} />
+				<Interfaces {data} />
 			{/if}
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {form} {data} />
+			<ServiceConfig {form} {data} />
 		{:else}
 			<ErrorCard title="Network" message="Unknown action" params={{ name, data }} />
 		{/if}

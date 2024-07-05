@@ -6,7 +6,6 @@
 
 	import type { GalleryServiceConfigData } from '$lib/models/gallery';
 
-	export let name: string;
 	export let data: GalleryServiceConfigData;
 
 	$: images = data.images;
@@ -83,7 +82,6 @@
 				</td>
 				<td>
 					<form id="formNew" method="POST" enctype="multipart/form-data" use:enhance>
-						<input type="hidden" name="name" value={name} />
 						<input type="hidden" name="action" value="add" />
 						<button
 							class="btn btn-sm"
@@ -135,7 +133,6 @@
 									({ result }) =>
 										applyAction(result)}
 							>
-								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="save" />
 								<input type="hidden" name="index" value={i} />
 								<button class="btn btn-sm btn-outline-success">
@@ -143,7 +140,6 @@
 								</button>
 							</form>
 							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="move" />
 								<input type="hidden" name="dir" value="up" />
 								<input type="hidden" name="index" value={i} />
@@ -157,7 +153,6 @@
 								</button>
 							</form>
 							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="move" />
 								<input type="hidden" name="dir" value="down" />
 								<input type="hidden" name="index" value={i} />
@@ -171,7 +166,6 @@
 								</button>
 							</form>
 							<form method="POST" use:enhance>
-								<input type="hidden" name="name" value={name} />
 								<input type="hidden" name="action" value="delete" />
 								<input type="hidden" name="index" value={i} />
 								<button class="btn btn-sm btn-outline-danger">

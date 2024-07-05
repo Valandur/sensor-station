@@ -24,13 +24,13 @@
 	{#if data}
 		{#if data.type === 'data'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<News {name} articles={data.articles} />
+				<News {name} {data} />
 			</Pagination>
 		{:else if data.type === 'details'}
-			<Details head={data.head} body={data.body} simple={data.simple} />
+			<Details {data} />
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="SRF" message="Unknown action" params={{ name, data }} />
 		{/if}

@@ -99,6 +99,7 @@
 		"svelte-highlight": "^7.6.0",
 		"svelte-select": "^5.8.3",
 		"svelte-tags-input": "^6.0.0",
+		"sveltekit-sse": "^0.13.2",
 		"tough-cookie": "^4.1.4",
 		"tuyapi": "github:codetheweb/tuyapi",
 		"xml2js": "^0.6.2"

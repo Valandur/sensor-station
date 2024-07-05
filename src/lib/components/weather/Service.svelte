@@ -19,16 +19,16 @@
 <PageLayout title="Weather" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if data}
 		{#if data.type === 'hourly'}
-			<Hourly location={data.location} hourly={data.hourly} />
+			<Hourly {data} />
 		{:else if data.type === 'daily'}
-			<Daily location={data.location} daily={data.daily} />
+			<Daily {data} />
 		{:else if data.type === 'alerts'}
 			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Alerts location={data.location} alert={data.alert} />
+				<Alerts {data} />
 			</Pagination>
 		{:else if data.type === 'config'}
 			<FormFeedback {form} />
-			<ServiceConfig {name} {data} />
+			<ServiceConfig {data} />
 		{:else}
 			<ErrorCard title="Weather" message="Unknown action" params={{ name, data }} />
 		{/if}

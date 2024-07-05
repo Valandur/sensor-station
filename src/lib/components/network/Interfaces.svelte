@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { NetworkInterface } from '$lib/models/network';
+	import type { NetworkInterface, NetworkServiceMainData } from '$lib/models/network';
 
-	export let interfaces: NetworkInterface[];
+	export let data: NetworkServiceMainData;
+	$: interfaces = data.interfaces;
 </script>
 
 <div class="row overflow-auto">

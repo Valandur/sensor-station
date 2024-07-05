@@ -2,12 +2,13 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale/de';
 
-	import type { SbbDeparture } from '$lib/models/sbb-departures';
+	import type { SbbDeparturesServiceMainData } from '$lib/models/sbb-departures';
 	import { tz } from '$lib/stores/tz';
 
 	import EmptyCard from '../EmptyCard.svelte';
 
-	export let departures: SbbDeparture[];
+	export let data: SbbDeparturesServiceMainData;
+	$: departures = data.departures;
 </script>
 
 <div class="row flex-1"></div>
