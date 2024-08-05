@@ -205,14 +205,14 @@ export class SrfService extends BaseService<SrfServiceAction, SrfServiceConfig> 
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [articles, prevPage, nextPage] = wrap(
+		const [articles, prevPage, nextPage, index] = wrap(
 			data.articles.length,
 			page,
 			this.config.itemsPerPage,
 			data.articles
 		);
+		this.lastPage = index;
 
 		return {
 			ts: new Date(),

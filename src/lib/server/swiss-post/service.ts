@@ -399,9 +399,14 @@ export class SwissPostService extends BaseService<SwissPostServiceAction, SwissP
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [[shipment], prevPage, nextPage] = wrap(data.shipments.length, page, 1, data.shipments);
+		const [[shipment], prevPage, nextPage, index] = wrap(
+			data.shipments.length,
+			page,
+			1,
+			data.shipments
+		);
+		this.lastPage = index;
 
 		return {
 			ts: new Date(),

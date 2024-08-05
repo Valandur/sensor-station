@@ -201,6 +201,10 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 
 		const data = await this.getData(options);
 
+		if (data.alerts.length === 0 && options.embedded) {
+			error(404, 'No weather alerts');
+		}
+
 		const pageStr = options.url.searchParams.get('page');
 		let page = Number(pageStr);
 		if (pageStr === null && options?.embedded) {
@@ -208,12 +212,9 @@ export class WeatherService extends BaseService<WeatherServiceAction, WeatherSer
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
-		if (!alert && options.embedded) {
-			error(404, 'No weather alerts');
-		}
+		const [[alert], prevPage, nextPage, index] = wrap(data.alerts.length, page, 1, data.alerts);
+		this.lastPage = index;
 
 		return {
 			ts: data.ts,

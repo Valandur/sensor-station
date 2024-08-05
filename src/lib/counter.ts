@@ -14,11 +14,11 @@ export function clampIndex(max: number, idx: number, amount: number) {
 
 export function wrap<T>(max: number, idx: number, amount: number, array: T[]): Result<T> {
 	const index = wrapIndex(max, idx);
-	const prev = wrapIndex(max, idx - 1);
-	const next = wrapIndex(max, idx + 1);
+	const prev = wrapIndex(max, index - 1);
+	const next = wrapIndex(max, index + 1);
 	const arr = [
-		...array.slice(idx, idx + amount),
-		...array.slice(0, Math.max(amount - (max - idx), 0))
+		...array.slice(index, index + amount),
+		...array.slice(0, Math.max(amount - (max - index), 0))
 	];
 	return [arr, prev, next, index];
 }

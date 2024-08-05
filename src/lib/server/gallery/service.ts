@@ -177,14 +177,14 @@ export class GalleryService extends BaseService<GalleryServiceAction, GallerySer
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [[image], prevPage, nextPage] = wrap(
+		const [[image], prevPage, nextPage, index] = wrap(
 			this.config.images.length,
 			page,
 			1,
 			this.config.images
 		);
+		this.lastPage = index;
 
 		return {
 			ts: new Date(),

@@ -163,9 +163,9 @@ export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAle
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [[alert], prevPage, nextPage] = wrap(data.alerts.length, page, 1, data.alerts);
+		const [[alert], prevPage, nextPage, index] = wrap(data.alerts.length, page, 1, data.alerts);
+		this.lastPage = index;
 
 		return {
 			ts: data.ts,

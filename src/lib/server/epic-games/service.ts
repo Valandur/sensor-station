@@ -173,14 +173,14 @@ export class EpicGamesService extends BaseService<EpicGamesServiceAction, EpicGa
 		} else if (!isFinite(page)) {
 			page = 0;
 		}
-		this.lastPage = page;
 
-		const [games, prevPage, nextPage] = clamp(
+		const [games, prevPage, nextPage, index] = clamp(
 			data.games.length,
 			page,
 			this.config.itemsPerPage,
 			data.games
 		);
+		this.lastPage = index;
 
 		return {
 			ts: data.ts,
