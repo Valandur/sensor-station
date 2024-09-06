@@ -3,7 +3,6 @@
 declare global {
 	namespace App {
 		interface Error {
-			key: string;
 			embedded?: boolean;
 			params?: Record<string, unknown>;
 		}

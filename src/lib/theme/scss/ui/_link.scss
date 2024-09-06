@@ -1,7 +1,7 @@
 a {
-	color: var(--bs-theme);
-
+	color: var(--#{$prefix}theme);
+	
 	&:hover {
-		color: rgba(#{var(--bs-theme-rgb)}, 0.75);
+		color: rgba(#{var(--#{$prefix}theme-rgb)}, .75);
 	}
 }

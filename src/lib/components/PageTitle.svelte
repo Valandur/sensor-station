@@ -1,12 +1,13 @@
 <script lang="ts">
-	export let showReload = false;
+	export let showReload: boolean = false;
+	export let closeUrl: string = '/';
 
 	function reload() {
 		window.location.reload();
 	}
 </script>
 
-<div class="row">
+<div class="row z-1">
 	<div class="col-auto">
 		<h1><slot /></h1>
 	</div>
@@ -16,11 +17,11 @@
 	<div class="col-auto">
 		{#if showReload}
 			<button class="btn btn-sm btn-theme" on:click={reload}>
-				<i class="icofont-refresh" />
+				<i class="fa-solid fa-rotate fa-lg"></i>
 			</button>
 		{/if}
-		<a class="btn btn-sm btn-danger" href="/">
-			<i class="icofont-ui-close" />
+		<a class="btn btn-sm btn-danger" href={closeUrl}>
+			<i class="fa-solid fa-xmark fa-xl"></i>
 		</a>
 	</div>
 </div>

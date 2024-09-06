@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
 	<meta charset="utf-8" />
 	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-	<link rel="stylesheet" type="text/css" href="%sveltekit.assets%/icofont.min.css" />
 	<meta name="viewport"
 		content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	%sveltekit.head%
 </head>
 
 <body data-sveltekit-preload-data="hover">
-	<div style="display: contents">%sveltekit.body%</div>
+	<div id="app"
+		class="app app-content-full-height app-content-full-width app-without-sidebar app-without-header overflow-hidden">
+		%sveltekit.body%
+	</div>
 </body>
 
 </html>

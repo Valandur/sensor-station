@@ -4,11 +4,11 @@
 			position: relative;
 		}
 	}
-	& .modal-dialog {
+	& .modal-dialog{
 		&.modal-full {
 			max-width: 100%;
 			width: 100%;
-
+			
 			& .modal-content {
 				border-radius: 0;
 			}
@@ -30,3 +30,12 @@
 		}
 	}
 }
+
+@if $enable-dark-mode {
+  @include color-mode(dark, true) {
+  	.modal-backdrop {
+  		--#{$prefix}backdrop-bg: #{$modal-backdrop-bg-dark};
+  	}
+  }
+}
+

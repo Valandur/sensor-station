@@ -1,0 +1,510 @@
+import { decode } from 'html-entities';
+import { error, fail } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
+import makeFetchCookie from 'fetch-cookie';
+import { parseISO } from 'date-fns/parseISO';
+import { CookieJar } from 'tough-cookie';
+import { mkdir, readFile, rm, writeFile } from 'fs/promises';
+import { dirname } from 'path';
+
+import type { ServiceActionFailure } from '$lib/models/service';
+import { wrap } from '$lib/counter';
+import {
+	SWISS_POST_SERVICE_TYPE,
+	SWISS_POST_SERVICE_ACTIONS,
+	type SwissPostServiceAction,
+	type SwissPostServiceConfig,
+	type SwissPostServiceConfigData,
+	type SwissPostServiceMainData,
+	type Shipment,
+	type RecursiveMap,
+	type RawShipmentEvent,
+	type RawShipment,
+	GLOBAL_STATUS
+} from '$lib/models/swiss-post';
+
+import { Cache } from '../Cache';
+import {
+	BaseService,
+	type ServiceActions,
+	type ServiceGetDataOptions,
+	type ServiceSetDataOptions
+} from '../BaseService';
+
+interface CacheData {
+	ts: Date;
+	shipments: Shipment[];
+}
+
+const ENABLED = env.SWISS_POST_ENABLED === '1';
+const URL_START =
+	'https://account.post.ch/idp/?targetURL=https%3A%2F%2Fservice.post.ch%2Fekp-web%2Fsecure%2F%3Flang%3Den%26service%3Dekp%26app%3Dekp&lang=en&service=ekp&inIframe=&inMobileApp=';
+const URL_INIT = 'https://login.swissid.ch/api-login/authenticate/init';
+const URL_LOGIN = 'https://login.swissid.ch/api-login/authenticate/basic';
+const URL_ANOMALY = 'https://login.swissid.ch/api-login/anomaly-detection/device-print';
+const FORM_REGEX = /<form .*?action="((?:.|\n)*?)"/i;
+const INPUT_REGEX = /<input .*?name="(.*?)" .*?value="(.*?)".*?\/>/gi;
+const URL_USER = 'https://service.post.ch/ekp-web/api/user';
+const URL_SHIPMENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/mine';
+const URL_EVENTS = 'https://service.post.ch/ekp-web/secure/api/shipment/id/$id/events/';
+const URL_TEXTS =
+	'https://service.post.ch/ekp-web/core/rest/translations/de/shipment-text-messages';
+
+export class SwissPostService extends BaseService<SwissPostServiceAction, SwissPostServiceConfig> {
+	public override readonly type = SWISS_POST_SERVICE_TYPE;
+	public static readonly actions = SWISS_POST_SERVICE_ACTIONS;
+
+	protected readonly cache: Cache<CacheData> = new Cache(this.logger);
+	protected hasTexts = false;
+	protected shipmentTexts: RecursiveMap = new Map();
+	protected cookieJar = new CookieJar();
+	protected fetchWithCookies = makeFetchCookie(fetch, this.cookieJar);
+	protected cookieJarFileName = `data/swiss-post/${Buffer.from(this.config.username, 'utf-8').toString('base64')}.json`;
+	protected lastPage: number = 0;
+
+	public override async init(): Promise<void> {
+		await this.updateTexts();
+
+		const cookieJarStr = await readFile(this.cookieJarFileName, 'utf-8').catch(() => null);
+		if (cookieJarStr) {
+			this.cookieJar = await CookieJar.deserialize(cookieJarStr);
+			this.fetchWithCookies = makeFetchCookie(fetch, this.cookieJar);
+			this.logger.debug('Loaded cookie jar from file');
+		}
+	}
+
+	protected getDefaultConfig(): SwissPostServiceConfig {
+		return {
+			username: '',
+			password: ''
+		};
+	}
+
+	protected getActions(): ServiceActions<SwissPostServiceAction> {
+		return {
+			config: {
+				get: this.getConfig.bind(this),
+				set: this.setConfig.bind(this)
+			},
+			main: {
+				get: this.getData.bind(this)
+			}
+		};
+	}
+
+	public async getConfig({ url }: ServiceGetDataOptions): Promise<SwissPostServiceConfigData> {
+		if (!ENABLED) {
+			error(400, `Swiss Post is disabled`);
+		}
+
+		return {
+			ts: new Date(),
+			type: 'config',
+			config: this.config
+		};
+	}
+
+	public async setConfig({ form }: ServiceSetDataOptions): Promise<void | ServiceActionFailure> {
+		const username = form.get('username');
+		if (typeof username !== 'string') {
+			return fail(400, { message: 'Invalid username' });
+		}
+
+		const password = form.get('password');
+		if (typeof password !== 'string') {
+			return fail(400, { message: 'Invalid password' });
+		}
+
+		let url = URL_START;
+		const resPre = await this.request('pre', url, {
+			headers: { Accept: 'text/html' }
+		});
+
+		const redir = resPre.url;
+		if (!redir) {
+			return fail(400, { message: 'Missing redirect URL' });
+		}
+
+		const params = new URL(redir).searchParams.toString();
+		url = `${URL_INIT}?${params}`;
+
+		const resInit = await this.request('init', url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({})
+		});
+		const bodyInit = await resInit.json();
+
+		this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+		url = `${URL_LOGIN}?${params}`;
+		let authId = bodyInit.tokens.authId;
+		if (!authId) {
+			return fail(400, { message: 'Missing auth ID' });
+		}
+
+		const loginData = { username, password };
+
+		const resBasic = await this.request('basic', url, {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				authId: authId
+			},
+			body: JSON.stringify(loginData)
+		});
+		const bodyBasic = await resBasic.json();
+
+		authId = bodyBasic.tokens.authId;
+		if (!authId) {
+			return fail(400, { message: 'Missing auth ID' });
+		}
+
+		this.config.username = username;
+		this.config.password = password;
+	}
+
+	public async getData({
+		url,
+		embedded
+	}: ServiceGetDataOptions): Promise<SwissPostServiceMainData> {
+		if (!ENABLED) {
+			error(400, `Swiss Post is disabled`);
+		}
+
+		if (!this.config.username || !this.config.password) {
+			error(400, 'Invalid Swiss Post config');
+		}
+
+		const forceUpdate = url.searchParams.has('force');
+
+		const data = await this.cache.with(
+			{
+				key: this.config.username,
+				force: forceUpdate,
+				resultCacheTime: this.config.resultCacheTime,
+				errorCacheTime: this.config.errorCacheTime
+			},
+			async () => {
+				let resUser = await this.request('user', URL_USER, {
+					headers: { Accept: 'application/json' }
+				});
+				let userBody = await resUser.json();
+
+				let url = URL_START;
+				if (userBody?.securityLevel !== 'AUTHENTICATED') {
+					this.logger.debug('Saved credentials are not valid, reauthenticating');
+					await rm(this.cookieJarFileName, { force: true });
+
+					const resPre = await this.request('pre', url, {
+						headers: { Accept: 'text/html' }
+					});
+
+					const redir = resPre.url;
+					if (!redir) {
+						error(500, 'Missing redirect URL');
+					}
+
+					const params = new URL(redir).searchParams.toString();
+					url = `${URL_INIT}?${params}`;
+
+					const resInit = await this.request('init', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({})
+					});
+					const bodyInit = await resInit.json();
+
+					this.logger.debug('next_action', bodyInit.nextAction?.type);
+
+					url = `${URL_LOGIN}?${params}`;
+					let authId = bodyInit.tokens.authId;
+					const loginData = { username: this.config.username, password: this.config.password };
+
+					const resBasic = await this.request('basic', url, {
+						method: 'POST',
+						headers: {
+							Accept: 'application/json',
+							'Content-Type': 'application/json',
+							authId: authId
+						},
+						body: JSON.stringify(loginData)
+					});
+					const bodyBasic = await resBasic.json();
+
+					authId = bodyBasic.tokens.authId;
+					url = `${URL_ANOMALY}?${params}`;
+
+					const resAnomaly = await this.request('anomaly', url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							authId: authId
+						},
+						body: JSON.stringify({})
+					});
+					const anomalyBody = await resAnomaly.json();
+
+					url = decodeURI(anomalyBody.nextAction.successUrl.trim());
+
+					const resAuth = await this.request('auth', url, {
+						headers: { Accept: 'text/html' }
+					});
+					const authBody = await resAuth.text();
+
+					let rawUrl = FORM_REGEX.exec(authBody)?.[1]?.trim();
+					if (!rawUrl) {
+						error(500, 'Could not find auth form');
+					}
+
+					url = decode(rawUrl);
+
+					const resDone = await this.request('done', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+					});
+					const doneBody = await resDone.text();
+
+					rawUrl = FORM_REGEX.exec(doneBody)?.[1]?.trim();
+					if (!rawUrl) {
+						error(500, 'Could not find submit form');
+					}
+
+					url = decode(rawUrl);
+					let matches = INPUT_REGEX.exec(doneBody);
+					const data = new URLSearchParams();
+					while (matches !== null) {
+						const key = matches[1];
+						const value = matches[2];
+						data.append(key, value);
+						matches = INPUT_REGEX.exec(doneBody);
+					}
+
+					await this.request('post', url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: data
+					});
+
+					resUser = await this.request('user', URL_USER, {
+						headers: {
+							Accept: 'application/json'
+						}
+					});
+					userBody = await resUser.json();
+				}
+
+				url = `${URL_SHIPMENTS}/user/${userBody.userIdentifier}`;
+
+				const resShipmentReq = await this.request('shipments-req', url, {
+					headers: { Accept: 'application/json' }
+				});
+				const shipmentReqBody = await resShipmentReq.json();
+
+				url = `${URL_SHIPMENTS}/result/${shipmentReqBody}`;
+
+				const resShipments = await this.request('shipments', url, {
+					headers: { Accept: 'application/json' }
+				});
+				let shipmentsBody = await resShipments.json();
+
+				// Retry 5 times until the shipment is "DONE"
+				for (let i = 0; i < 5; i++) {
+					if (shipmentsBody.status === 'DONE') {
+						break;
+					}
+					await new Promise<void>((res) => setTimeout(res, 1000));
+					const resShipments = await this.request('shipments', url, {
+						headers: { Accept: 'application/json' }
+					});
+					shipmentsBody = await resShipments.json();
+				}
+
+				if (shipmentsBody.status !== 'DONE') {
+					error(500, {
+						message: 'Shipment query status did not change to DONE',
+						params: { status: shipmentsBody.status }
+					});
+				}
+
+				const shipments: Shipment[] = [];
+				const rawShipments: RawShipment[] = shipmentsBody.shipments;
+				for (const rawShipment of rawShipments) {
+					const inner = rawShipment.shipment;
+
+					if (inner.globalStatus === 'DELIVERED') {
+						continue;
+					}
+
+					const phys = inner.physicalProperties;
+					let type = this.getText(inner.product) || inner.product;
+					if (inner.internationalProduct) {
+						const newType = this.getText(inner.internationalProduct);
+						if (newType) {
+							type = newType;
+						}
+					}
+
+					const shipment: Shipment = {
+						id: inner.identity,
+						number: inner.formattedShipmentNumber ?? '-- unbekannt --',
+						type: type,
+						arrival: inner.calculatedDeliveryDate ?? null,
+						status: GLOBAL_STATUS[inner.globalStatus],
+						sender: inner.debitorDescription ?? null,
+						dims: phys.dimension1
+							? { x: phys.dimension1, y: phys.dimension2, z: phys.dimension3 }
+							: null,
+						weight: phys.weight ?? null,
+						events: []
+					};
+					shipments.push(shipment);
+
+					const eventsRes = await this.request(
+						`events-${shipment.number}`,
+						URL_EVENTS.replace('$id', shipment.id),
+						{ headers: { Accept: 'application/json' } }
+					);
+					const eventsBody: RawShipmentEvent[] = await eventsRes.json();
+					const events = eventsBody
+						.sort((a, b) => parseISO(b.timestamp).getTime() - parseISO(a.timestamp).getTime())
+						.map((e) => ({
+							ts: parseISO(e.timestamp),
+							event: this.getText(e.eventCode) || e.eventCode
+						}));
+					shipment.events = events;
+				}
+
+				// Cache cookies to disk
+				const jar = await this.cookieJar.serialize();
+				await mkdir(dirname(this.cookieJarFileName), { recursive: true });
+				await writeFile(this.cookieJarFileName, JSON.stringify(jar), 'utf-8');
+
+				return {
+					ts: new Date(),
+					shipments
+				};
+			}
+		);
+
+		if (data.shipments.length === 0 && embedded) {
+			error(404, 'No shipments found');
+		}
+
+		const pageStr = url.searchParams.get('page');
+		let page = Number(pageStr);
+		if (pageStr === null && embedded) {
+			page = this.lastPage + 1;
+		} else if (!isFinite(page)) {
+			page = 0;
+		}
+
+		const [[shipment], prevPage, nextPage, index] = wrap(
+			data.shipments.length,
+			page,
+			1,
+			data.shipments
+		);
+		this.lastPage = index;
+
+		return {
+			ts: new Date(),
+			type: 'data',
+			prevPage,
+			nextPage,
+			shipment
+		};
+	}
+
+	private async request(name: string, url: string, init: RequestInit) {
+		this.logger.debug(name, init.method ?? 'GET', url);
+		try {
+			const resp = await this.fetchWithCookies(url, {
+				...init,
+				redirect: 'follow',
+				credentials: 'include'
+			});
+			this.logger.debug(name, 'status:', resp.status);
+			if (resp.status < 200 || resp.status >= 400) {
+				const body = await resp.json().catch(() => null);
+				const text = body ? null : await resp.text().catch(() => null);
+				error(400, `Invalid status: ${resp.status}: ${body?.title ?? text ?? resp.statusText}`);
+			}
+			return resp;
+		} catch (err: unknown) {
+			this.logger.error(name, (err as any).cause ?? err);
+			throw (err as any).cause ?? err;
+		}
+	}
+
+	private async updateTexts() {
+		if (this.hasTexts) {
+			return;
+		}
+
+		const resTexts = await fetch(URL_TEXTS);
+		const bodyTexts = await resTexts.json();
+		const texts: Record<string, string> = bodyTexts['shipment-text--'];
+		for (const [key, value] of Object.entries(texts)) {
+			const splits = key.split('.');
+			let entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+			let split: string | undefined;
+			while ((split = splits.shift())) {
+				let subEntry = entry[1].get(split);
+				if (typeof subEntry === 'undefined') {
+					subEntry = ['', new Map()];
+					entry[1].set(split, subEntry);
+				}
+				entry = subEntry;
+			}
+			entry[0] = value.trim();
+		}
+
+		this.hasTexts = true;
+	}
+
+	private getText(code: string) {
+		const splits = code.split('.');
+		const entry = ['', this.shipmentTexts] as [string, RecursiveMap];
+		const text = this.getRecursiveTexts(entry, splits, 0);
+		return text;
+	}
+
+	private getRecursiveTexts(
+		entry: [string, RecursiveMap],
+		splits: string[],
+		index: number
+	): string | undefined {
+		const split = splits[index];
+		if (!split) {
+			// Find the text -> Either the current entry if there is text, or the first sub entry with key '*' and text (recursivly)
+			let subEntry = entry;
+			while (!subEntry[0]) {
+				const nextSubEntry = subEntry[1].get('*');
+				if (!nextSubEntry) {
+					break;
+				}
+				subEntry = nextSubEntry;
+			}
+			return subEntry[0];
+		}
+
+		const specific = entry[1].get(split);
+		if (specific) {
+			const res = this.getRecursiveTexts(specific, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+		const generic = entry[1].get('*');
+		if (generic) {
+			const res = this.getRecursiveTexts(generic, splits, index + 1);
+			if (res) {
+				return res;
+			}
+		}
+
+		return undefined;
+	}
+}

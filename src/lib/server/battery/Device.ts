@@ -1,9 +1,7 @@
 import { stat } from 'node:fs/promises';
 import type * as I2C from 'i2c-bus';
 
-import { BatteryChargingTemperature } from '$lib/models/BatteryChargingTemperature';
-import { BatteryPowerState } from '$lib/models/BatteryPowerState';
-import { BatteryState } from '$lib/models/BatteryState';
+import { BatteryChargingTemperature, BatteryPowerState, BatteryState } from '$lib/models/battery';
 
 const CMD_STATUS = 0x40;
 const CMD_FAULT_EVENT = 0x44;

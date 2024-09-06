@@ -1,52 +1,28 @@
 @keyframes appSidebarExpand {
 	@if ($enable-rtl) {
-		from {
-			margin-right: -$app-sidebar-width;
-		}
-		to {
-			margin-right: 0;
-		}
+		from { margin-right: -$app-sidebar-width; }
+		to { margin-right: 0; }
 	} @else {
-		from {
-			margin-left: -$app-sidebar-width;
-		}
-		to {
-			margin-left: 0;
-		}
+		from { margin-left: -$app-sidebar-width; }
+		to { margin-left: 0; }
 	}
 }
 @keyframes appContentExpand {
 	@if ($enable-rtl) {
-		from {
-			margin-right: 0;
-		}
-		to {
-			margin-right: $app-sidebar-width;
-		}
+		from { margin-right: 0; }
+		to { margin-right: $app-sidebar-width; }
 	} @else {
-		from {
-			margin-left: 0;
-		}
-		to {
-			margin-left: $app-sidebar-width;
-		}
+		from { margin-left: 0; }
+		to { margin-left: $app-sidebar-width; }
 	}
 }
 @keyframes appFooterExpand {
 	@if ($enable-rtl) {
-		from {
-			margin-right: $app-content-padding-x;
-		}
-		to {
-			margin-right: $app-sidebar-width + $app-content-padding-x;
-		}
+		from { margin-right: $app-content-padding-x; }
+		to { margin-right: $app-sidebar-width + $app-content-padding-x; }
 	} @else {
-		from {
-			margin-left: $app-content-padding-x;
-		}
-		to {
-			margin-left: $app-sidebar-width + $app-content-padding-x;
-		}
+		from { margin-left: $app-content-padding-x; }
+		to { margin-left: $app-sidebar-width + $app-content-padding-x; }
 	}
 }
 
@@ -54,7 +30,7 @@
 	@include media-breakpoint-up(md) {
 		& .app-sidebar {
 			animation: appSidebarExpand 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
-
+			
 			@if ($enable-rtl) {
 				margin-right: 0;
 			} @else {
@@ -63,7 +39,7 @@
 		}
 		& .app-content {
 			animation: appContentExpand 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
-
+			
 			@if ($enable-rtl) {
 				margin-right: $app-sidebar-width;
 			} @else {
@@ -72,7 +48,7 @@
 		}
 		& .app-footer {
 			animation: appFooterExpand 0.15s both cubic-bezier(0.7, 0, 0.3, 1);
-
+			
 			@if ($enable-rtl) {
 				margin-right: $app-sidebar-width + $app-content-padding-x;
 			} @else {

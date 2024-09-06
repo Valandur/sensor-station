@@ -2,15 +2,15 @@
 	import { dev } from '$app/environment';
 	import { fade, slide } from 'svelte/transition';
 	import { onMount } from 'svelte';
+	import 'bootstrap-icons/font/bootstrap-icons.min.css';
+	import '@fortawesome/fontawesome-free/css/all.min.css';
+	import 'perfect-scrollbar/css/perfect-scrollbar.css';
 
 	import { swipe, type SwipeEvent } from '$lib/swipe';
-
 	import '$lib/theme/scss/styles.scss';
 	import '$lib/theme/scss/font.scss';
 
 	let showToolbar = false;
-
-	onMount(() => document.body.classList.add('app-init'));
 
 	function onSwipe(e: SwipeEvent) {
 		if (e.detail.dir === 'down' && e.detail.y.start < 100) {
@@ -23,14 +23,21 @@
 	function reload() {
 		window.location.reload();
 	}
+
+	onMount(async () => {
+		import('bootstrap');
+		document.querySelector('body')?.classList.add('app-init');
+	});
 </script>
 
 <svelte:body use:swipe={{ y: 100 }} on:swipe={onSwipe} />
 
-<slot />
+<div id="content" class="app-content p-1 d-flex flex-column">
+	<slot />
+</div>
 
 {#if dev}
-	<div class="dev-note">DEV</div>
+	<div class="dev-note z-2">DEV</div>
 {/if}
 
 {#if showToolbar}
@@ -41,59 +48,42 @@
 		on:click={() => (showToolbar = false)}
 	/>
 	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
-		<div class="col-auto">
-			<a class="btn btn-theme" href="/screens" on:click={() => (showToolbar = false)}>
-				<i class="icofont-home icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/modem" on:click={() => (showToolbar = false)}>
-				<i class="icofont-globe icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/network" on:click={() => (showToolbar = false)}>
-				<i class="icofont-network icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<a class="btn btn-outline-theme" href="/battery" on:click={() => (showToolbar = false)}>
-				<i class="icofont-battery-half icofont-2x" />
-			</a>
-		</div>
+		<a class="col-auto btn btn-theme p-3" href="/" on:click={() => (showToolbar = false)}>
+			<i class="fa-solid fa-house fa-2xl"></i>
+		</a>
 
 		<div class="col" />
 
-		<div class="col-auto">
-			<a class="btn btn-theme" href="/settings" on:click={() => (showToolbar = false)}>
-				<i class="icofont-gears icofont-2x" />
-			</a>
-		</div>
-		<div class="col-auto">
-			<button class="btn btn-warning" on:click={reload}>
-				<i class="icofont-refresh icofont-2x" />
+		<a
+			class="col-auto btn btn-theme p-3 ms-2"
+			href="/services"
+			on:click={() => (showToolbar = false)}
+		>
+			<i class="fa-solid fa-gears fa-2xl"></i>
+		</a>
+
+		<button class="col-auto btn btn-warning p-3 ms-2" on:click={reload}>
+			<i class="fa-solid fa-rotate fa-2xl"></i>
+		</button>
+
+		<form method="POST" action="/?/restart" class="col-auto p-0 ms-2">
+			<button type="submit" class="btn btn-danger p-3">
+				<i class="fa-solid fa-power-off fa-2xl"></i>
 			</button>
-		</div>
-		<div class="col-auto">
-			<form method="POST" action="/?/restart">
-				<button type="submit" class="btn btn-danger">
-					<i class="icofont-power icofont-2x" />
-				</button>
-			</form>
-		</div>
+		</form>
 	</div>
 {/if}
 
 <style>
 	:global(html),
 	:global(body) {
-		font-size: 30px;
+		font-size: 32px;
 	}
 
 	.dev-note {
 		position: fixed;
 		top: 4px;
-		left: 4px;
+		left: 50%;
 		padding: 2px 8px;
 		font-weight: 600;
 		color: var(--bs-black);

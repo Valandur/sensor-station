@@ -3,10 +3,10 @@
 	right: 0;
 	bottom: 0;
 	padding: $spacer * 1.25 0;
-	border-top: 1px solid $border-color;
+	border-top: 1px solid var(--#{$prefix}border-color);
 	font-weight: $font-weight-bold;
-	color: rgba($white, 0.5);
-
+	color: rgba(var(--#{$prefix}body-color-rgb), .5);
+	
 	@if $enable-rtl {
 		margin-right: $app-sidebar-width + $app-content-padding-x;
 		margin-left: $app-content-padding-x;

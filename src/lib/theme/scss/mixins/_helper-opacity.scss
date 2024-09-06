@@ -7,16 +7,16 @@
 			opacity: #{$i * 0.15} !important;
 		}
 		.text-opacity-#{$i * 10} {
-			--bs-text-opacity: #{$i * 0.1};
+			--#{$prefix}text-opacity: #{$i * 0.1};
 		}
 		.text-opacity-#{($i * 10) + 5} {
-			--bs-text-opacity: #{($i * 0.1) + 0.05};
+			--#{$prefix}text-opacity: #{($i * 0.1) + 0.05};
 		}
 		.bg-opacity-#{$i * 10} {
-			--bs-bg-opacity: #{$i * 0.1};
+			--#{$prefix}bg-opacity: #{$i * 0.1};
 		}
 		.bg-opacity-#{($i * 10) + 5} {
-			--bs-bg-opacity: #{($i * 0.1) + 0.05};
+			--#{$prefix}bg-opacity: #{($i * 0.1) + 0.05};
 		}
 	}
 }

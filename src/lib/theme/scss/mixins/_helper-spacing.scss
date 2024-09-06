@@ -3,7 +3,7 @@
 		$classInt: $i;
 		$cssValue: rem($i);
 		$cssProperty: $classProperty;
-
+		
 		@if ($direction == 'top') {
 			$cssProperty: $classProperty + '-top';
 		} @else if ($direction == 'right') {

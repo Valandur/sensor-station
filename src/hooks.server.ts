@@ -1,16 +1,12 @@
 import { normalize, resolve as resolvePath } from 'path';
 import { readFile } from 'fs/promises';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-
 import { building } from '$app/environment';
 
-import { BaseLogger } from '$lib/models/BaseLogger';
-import { setup as setupBattery } from '$lib/server/battery/data';
-import { setup as setupScreens } from '$lib/server/screen/data';
-import { setup as setupSensor } from '$lib/server/sensor/data';
-import { setup as setupUploads } from '$lib/server/uploads/data';
+import { Logger } from '$lib/server/Logger';
+import servicesService from '$lib/server/services';
 
-const logger = new BaseLogger('MAIN');
+const logger = new Logger('MAIN');
 
 await init();
 
@@ -29,7 +25,6 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	logger.error(error);
 	return {
 		message: error instanceof Error ? error.message : JSON.stringify(error),
-		key: 'unhandled',
 		params: { route: event.route, error: JSON.parse(JSON.stringify(error)) }
 	};
 };
@@ -41,8 +36,5 @@ async function init() {
 
 	logger.info('Starting...');
 
-	setupBattery();
-	setupScreens();
-	setupSensor();
-	setupUploads();
+	await servicesService.load();
 }
