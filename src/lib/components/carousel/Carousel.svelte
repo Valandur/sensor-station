@@ -116,7 +116,7 @@
 			</div>
 
 			<div class="row flex-nowrap">
-				<div class="h2 col text-nowrap m-0">{date}</div>
+				<div class="h3 col text-nowrap m-0">{date}</div>
 			</div>
 
 			<div class="row align-items-center flex-nowrap">
