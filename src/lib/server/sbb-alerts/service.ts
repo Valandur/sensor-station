@@ -31,7 +31,7 @@ interface CacheData {
 }
 
 const ENABLED = env.SBB_ALERTS_ENABLED === '1';
-const STATUS_URL = 'https://api.opentransportdata.swiss/siri-sx';
+const STATUS_URL = 'https://api.opentransportdata.swiss/la/siri-sx';
 
 export class SbbAlertsService extends BaseService<SbbAlertsServiceAction, SbbAlertsServiceConfig> {
 	public override readonly type = SBB_ALERTS_SERVICE_TYPE;

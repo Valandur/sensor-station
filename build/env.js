@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 /* global "" */
 
 const expected = new Set([

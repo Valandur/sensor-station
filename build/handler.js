@@ -1,10 +1,9 @@
 import './shims.js';
-import fs$1, { createReadStream } from 'node:fs';
-import path from 'node:path';
-import * as fs from 'fs';
-import { readdirSync, statSync } from 'fs';
-import { resolve, join, normalize } from 'path';
-import * as qs from 'querystring';
+import * as fs from 'node:fs';
+import fs__default, { readdirSync, statSync, createReadStream } from 'node:fs';
+import path, { resolve, join, normalize } from 'node:path';
+import process from 'node:process';
+import * as qs from 'node:querystring';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import { Server } from './server/index.js';
@@ -39,7 +38,7 @@ function totalist(dir, callback, pre='') {
  * @param {Request} req
  * @returns {ParsedURL|void}
  */
-function parse$1(req) {
+function parse(req) {
 	let raw = req.url;
 	if (raw == null) return;
 
@@ -667,7 +666,7 @@ function sirv (dir, opts={}) {
 
 	return function (req, res, next) {
 		let extns = [''];
-		let pathname = parse$1(req).pathname;
+		let pathname = parse(req).pathname;
 		let val = req.headers['accept-encoding'] || '';
 		if (gzips && val.includes('gzip')) extns.unshift(...gzips);
 		if (brots && /(br|brotli)/i.test(val)) extns.unshift(...brots);
@@ -697,230 +696,240 @@ function sirv (dir, opts={}) {
 
 var setCookie = {exports: {}};
 
-var defaultParseOptions = {
-  decodeValues: true,
-  map: false,
-  silent: false,
-};
+var hasRequiredSetCookie;
 
-function isNonEmptyString(str) {
-  return typeof str === "string" && !!str.trim();
+function requireSetCookie () {
+	if (hasRequiredSetCookie) return setCookie.exports;
+	hasRequiredSetCookie = 1;
+
+	var defaultParseOptions = {
+	  decodeValues: true,
+	  map: false,
+	  silent: false,
+	};
+
+	function isNonEmptyString(str) {
+	  return typeof str === "string" && !!str.trim();
+	}
+
+	function parseString(setCookieValue, options) {
+	  var parts = setCookieValue.split(";").filter(isNonEmptyString);
+
+	  var nameValuePairStr = parts.shift();
+	  var parsed = parseNameValuePair(nameValuePairStr);
+	  var name = parsed.name;
+	  var value = parsed.value;
+
+	  options = options
+	    ? Object.assign({}, defaultParseOptions, options)
+	    : defaultParseOptions;
+
+	  try {
+	    value = options.decodeValues ? decodeURIComponent(value) : value; // decode cookie value
+	  } catch (e) {
+	    console.error(
+	      "set-cookie-parser encountered an error while decoding a cookie with value '" +
+	        value +
+	        "'. Set options.decodeValues to false to disable this feature.",
+	      e
+	    );
+	  }
+
+	  var cookie = {
+	    name: name,
+	    value: value,
+	  };
+
+	  parts.forEach(function (part) {
+	    var sides = part.split("=");
+	    var key = sides.shift().trimLeft().toLowerCase();
+	    var value = sides.join("=");
+	    if (key === "expires") {
+	      cookie.expires = new Date(value);
+	    } else if (key === "max-age") {
+	      cookie.maxAge = parseInt(value, 10);
+	    } else if (key === "secure") {
+	      cookie.secure = true;
+	    } else if (key === "httponly") {
+	      cookie.httpOnly = true;
+	    } else if (key === "samesite") {
+	      cookie.sameSite = value;
+	    } else {
+	      cookie[key] = value;
+	    }
+	  });
+
+	  return cookie;
+	}
+
+	function parseNameValuePair(nameValuePairStr) {
+	  // Parses name-value-pair according to rfc6265bis draft
+
+	  var name = "";
+	  var value = "";
+	  var nameValueArr = nameValuePairStr.split("=");
+	  if (nameValueArr.length > 1) {
+	    name = nameValueArr.shift();
+	    value = nameValueArr.join("="); // everything after the first =, joined by a "=" if there was more than one part
+	  } else {
+	    value = nameValuePairStr;
+	  }
+
+	  return { name: name, value: value };
+	}
+
+	function parse(input, options) {
+	  options = options
+	    ? Object.assign({}, defaultParseOptions, options)
+	    : defaultParseOptions;
+
+	  if (!input) {
+	    if (!options.map) {
+	      return [];
+	    } else {
+	      return {};
+	    }
+	  }
+
+	  if (input.headers) {
+	    if (typeof input.headers.getSetCookie === "function") {
+	      // for fetch responses - they combine headers of the same type in the headers array,
+	      // but getSetCookie returns an uncombined array
+	      input = input.headers.getSetCookie();
+	    } else if (input.headers["set-cookie"]) {
+	      // fast-path for node.js (which automatically normalizes header names to lower-case
+	      input = input.headers["set-cookie"];
+	    } else {
+	      // slow-path for other environments - see #25
+	      var sch =
+	        input.headers[
+	          Object.keys(input.headers).find(function (key) {
+	            return key.toLowerCase() === "set-cookie";
+	          })
+	        ];
+	      // warn if called on a request-like object with a cookie header rather than a set-cookie header - see #34, 36
+	      if (!sch && input.headers.cookie && !options.silent) {
+	        console.warn(
+	          "Warning: set-cookie-parser appears to have been called on a request object. It is designed to parse Set-Cookie headers from responses, not Cookie headers from requests. Set the option {silent: true} to suppress this warning."
+	        );
+	      }
+	      input = sch;
+	    }
+	  }
+	  if (!Array.isArray(input)) {
+	    input = [input];
+	  }
+
+	  options = options
+	    ? Object.assign({}, defaultParseOptions, options)
+	    : defaultParseOptions;
+
+	  if (!options.map) {
+	    return input.filter(isNonEmptyString).map(function (str) {
+	      return parseString(str, options);
+	    });
+	  } else {
+	    var cookies = {};
+	    return input.filter(isNonEmptyString).reduce(function (cookies, str) {
+	      var cookie = parseString(str, options);
+	      cookies[cookie.name] = cookie;
+	      return cookies;
+	    }, cookies);
+	  }
+	}
+
+	/*
+	  Set-Cookie header field-values are sometimes comma joined in one string. This splits them without choking on commas
+	  that are within a single set-cookie field-value, such as in the Expires portion.
+
+	  This is uncommon, but explicitly allowed - see https://tools.ietf.org/html/rfc2616#section-4.2
+	  Node.js does this for every header *except* set-cookie - see https://github.com/nodejs/node/blob/d5e363b77ebaf1caf67cd7528224b651c86815c1/lib/_http_incoming.js#L128
+	  React Native's fetch does this for *every* header, including set-cookie.
+
+	  Based on: https://github.com/google/j2objc/commit/16820fdbc8f76ca0c33472810ce0cb03d20efe25
+	  Credits to: https://github.com/tomball for original and https://github.com/chrusart for JavaScript implementation
+	*/
+	function splitCookiesString(cookiesString) {
+	  if (Array.isArray(cookiesString)) {
+	    return cookiesString;
+	  }
+	  if (typeof cookiesString !== "string") {
+	    return [];
+	  }
+
+	  var cookiesStrings = [];
+	  var pos = 0;
+	  var start;
+	  var ch;
+	  var lastComma;
+	  var nextStart;
+	  var cookiesSeparatorFound;
+
+	  function skipWhitespace() {
+	    while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) {
+	      pos += 1;
+	    }
+	    return pos < cookiesString.length;
+	  }
+
+	  function notSpecialChar() {
+	    ch = cookiesString.charAt(pos);
+
+	    return ch !== "=" && ch !== ";" && ch !== ",";
+	  }
+
+	  while (pos < cookiesString.length) {
+	    start = pos;
+	    cookiesSeparatorFound = false;
+
+	    while (skipWhitespace()) {
+	      ch = cookiesString.charAt(pos);
+	      if (ch === ",") {
+	        // ',' is a cookie separator if we have later first '=', not ';' or ','
+	        lastComma = pos;
+	        pos += 1;
+
+	        skipWhitespace();
+	        nextStart = pos;
+
+	        while (pos < cookiesString.length && notSpecialChar()) {
+	          pos += 1;
+	        }
+
+	        // currently special character
+	        if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
+	          // we found cookies separator
+	          cookiesSeparatorFound = true;
+	          // pos is inside the next cookie, so back up and return it.
+	          pos = nextStart;
+	          cookiesStrings.push(cookiesString.substring(start, lastComma));
+	          start = pos;
+	        } else {
+	          // in param ',' or param separator ';',
+	          // we continue from that comma
+	          pos = lastComma + 1;
+	        }
+	      } else {
+	        pos += 1;
+	      }
+	    }
+
+	    if (!cookiesSeparatorFound || pos >= cookiesString.length) {
+	      cookiesStrings.push(cookiesString.substring(start, cookiesString.length));
+	    }
+	  }
+
+	  return cookiesStrings;
+	}
+
+	setCookie.exports = parse;
+	setCookie.exports.parse = parse;
+	setCookie.exports.parseString = parseString;
+	setCookie.exports.splitCookiesString = splitCookiesString;
+	return setCookie.exports;
 }
 
-function parseString(setCookieValue, options) {
-  var parts = setCookieValue.split(";").filter(isNonEmptyString);
-
-  var nameValuePairStr = parts.shift();
-  var parsed = parseNameValuePair(nameValuePairStr);
-  var name = parsed.name;
-  var value = parsed.value;
-
-  options = options
-    ? Object.assign({}, defaultParseOptions, options)
-    : defaultParseOptions;
-
-  try {
-    value = options.decodeValues ? decodeURIComponent(value) : value; // decode cookie value
-  } catch (e) {
-    console.error(
-      "set-cookie-parser encountered an error while decoding a cookie with value '" +
-        value +
-        "'. Set options.decodeValues to false to disable this feature.",
-      e
-    );
-  }
-
-  var cookie = {
-    name: name,
-    value: value,
-  };
-
-  parts.forEach(function (part) {
-    var sides = part.split("=");
-    var key = sides.shift().trimLeft().toLowerCase();
-    var value = sides.join("=");
-    if (key === "expires") {
-      cookie.expires = new Date(value);
-    } else if (key === "max-age") {
-      cookie.maxAge = parseInt(value, 10);
-    } else if (key === "secure") {
-      cookie.secure = true;
-    } else if (key === "httponly") {
-      cookie.httpOnly = true;
-    } else if (key === "samesite") {
-      cookie.sameSite = value;
-    } else {
-      cookie[key] = value;
-    }
-  });
-
-  return cookie;
-}
-
-function parseNameValuePair(nameValuePairStr) {
-  // Parses name-value-pair according to rfc6265bis draft
-
-  var name = "";
-  var value = "";
-  var nameValueArr = nameValuePairStr.split("=");
-  if (nameValueArr.length > 1) {
-    name = nameValueArr.shift();
-    value = nameValueArr.join("="); // everything after the first =, joined by a "=" if there was more than one part
-  } else {
-    value = nameValuePairStr;
-  }
-
-  return { name: name, value: value };
-}
-
-function parse(input, options) {
-  options = options
-    ? Object.assign({}, defaultParseOptions, options)
-    : defaultParseOptions;
-
-  if (!input) {
-    if (!options.map) {
-      return [];
-    } else {
-      return {};
-    }
-  }
-
-  if (input.headers) {
-    if (typeof input.headers.getSetCookie === "function") {
-      // for fetch responses - they combine headers of the same type in the headers array,
-      // but getSetCookie returns an uncombined array
-      input = input.headers.getSetCookie();
-    } else if (input.headers["set-cookie"]) {
-      // fast-path for node.js (which automatically normalizes header names to lower-case
-      input = input.headers["set-cookie"];
-    } else {
-      // slow-path for other environments - see #25
-      var sch =
-        input.headers[
-          Object.keys(input.headers).find(function (key) {
-            return key.toLowerCase() === "set-cookie";
-          })
-        ];
-      // warn if called on a request-like object with a cookie header rather than a set-cookie header - see #34, 36
-      if (!sch && input.headers.cookie && !options.silent) {
-        console.warn(
-          "Warning: set-cookie-parser appears to have been called on a request object. It is designed to parse Set-Cookie headers from responses, not Cookie headers from requests. Set the option {silent: true} to suppress this warning."
-        );
-      }
-      input = sch;
-    }
-  }
-  if (!Array.isArray(input)) {
-    input = [input];
-  }
-
-  options = options
-    ? Object.assign({}, defaultParseOptions, options)
-    : defaultParseOptions;
-
-  if (!options.map) {
-    return input.filter(isNonEmptyString).map(function (str) {
-      return parseString(str, options);
-    });
-  } else {
-    var cookies = {};
-    return input.filter(isNonEmptyString).reduce(function (cookies, str) {
-      var cookie = parseString(str, options);
-      cookies[cookie.name] = cookie;
-      return cookies;
-    }, cookies);
-  }
-}
-
-/*
-  Set-Cookie header field-values are sometimes comma joined in one string. This splits them without choking on commas
-  that are within a single set-cookie field-value, such as in the Expires portion.
-
-  This is uncommon, but explicitly allowed - see https://tools.ietf.org/html/rfc2616#section-4.2
-  Node.js does this for every header *except* set-cookie - see https://github.com/nodejs/node/blob/d5e363b77ebaf1caf67cd7528224b651c86815c1/lib/_http_incoming.js#L128
-  React Native's fetch does this for *every* header, including set-cookie.
-
-  Based on: https://github.com/google/j2objc/commit/16820fdbc8f76ca0c33472810ce0cb03d20efe25
-  Credits to: https://github.com/tomball for original and https://github.com/chrusart for JavaScript implementation
-*/
-function splitCookiesString(cookiesString) {
-  if (Array.isArray(cookiesString)) {
-    return cookiesString;
-  }
-  if (typeof cookiesString !== "string") {
-    return [];
-  }
-
-  var cookiesStrings = [];
-  var pos = 0;
-  var start;
-  var ch;
-  var lastComma;
-  var nextStart;
-  var cookiesSeparatorFound;
-
-  function skipWhitespace() {
-    while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) {
-      pos += 1;
-    }
-    return pos < cookiesString.length;
-  }
-
-  function notSpecialChar() {
-    ch = cookiesString.charAt(pos);
-
-    return ch !== "=" && ch !== ";" && ch !== ",";
-  }
-
-  while (pos < cookiesString.length) {
-    start = pos;
-    cookiesSeparatorFound = false;
-
-    while (skipWhitespace()) {
-      ch = cookiesString.charAt(pos);
-      if (ch === ",") {
-        // ',' is a cookie separator if we have later first '=', not ';' or ','
-        lastComma = pos;
-        pos += 1;
-
-        skipWhitespace();
-        nextStart = pos;
-
-        while (pos < cookiesString.length && notSpecialChar()) {
-          pos += 1;
-        }
-
-        // currently special character
-        if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
-          // we found cookies separator
-          cookiesSeparatorFound = true;
-          // pos is inside the next cookie, so back up and return it.
-          pos = nextStart;
-          cookiesStrings.push(cookiesString.substring(start, lastComma));
-          start = pos;
-        } else {
-          // in param ',' or param separator ';',
-          // we continue from that comma
-          pos = lastComma + 1;
-        }
-      } else {
-        pos += 1;
-      }
-    }
-
-    if (!cookiesSeparatorFound || pos >= cookiesString.length) {
-      cookiesStrings.push(cookiesString.substring(start, cookiesString.length));
-    }
-  }
-
-  return cookiesStrings;
-}
-
-setCookie.exports = parse;
-setCookie.exports.parse = parse;
-setCookie.exports.parseString = parseString;
-var splitCookiesString_1 = setCookie.exports.splitCookiesString = splitCookiesString;
+var setCookieExports = /*@__PURE__*/ requireSetCookie();
 
 /**
  * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
@@ -963,7 +972,7 @@ function get_raw_body(req, body_size_limit) {
 
 	if (req.destroyed) {
 		const readable = new ReadableStream();
-		readable.cancel();
+		void readable.cancel();
 		return readable;
 	}
 
@@ -1043,11 +1052,25 @@ function get_raw_body(req, body_size_limit) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 async function getRequest({ request, base, bodySizeLimit }) {
+	let headers = /** @type {Record<string, string>} */ (request.headers);
+	if (request.httpVersionMajor >= 2) {
+		// the Request constructor rejects headers with ':' in the name
+		headers = Object.assign({}, headers);
+		// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
+		if (headers[':authority']) {
+			headers.host = headers[':authority'];
+		}
+		delete headers[':authority'];
+		delete headers[':method'];
+		delete headers[':path'];
+		delete headers[':scheme'];
+	}
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers: /** @type {Record<string, string>} */ (request.headers),
+		headers: Object.entries(headers),
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
@@ -1068,7 +1091,7 @@ async function setResponse(res, response) {
 			res.setHeader(
 				key,
 				key === 'set-cookie'
-					? splitCookiesString_1(
+					? setCookieExports.splitCookiesString(
 							// This is absurd but necessary, TODO: investigate why
 							/** @type {string}*/ (response.headers.get(key))
 						)
@@ -1099,7 +1122,7 @@ async function setResponse(res, response) {
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {
-		reader.cancel();
+		void reader.cancel();
 		return;
 	}
 
@@ -1116,7 +1139,7 @@ async function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	next();
+	void next();
 	async function next() {
 		try {
 			for (;;) {
@@ -1146,6 +1169,22 @@ function createReadableStream(file) {
 	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
 }
 
+/**
+ * Parses the given value into number of bytes.
+ *
+ * @param {string} value - Size in bytes. Can also be specified with a unit suffix kilobytes (K), megabytes (M), or gigabytes (G).
+ * @returns {number}
+ */
+function parse_as_bytes(value) {
+	const multiplier =
+		{
+			K: 1024,
+			M: 1024 * 1024,
+			G: 1024 * 1024 * 1024
+		}[value[value.length - 1]?.toUpperCase()] ?? 1;
+	return Number(multiplier != 1 ? value.substring(0, value.length - 1) : value) * multiplier;
+}
+
 /* global "" */
 
 const server = new Server(manifest);
@@ -1154,23 +1193,10 @@ const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
-const host_header = env('HOST_HEADER', 'host').toLowerCase();
+const host_header = env('HOST_HEADER', '').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
 
-/**
- * @param {string} bytes
- */
-function parse_body_size_limit(bytes) {
-	const multiplier =
-		{
-			K: 1024,
-			M: 1024 * 1024,
-			G: 1024 * 1024 * 1024
-		}[bytes[bytes.length - 1]?.toUpperCase()] ?? 1;
-	return Number(multiplier != 1 ? bytes.substring(0, bytes.length - 1) : bytes) * multiplier;
-}
-
-const body_size_limit = parse_body_size_limit(env('BODY_SIZE_LIMIT', '512K'));
+const body_size_limit = parse_as_bytes(env('BODY_SIZE_LIMIT', '512K'));
 
 if (isNaN(body_size_limit)) {
 	throw new Error(
@@ -1183,7 +1209,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: process.env,
+	env: /** @type {Record<string, string>} */ (process.env),
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -1192,22 +1218,24 @@ await server.init({
  * @param {boolean} client
  */
 function serve(path, client = false) {
-	return (
-		fs$1.existsSync(path) &&
-		sirv(path, {
-			etag: true,
-			gzip: true,
-			brotli: true,
-			setHeaders:
-				client &&
-				((res, pathname) => {
-					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
-						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-					}
-				})
-		})
-	);
+	return fs__default.existsSync(path)
+		? sirv(path, {
+				etag: true,
+				gzip: true,
+				brotli: true,
+				setHeaders: client
+					? (res, pathname) => {
+							// only apply to build directory, not e.g. version.json
+							if (
+								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+								res.statusCode === 200
+							) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+						}
+					: undefined
+			})
+		: undefined;
 }
 
 // required because the static file server ignores trailing slashes
@@ -1216,7 +1244,7 @@ function serve_prerendered() {
 	const handler = serve(path.join(dir, 'prerendered'));
 
 	return (req, res, next) => {
-		let { pathname, search, query } = parse$1(req);
+		let { pathname, search, query } = parse(req);
 
 		try {
 			pathname = decodeURIComponent(pathname);
@@ -1225,7 +1253,7 @@ function serve_prerendered() {
 		}
 
 		if (prerendered.has(pathname)) {
-			return handler(req, res, next);
+			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
@@ -1234,7 +1262,7 @@ function serve_prerendered() {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
-			next();
+			void next();
 		}
 	};
 }
@@ -1256,7 +1284,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(
+	await setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
@@ -1331,22 +1359,15 @@ function sequence(handlers) {
  */
 function get_origin(headers) {
 	const protocol = (protocol_header && headers[protocol_header]) || 'https';
-	const host = headers[host_header];
+	const host = (host_header && headers[host_header]) || headers['host'];
 	const port = port_header && headers[port_header];
-	if (port) {
-		return `${protocol}://${host}:${port}`;
-	} else {
-		return `${protocol}://${host}`;
-	}
+
+	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
 const handler = sequence(
-	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
-		serve_prerendered(),
-		ssr
-	].filter(Boolean)
+	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );
 
 export { handler };

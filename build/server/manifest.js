@@ -7,18 +7,21 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set([".DS_Store","favicon.png","fonts/chakra-petch-v9-latin_latin-ext-300.woff","fonts/chakra-petch-v9-latin_latin-ext-300.woff2","fonts/chakra-petch-v9-latin_latin-ext-500.woff","fonts/chakra-petch-v9-latin_latin-ext-500.woff2","fonts/chakra-petch-v9-latin_latin-ext-regular.woff","fonts/chakra-petch-v9-latin_latin-ext-regular.woff2","icons/clear.png","icons/clouds.png","icons/drizzle.png","icons/foggy.png","icons/heavyrain.png","icons/heavysnow.png","icons/overcast.png","icons/rain.png","icons/sand.png","icons/sandstorm.png","icons/snow.png","icons/thunderstorm.png","icons/tornado.png","icons/wind.png","img/.DS_Store","img/cover/.DS_Store","img/cover/cover-2-dark.jpg","img/cover/cover-2.jpg","img/cover/cover-3-dark.jpg","img/cover/cover-3.jpg","img/cover/cover-4-dark.jpg","img/cover/cover-4.jpg","img/cover/cover-5-dark.jpg","img/cover/cover-5.jpg","img/cover/cover-6-dark.jpg","img/cover/cover-6.jpg","img/cover/cover-7-dark.jpg","img/cover/cover-7.jpg","img/cover/cover-8-dark.jpg","img/cover/cover-8.jpg","img/cover/cover-9-dark.jpg","img/cover/cover-9.jpg","img/cover/cover-dark.jpg","img/cover/cover-thumb-1.jpg","img/cover/cover-thumb-2.jpg","img/cover/cover-thumb-3.jpg","img/cover/cover-thumb-4.jpg","img/cover/cover-thumb-5.jpg","img/cover/cover-thumb-6.jpg","img/cover/cover-thumb-7.jpg","img/cover/cover-thumb-8.jpg","img/cover/cover-thumb-9.jpg","img/cover/cover.jpg","img/logo/logo-dark.png","img/logo/logo.png","img/mode/dark.jpg","img/mode/light.jpg","img/pattern/pattern-dark.png","img/pattern/pattern.png"]),
+	assets: new Set(["favicon.png","fonts/chakra-petch-v9-latin_latin-ext-300.woff","fonts/chakra-petch-v9-latin_latin-ext-300.woff2","fonts/chakra-petch-v9-latin_latin-ext-500.woff","fonts/chakra-petch-v9-latin_latin-ext-500.woff2","fonts/chakra-petch-v9-latin_latin-ext-regular.woff","fonts/chakra-petch-v9-latin_latin-ext-regular.woff2","icons/clear.png","icons/clouds.png","icons/drizzle.png","icons/foggy.png","icons/heavyrain.png","icons/heavysnow.png","icons/overcast.png","icons/rain.png","icons/sand.png","icons/sandstorm.png","icons/snow.png","icons/thunderstorm.png","icons/tornado.png","icons/wind.png","img/cover/cover-2-dark.jpg","img/cover/cover-2.jpg","img/cover/cover-3-dark.jpg","img/cover/cover-3.jpg","img/cover/cover-4-dark.jpg","img/cover/cover-4.jpg","img/cover/cover-5-dark.jpg","img/cover/cover-5.jpg","img/cover/cover-6-dark.jpg","img/cover/cover-6.jpg","img/cover/cover-7-dark.jpg","img/cover/cover-7.jpg","img/cover/cover-8-dark.jpg","img/cover/cover-8.jpg","img/cover/cover-9-dark.jpg","img/cover/cover-9.jpg","img/cover/cover-dark.jpg","img/cover/cover-thumb-1.jpg","img/cover/cover-thumb-2.jpg","img/cover/cover-thumb-3.jpg","img/cover/cover-thumb-4.jpg","img/cover/cover-thumb-5.jpg","img/cover/cover-thumb-6.jpg","img/cover/cover-thumb-7.jpg","img/cover/cover-thumb-8.jpg","img/cover/cover-thumb-9.jpg","img/cover/cover.jpg","img/logo/logo-dark.png","img/logo/logo.png","img/mode/dark.jpg","img/mode/light.jpg","img/pattern/pattern-dark.png","img/pattern/pattern.png"]),
 	mimeTypes: {".png":"image/png",".woff":"font/woff",".woff2":"font/woff2",".jpg":"image/jpeg"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.xF6x9BEG.js","app":"_app/immutable/entry/app.C6BIF8g_.js","imports":["_app/immutable/entry/start.xF6x9BEG.js","_app/immutable/chunks/entry.bShCfthd.js","_app/immutable/chunks/scheduler.DSLye_OD.js","_app/immutable/entry/app.C6BIF8g_.js","_app/immutable/chunks/3.-LS5Hydt.js","_app/immutable/chunks/scheduler.DSLye_OD.js","_app/immutable/chunks/index.B09Z5uM9.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {start:"_app/immutable/entry/start.BQL2Ocjj.js",app:"_app/immutable/entry/app.D2qkGD65.js",imports:["_app/immutable/entry/start.BQL2Ocjj.js","_app/immutable/chunks/NXOOxNA3.js","_app/immutable/chunks/BHCLn_Xu.js","_app/immutable/entry/app.D2qkGD65.js","_app/immutable/chunks/jKjWACjA.js","_app/immutable/chunks/BHCLn_Xu.js","_app/immutable/chunks/IHki7fMi.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
-			__memo(() => import('./chunks/0-DjZUsSkK.js')),
-			__memo(() => import('./chunks/1-Dyn5qbaz.js')),
-			__memo(() => import('./chunks/2-CE100Tno.js')),
-			__memo(() => import('./chunks/3-52XF1BXH.js')),
-			__memo(() => import('./chunks/4-Bj5oONVC.js')),
-			__memo(() => import('./chunks/5-CMj1hZng.js'))
+			__memo(() => import('./chunks/0-AQXKmdvz.js')),
+			__memo(() => import('./chunks/1-zEYEGi44.js')),
+			__memo(() => import('./chunks/2-DtDpfDuM.js')),
+			__memo(() => import('./chunks/3-CeV-2sKr.js')),
+			__memo(() => import('./chunks/4-iuRc1AqX.js')),
+			__memo(() => import('./chunks/5-C6TUnUca.js'))
 		],
+		remotes: {
+			
+		},
 		routes: [
 			{
 				id: "/",
@@ -36,12 +39,13 @@ return {
 			},
 			{
 				id: "/services/[name]/[...action]",
-				pattern: /^\/services\/([^/]+?)(?:\/(.*))?\/?$/,
+				pattern: /^\/services\/([^/]+?)(?:\/([^]*))?\/?$/,
 				params: [{"name":"name","optional":false,"rest":false,"chained":false},{"name":"action","optional":false,"rest":true,"chained":true}],
 				page: { layouts: [0,,], errors: [1,2,], leaf: 5 },
 				endpoint: null
 			}
 		],
+		prerendered_routes: new Set([]),
 		matchers: async () => {
 			
 			return {  };

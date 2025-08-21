@@ -1,7 +1,9 @@
+import process from 'node:process';
 import { handler } from './handler.js';
 import { env } from './env.js';
-import http from 'http';
-import * as qs from 'querystring';
+import http from 'node:http';
+import { setImmediate } from 'node:timers';
+import * as qs from 'node:querystring';
 
 /**
  * @param {string|RegExp} input The route pattern
@@ -266,7 +268,7 @@ if (socket_activation) {
 	});
 } else {
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path ? path : host + ':' + port}`);
+		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
 }
 
