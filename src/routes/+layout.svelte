@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
 	import { fade, slide } from 'svelte/transition';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
+	import { resolve } from '$app/paths';
 	import 'bootstrap-icons/font/bootstrap-icons.min.css';
 	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import 'perfect-scrollbar/css/perfect-scrollbar.css';
 
 	import { swipe, type SwipeEvent } from '$lib/swipe';
-	import '$lib/theme/scss/styles.scss';
-	import '$lib/theme/scss/font.scss';
+	import favicon from '$lib/assets/favicon.svg';
 
-	let showToolbar = false;
+	import '../scss/styles.scss';
+
+	let { children }: { children?: Snippet } = $props();
+
+	let showToolbar = $state(false);
 
 	function onSwipe(e: SwipeEvent) {
 		if (e.detail.dir === 'down' && e.detail.y.start < 100) {
@@ -30,10 +34,12 @@
 	});
 </script>
 
-<svelte:body use:swipe={{ y: 100 }} on:swipe={onSwipe} />
+<svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<div id="content" class="app-content p-1 d-flex flex-column">
-	<slot />
+<svelte:body use:swipe={{ y: 100 }} onswipe={onSwipe} />
+
+<div id="content" class="app-content d-flex flex-column p-1">
+	{@render children?.()}
 </div>
 
 {#if dev}
@@ -42,32 +48,39 @@
 
 {#if showToolbar}
 	<div
-		class="overlay"
+		class="overd"
 		role="presentation"
 		transition:fade={{ duration: 500 }}
-		on:click={() => (showToolbar = false)}
-	/>
-	<div class="toolbar row p-2 bg-black" transition:slide={{ duration: 500 }}>
-		<a class="col-auto btn btn-theme p-3" href="/" on:click={() => (showToolbar = false)}>
+		onclick={() => (showToolbar = false)}
+	></div>
+
+	<div class="toolbar row bg-black p-2" transition:slide={{ duration: 500 }}>
+		<a
+			class="btn-theme btn col-auto p-3"
+			href={resolve('/')}
+			onclick={() => (showToolbar = false)}
+			title="Home"
+		>
 			<i class="fa-solid fa-house fa-2xl"></i>
 		</a>
 
-		<div class="col" />
+		<div class="col"></div>
 
 		<a
-			class="col-auto btn btn-theme p-3 ms-2"
-			href="/services"
-			on:click={() => (showToolbar = false)}
+			class="btn-theme btn col-auto ms-2 p-3"
+			href={resolve('/services')}
+			onclick={() => (showToolbar = false)}
+			title="Settings"
 		>
 			<i class="fa-solid fa-gears fa-2xl"></i>
 		</a>
 
-		<button class="col-auto btn btn-warning p-3 ms-2" on:click={reload}>
+		<button class="btn-warning btn col-auto ms-2 p-3" onclick={reload} title="Reload">
 			<i class="fa-solid fa-rotate fa-2xl"></i>
 		</button>
 
-		<form method="POST" action="/?/restart" class="col-auto p-0 ms-2">
-			<button type="submit" class="btn btn-danger p-3">
+		<form method="POST" action="/?/restart" class="col-auto ms-2 p-0">
+			<button type="submit" class="btn btn-danger p-3" title="Restart">
 				<i class="fa-solid fa-power-off fa-2xl"></i>
 			</button>
 		</form>
@@ -100,15 +113,5 @@
 		display: flex;
 		flex-direction: row;
 		z-index: 100;
-	}
-
-	.overlay {
-		position: fixed;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		background-color: rgba(var(--bs-white-rgb), 0.2);
-		z-index: 10;
 	}
 </style>

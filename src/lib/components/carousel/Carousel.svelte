@@ -1,90 +1,75 @@
 <script lang="ts">
-	import { afterNavigate, beforeNavigate, goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { fade } from 'svelte/transition';
 	import { formatInTimeZone } from 'date-fns-tz';
-	import { navigating, page } from '$app/stores';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { de } from 'date-fns/locale';
+	import { navigating, page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	import { SERVICES } from '$lib/services';
-	import type { CarouselServiceMainData } from '$lib/models/carousel';
-	import { paused, progress, reset, start } from '$lib/stores/screen';
+	import { getProgress, isPaused, pause, reset, resume, start } from '$lib/screen.svelte';
 	import { swipe, type SwipeEvent } from '$lib/swipe';
 	import { time } from '$lib/stores/time';
 	import { tz } from '$lib/stores/tz';
+	import { getScreen } from '$lib/carousel.remote';
 
-	export let data: CarouselServiceMainData;
-	$: index = data.index;
-	$: screen = data.screen;
-	$: screenType = data.screenType;
-	$: screenData = data.screenData;
-	$: icons = data.icons;
-	$: holiday = data.holiday;
-	$: timeStr = formatInTimeZone($time, $tz, 'HH:mm', { locale: de });
-	$: tzStr = formatInTimeZone($time, $tz, 'O', { locale: de });
-	$: secondStr = formatInTimeZone($time, $tz, 'ss', { locale: de });
-	$: date = formatInTimeZone($time, $tz, 'd. MMMM yyyy', { locale: de });
-	$: dateSub = formatInTimeZone($time, $tz, 'eeee', { locale: de }).replace('.', '');
+	import Loader from '../loader.svelte';
 
-	let timer: ReturnType<typeof setInterval> | null = null;
+	let { name }: { name: string } = $props();
 
-	$: {
-		reset();
-		if (timer) {
-			clearInterval(timer);
-			timer = null;
-		}
-		if (!$paused && data.nextScreen) {
-			const next = data.nextScreen;
-			start(() => goto(next), data.switchInterval);
-		} else if ($paused) {
-			timer = setInterval(() => invalidate('carousel'), data.updateInterval);
-		}
-	}
+	let index = $derived.by(() => {
+		const idxStr = page.url.searchParams.get('screen');
+		const idx = idxStr ? Number(idxStr) : 0;
+		return isFinite(idx) ? idx : 0;
+	});
 
-	beforeNavigate(() => {
-		reset(false);
-		if (timer) {
-			clearInterval(timer);
-			timer = null;
+	let prom = $derived(getScreen({ srv: name, index }));
+	let data = $derived(prom.current);
+
+	let timeStr = $derived(formatInTimeZone($time, $tz, 'HH:mm', { locale: de }));
+	let tzStr = $derived(formatInTimeZone($time, $tz, 'O', { locale: de }));
+	let secondStr = $derived(formatInTimeZone($time, $tz, 'ss', { locale: de }));
+	let date = $derived(formatInTimeZone($time, $tz, 'd. MMMM yyyy', { locale: de }));
+	let dateSub = $derived(formatInTimeZone($time, $tz, 'eeee', { locale: de }).replace('.', ''));
+
+	$effect(() => {
+		if (!isPaused()) {
+			const next = data?.nextScreen;
+			if (next) {
+				start(() => goto(next), data.switchInterval);
+				return () => reset();
+			}
+		} else {
+			const timer = setInterval(() => invalidateAll(), data?.updateInterval);
+			return () => clearInterval(timer);
 		}
 	});
-	afterNavigate(() => {
-		const urlIndex = Number($page.url.searchParams.get('screen'));
-		if (index !== urlIndex) {
-			const url = new URL($page.url);
-			url.searchParams.set('screen', `${index}`);
-			goto(url, { replaceState: true, keepFocus: true, noScroll: true, invalidateAll: false });
-		}
-	});
+
 	onDestroy(() => {
 		reset();
-		if (timer) {
-			clearInterval(timer);
-			timer = null;
-		}
 	});
 
 	function togglePause() {
-		paused.update((p) => !p);
+		if (isPaused()) {
+			resume();
+		} else {
+			pause();
+		}
 	}
 
 	function onSwipe(e: SwipeEvent) {
-		if (e.detail.dir === 'left' && data.nextScreen) {
+		if (e.detail.dir === 'left' && data?.nextScreen) {
 			goto(data.nextScreen);
-		} else if (e.detail.dir === 'right' && data.prevScreen) {
+		} else if (e.detail.dir === 'right' && data?.prevScreen) {
 			goto(data.prevScreen);
 		}
 	}
 </script>
 
-<div style="display: contents;" use:swipe={{ x: 200 }} on:swipe={onSwipe}>
-	<div class="row flex-nowrap mb-2">
-		<div
-			role="presentation"
-			class="col-auto d-flex flex-row align-items-end"
-			on:click={togglePause}
-		>
+<div style="display: contents;" use:swipe={{ x: 200 }} onswipe={onSwipe}>
+	<div class="row mb-2 flex-nowrap">
+		<div role="presentation" class="d-flex align-items-end col-auto flex-row" onclick={togglePause}>
 			<div class="time-main">{timeStr}</div>
 			<div class="time-seconds align-self-stretch d-flex flex-column justify-content-between ms-2">
 				<div>{secondStr}</div>
@@ -93,22 +78,15 @@
 		</div>
 
 		<div class="col d-flex flex-column justify-content-end align-items-end">
-			<div class="row icons flex-nowrap justify-content-end">
-				{#each icons as icon}
-					{@const comp = SERVICES[icon.type]}
+			<div class="row icons justify-content-end flex-nowrap">
+				{#each data?.icons as icon, i (i)}
+					{@const Comp = SERVICES[icon.type]}
 					<div class="col-auto">
-						<svelte:component
-							this={comp}
-							name={icon.name}
-							action={icon.action}
-							data={icon.data}
-							form={null}
-							isEmbedded
-						/>
+						<Comp name={icon.name} action={icon.action} isEmbedded />
 					</div>
 				{/each}
 
-				{#if $paused}
+				{#if isPaused()}
 					<div class="col-auto">
 						<i class="fa-solid fa-pause"></i>
 					</div>
@@ -116,36 +94,30 @@
 			</div>
 
 			<div class="row flex-nowrap">
-				<div class="h3 col text-nowrap m-0">{date}</div>
+				<div class="h3 col m-0 text-nowrap">{date}</div>
 			</div>
 
 			<div class="row align-items-center flex-nowrap">
-				{#if holiday}
-					<div class="col-auto text-nowrap m-0">{holiday.name}</div>
+				{#if data?.holiday}
+					<div class="col-auto m-0 text-nowrap">{data?.holiday.name}</div>
 					<div class="col-auto m-0">•</div>
 				{/if}
-				<div class="col-auto fw-bold text-white text-nowrap m-0">{dateSub}</div>
+				<div class="fw-bold col-auto m-0 text-nowrap text-white">{dateSub}</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="row flex-1 position-relative">
+	<div class="row position-relative flex-1">
 		{#key index}
-			<div class="w-100 h-100 d-flex flex-column position-absolute overflow-hidden" transition:fade>
+			{@const screen = data?.screen}
+			<div class="d-flex flex-column position-absolute h-100 w-100 overflow-hidden" transition:fade>
 				{#if screen}
-					{@const comp = SERVICES[screenType]}
-					<svelte:component
-						this={comp}
-						name={screen.name}
-						action={screen.action}
-						data={screenData}
-						form={null}
-						isEmbedded
-					/>
-				{:else}
+					{@const Comp = SERVICES[data.screenType]}
+					<Comp name={screen.name} action={screen.action} isEmbedded />
+				{:else if !prom.loading}
 					<p class="alert alert-info m-2">
 						There are no screens setup! Check the
-						<a class="alert-link" href="/settings">settings</a>
+						<a class="alert-link" href={resolve(`/services/${name}/config`)}>config</a>
 						to add some.
 					</p>
 				{/if}
@@ -154,12 +126,10 @@
 	</div>
 </div>
 
-<div class="progress bg-secondary" style:width={$progress + '%'} />
+<div class="progress bg-secondary" style:width={getProgress() + '%'}></div>
 
-{#if $navigating}
-	<div class="loading">
-		<i class="fa-solid fa-spinner"></i>
-	</div>
+{#if prom.loading || navigating.to}
+	<Loader />
 {/if}
 
 <style lang="scss">
@@ -198,22 +168,5 @@
 		left: 0;
 		bottom: 0;
 		height: 2px;
-	}
-
-	.loading {
-		position: fixed;
-		bottom: 10px;
-		right: 16px;
-		z-index: 1000;
-		animation: rotating 2s linear infinite;
-	}
-
-	@keyframes rotating {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
 	}
 </style>

@@ -1,38 +1,27 @@
 <script lang="ts">
-	import type { WeatherServiceData } from '$lib/models/weather';
+	import type { ServiceComponentProps } from '$lib/models/service';
 
-	import ErrorCard from '../ErrorCard.svelte';
-	import PageLayout from '../PageLayout.svelte';
-	import Pagination from '../Pagination.svelte';
-	import FormFeedback from '../FormFeedback.svelte';
-	import ServiceConfig from './ServiceConfig.svelte';
-	import Daily from './Daily.svelte';
-	import Hourly from './Hourly.svelte';
-	import Alerts from './Alerts.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import PageLayout from '../page-layout.svelte';
 
-	export let name: string;
-	export let data: WeatherServiceData | null;
-	export let form: Record<string, any> | null;
-	export let isEmbedded: boolean = false;
+	import ServiceConfig from './service-config.svelte';
+	import Daily from './daily.svelte';
+	import Hourly from './hourly.svelte';
+	import Alerts from './alerts.svelte';
+
+	let { name, action, isEmbedded = false }: ServiceComponentProps = $props();
 </script>
 
 <PageLayout title="Weather" subTitle={name} closeUrl="/services" show={!isEmbedded}>
-	{#if data}
-		{#if data.type === 'hourly'}
-			<Hourly {data} />
-		{:else if data.type === 'daily'}
-			<Daily {data} />
-		{:else if data.type === 'alerts'}
-			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Alerts {data} />
-			</Pagination>
-		{:else if data.type === 'config'}
-			<FormFeedback {form} />
-			<ServiceConfig {data} />
-		{:else}
-			<ErrorCard title="Weather" message="Unknown action" params={{ name, data }} />
-		{/if}
+	{#if action === 'hourly'}
+		<Hourly {name} />
+	{:else if action === 'daily'}
+		<Daily {name} />
+	{:else if action === 'alerts'}
+		<Alerts {name} />
+	{:else if action === 'config'}
+		<ServiceConfig {name} />
 	{:else}
-		<ErrorCard title="Weather" message="Missing data" params={{ name }} />
+		<ErrorCard title="Weather" message="Unknown action" params={{ name, action }} />
 	{/if}
 </PageLayout>

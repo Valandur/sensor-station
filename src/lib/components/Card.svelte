@@ -1,46 +1,65 @@
 <script lang="ts">
-	export let type: 'theme' | 'primary' | 'warning' = 'theme';
+	import type { Snippet } from 'svelte';
+	import type { ClassValue } from 'svelte/elements';
+
+	let {
+		type = 'theme',
+		header,
+		body,
+		title,
+		subTitle,
+		children,
+		footer,
+		class: clazz
+	}: {
+		type: 'theme' | 'primary' | 'warning';
+		header?: Snippet;
+		body?: Snippet;
+		title?: Snippet;
+		subTitle?: Snippet;
+		children?: Snippet;
+		footer?: Snippet;
+		class?: ClassValue;
+	} = $props();
 </script>
 
-<div class="card bg-{type} border-{type} bg-opacity-25 {$$props.class}">
-	{#if $$slots.header}
+<div class="card bg-{type} border-{type} bg-opacity-25 {clazz}">
+	{#if header}
 		<div class="card-header border-{type} fw-bold small d-flex justify-content-between">
-			<slot name="header" />
+			{@render header()}
 		</div>
 	{/if}
 
-	{#if $$slots.body}
-		<slot name="body" />
-	{:else if $$slots.title || $$slots.subTitle || $$slots.default}
+	{#if body}
+		{@render body()}
+	{:else if title || subTitle || children}
 		<div class="card-body">
-			{#if $$slots.title}
+			{#if title}
 				<h5 class="card-title">
-					<slot name="title" />
+					{@render title()}
 				</h5>
 			{/if}
 
-			{#if $$slots.subTitle}
-				<h6 class="card-subtitle mb-2 text-white text-opacity-50">
-					<slot name="subTitle" />
+			{#if subTitle}
+				<h6 class="card-subtitle text-opacity-50 mb-2 text-white">
+					{@render subTitle()}
 				</h6>
 			{/if}
 
-			{#if $$slots.default}
-				<slot />
-			{/if}
+			{@render children?.()}
 		</div>
 	{/if}
 
-	{#if $$slots.footer}
+	{#if footer}
 		<div class="card-footer">
-			<slot name="footer" />
+			{@render footer()}
 		</div>
 	{/if}
 
 	<div class="card-arrow">
-		<div class="card-arrow-top-left" />
-		<div class="card-arrow-top-right" />
-		<div class="card-arrow-bottom-left" />
-		<div class="card-arrow-bottom-right" />
+		<div class="card-arrow-top-left"></div>
+		<div class="card-arrow-top-right"></div>
+		<div class="card-arrow-bottom-left"></div>
+		<div class="card-arrow-bottom-right"></div>
 	</div>
 </div>

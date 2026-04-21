@@ -1,4 +1,4 @@
-import type { ServiceConfig, ServiceData } from './service';
+import type { ServiceConfig } from './service';
 
 // ---------
 // Service
@@ -8,18 +8,6 @@ export const CALENDAR_SERVICE_TYPE = 'calendar';
 export const CALENDAR_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type CalendarServiceAction = (typeof CALENDAR_SERVICE_ACTIONS)[number];
-
-export interface CalendarServiceMainData extends ServiceData {
-	type: 'data';
-	prevPage: number;
-	nextPage: number;
-	events: CalendarEvent[];
-}
-export interface CalendarServiceConfigData extends ServiceData {
-	type: 'config';
-	config: CalendarServiceConfig;
-}
-export type CalendarServiceData = CalendarServiceMainData | CalendarServiceConfigData;
 
 export interface CalendarServiceConfig extends ServiceConfig {
 	calendarId: string;

@@ -10,13 +10,15 @@ export interface ServiceInstance {
 	type: ServiceType;
 }
 
+export interface ServiceComponentProps {
+	name: string;
+	action: string;
+	isEmbedded: boolean;
+}
+
 export interface ServiceConfig {
 	resultCacheTime?: number;
 	errorCacheTime?: number;
-}
-
-export interface ServiceData {
-	ts: Date;
 }
 
 export type ServiceActionFailure = ActionFailure<{

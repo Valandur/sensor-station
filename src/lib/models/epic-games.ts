@@ -1,4 +1,4 @@
-import type { ServiceConfig, ServiceData } from './service';
+import type { ServiceConfig } from './service';
 
 // ---------
 // Service
@@ -8,18 +8,6 @@ export const EPIC_GAMES_SERVICE_TYPE = 'epic-games';
 export const EPIC_GAMES_SERVICE_ACTIONS = ['main', 'config'] as const;
 
 export type EpicGamesServiceAction = (typeof EPIC_GAMES_SERVICE_ACTIONS)[number];
-
-export interface EpicGamesServiceMainData extends ServiceData {
-	type: 'data';
-	prevPage: number;
-	nextPage: number;
-	games: GameItem[];
-}
-export interface EpicGamesServiceConfigData extends ServiceData {
-	type: 'config';
-	config: EpicGamesServiceConfig;
-}
-export type EpicGamesServiceData = EpicGamesServiceMainData | EpicGamesServiceConfigData;
 
 export interface EpicGamesServiceConfig extends ServiceConfig {
 	itemsPerPage: number;

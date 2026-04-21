@@ -1,17 +1,13 @@
 <script lang="ts">
-	import type { CarouselServiceData } from '$lib/models/carousel';
+	import type { ServiceComponentProps } from '$lib/models/service';
 
-	import ErrorCard from '../ErrorCard.svelte';
-	import PageLayout from '../PageLayout.svelte';
-	import FormFeedback from '../FormFeedback.svelte';
-	import ServiceConfig from './ServiceConfig.svelte';
-	import Carousel from './Carousel.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import PageLayout from '../page-layout.svelte';
 
-	export let name: string;
-	export let action: string;
-	export let data: CarouselServiceData | null;
-	export let form: Record<string, any> | null;
-	export let isEmbedded: boolean = false;
+	import ServiceConfig from './service-config.svelte';
+	import Carousel from './carousel.svelte';
+
+	let { name, action, isEmbedded }: ServiceComponentProps = $props();
 </script>
 
 <PageLayout
@@ -20,16 +16,11 @@
 	closeUrl="/services"
 	show={!isEmbedded && action !== 'main'}
 >
-	{#if data}
-		{#if data.type === 'data'}
-			<Carousel {data} />
-		{:else if data.type === 'config'}
-			<FormFeedback {form} showSuccess={false} />
-			<ServiceConfig {data} />
-		{:else}
-			<ErrorCard title="Carousel" message="Unknown action" params={{ name, data }} />
-		{/if}
+	{#if action === 'main'}
+		<Carousel {name} />
+	{:else if action === 'config'}
+		<ServiceConfig {name} />
 	{:else}
-		<ErrorCard title="Carousel" message="Missing data" params={{ name }} />
+		<ErrorCard title="Carousel" message="Unknown action" params={{ name, action }} />
 	{/if}
 </PageLayout>

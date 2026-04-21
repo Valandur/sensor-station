@@ -20,7 +20,7 @@ export type SwipeDetails = SwipeDetailsX | SwipeDetailsY;
 export type SwipeEvent = CustomEvent<SwipeDetails>;
 
 export interface SwipeAttributes {
-	'on:swipe': (event: SwipeEvent) => void;
+	onswipe: (event: SwipeEvent) => void;
 }
 
 export type SwipeAction = Action<HTMLElement, SwipeParameters, SwipeAttributes>;

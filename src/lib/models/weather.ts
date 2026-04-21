@@ -1,4 +1,4 @@
-import type { ServiceConfig, ServiceData, ServiceInstance } from './service';
+import type { ServiceConfig } from './service';
 
 // ---------
 // Service
@@ -9,38 +9,7 @@ export const WEATHER_SERVICE_ACTIONS = ['config', 'daily', 'hourly', 'alerts'] a
 
 export type WeatherServiceAction = (typeof WEATHER_SERVICE_ACTIONS)[number];
 
-export interface WeatherServiceDailyData extends ServiceData {
-	type: 'daily';
-	location: WeatherLocation;
-	daily: WeatherForecast[];
-}
-export interface WeatherServiceHourlyData extends ServiceData {
-	type: 'hourly';
-	location: WeatherLocation;
-	hourly: WeatherForecast[];
-}
-export interface WeatherServiceAlertsData extends ServiceData {
-	type: 'alerts';
-	location: WeatherLocation;
-	prevPage: number;
-	nextPage: number;
-	alert: WeatherAlert;
-}
-export interface WeatherServiceConfigData extends ServiceData {
-	type: 'config';
-	config: WeatherServiceConfig;
-	modems: ServiceInstance[];
-}
-export type WeatherServiceData =
-	| WeatherServiceDailyData
-	| WeatherServiceHourlyData
-	| WeatherServiceAlertsData
-	| WeatherServiceConfigData;
-
 export interface WeatherServiceConfig extends ServiceConfig {
-	modemService: string;
-	useGps: boolean;
-	useGeo: boolean;
 	lat: number;
 	lng: number;
 	minDiff: number;

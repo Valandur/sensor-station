@@ -3,7 +3,7 @@ import { exec } from 'node:child_process';
 import { format } from 'date-fns/format';
 import chalk from 'chalk';
 
-import serviceManager from '$lib/server/services';
+import serviceManager from '$lib/server/manager';
 
 import type { PageServerLoad } from './$types';
 

@@ -2,53 +2,63 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 
-	import EmptyCard from '$lib/components/EmptyCard.svelte';
-	import Card from '$lib/components/Card.svelte';
-	import type { WeatherServiceAlertsData } from '$lib/models/weather';
+	import { getWeatherAlerts } from '$lib/weather.remote';
+	import EmptyCard from '$lib/components/empty-card.svelte';
+	import Card from '$lib/components/card.svelte';
 	import { tz } from '$lib/stores/tz';
 
-	import Marker from './Marker.svelte';
+	import Loader from '../loader.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import Pagination from '../pagination.svelte';
 
-	export let data: WeatherServiceAlertsData;
-	$: location = data.location;
-	$: alert = data.alert;
+	import Marker from './maker.svelte';
+
+	let { name }: { name: string } = $props();
 </script>
 
-<Marker {location} />
+{#await getWeatherAlerts({ srv: name })}
+	<Loader />
+{:then { location, alert, prevPage, nextPage }}
+	<Pagination {prevPage} {nextPage}>
+		<Marker {location} />
 
-<div class="row flex-1"></div>
+		<div class="row flex-1"></div>
 
-{#if alert}
-	<div class="row mh-100 overflow-auto">
-		<div class="col mh-100">
-			<Card type="warning">
-				<svelte:fragment slot="header">
-					<div>
-						{alert.tags}
-					</div>
-					<div>
-						<i class="fa-solid fa-calendar"></i>
-						{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
-						{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
-					</div>
-				</svelte:fragment>
+		{#if alert}
+			<div class="row mh-100 overflow-auto">
+				<div class="col mh-100">
+					<Card type="warning">
+						{#snippet header()}
+							<div>
+								{alert.tags}
+							</div>
+							<div>
+								<i class="fa-solid fa-calendar"></i>
+								{formatInTimeZone(alert.start, $tz, 'dd.MM.yy HH:mm', { locale: de })} -
+								{formatInTimeZone(alert.end, $tz, 'dd.MM.yy HH:mm', { locale: de })}
+							</div>
+						{/snippet}
 
-				<svelte:fragment slot="title">
-					{alert.event}
-				</svelte:fragment>
+						{#snippet title()}
+							{alert.event}
+						{/snippet}
 
-				<svelte:fragment slot="subTitle">
-					{alert.sender}
-				</svelte:fragment>
+						{#snippet subTitle()}
+							{alert.sender}
+						{/snippet}
 
-				<ul class="m-0 p-0 ms-3">
-					{#each alert.content.split('\n') as line}
-						<li>{line.substring(2)}</li>
-					{/each}
-				</ul>
-			</Card>
-		</div>
-	</div>
-{:else}
-	<EmptyCard>Aktuell sind keine Wetter-Warnungen vorhanden</EmptyCard>
-{/if}
+						<ul class="m-0 ms-3 p-0">
+							{#each alert.content.split('\n') as line, i (i)}
+								<li>{line.substring(2)}</li>
+							{/each}
+						</ul>
+					</Card>
+				</div>
+			</div>
+		{:else}
+			<EmptyCard>Aktuell sind keine Wetter-Warnungen vorhanden</EmptyCard>
+		{/if}
+	</Pagination>
+{:catch err}
+	<ErrorCard message="Error loading weather" params={err} />
+{/await}

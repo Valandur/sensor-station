@@ -2,7 +2,7 @@ import { type HttpError } from '@sveltejs/kit';
 import { differenceInSeconds } from 'date-fns';
 import { env } from '$env/dynamic/private';
 
-import type { Logger } from './Logger';
+import type { Logger } from './logger';
 
 const DEFAULT_KEY = '__default__';
 const DEFAULT_RESULT_CACHE_TIME = Number(env.CACHE_DEFAULT_RESULT_CACHE_TIME);

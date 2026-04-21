@@ -1,32 +1,21 @@
 <script lang="ts">
-	import type { EpicGamesServiceData } from '$lib/models/epic-games';
+	import type { ServiceComponentProps } from '$lib/models/service';
 
-	import ErrorCard from '../ErrorCard.svelte';
-	import PageLayout from '../PageLayout.svelte';
-	import Pagination from '../Pagination.svelte';
-	import FormFeedback from '../FormFeedback.svelte';
-	import ServiceConfig from './ServiceConfig.svelte';
-	import Games from './Games.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import PageLayout from '../page-layout.svelte';
 
-	export let name: string;
-	export let data: EpicGamesServiceData | null;
-	export let form: Record<string, any> | null;
-	export let isEmbedded: boolean = false;
+	import ServiceConfig from './service-config.svelte';
+	import Games from './games.svelte';
+
+	let { name, action, isEmbedded }: ServiceComponentProps = $props();
 </script>
 
 <PageLayout title="Epic Games" subTitle={name} closeUrl="/services" show={!isEmbedded}>
-	{#if data}
-		{#if data.type === 'data'}
-			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Games {data} />
-			</Pagination>
-		{:else if data.type === 'config'}
-			<FormFeedback {form} />
-			<ServiceConfig {data} />
-		{:else}
-			<ErrorCard title="Epic Games" message="Unknown action" params={{ name, data }} />
-		{/if}
+	{#if action === 'main'}
+		<Games {name} />
+	{:else if action === 'config'}
+		<ServiceConfig {name} />
 	{:else}
-		<ErrorCard title="Epic Games" message="Missing data" params={{ name }} />
+		<ErrorCard title="Epic Games" message="Unknown action" params={{ name, action }} />
 	{/if}
 </PageLayout>

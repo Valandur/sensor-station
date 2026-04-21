@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { SERVICES } from '$lib/services';
 
-	import type { ActionData, PageData } from './$types';
+	import type { PageProps } from './$types';
 
-	export let data: PageData;
-	export let form: ActionData;
+	let { data }: PageProps = $props();
 
-	$: name = data.name;
-	$: type = data.type;
-	$: action = data.action;
-	$: serviceData = data.data;
+	let name = $derived(data.name);
+	let type = $derived(data.type);
+	let action = $derived(data.action);
 
-	$: comp = SERVICES[type];
+	let Comp = $derived(SERVICES[type]);
 </script>
 
-<svelte:component this={comp} {name} {action} data={serviceData} {form} />
+<Comp {name} {action} isEmbedded={false} />

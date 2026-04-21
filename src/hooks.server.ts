@@ -1,14 +1,17 @@
-import { normalize, resolve as resolvePath } from 'path';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit';
 import { readFile } from 'fs/promises';
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { building } from '$app/environment';
+import { normalize, resolve as resolvePath } from 'path';
 
-import { Logger } from '$lib/server/Logger';
-import servicesService from '$lib/server/services';
+import { Logger } from '$lib/server/logger';
+import manager from '$lib/server/manager';
 
 const logger = new Logger('MAIN');
 
-await init();
+export const init: ServerInit = async () => {
+	logger.info('Starting...');
+
+	await manager.load();
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
@@ -28,13 +31,3 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 		params: { route: event.route, error: JSON.parse(JSON.stringify(error)) }
 	};
 };
-
-async function init() {
-	if (building) {
-		return;
-	}
-
-	logger.info('Starting...');
-
-	await servicesService.load();
-}

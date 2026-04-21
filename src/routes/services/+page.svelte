@@ -1,21 +1,23 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 
-	import PageLayout from '$lib/components/PageLayout.svelte';
+	import PageLayout from '$lib/components/page-layout.svelte';
 	import { SERVICES } from '$lib/services';
 
 	import type { PageData } from './$types';
 
-	export let data: PageData;
-	$: types = data.types;
-	$: services = data.services;
+	let { data }: { data: PageData } = $props();
 
-	let mainName = data.main?.name ?? '';
-	let mainAction = data.main?.action ?? '';
-	$: mainActions = services.find((s) => s.name === mainName)?.type.actions ?? [];
+	let types = $derived(data.types);
+	let services = $derived(data.services);
 
-	let newName = '';
-	let newType = '';
+	let mainName = $derived(data.main?.name ?? '');
+	let mainAction = $derived(data.main?.action ?? '');
+	let mainActions = $derived(services.find((s) => s.name === mainName)?.type.actions ?? []);
+
+	let newName = $state('');
+	let newType = $state('');
 </script>
 
 <PageLayout title="Services">
@@ -52,21 +54,26 @@
 						<td>
 							<select form="formNew" name="newType" class="form-select" bind:value={newType}>
 								<option value="" selected disabled>---</option>
-								{#each types as { name }}
+								{#each types as { name } (name)}
 									<option value={name}>{name}</option>
 								{/each}
 							</select>
 						</td>
 						<td>
 							<form id="formNew" method="POST" action="?/add" use:enhance>
-								<button type="submit" class="btn btn-theme" disabled={!newName || !newType}>
+								<button
+									type="submit"
+									class="btn-theme btn"
+									disabled={!newName || !newType}
+									title="Add"
+								>
 									<i class="fa-solid fa-plus"></i>
 								</button>
 							</form>
 						</td>
 					</tr>
 
-					{#each services as service}
+					{#each services as service (service.name)}
 						<tr>
 							<td>
 								{service.name}
@@ -87,13 +94,17 @@
 														type="button"
 														data-bs-toggle="dropdown"
 														aria-expanded="false"
+														title="View"
 													>
 														<i class="fa-solid fa-eye"></i>
 													</button>
 													<ul class="dropdown-menu">
-														{#each actions as action}
+														{#each actions as action (action)}
 															<li>
-																<a class="dropdown-item" href="/services/{service.name}/{action}">
+																<a
+																	class="dropdown-item"
+																	href={resolve(`/services/${service.name}/${action}`)}
+																>
 																	{action}
 																</a>
 															</li>
@@ -101,17 +112,25 @@
 													</ul>
 												</div>
 											{:else if actions.length > 0}
-												<a href="/services/{service.name}/{actions[0]}" class="btn btn-primary">
+												<a
+													href={resolve(`/services/${service.name}/${actions[0]}`)}
+													class="btn btn-primary"
+													title="View"
+												>
 													<i class="fa-solid fa-eye"></i>
 												</a>
 											{/if}
 											{#if service.type.actions.includes('config')}
-												<a href="/services/{service.name}/config" class="btn btn-theme">
+												<a
+													href={resolve(`/services/${service.name}/config`)}
+													class="btn-theme btn"
+													title="Settings"
+												>
 													<i class="fa-solid fa-gear"></i>
 												</a>
 											{/if}
 										{/if}
-										<button class="btn btn-danger">
+										<button class="btn btn-danger" title="Delete">
 											<i class="fa-solid fa-trash"></i>
 										</button>
 									</div>
@@ -125,7 +144,7 @@
 
 		<div class="tab-pane container-fluid fade" id="general">
 			<form method="POST" action="?/save" class="row" use:enhance>
-				<label for="selectMainService" class="col-auto col-form-label">Main</label>
+				<label for="selectMainService" class="col-form-label col-auto">Main</label>
 				<div class="col">
 					<select
 						id="selectMainService"
@@ -134,7 +153,7 @@
 						bind:value={mainName}
 					>
 						<option value="">--- None ---</option>
-						{#each data.services as srv}
+						{#each data.services as srv (srv.name)}
 							<option value={srv.name}>{srv.name} [{srv.type.name}]</option>
 						{/each}
 					</select>
@@ -143,14 +162,14 @@
 				<div class="col">
 					<select name="mainAction" class="form-select" bind:value={mainAction}>
 						<option value="" selected disabled>---</option>
-						{#each mainActions as action}
+						{#each mainActions as action (action)}
 							<option value={action}>{action}</option>
 						{/each}
 					</select>
 				</div>
 
 				<div class="col-auto">
-					<button type="submit" class="btn btn-theme">Save</button>
+					<button type="submit" class="btn-theme btn">Save</button>
 				</div>
 			</form>
 		</div>

@@ -3,28 +3,35 @@
 	import { de } from 'date-fns/locale';
 
 	import { tz } from '$lib/stores/tz';
-	import type { WeatherServiceDailyData } from '$lib/models/weather';
+	import { getDailyWeather } from '$lib/weather.remote';
 
-	import Marker from './Marker.svelte';
+	import Loader from '../loader.svelte';
+	import ErrorCard from '../error-card.svelte';
 
-	export let data: WeatherServiceDailyData;
-	$: location = data.location;
-	$: daily = data.daily;
+	import Marker from './maker.svelte';
+
+	let { name }: { name: string } = $props();
 </script>
 
-<Marker {location} />
+{#await getDailyWeather({ srv: name })}
+	<Loader />
+{:then { location, daily }}
+	<Marker {location} />
 
-<div class="row flex-1"></div>
+	<div class="row flex-1"></div>
 
-<div class="row flex-nowrap">
-	{#each daily as forecast}
-		<div class="col d-flex flex-column justify-content-between align-items-center">
-			<div class="text">{formatInTimeZone(forecast.ts, $tz, 'iiiiii', { locale: de })}</div>
-			<img src={forecast.img} alt="Weather icon" />
-			<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
-		</div>
-	{/each}
-</div>
+	<div class="row flex-nowrap">
+		{#each daily as forecast, i (i)}
+			<div class="col d-flex flex-column justify-content-between align-items-center">
+				<div class="text">{formatInTimeZone(forecast.ts, $tz, 'iiiiii', { locale: de })}</div>
+				<img src={forecast.img} alt="Weather icon" />
+				<div class="text" style="color: #23ad00">{forecast.feelsLike.toFixed(0)}°</div>
+			</div>
+		{/each}
+	</div>
+{:catch err}
+	<ErrorCard message="Error loading weather" params={err} />
+{/await}
 
 <style>
 	.text {

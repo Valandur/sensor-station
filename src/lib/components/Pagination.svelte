@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import type { Snippet } from 'svelte';
 
 	import { swipe } from '$lib/swipe';
-	import { restart } from '$lib/stores/screen';
+	import { restart } from '$lib/screen.svelte';
 
-	export let nextPage: number;
-	export let prevPage: number;
+	let { nextPage, prevPage, children }: { nextPage: number; prevPage: number; children?: Snippet } =
+		$props();
 
-	function onSwipe(page: number) {
+	function onSwipe(pageNr: number) {
 		restart();
-		const url = new URL($page.url);
-		url.searchParams.set('page', `${page}`);
+		const url = new URL(page.url);
+		url.searchParams.set('page', `${pageNr}`);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(url);
 	}
 </script>
@@ -19,7 +21,7 @@
 <div
 	style="display: contents;"
 	use:swipe={{ y: 100 }}
-	on:swipe={(e) => onSwipe(e.detail.dir === 'up' ? nextPage : prevPage)}
+	onswipe={(e) => onSwipe(e.detail.dir === 'up' ? nextPage : prevPage)}
 >
-	<slot />
+	{@render children?.()}
 </div>

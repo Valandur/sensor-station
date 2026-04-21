@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	import ErrorCard from '$lib/components/ErrorCard.svelte';
-	import PageTitle from '$lib/components/PageTitle.svelte';
+	import ErrorCard from '$lib/components/error-card.svelte';
+	import PageTitle from '$lib/components/page-title.svelte';
 
-	$: embedded = $page.error?.embedded;
-	$: title = $page.route.id;
-	$: message = $page.error?.message;
-	$: params = $page.error?.params;
+	let embedded = $derived(page.error?.embedded);
+	let title = $derived(page.route.id);
+	let message = $derived(page.error?.message);
+	let params = $derived(page.error?.params);
 </script>
 
 {#if !embedded}

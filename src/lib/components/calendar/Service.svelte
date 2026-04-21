@@ -1,32 +1,21 @@
 <script lang="ts">
-	import type { CalendarServiceData } from '$lib/models/calendar';
+	import type { ServiceComponentProps } from '$lib/models/service';
 
-	import ErrorCard from '../ErrorCard.svelte';
-	import PageLayout from '../PageLayout.svelte';
-	import Pagination from '../Pagination.svelte';
-	import FormFeedback from '../FormFeedback.svelte';
-	import ServiceConfig from './ServiceConfig.svelte';
-	import Events from './Events.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import PageLayout from '../page-layout.svelte';
 
-	export let name: string;
-	export let data: CalendarServiceData | null;
-	export let form: Record<string, any> | null;
-	export let isEmbedded: boolean = false;
+	import ServiceConfig from './service-config.svelte';
+	import Events from './events.svelte';
+
+	let { name, action, isEmbedded }: ServiceComponentProps = $props();
 </script>
 
 <PageLayout title="Calendar" subTitle={name} closeUrl="/services" show={!isEmbedded}>
-	{#if data}
-		{#if data.type === 'data'}
-			<Pagination prevPage={data.prevPage} nextPage={data.nextPage}>
-				<Events {data} />
-			</Pagination>
-		{:else if data.type === 'config'}
-			<FormFeedback {form} />
-			<ServiceConfig {data} />
-		{:else}
-			<ErrorCard title="Calendar" message="Unknown action" params={{ name, data }} />
-		{/if}
+	{#if action === 'main'}
+		<Events {name} />
+	{:else if action === 'config'}
+		<ServiceConfig {name} />
 	{:else}
-		<ErrorCard title="Calendar" message="Missing data" params={{ name }} />
+		<ErrorCard title="Calendar" message="Unknown action" params={{ name, action }} />
 	{/if}
 </PageLayout>
