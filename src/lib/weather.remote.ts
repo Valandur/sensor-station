@@ -1,4 +1,4 @@
-import { query } from '$app/server';
+import { form, query } from '$app/server';
 import * as v from 'valibot';
 
 import manager from './server/manager';
@@ -32,5 +32,28 @@ export const getWeatherAlerts = query(
 	}),
 	async ({ srv, page, forceUpdate = false }) => {
 		return manager.getByName<WeatherService>(srv).getAlerts({ forceUpdate, page });
+	}
+);
+
+export const getConfig = query(v.string(), (srv) => {
+	return manager.getByName<WeatherService>(srv).getConfig();
+});
+
+export const configForm = form(
+	v.object({
+		srv: v.string(),
+		apiKey: v.string(),
+		googleKey: v.string(),
+		lat: v.number(),
+		lng: v.number(),
+		itemsPerPage: v.number(),
+		minDiff: v.number()
+	}),
+	async ({ srv, apiKey, googleKey, lat, lng, itemsPerPage, minDiff }) => {
+		await manager
+			.getByName<WeatherService>(srv)
+			.setConfig({ apiKey, googleKey, lat, lng, itemsPerPage, minDiff });
+		await manager.save();
+		void getConfig(srv).refresh();
 	}
 );

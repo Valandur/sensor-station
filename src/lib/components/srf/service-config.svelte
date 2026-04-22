@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { configForm, getConfig } from '$lib/epic-games.remote';
+	import { configForm, getConfig } from '$lib/srf.remote';
 
 	import CacheTime from '../cache-time.svelte';
 	import ErrorCard from '../error-card.svelte';
@@ -25,7 +25,50 @@
 
 		<div class="tab-pane container-fluid fade show active" id="general">
 			<div class="row mb-2">
-				<label for="inputItemsPerPage" class="col-form-label col-3">Items per page</label>
+				<label for="inputFeedId" class="col-3 col-form-label">Feed ID</label>
+				<div class="col">
+					<input
+						id="inputFeedId"
+						class="form-control"
+						{...configForm.fields.feedId.as('text', config.feedId)}
+					/>
+				</div>
+			</div>
+
+			<div class="row mb-2">
+				<div class="col-3"></div>
+				<div class="col">
+					<table class="table table-sm">
+						<thead class="table-dark">
+							<tr>
+								<th>Kategorie</th>
+								<th>Feed ID</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Allgemein</td>
+								<td>1646</td>
+							</tr>
+							<tr>
+								<td>Sport</td>
+								<td>718</td>
+							</tr>
+							<tr>
+								<td>Kultur</td>
+								<td>454</td>
+							</tr>
+							<tr>
+								<td>Wissen</td>
+								<td>630</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="row mb-2">
+				<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
 				<div class="col">
 					<input
 						id="inputItemsPerPage"

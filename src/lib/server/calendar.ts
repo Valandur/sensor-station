@@ -42,11 +42,7 @@ export class CalendarService extends BaseService<CalendarServiceConfig> {
 			error(400, `Calendar is disabled`);
 		}
 
-		return {
-			ts: new Date(),
-			type: 'config',
-			config: this.config
-		};
+		return this.config;
 	}
 
 	public async setConfig({

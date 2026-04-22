@@ -47,11 +47,7 @@ export class EpicGamesService extends BaseService<EpicGamesServiceConfig> {
 			error(400, `Epic Games is disabled`);
 		}
 
-		return {
-			ts: new Date(),
-			type: 'config',
-			config: this.config
-		};
+		return this.config;
 	}
 
 	public async setConfig({ itemsPerPage }: { itemsPerPage: number }) {

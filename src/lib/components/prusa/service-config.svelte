@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { configForm, getConfig } from '$lib/epic-games.remote';
+	import { configForm, getConfig } from '$lib/prusa.remote';
 
 	import CacheTime from '../cache-time.svelte';
 	import ErrorCard from '../error-card.svelte';
@@ -25,15 +25,23 @@
 
 		<div class="tab-pane container-fluid fade show active" id="general">
 			<div class="row mb-2">
-				<label for="inputItemsPerPage" class="col-form-label col-3">Items per page</label>
+				<label for="inputApiUrl" class="col-3 col-form-label">API URL</label>
 				<div class="col">
 					<input
-						id="inputItemsPerPage"
-						min="1"
-						max="100"
-						step="1"
+						id="inputApiUrl"
 						class="form-control"
-						{...configForm.fields.itemsPerPage.as('number', config.itemsPerPage)}
+						{...configForm.fields.apiUrl.as('text', config.apiUrl)}
+					/>
+				</div>
+			</div>
+
+			<div class="row mb-2">
+				<label for="inputApiKey" class="col-3 col-form-label">API key</label>
+				<div class="col">
+					<input
+						id="inputApiKey"
+						class="form-control"
+						{...configForm.fields.apiKey.as('password', config.apiKey)}
 					/>
 				</div>
 			</div>

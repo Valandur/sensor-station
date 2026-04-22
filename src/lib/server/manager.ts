@@ -6,6 +6,8 @@ import type { ServiceInstance, ServiceType } from '$lib/models/service';
 import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
 import { CALENDAR_SERVICE_TYPE } from '$lib/models/calendar';
 import { EPIC_GAMES_SERVICE_TYPE } from '$lib/models/epic-games';
+import { PRUSA_SERVICE_TYPE } from '$lib/models/prusa';
+import { SRF_SERVICE_TYPE } from '$lib/models/srf';
 import { WEATHER_SERVICE_TYPE } from '$lib/models/weather';
 
 import { Logger } from './logger';
@@ -13,6 +15,8 @@ import { BaseService } from './service';
 import { CarouselService } from './carousel';
 import { CalendarService } from './calendar';
 import { EpicGamesService } from './epic-games';
+import { PrusaService } from './prusa';
+import { SrfService } from './srf';
 import { WeatherService } from './weather';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +28,8 @@ const SERVICES: ServiceMap = {
 	[CAROUSEL_SERVICE_TYPE]: CarouselService,
 	[CALENDAR_SERVICE_TYPE]: CalendarService,
 	[EPIC_GAMES_SERVICE_TYPE]: EpicGamesService,
+	[PRUSA_SERVICE_TYPE]: PrusaService,
+	[SRF_SERVICE_TYPE]: SrfService,
 	[WEATHER_SERVICE_TYPE]: WeatherService
 };
 

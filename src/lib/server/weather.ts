@@ -2,7 +2,6 @@ import { error, fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import type { ServiceActionFailure } from '$lib/models/service';
 import { clamp, wrap } from '$lib/counter';
 import {
 	WEATHER_SERVICE_TYPE,
@@ -63,11 +62,7 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 	public async getConfig() {
 		this.checkSetup(false);
 
-		return {
-			ts: new Date(),
-			type: 'config',
-			config: this.config
-		};
+		return this.config;
 	}
 
 	public async setConfig({
@@ -84,7 +79,7 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 		apiKey: string;
 		googleKey: string;
 		itemsPerPage: number;
-	}): Promise<void | ServiceActionFailure> {
+	}) {
 		// Save config before testing it
 		this.config.lat = lat;
 		this.config.lng = lng;
@@ -110,7 +105,6 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 
 		return {
 			ts: data.ts,
-			type: 'daily',
 			location: data.location,
 			daily
 		};
@@ -125,7 +119,6 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 
 		return {
 			ts: data.ts,
-			type: 'hourly',
 			location: data.location,
 			hourly
 		};
@@ -157,7 +150,6 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 
 		return {
 			ts: data.ts,
-			type: 'alerts',
 			location: data.location,
 			prevPage,
 			nextPage,
