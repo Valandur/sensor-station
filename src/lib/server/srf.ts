@@ -172,7 +172,6 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 		this.lastPage = index;
 
 		return {
-			ts: new Date(),
 			prevPage,
 			nextPage,
 			articles
@@ -237,7 +236,7 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 				const body = html.getElementsByTagName('body')[0];
 				const main = body.getElementsByTagName('main')[0];
 				const title = main.getElementsByTagName('header')[0];
-				const section = main.getElementsByTagName('section')[0];
+				const sections = main.getElementsByTagName('section');
 
 				if (this.config.simpleDetails) {
 					// strip divs
@@ -251,13 +250,11 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 					// strip link in title
 					title.getElementById('skiplink__contentlink')?.remove();
 
-					body.childNodes = [title, section];
+					body.childNodes = [title, ...sections];
 				} else {
-					const header = main.getElementsByTagName('div')[0];
-					const section = main.getElementsByTagName('section')[0];
 					const config = body.getElementById('config__js')!;
 					const scripts = body.getElementsByTagName('script');
-					body.childNodes = [header, title, section, config, ...scripts];
+					body.childNodes = [title, ...sections, config, ...scripts];
 				}
 
 				return {

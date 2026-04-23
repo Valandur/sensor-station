@@ -34,19 +34,15 @@
 
 {#if selectedArticle}
 	<div class="details" transition:fade={{ duration: 500 }}>
-		<iframe
-			title="Story"
-			src={`http://172.25.140.113:5173/services/${name}/details?article=${selectedArticle.id}`}
-		></iframe>
+		<iframe title="Story" src={`/services/${name}/details?article=${selectedArticle.id}`}></iframe>
 		<button class="btn btn-sm btn-danger" onclick={() => select(null)} title="Close">
 			<i class="fa-solid fa-xmark"></i>
 		</button>
 	</div>
 {/if}
 
-{#await getNews({ srv: name, page: pageNr })}
-	<Loader />
-{:then { articles }}
+<svelte:boundary>
+	{@const { articles } = await getNews({ srv: name, page: pageNr })}
 	<div class="mb-2"></div>
 
 	{#if articles.length > 0}
@@ -71,9 +67,15 @@
 	{:else}
 		<EmptyCard>Es wurden keine Newseinträge gefunden</EmptyCard>
 	{/if}
-{:catch err}
-	<ErrorCard message="Error loading articles" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading articles" params={{ error }} />
+	{/snippet}
+</svelte:boundary>
 
 <style lang="scss">
 	.abstract {

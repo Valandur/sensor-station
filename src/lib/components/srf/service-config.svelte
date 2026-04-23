@@ -68,6 +68,20 @@
 			</div>
 
 			<div class="row mb-2">
+				<div class="col">
+					<div class="form-check form-switch">
+						<input
+							class="form-check-input"
+							id="switchSimpleDetails"
+							defaultChecked={config.simpleDetails}
+							{...configForm.fields.simpleDetails.as('checkbox')}
+						/>
+						<label class="form-check-label" for="switchSimpleDetails">Simple details</label>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mb-2">
 				<label for="inputItemsPerPage" class="col-3 col-form-label">Items per page</label>
 				<div class="col">
 					<input

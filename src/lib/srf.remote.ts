@@ -9,7 +9,7 @@ export const getNews = query(
 		srv: v.string(),
 		page: v.number()
 	}),
-	({ srv, page }) => {
+	async ({ srv, page }) => {
 		return manager.getByName<SrfService>(srv).getNews({ page });
 	}
 );
@@ -32,12 +32,11 @@ export const configForm = form(
 	v.object({
 		srv: v.string(),
 		feedId: v.string(),
-		itemsPerPage: v.number()
+		itemsPerPage: v.number(),
+		simpleDetails: v.optional(v.boolean(), false)
 	}),
-	async ({ srv, feedId, itemsPerPage }) => {
-		await manager
-			.getByName<SrfService>(srv)
-			.setConfig({ feedId, itemsPerPage, simpleDetails: true });
+	async ({ srv, feedId, itemsPerPage, simpleDetails }) => {
+		await manager.getByName<SrfService>(srv).setConfig({ feedId, itemsPerPage, simpleDetails });
 		await manager.save();
 		void getConfig(srv).refresh();
 	}
