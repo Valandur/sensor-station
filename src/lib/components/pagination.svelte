@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { Snippet } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	import { swipe } from '$lib/swipe';
 	import { restart } from '$lib/screen.svelte';
@@ -11,10 +12,10 @@
 
 	function onSwipe(pageNr: number) {
 		restart();
-		const url = new URL(page.url);
-		url.searchParams.set('page', `${pageNr}`);
+		const params = new SvelteURLSearchParams(page.url.search);
+		params.set('page', `${pageNr}`);
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(url);
+		goto(`?${params}`);
 	}
 </script>
 

@@ -2,8 +2,8 @@
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
 	import { isSameDay } from 'date-fns/isSameDay';
-	import { page } from '$app/state';
 
+	import { getPageNr } from '$lib/util.svelte';
 	import EmptyCard from '$lib/components/empty-card.svelte';
 	import { tz } from '$lib/stores/tz';
 	import { getEvents } from '$lib/calendar.remote';
@@ -14,16 +14,11 @@
 
 	let { name }: { name: string } = $props();
 
-	let pageNr = $derived.by(() => {
-		const pageStr = page.url.searchParams.get('page');
-		const pageNr = pageStr ? Number(pageStr) : 0;
-		return isFinite(pageNr) ? pageNr : 0;
-	});
+	let pageNr = $derived(getPageNr());
 </script>
 
-{#await getEvents({ srv: name, page: pageNr })}
-	<Loader />
-{:then { events, nextPage, prevPage }}
+<svelte:boundary>
+	{@const { events, nextPage, prevPage } = await getEvents({ srv: name, page: pageNr })}
 	{@const formattedEvents = events
 		?.map((event) => ({ ...event, isSameDay: false, isOdd: false }))
 		.map((event, i, arr) => ({
@@ -56,9 +51,15 @@
 	{:else}
 		<EmptyCard>Es wurden keine Kalendereinträge gefunden</EmptyCard>
 	{/if}
-{:catch err}
-	<ErrorCard message="Error loading events" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading events" params={{ error }} />
+	{/snippet}
+</svelte:boundary>
 
 <style lang="scss">
 	.row {

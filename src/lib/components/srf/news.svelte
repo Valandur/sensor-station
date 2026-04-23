@@ -2,23 +2,20 @@
 	import { fade } from 'svelte/transition';
 	import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 	import { de } from 'date-fns/locale/de';
-	import { page } from '$app/state';
 
 	import type { NewsArticle } from '$lib/models/srf';
 	import { pause, resume } from '$lib/screen.svelte';
 	import { getNews } from '$lib/srf.remote';
+	import { getPageNr } from '$lib/util.svelte';
 
 	import EmptyCard from '../empty-card.svelte';
 	import Loader from '../loader.svelte';
 	import ErrorCard from '../error-card.svelte';
+	import Pagination from '../pagination.svelte';
 
 	let { name }: { name: string } = $props();
 
-	let pageNr = $derived.by(() => {
-		const pageStr = page.url.searchParams.get('page');
-		const pageNr = pageStr ? Number(pageStr) : 0;
-		return isFinite(pageNr) ? pageNr : 0;
-	});
+	let pageNr = $derived(getPageNr());
 
 	let selectedArticle = $state<NewsArticle | null>(null);
 
@@ -42,31 +39,34 @@
 {/if}
 
 <svelte:boundary>
-	{@const { articles } = await getNews({ srv: name, page: pageNr })}
-	<div class="mb-2"></div>
+	{@const { articles, nextPage, prevPage } = await getNews({ srv: name, page: pageNr })}
 
-	{#if articles.length > 0}
-		{#each articles as item (item.id)}
-			<div role="presentation" class="row mt-1 flex-1" onclick={() => select(item)}>
-				<div class="col-3 me-1 image">
-					<img
-						alt="Thumbnail"
-						src={'/' + item.image}
-						class="h-100 w-100"
-						style="object-fit: cover; background-color: red;"
-					/>
-				</div>
-				<div class="col abstract d-flex flex-column justify-content-around">
-					<div class="fs-4">{item.title}</div>
-					<div class="fs-6 text-secondary">
-						{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
+	<Pagination {prevPage} {nextPage}>
+		<div class="mb-2"></div>
+
+		{#if articles.length > 0}
+			{#each articles as item (item.id)}
+				<div role="presentation" class="row mt-1 flex-1" onclick={() => select(item)}>
+					<div class="col-3 me-1 image">
+						<img
+							alt="Thumbnail"
+							src={'/' + item.image}
+							class="h-100 w-100"
+							style="object-fit: cover; background-color: red;"
+						/>
+					</div>
+					<div class="col abstract d-flex flex-column justify-content-around">
+						<div class="fs-4">{item.title}</div>
+						<div class="fs-6 text-secondary">
+							{formatDistanceToNow(item.ts, { locale: de, addSuffix: true })}
+						</div>
 					</div>
 				</div>
-			</div>
-		{/each}
-	{:else}
-		<EmptyCard>Es wurden keine Newseinträge gefunden</EmptyCard>
-	{/if}
+			{/each}
+		{:else}
+			<EmptyCard>Es wurden keine Newseinträge gefunden</EmptyCard>
+		{/if}
+	</Pagination>
 
 	{#snippet pending()}
 		<Loader />

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { de } from 'date-fns/locale';
-	import { page } from '$app/state';
 
+	import { getPageNr } from '$lib/util.svelte';
 	import { tz } from '$lib/stores/tz';
 	import { getGames } from '$lib/epic-games.remote';
 	import EmptyCard from '$lib/components/empty-card.svelte';
@@ -13,16 +13,12 @@
 
 	let { name }: { name: string } = $props();
 
-	let pageNr = $derived.by(() => {
-		const pageStr = page.url.searchParams.get('page');
-		const pageNr = pageStr ? Number(pageStr) : 0;
-		return isFinite(pageNr) ? pageNr : 0;
-	});
+	let pageNr = $derived(getPageNr());
 </script>
 
-{#await getGames({ srv: name, page: pageNr })}
-	<Loader />
-{:then { games }}
+<svelte:boundary>
+	{@const { games } = await getGames({ srv: name, page: pageNr })}
+
 	<div class="row flex-1"></div>
 
 	{#if games.length > 0}
@@ -60,6 +56,12 @@
 	{:else}
 		<EmptyCard>Es wurden keine Spiele gefunden</EmptyCard>
 	{/if}
-{:catch err}
-	<ErrorCard message="Error loading games" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading games" params={{ error }} />
+	{/snippet}
+</svelte:boundary>

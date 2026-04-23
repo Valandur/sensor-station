@@ -7,7 +7,7 @@ import { CalendarService } from './server/calendar';
 export const getEvents = query(
 	v.object({
 		srv: v.string(),
-		page: v.number()
+		page: v.optional(v.nullable(v.number()))
 	}),
 	async ({ srv, page }) => {
 		return manager.getByName<CalendarService>(srv).getEvents({ page });

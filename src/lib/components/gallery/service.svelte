@@ -4,18 +4,18 @@
 	import ErrorCard from '../error-card.svelte';
 	import PageLayout from '../page-layout.svelte';
 
-	import ServiceConfig from './config.svelte';
-	import Events from './events.svelte';
+	import Config from './config.svelte';
+	import Gallery from './gallery.svelte';
 
 	let { name, action, isEmbedded }: ServiceComponentProps = $props();
 </script>
 
-<PageLayout title="Calendar" subTitle={name} closeUrl="/services" show={!isEmbedded}>
+<PageLayout title="Gallery" subTitle={name} closeUrl="/services" show={!isEmbedded}>
 	{#if action === 'main'}
-		<Events {name} />
+		<Gallery {name} />
 	{:else if action === 'config'}
-		<ServiceConfig {name} />
+		<Config {name} />
 	{:else}
-		<ErrorCard title="Calendar" message="Unknown action" params={{ name, action }} />
+		<ErrorCard title="Gallery" message="Unknown action" params={{ name, action }} />
 	{/if}
 </PageLayout>

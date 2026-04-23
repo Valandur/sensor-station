@@ -7,7 +7,7 @@ import type { SrfService } from './server/srf';
 export const getNews = query(
 	v.object({
 		srv: v.string(),
-		page: v.number()
+		page: v.optional(v.nullable(v.number()))
 	}),
 	async ({ srv, page }) => {
 		return manager.getByName<SrfService>(srv).getNews({ page });

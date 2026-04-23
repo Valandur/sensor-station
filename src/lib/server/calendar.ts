@@ -82,7 +82,7 @@ export class CalendarService extends BaseService<CalendarServiceConfig> {
 		}
 	}
 
-	public async getEvents({ forceUpdate, page = 0 }: { forceUpdate?: boolean; page?: number }) {
+	public async getEvents({ forceUpdate, page }: { forceUpdate?: boolean; page?: number | null }) {
 		if (!ENABLED) {
 			error(400, `Calendar is disabled`);
 		}
@@ -138,6 +138,10 @@ export class CalendarService extends BaseService<CalendarServiceConfig> {
 				};
 			}
 		);
+
+		if (typeof page !== 'number') {
+			page = 0;
+		}
 
 		const [events, prevPage, nextPage] = clamp(
 			data.events.length,

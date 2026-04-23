@@ -83,7 +83,7 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 		this.config.itemsPerPage = itemsPerPage;
 	}
 
-	public async getNews({ page = 0, forceUpdate }: { page?: number; forceUpdate?: boolean }) {
+	public async getNews({ page, forceUpdate }: { page?: number | null; forceUpdate?: boolean }) {
 		if (!ENABLED) {
 			error(400, `SRF is disabled`);
 		}
@@ -162,6 +162,10 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 				};
 			}
 		);
+
+		if (typeof page !== 'number') {
+			page = this.lastPage + 1;
+		}
 
 		const [articles, prevPage, nextPage, index] = wrap(
 			data.articles.length,

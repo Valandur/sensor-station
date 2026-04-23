@@ -17,9 +17,9 @@
 	}
 </script>
 
-{#await getStatus({ srv: name })}
-	<Loader />
-{:then { job, printer }}
+<svelte:boundary>
+	{@const { job, printer } = await getStatus({ srv: name })}
+
 	<div class="row flex-1"></div>
 
 	{#if job}
@@ -81,6 +81,12 @@
 	{:else}
 		<EmptyCard>Aktuell ist kein Druckauftrag in Bearbeitung</EmptyCard>
 	{/if}
-{:catch err}
-	<ErrorCard message="Error loading printer status" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading printer status" params={{ error }} />
+	{/snippet}
+</svelte:boundary>

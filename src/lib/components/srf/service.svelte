@@ -4,7 +4,7 @@
 	import ErrorCard from '../error-card.svelte';
 	import PageLayout from '../page-layout.svelte';
 
-	import ServiceConfig from './service-config.svelte';
+	import ServiceConfig from './config.svelte';
 	import News from './news.svelte';
 	import Details from './details.svelte';
 

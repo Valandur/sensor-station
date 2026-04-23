@@ -7,7 +7,7 @@ import { EpicGamesService } from './server/epic-games';
 export const getGames = query(
 	v.object({
 		srv: v.string(),
-		page: v.number()
+		page: v.optional(v.nullable(v.number()))
 	}),
 	({ srv, page }) => {
 		return manager.getByName<EpicGamesService>(srv).getGames({ page });
