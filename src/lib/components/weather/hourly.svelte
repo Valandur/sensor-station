@@ -13,9 +13,9 @@
 	let { name }: { name: string } = $props();
 </script>
 
-{#await getHourlyWeather({ srv: name })}
-	<Loader />
-{:then { location, hourly }}
+<svelte:boundary>
+	{@const { location, hourly } = await getHourlyWeather({ srv: name })}
+
 	<Marker {location} />
 
 	<div class="row flex-1"></div>
@@ -29,9 +29,15 @@
 			</div>
 		{/each}
 	</div>
-{:catch err}
-	<ErrorCard message="Error loading weather" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading hourly weather" params={{ error }} />
+	{/snippet}
+</svelte:boundary>
 
 <style>
 	.text {

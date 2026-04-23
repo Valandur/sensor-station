@@ -16,9 +16,9 @@
 	let { name }: { name: string } = $props();
 </script>
 
-{#await getWeatherAlerts({ srv: name })}
-	<Loader />
-{:then { location, alert, prevPage, nextPage }}
+<svelte:boundary>
+	{@const { location, alert, prevPage, nextPage } = await getWeatherAlerts({ srv: name })}
+
 	<Pagination {prevPage} {nextPage}>
 		<Marker {location} />
 
@@ -59,6 +59,12 @@
 			<EmptyCard>Aktuell sind keine Wetter-Warnungen vorhanden</EmptyCard>
 		{/if}
 	</Pagination>
-{:catch err}
-	<ErrorCard message="Error loading weather" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading weather alerts" params={{ error }} />
+	{/snippet}
+</svelte:boundary>

@@ -17,9 +17,9 @@
 	</li>
 </ul>
 
-{#await getConfig(name)}
-	<Loader />
-{:then config}
+<svelte:boundary>
+	{@const config = await getConfig(name)}
+
 	<form id="form" class="tab-content flex-1 pt-3" {...configForm}>
 		<input {...configForm.fields.srv.as('hidden', name)} />
 
@@ -89,6 +89,12 @@
 			</div>
 		</div>
 	</form>
-{:catch err}
-	<ErrorCard message="Error loading config" params={err} />
-{/await}
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		<ErrorCard message="Error loading config" params={{ error }} />
+	{/snippet}
+</svelte:boundary>
