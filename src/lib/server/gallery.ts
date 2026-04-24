@@ -73,7 +73,6 @@ export class GalleryService extends BaseService<GalleryServiceConfig> {
 		await writeFile(img, data);
 		const ratio = await this.getRatio(img, data);
 
-		console.log(date, title, img);
 		this.config.images = this.config.images.concat({ date, title, img, ratio });
 	}
 
