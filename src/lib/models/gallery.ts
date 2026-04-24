@@ -18,7 +18,7 @@ export interface GalleryServiceConfig extends ServiceConfig {
 // ---------
 
 export interface GalleryImage {
-	ts: Date;
+	date: Date;
 	title: string;
 	img: string;
 	ratio: number;

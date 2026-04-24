@@ -1,15 +1,22 @@
 <script lang="ts">
-	import { applyAction, enhance } from '$app/forms';
-	import { format } from 'date-fns/format';
-	import { de } from 'date-fns/locale/de';
-	import { parseISO } from 'date-fns/parseISO';
+	import {
+		addImageForm,
+		getConfig,
+		moveImage,
+		removeImage,
+		saveImageForm
+	} from '$lib/gallery.remote';
+
+	import Loader from '../loader.svelte';
+	import ErrorCard from '../error-card.svelte';
+	import { format } from 'date-fns';
 
 	let { name }: { name: string } = $props();
 
 	let fileInput: HTMLInputElement;
-	let newImg: string | null = null;
-	let newTitle = '';
-	let newDate = new Date();
+	let newImg = $state<string | null>(null);
+	let newTitle = $state('');
+	let newDate = $state(new Date());
 
 	function onChangeFile(e: Event & { currentTarget: HTMLInputElement }) {
 		const image = e.currentTarget.files![0];
@@ -27,154 +34,148 @@
 	}
 </script>
 
-<div class="row overflow-auto">
-	<table class="col table table-sm">
-		<colgroup>
-			<col width="10%" />
-			<col width="15%" />
-			<col width="75%" />
-			<col />
-		</colgroup>
+<svelte:boundary>
+	{@const config = await getConfig(name)}
 
-		<tbody>
-			<tr>
-				<td>
-					{#if !newImg}
-						<button class="btn btn-sm w-100" on:click={() => fileInput.click()}>
-							<i class="fa-solid fa-image fa-xl"></i>
-						</button>
-					{:else}
-						<button class="btn btn-sm m-0 p-0" on:click={clear}>
-							<img src={newImg} alt="Uploaded file" />
-						</button>
-					{/if}
-					<input
-						type="file"
-						name="newImage"
-						form="formNew"
-						accept=".jpg, .jpeg, .png .mp4"
-						style:display="none"
-						on:change={onChangeFile}
-						bind:this={fileInput}
-					/>
-				</td>
-				<td>
-					<input
-						type="date"
-						form="formNew"
-						name="newDate"
-						class="form-control form-control-sm"
-						bind:value={newDate}
-					/>
-				</td>
-				<td>
-					<input
-						type="text"
-						form="formNew"
-						name="newTitle"
-						class="form-control form-control-sm"
-						bind:value={newTitle}
-					/>
-				</td>
-				<td>
-					<form id="formNew" method="POST" enctype="multipart/form-data" use:enhance>
-						<input type="hidden" name="action" value="add" />
-						<button
-							class="btn btn-sm"
-							class:btn-outline-success={newImg && newDate && newTitle}
-							class:btn-outline-secondary={!newImg || !newDate || !newTitle}
-							disabled={!newImg || !newDate || !newTitle}
-						>
-							<i class="fa-solid fa-plus"></i>
-						</button>
-					</form>
-				</td>
-			</tr>
+	<div class="row overflow-auto">
+		<table class="col table table-sm">
+			<colgroup>
+				<col width="10%" />
+				<col width="25%" />
+				<col width="65%" />
+				<col />
+			</colgroup>
 
-			{#each images as upload, i}
+			<tbody>
 				<tr>
-					<td class="m-0 p-1">
-						{#if upload.img.endsWith('.mp4')}
-							<video src={'/' + upload.img} muted />
+					<td>
+						{#if !newImg}
+							<button class="btn btn-sm w-100" onclick={() => fileInput.click()} title="Pick image">
+								<i class="fa-solid fa-image fa-xl"></i>
+							</button>
 						{:else}
-							<img src={'/' + upload.img} alt="Upload" />
+							<button class="btn btn-sm m-0 p-0" onclick={clear}>
+								<img src={newImg} alt="Uploaded file" />
+							</button>
 						{/if}
-					</td>
-					<td class="m-0 p-1">
 						<input
-							type="date"
-							form={`formSave${i}`}
-							name="date"
-							class="form-control form-control-sm"
-							on:change={(e) => (upload.ts = parseISO(e.currentTarget.value))}
-							value={format(upload.ts, 'yyyy-MM-dd', { locale: de })}
-						/>
-					</td>
-					<td class="m-0 p-1">
-						<input
-							type="text"
-							form={`formSave${i}`}
-							name="title"
-							class="form-control form-control-sm"
-							on:change={(e) => (upload.title = e.currentTarget.value)}
-							value={upload.title}
+							form="formNew"
+							accept=".jpg, .jpeg, .png .mp4"
+							style:display="none"
+							onchange={onChangeFile}
+							bind:this={fileInput}
+							{...addImageForm.fields.image.as('file')}
 						/>
 					</td>
 					<td>
-						<div class="btn-group">
-							<form
-								id={`formSave${i}`}
-								method="POST"
-								use:enhance={() =>
-									({ result }) =>
-										applyAction(result)}
+						<input
+							form="formNew"
+							class="form-control form-control-sm"
+							{...addImageForm.fields.date.as('date')}
+						/>
+					</td>
+					<td>
+						<input
+							form="formNew"
+							class="form-control form-control-sm"
+							bind:value={newTitle}
+							{...addImageForm.fields.title.as('text')}
+						/>
+					</td>
+					<td>
+						<form id="formNew" {...addImageForm} enctype="multipart/form-data">
+							<input {...addImageForm.fields.srv.as('hidden', name)} />
+							<button
+								class="btn btn-sm"
+								class:btn-outline-success={newImg && newDate && newTitle}
+								class:btn-outline-secondary={!newImg || !newDate || !newTitle}
+								disabled={!newImg || !newDate || !newTitle}
+								title="Add image"
 							>
-								<input type="hidden" name="action" value="save" />
-								<input type="hidden" name="index" value={i} />
-								<button class="btn btn-sm btn-outline-success">
-									<i class="fa-solid fa-floppy-disk"></i>
-								</button>
-							</form>
-							<form method="POST" use:enhance>
-								<input type="hidden" name="action" value="move" />
-								<input type="hidden" name="dir" value="up" />
-								<input type="hidden" name="index" value={i} />
+								<i class="fa-solid fa-plus"></i>
+							</button>
+						</form>
+					</td>
+				</tr>
+
+				{#each config.images as galleryImage, i (i)}
+					{@const form = saveImageForm.for(i)}
+
+					<tr>
+						<td class="m-0 p-1">
+							{#if galleryImage.img.endsWith('.mp4')}
+								<video src={'/' + galleryImage.img} muted></video>
+							{:else}
+								<img src={'/' + galleryImage.img} alt="Upload" />
+							{/if}
+						</td>
+						<td class="m-0 p-1">
+							<input
+								form={`formSave${i}`}
+								class="form-control form-control-sm"
+								{...form.fields.date.as('date', format(galleryImage.date, 'yyyy-MM-dd'))}
+							/>
+						</td>
+						<td class="m-0 p-1">
+							<input
+								form={`formSave${i}`}
+								class="form-control form-control-sm"
+								{...form.fields.title.as('text', galleryImage.title)}
+							/>
+						</td>
+						<td>
+							<div class="btn-group">
+								<form id={`formSave${i}`} {...form}>
+									<input {...addImageForm.fields.srv.as('hidden', name)} />
+									<input {...form.fields.index.as('hidden', `${i}`)} />
+									<button class="btn btn-sm btn-outline-success" title="Save">
+										<i class="fa-solid fa-floppy-disk"></i>
+									</button>
+								</form>
 								<button
 									class="btn btn-sm"
 									class:btn-outline-theme={i > 0}
 									class:btn-outline-secondary={i === 0}
 									disabled={i === 0}
+									title="Move up"
+									onclick={() => moveImage({ srv: name, index: i, dir: 'up' })}
 								>
 									<i class="fa-solid fa-caret-up"></i>
 								</button>
-							</form>
-							<form method="POST" use:enhance>
-								<input type="hidden" name="action" value="move" />
-								<input type="hidden" name="dir" value="down" />
-								<input type="hidden" name="index" value={i} />
 								<button
 									class="btn btn-sm"
-									class:btn-outline-theme={i < images.length - 1}
-									class:btn-outline-secondary={i === images.length - 1}
-									disabled={i === images.length - 1}
+									class:btn-outline-theme={i < config.images.length - 1}
+									class:btn-outline-secondary={i === config.images.length - 1}
+									disabled={i === config.images.length - 1}
+									title="Move down"
+									onclick={() => moveImage({ srv: name, index: i, dir: 'up' })}
 								>
 									<i class="fa-solid fa-caret-down"></i>
 								</button>
-							</form>
-							<form method="POST" use:enhance>
-								<input type="hidden" name="action" value="delete" />
-								<input type="hidden" name="index" value={i} />
-								<button class="btn btn-sm btn-outline-danger">
+								<button
+									class="btn btn-sm btn-outline-danger"
+									title="Remove"
+									onclick={() => removeImage({ srv: name, index: i })}
+								>
 									<i class="fa-solid fa-trash"></i>
 								</button>
-							</form>
-						</div>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-</div>
+							</div>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+
+	{#snippet pending()}
+		<Loader />
+	{/snippet}
+
+	{#snippet failed(error)}
+		{console.log(error)}
+		<ErrorCard message="Error loading config" params={{ error }} />
+	{/snippet}
+</svelte:boundary>
 
 <style lang="scss">
 	img,

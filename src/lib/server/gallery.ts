@@ -34,7 +34,47 @@ export class GalleryService extends BaseService<GalleryServiceConfig> {
 			error(400, `Gallery is disabled`);
 		}
 
-		return this.config.images;
+		return this.config;
+	}
+
+	public async getImage({ page }: { page?: number | null }) {
+		if (!ENABLED) {
+			error(400, `Gallery is disabled`);
+		}
+
+		if (typeof page !== 'number') {
+			page = this.lastPage + 1;
+		}
+
+		const [[image], prevPage, nextPage, index] = wrap(
+			this.config.images.length,
+			page,
+			1,
+			this.config.images
+		);
+		this.lastPage = index;
+
+		return {
+			prevPage,
+			nextPage,
+			image
+		};
+	}
+
+	public async addImage({ date, title, image }: { date: Date; title: string; image: File }) {
+		const data = Buffer.from(await image.arrayBuffer());
+		const hash = createHash('md5').update(data).digest('hex');
+		const ext = mime.extension(image.type);
+
+		const folderPath = `data/${this.name}`;
+		const img = `${folderPath}/${hash}.${ext}`;
+
+		await mkdir(folderPath, { recursive: true });
+		await writeFile(img, data);
+		const ratio = await this.getRatio(img, data);
+
+		console.log(date, title, img);
+		this.config.images = this.config.images.concat({ date, title, img, ratio });
 	}
 
 	public async editImage(index: number, { date, title }: { date?: Date; title?: string }) {
@@ -43,7 +83,7 @@ export class GalleryService extends BaseService<GalleryServiceConfig> {
 		}
 
 		if (date) {
-			this.config.images[index].ts = date;
+			this.config.images[index].date = date;
 		}
 		if (typeof title === 'string') {
 			this.config.images[index].title = title;
@@ -76,50 +116,7 @@ export class GalleryService extends BaseService<GalleryServiceConfig> {
 		}
 	}
 
-	public async getImage({ page }: { page?: number | null }) {
-		if (!ENABLED) {
-			error(400, `Gallery is disabled`);
-		}
-
-		if (typeof page !== 'number') {
-			page = this.lastPage + 1;
-		}
-
-		const [[image], prevPage, nextPage, index] = wrap(
-			this.config.images.length,
-			page,
-			1,
-			this.config.images
-		);
-		this.lastPage = index;
-
-		return {
-			prevPage,
-			nextPage,
-			image
-		};
-	}
-
-	public async saveUpload(ts: Date, title: string, file: File) {
-		const data = Buffer.from(await file.arrayBuffer());
-		const hash = createHash('md5')
-			.update(ts.toISOString(), 'utf-8')
-			.update(title, 'utf-8')
-			.update(data)
-			.digest('hex');
-		const ext = mime.extension(file.type);
-
-		const folderPath = `data/${this.name}`;
-		const img = `${folderPath}/${hash}.${ext}`;
-
-		await mkdir(folderPath, { recursive: true });
-		await writeFile(img, data);
-		const ratio = await this.getRatio(img, data);
-
-		this.config.images = this.config.images.concat({ ts, title, img, ratio });
-	}
-
-	public async deleteUpload(index: number) {
+	public async removeImage(index: number) {
 		const item = this.config.images[index];
 
 		await rm(`${item.img}`);

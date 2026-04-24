@@ -1,6 +1,7 @@
 import { dirname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { error, fail } from '@sveltejs/kit';
+import { parseISO } from 'date-fns';
 
 import type { ServiceInstance, ServiceType } from '$lib/models/service';
 import { CAROUSEL_SERVICE_TYPE } from '$lib/models/carousel';
@@ -63,7 +64,13 @@ class ServiceManager {
 
 		await mkdir(dirname(PATH), { recursive: true });
 		const json = JSON.parse(
-			await readFile(PATH, 'utf-8').catch(() => '{ "main": null, "services": []}')
+			await readFile(PATH, 'utf-8').catch(() => '{ "main": null, "services": []}'),
+			function (key, value) {
+				if (typeof this[key] === 'string' && this[key].startsWith('_d:')) {
+					return parseISO(this[key].substring(3));
+				}
+				return value;
+			}
 		);
 
 		this.main = json.main ?? null;
@@ -111,7 +118,16 @@ class ServiceManager {
 		const startTime = process.hrtime.bigint();
 
 		const services = [...this.services.values()].map((s) => s.serialize());
-		await writeFile(PATH, JSON.stringify({ main: this.main, services }), 'utf-8');
+		await writeFile(
+			PATH,
+			JSON.stringify({ main: this.main, services }, function (key, value) {
+				if (this[key] instanceof Date) {
+					return `_d:${value}`;
+				}
+				return value;
+			}),
+			'utf-8'
+		);
 
 		const diffTime = (process.hrtime.bigint() - startTime) / 1000000n;
 		this.logger.info('Saved', this.services.size, 'services', diffTime, 'ms');
