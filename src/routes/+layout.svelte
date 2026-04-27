@@ -11,6 +11,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 
 	import '../scss/styles.scss';
+	import '../scss/font.scss';
 
 	let { children }: { children?: Snippet } = $props();
 
