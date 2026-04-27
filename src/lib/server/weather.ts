@@ -71,7 +71,9 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 		minDiff,
 		apiKey,
 		googleKey,
-		itemsPerPage
+		itemsPerPage,
+		resultCacheTime,
+		errorCacheTime
 	}: {
 		lat: number;
 		lng: number;
@@ -79,7 +81,16 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 		apiKey: string;
 		googleKey: string;
 		itemsPerPage: number;
+		resultCacheTime: number;
+		errorCacheTime: number;
 	}) {
+		// Test using supplied base cooridnates
+		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
+		const res = await fetch(forecastUrl);
+		if (res.status !== 200) {
+			return fail(400, { message: 'Could not access weather' });
+		}
+
 		// Save config before testing it
 		this.config.lat = lat;
 		this.config.lng = lng;
@@ -87,13 +98,8 @@ export class WeatherService extends BaseService<WeatherServiceConfig> {
 		this.config.apiKey = apiKey;
 		this.config.googleKey = googleKey;
 		this.config.itemsPerPage = itemsPerPage;
-
-		// Test using supplied base cooridnates
-		const forecastUrl = `${FORECAST_URL}&appid=${apiKey}&lat=${lat}&lon=${lng}`;
-		const res = await fetch(forecastUrl);
-		if (res.status !== 200) {
-			return fail(400, { message: 'Could not access weather' });
-		}
+		this.config.resultCacheTime = resultCacheTime;
+		this.config.errorCacheTime = errorCacheTime;
 	}
 
 	public async getDaily(options: { forceUpdate?: boolean }) {

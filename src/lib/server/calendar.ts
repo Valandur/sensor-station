@@ -49,17 +49,23 @@ export class CalendarService extends BaseService<CalendarServiceConfig> {
 		calendarId,
 		serviceEmail,
 		privateKey,
-		itemsPerPage
+		itemsPerPage,
+		resultCacheTime,
+		errorCacheTime
 	}: {
 		calendarId: string;
 		serviceEmail: string;
 		privateKey: string;
 		itemsPerPage: number;
+		resultCacheTime: number;
+		errorCacheTime: number;
 	}) {
 		this.config.calendarId = calendarId;
 		this.config.serviceEmail = serviceEmail;
 		this.config.privateKey = privateKey;
 		this.config.itemsPerPage = itemsPerPage;
+		this.config.resultCacheTime = resultCacheTime;
+		this.config.errorCacheTime = errorCacheTime;
 
 		const jwtClient = new google.auth.JWT({
 			email: serviceEmail,

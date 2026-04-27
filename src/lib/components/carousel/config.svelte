@@ -238,28 +238,48 @@
 			<div class="row mb-2">
 				<label for="inputCountry" class="col-form-label col-4">Country</label>
 				<div class="col">
-					<input
-						id="inputCountry"
-						class="form-control"
-						{...holidaysForm.fields.country.as('text', data?.config.country ?? '')}
-					/>
+					<div class="input-group">
+						<input
+							id="inputCountry"
+							class="form-control"
+							class:is-invalid={!!holidaysForm.fields.country.issues()}
+							class:is-valid={!holidaysForm.fields.country.issues()}
+							{...holidaysForm.fields.country.as('text', data?.config.country ?? '')}
+						/>
+						{#each holidaysForm.fields.country.issues() as issue, i (i)}
+							<div class="invalid-tooltip">{issue.message}</div>
+						{/each}
+					</div>
 				</div>
 			</div>
 
 			<div class="row mb-2">
 				<label for="inputState" class="col-form-label col-4">State</label>
 				<div class="col">
-					<input
-						id="inputState"
-						class="form-control"
-						{...holidaysForm.fields.state.as('text', data?.config.state ?? '')}
-					/>
+					<div class="input-group">
+						<input
+							id="inputState"
+							class="form-control"
+							class:is-invalid={!!holidaysForm.fields.state.issues()}
+							class:is-valid={!holidaysForm.fields.state.issues()}
+							{...holidaysForm.fields.state.as('text', data?.config.state ?? '')}
+						/>
+						{#each holidaysForm.fields.state.issues() as issue, i (i)}
+							<div class="invalid-tooltip">{issue.message}</div>
+						{/each}
+					</div>
 				</div>
 			</div>
 
 			<div class="row justify-content-end">
 				<div class="col-auto">
-					<button type="submit" class="btn btn-theme mt-2">Save</button>
+					<button
+						type="submit"
+						class="btn btn-theme mt-2"
+						disabled={holidaysForm.pending > 0 || !!holidaysForm.fields.allIssues()?.length}
+					>
+						Save
+					</button>
 				</div>
 			</div>
 		</form>

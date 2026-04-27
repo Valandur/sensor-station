@@ -43,7 +43,17 @@ export class PrusaService extends BaseService<PrusaServiceConfig> {
 		return this.config;
 	}
 
-	public async setConfig({ apiUrl, apiKey }: { apiUrl: string; apiKey: string }) {
+	public async setConfig({
+		apiUrl,
+		apiKey,
+		resultCacheTime,
+		errorCacheTime
+	}: {
+		apiUrl: string;
+		apiKey: string;
+		resultCacheTime: number;
+		errorCacheTime: number;
+	}) {
 		const statusUrl = `${apiUrl}/api/v1/status`;
 		const res = await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
 		if (res.status !== 200) {
@@ -53,6 +63,8 @@ export class PrusaService extends BaseService<PrusaServiceConfig> {
 
 		this.config.apiUrl = apiUrl;
 		this.config.apiKey = apiKey;
+		this.config.resultCacheTime = resultCacheTime;
+		this.config.errorCacheTime = errorCacheTime;
 	}
 
 	public async getStatus({ forceUpdate, embedded }: { forceUpdate?: boolean; embedded?: boolean }) {

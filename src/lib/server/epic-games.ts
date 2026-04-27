@@ -50,8 +50,18 @@ export class EpicGamesService extends BaseService<EpicGamesServiceConfig> {
 		return this.config;
 	}
 
-	public async setConfig({ itemsPerPage }: { itemsPerPage: number }) {
+	public async setConfig({
+		itemsPerPage,
+		resultCacheTime,
+		errorCacheTime
+	}: {
+		itemsPerPage: number;
+		resultCacheTime: number;
+		errorCacheTime: number;
+	}) {
 		this.config.itemsPerPage = itemsPerPage;
+		this.config.resultCacheTime = resultCacheTime;
+		this.config.errorCacheTime = errorCacheTime;
 	}
 
 	public async getGames({ forceUpdate, page }: { forceUpdate?: boolean; page?: number | null }) {

@@ -47,12 +47,33 @@ export const configForm = form(
 		lat: v.number(),
 		lng: v.number(),
 		itemsPerPage: v.number(),
-		minDiff: v.number()
+		minDiff: v.number(),
+		resultCacheTime: v.pipe(v.number(), v.minValue(0)),
+		errorCacheTime: v.pipe(v.number(), v.minValue(0))
 	}),
-	async ({ srv, apiKey, googleKey, lat, lng, itemsPerPage, minDiff }) => {
+	async ({
+		srv,
+		apiKey,
+		googleKey,
+		lat,
+		lng,
+		itemsPerPage,
+		minDiff,
+		resultCacheTime,
+		errorCacheTime
+	}) => {
 		await manager
 			.getByName<WeatherService>(srv)
-			.setConfig({ apiKey, googleKey, lat, lng, itemsPerPage, minDiff });
+			.setConfig({
+				apiKey,
+				googleKey,
+				lat,
+				lng,
+				itemsPerPage,
+				minDiff,
+				resultCacheTime,
+				errorCacheTime
+			});
 		await manager.save();
 		void getConfig(srv).refresh();
 	}

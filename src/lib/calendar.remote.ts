@@ -22,14 +22,29 @@ export const configForm = form(
 	v.object({
 		srv: v.string(),
 		calendarId: v.string(),
-		serviceEmail: v.string(),
+		serviceEmail: v.pipe(v.string(), v.email()),
 		privateKey: v.string(),
-		itemsPerPage: v.number()
+		itemsPerPage: v.pipe(v.number(), v.minValue(1), v.maxValue(10)),
+		resultCacheTime: v.pipe(v.number(), v.minValue(0)),
+		errorCacheTime: v.pipe(v.number(), v.minValue(0))
 	}),
-	async ({ srv, calendarId, serviceEmail, privateKey, itemsPerPage }) => {
-		await manager
-			.getByName<CalendarService>(srv)
-			.setConfig({ calendarId, serviceEmail, privateKey, itemsPerPage });
+	async ({
+		srv,
+		calendarId,
+		serviceEmail,
+		privateKey,
+		itemsPerPage,
+		resultCacheTime,
+		errorCacheTime
+	}) => {
+		await manager.getByName<CalendarService>(srv).setConfig({
+			calendarId,
+			serviceEmail,
+			privateKey,
+			itemsPerPage,
+			resultCacheTime,
+			errorCacheTime
+		});
 		await manager.save();
 		void getConfig(srv).refresh();
 	}

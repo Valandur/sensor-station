@@ -32,11 +32,15 @@ export const configForm = form(
 	v.object({
 		srv: v.string(),
 		feedId: v.string(),
-		itemsPerPage: v.number(),
-		simpleDetails: v.optional(v.boolean(), false)
+		itemsPerPage: v.pipe(v.number(), v.minValue(1), v.maxValue(10)),
+		simpleDetails: v.optional(v.boolean(), false),
+		resultCacheTime: v.pipe(v.number(), v.minValue(0)),
+		errorCacheTime: v.pipe(v.number(), v.minValue(0))
 	}),
-	async ({ srv, feedId, itemsPerPage, simpleDetails }) => {
-		await manager.getByName<SrfService>(srv).setConfig({ feedId, itemsPerPage, simpleDetails });
+	async ({ srv, feedId, itemsPerPage, simpleDetails, resultCacheTime, errorCacheTime }) => {
+		await manager
+			.getByName<SrfService>(srv)
+			.setConfig({ feedId, itemsPerPage, simpleDetails, resultCacheTime, errorCacheTime });
 		await manager.save();
 		void getConfig(srv).refresh();
 	}

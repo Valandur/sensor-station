@@ -21,10 +21,14 @@ export const getConfig = query(v.string(), (srv) => {
 export const configForm = form(
 	v.object({
 		srv: v.string(),
-		itemsPerPage: v.number()
+		itemsPerPage: v.pipe(v.number(), v.minValue(1), v.maxValue(10)),
+		resultCacheTime: v.pipe(v.number(), v.minValue(0)),
+		errorCacheTime: v.pipe(v.number(), v.minValue(0))
 	}),
-	async ({ srv, itemsPerPage }) => {
-		await manager.getByName<EpicGamesService>(srv).setConfig({ itemsPerPage });
+	async ({ srv, itemsPerPage, resultCacheTime, errorCacheTime }) => {
+		await manager
+			.getByName<EpicGamesService>(srv)
+			.setConfig({ itemsPerPage, resultCacheTime, errorCacheTime });
 		await manager.save();
 		void getConfig(srv).refresh();
 	}

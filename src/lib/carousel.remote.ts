@@ -59,8 +59,8 @@ export const newScreenForm = form(
 export const holidaysForm = form(
 	v.object({
 		srv: v.string(),
-		country: v.string(),
-		state: v.string()
+		country: v.pipe(v.string(), v.length(2)),
+		state: v.pipe(v.string(), v.length(2))
 	}),
 	async ({ srv, country, state }) => {
 		await manager.getByName<CarouselService>(srv).setHolidays({ country, state });

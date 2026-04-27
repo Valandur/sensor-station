@@ -21,11 +21,15 @@ export const getConfig = query(v.string(), (srv) => {
 export const configForm = form(
 	v.object({
 		srv: v.string(),
-		apiUrl: v.string(),
-		apiKey: v.string()
+		apiUrl: v.pipe(v.string(), v.url()),
+		apiKey: v.string(),
+		resultCacheTime: v.pipe(v.number(), v.minValue(0)),
+		errorCacheTime: v.pipe(v.number(), v.minValue(0))
 	}),
-	async ({ srv, apiUrl, apiKey }) => {
-		await manager.getByName<PrusaService>(srv).setConfig({ apiUrl, apiKey });
+	async ({ srv, apiUrl, apiKey, resultCacheTime, errorCacheTime }) => {
+		await manager
+			.getByName<PrusaService>(srv)
+			.setConfig({ apiUrl, apiKey, resultCacheTime, errorCacheTime });
 		await manager.save();
 		void getConfig(srv).refresh();
 	}

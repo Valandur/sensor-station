@@ -65,11 +65,15 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 	public async setConfig({
 		feedId,
 		simpleDetails,
-		itemsPerPage
+		itemsPerPage,
+		resultCacheTime,
+		errorCacheTime
 	}: {
 		feedId: string;
 		simpleDetails: boolean;
 		itemsPerPage: number;
+		resultCacheTime: number;
+		errorCacheTime: number;
 	}) {
 		const res = await fetch(`${BASE_URL}${feedId}`);
 		if (res.status === 404) {
@@ -81,6 +85,8 @@ export class SrfService extends BaseService<SrfServiceConfig> {
 		this.config.feedId = feedId;
 		this.config.simpleDetails = simpleDetails;
 		this.config.itemsPerPage = itemsPerPage;
+		this.config.resultCacheTime = resultCacheTime;
+		this.config.errorCacheTime = errorCacheTime;
 	}
 
 	public async getNews({ page, forceUpdate }: { page?: number | null; forceUpdate?: boolean }) {

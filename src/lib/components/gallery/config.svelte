@@ -110,28 +110,47 @@
 							{/if}
 						</td>
 						<td class="m-0 p-1">
-							<input
-								form={`formSave${i}`}
-								class="form-control form-control-sm"
-								{...form.fields.date.as('date', format(galleryImage.date, 'yyyy-MM-dd'))}
-							/>
+							<div class="input-group">
+								<input
+									form={`formSave${i}`}
+									class="form-control form-control-sm"
+									class:is-invalid={!!form.fields.date.issues()}
+									class:is-valid={!form.fields.date.issues()}
+									{...form.fields.date.as('date', format(galleryImage.date, 'yyyy-MM-dd'))}
+								/>
+								{#each form.fields.title.issues() as issue, i (i)}
+									<div class="invalid-tooltip">{issue.message}</div>
+								{/each}
+							</div>
 						</td>
 						<td class="m-0 p-1">
-							<input
-								form={`formSave${i}`}
-								class="form-control form-control-sm"
-								{...form.fields.title.as('text', galleryImage.title)}
-							/>
+							<div class="input-group">
+								<input
+									form={`formSave${i}`}
+									class="form-control form-control-sm"
+									class:is-invalid={!!form.fields.title.issues()}
+									class:is-valid={!form.fields.title.issues()}
+									{...form.fields.title.as('text', galleryImage.title)}
+								/>
+								{#each form.fields.title.issues() as issue, i (i)}
+									<div class="invalid-tooltip">{issue.message}</div>
+								{/each}
+							</div>
 						</td>
 						<td>
 							<div class="btn-group">
-								<form id={`formSave${i}`} {...form}>
+								<form
+									id={`formSave${i}`}
+									{...form.enhance(({ submit }) => submit())}
+									onchange={() => form.validate()}
+								>
 									<input {...addImageForm.fields.srv.as('hidden', name)} />
 									<input {...form.fields.index.as('hidden', `${i}`)} />
 									<button class="btn btn-sm btn-outline-success" title="Save">
 										<i class="fa-solid fa-floppy-disk"></i>
 									</button>
 								</form>
+
 								<button
 									class="btn btn-sm"
 									class:btn-outline-theme={i > 0}
@@ -142,6 +161,7 @@
 								>
 									<i class="fa-solid fa-caret-up"></i>
 								</button>
+
 								<button
 									class="btn btn-sm"
 									class:btn-outline-theme={i < config.images.length - 1}
@@ -152,6 +172,7 @@
 								>
 									<i class="fa-solid fa-caret-down"></i>
 								</button>
+
 								<button
 									class="btn btn-sm btn-outline-danger"
 									title="Remove"
